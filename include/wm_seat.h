@@ -8,7 +8,6 @@
 #include "wm_cursor.h"
 
 struct wm_seat{
-    struct wl_list link;  // wm_server::wm_seats
     struct wm_server* wm_server;
 
     struct wm_cursor* wm_cursor;

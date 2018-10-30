@@ -34,7 +34,6 @@ void wm_seat_init(struct wm_seat* seat, struct wm_server* server){
 
 void wm_seat_destroy(struct wm_seat* seat) {
     wl_list_remove(&seat->destroy.link);
-    wl_list_remove(&seat->link);
 
     // TODO
 }

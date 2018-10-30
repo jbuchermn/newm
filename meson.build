@@ -33,6 +33,8 @@ sources = [
     'src/wm_keyboard.c',
     'src/wm_pointer.c',
     'src/wm_cursor.c',
+    'src/wm_layout.c',
+    'src/wm_output.c',
     'src/main.c',
 ]
 

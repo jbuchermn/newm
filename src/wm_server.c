@@ -6,6 +6,7 @@
 #include <wlr/backend/multi.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_output.h>
 #include <wlr/config.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/util/log.h>
@@ -21,28 +22,20 @@ static void handle_new_input(struct wl_listener* listener, void* data){
     struct wlr_input_device* input_device = data;
     struct wm_server* server = wl_container_of(listener, server, new_input);
 
-    /* For now, only one seat */
-    if(wl_list_empty(&server->wm_seats)){
-        struct wm_seat* seat = calloc(1, sizeof(struct wm_seat));
-        wm_seat_init(seat, server);
-        wl_list_insert(&server->wm_seats, &seat->link);
-        wlr_log(WLR_DEBUG, "New seat");
-    }
+    wm_seat_add_input_device(server->wm_seat, input_device);
+}
 
-    struct wm_seat* seat;
-    wl_list_for_each(seat, &server->wm_seats, link){
-        wm_seat_add_input_device(seat, input_device);
-    }
+static void handle_new_output(struct wl_listener* listener, void* data){
+    struct wlr_output* output = data;
+    struct wm_server* server = wl_container_of(listener, server, new_output);
 
+    wm_layout_add_output(server->wm_layout, output);
 }
 
 /*
  * Class implementation
  */
 void wm_server_init(struct wm_server* server){
-    /* Fields */
-    wl_list_init(&server->wm_seats);
-
     /* Wayland and wlroots resources */
     server->wl_display = wl_display_create();
     assert(server->wl_display);
@@ -64,9 +57,19 @@ void wm_server_init(struct wm_server* server){
     server->wlr_data_device_manager = wlr_data_device_manager_create(server->wl_display);
     assert(server->wlr_data_device_manager);
 
+    /* Children */
+    server->wm_seat = calloc(1, sizeof(struct wm_seat));
+    wm_seat_init(server->wm_seat, server);
+
+    server->wm_layout = calloc(1, sizeof(struct wm_layout));
+    wm_layout_init(server->wm_layout, server);
+
     /* Handlers */
     server->new_input.notify = handle_new_input;
     wl_signal_add(&server->wlr_backend->events.new_input, &server->new_input);
+
+    server->new_output.notify = handle_new_output;
+    wl_signal_add(&server->wlr_backend->events.new_output, &server->new_output);
 }
 
 void wm_server_destroy(struct wm_server* server){
