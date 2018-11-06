@@ -12,6 +12,19 @@
 /*
  * Callbacks
  */
+static void handle_deco_request_mode(struct wl_listener* listener, void* data){
+    struct wm_view_decoration* deco = wl_container_of(listener, deco, request_mode);
+    
+    wlr_xdg_toplevel_decoration_v1_set_mode(deco->wlr_xdg_toplevel_decoration,
+        WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+}
+
+static void handle_deco_destroy(struct wl_listener* listener, void* data){
+    struct wm_view_decoration* deco = wl_container_of(listener, deco, destroy);
+    wm_view_decoration_destroy(deco);
+    free(deco);
+}
+
 static void handle_map(struct wl_listener* listener, void* data){
     struct wm_view* view = wl_container_of(listener, view, map);
     view->mapped = true;
@@ -38,6 +51,22 @@ static void handle_new_popup(struct wl_listener* listener, void* data){
 /*
  * Class implementation
  */
+void wm_view_decoration_init(struct wm_view_decoration* deco, struct wlr_xdg_toplevel_decoration_v1* wlr_deco){
+    deco->wlr_xdg_toplevel_decoration = wlr_deco;
+
+    deco->request_mode.notify = &handle_deco_request_mode;
+    wl_signal_add(&wlr_deco->events.request_mode, &deco->request_mode);
+
+    deco->destroy.notify = &handle_deco_destroy;
+    wl_signal_add(&wlr_deco->events.destroy, &deco->destroy);
+}
+
+void wm_view_decoration_destroy(struct wm_view_decoration* deco){
+    wl_list_remove(&deco->request_mode.link);
+    wl_list_remove(&deco->destroy.link);
+    wl_list_remove(&deco->link);
+}
+
 void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface){
     view->wm_server = server;
     view->wlr_xdg_surface = surface;
@@ -63,6 +92,10 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
 }
 
 void wm_view_destroy(struct wm_view* view){
+    wl_list_remove(&view->map.link);
+    wl_list_remove(&view->unmap.link);
+    wl_list_remove(&view->destroy.link);
+    wl_list_remove(&view->new_popup.link);
     wl_list_remove(&view->link);
 }
 

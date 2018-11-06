@@ -5,6 +5,7 @@
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
 
 struct wm_seat;
 struct wm_layout;
@@ -18,14 +19,17 @@ struct wm_server{
     struct wlr_renderer* wlr_renderer;
     struct wlr_data_device_manager* wlr_data_device_manager;
     struct wlr_xdg_shell* wlr_xdg_shell;
+    struct wlr_xdg_decoration_manager_v1* wlr_xdg_decoration_manager;
 
     struct wm_seat* wm_seat;
     struct wm_layout* wm_layout;
     struct wl_list wm_views;  // wm_view::link
+    struct wl_list wm_view_decorations;  // wm_view_decoration::link
 
     struct wl_listener new_input;
     struct wl_listener new_output;
     struct wl_listener new_xdg_surface;
+    struct wl_listener new_xdg_decoration;
 };
 
 void wm_server_init(struct wm_server* server);

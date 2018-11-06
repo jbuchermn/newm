@@ -28,14 +28,14 @@ add_project_arguments(
 )
 
 sources = [
-    'src/wm_server.c',
-    'src/wm_seat.c',
-    'src/wm_keyboard.c',
-    'src/wm_pointer.c',
-    'src/wm_cursor.c',
-    'src/wm_layout.c',
-    'src/wm_output.c',
-    'src/wm_view.c',
+    'src/wm/wm_server.c',
+    'src/wm/wm_seat.c',
+    'src/wm/wm_keyboard.c',
+    'src/wm/wm_pointer.c',
+    'src/wm/wm_cursor.c',
+    'src/wm/wm_layout.c',
+    'src/wm/wm_output.c',
+    'src/wm/wm_view.c',
     'src/main.c',
 ]
 

@@ -50,11 +50,22 @@ static void handle_new_xdg_surface(struct wl_listener* listener, void* data){
     wl_list_insert(&server->wm_views, &view->link);
 }
 
+static void handle_new_xdg_decoration(struct wl_listener* listener, void* data){
+    struct wm_server* server = wl_container_of(listener, server, new_xdg_decoration);
+    struct wlr_xdg_toplevel_decoration_v1* wlr_deco = data;
+
+    struct wm_view_decoration* deco = calloc(1, sizeof(struct wm_view_decoration));
+    wm_view_decoration_init(deco, wlr_deco);
+
+    wl_list_insert(&server->wm_view_decorations, &deco->link);
+}
+
 /*
  * Class implementation
  */
 void wm_server_init(struct wm_server* server){
     wl_list_init(&server->wm_views);
+    wl_list_init(&server->wm_view_decorations);
 
     /* Wayland and wlroots resources */
     server->wl_display = wl_display_create();
@@ -80,6 +91,10 @@ void wm_server_init(struct wm_server* server){
     server->wlr_xdg_shell = wlr_xdg_shell_create(server->wl_display);
     assert(server->wlr_xdg_shell);
 
+    server->wlr_xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create(server->wl_display);
+    assert(server->wlr_xdg_decoration_manager);
+
+
     /* Children */
     server->wm_layout = calloc(1, sizeof(struct wm_layout));
     wm_layout_init(server->wm_layout, server);
@@ -96,6 +111,9 @@ void wm_server_init(struct wm_server* server){
 
     server->new_xdg_surface.notify = handle_new_xdg_surface;
     wl_signal_add(&server->wlr_xdg_shell->events.new_surface, &server->new_xdg_surface);
+
+    server->new_xdg_decoration.notify = handle_new_xdg_decoration;
+    wl_signal_add(&server->wlr_xdg_decoration_manager->events.new_toplevel_decoration, &server->new_xdg_decoration);
 }
 
 void wm_server_destroy(struct wm_server* server){
