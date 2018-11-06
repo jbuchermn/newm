@@ -10,12 +10,17 @@ project(
     ],
 )
 
+python = import('python').find_installation('python3')
+
 wlroots_proj = subproject('wlroots')
 
 # Dependencies
 wlroots     = wlroots_proj.get_variable('wlroots')
 wlr_protos  = wlroots_proj.get_variable('wlr_protos')
 pixman      = dependency('pixman-1')
+pthread     = meson.get_compiler('c').find_library('pthread')
+
+deps = [wlroots, wlr_protos, pixman, pthread]
 
 add_project_arguments(
 	'-DWLR_USE_UNSTABLE',
@@ -28,6 +33,7 @@ add_project_arguments(
 )
 
 sources = [
+    'src/wm/wm.c',
     'src/wm/wm_server.c',
     'src/wm/wm_seat.c',
     'src/wm/wm_keyboard.c',
@@ -36,14 +42,24 @@ sources = [
     'src/wm/wm_layout.c',
     'src/wm/wm_output.c',
     'src/wm/wm_view.c',
-    'src/main.c',
+]
+
+py_sources = [
+    'src/py/_pywmmodule.c'
 ]
 
 incs = include_directories('include')
 
 executable(
 	'pywm',
-	sources,
+	sources + ['src/main.c'],
     include_directories: incs,
-	dependencies: [wlroots, wlr_protos, pixman],
+	dependencies: deps,
+)
+
+python.extension_module(
+    '_pywm',
+    sources + py_sources,
+    include_directories: incs,
+    dependencies: deps + [python.dependency()]
 )
