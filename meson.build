@@ -35,6 +35,7 @@ sources = [
     'src/wm_cursor.c',
     'src/wm_layout.c',
     'src/wm_output.c',
+    'src/wm_view.c',
     'src/main.c',
 ]
 

@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200112L
+
 #include <assert.h>
 #include <stdlib.h>
 #include <wayland-server.h>
@@ -13,29 +15,46 @@
 
 #include "wm_server.h"
 #include "wm_seat.h"
+#include "wm_view.h"
 
 
 /*
  * Callbacks
  */
 static void handle_new_input(struct wl_listener* listener, void* data){
-    struct wlr_input_device* input_device = data;
     struct wm_server* server = wl_container_of(listener, server, new_input);
+    struct wlr_input_device* input_device = data;
 
     wm_seat_add_input_device(server->wm_seat, input_device);
 }
 
 static void handle_new_output(struct wl_listener* listener, void* data){
-    struct wlr_output* output = data;
     struct wm_server* server = wl_container_of(listener, server, new_output);
+    struct wlr_output* output = data;
 
     wm_layout_add_output(server->wm_layout, output);
+}
+
+static void handle_new_xdg_surface(struct wl_listener* listener, void* data){
+    struct wm_server* server = wl_container_of(listener, server, new_xdg_surface);
+    struct wlr_xdg_surface* surface = data;
+
+    if(surface->role != WLR_XDG_SURFACE_ROLE_TOPLEVEL){
+        return;
+    }
+
+    struct wm_view* view = calloc(1, sizeof(struct wm_view));
+    wm_view_init(view, surface);
+
+    wl_list_insert(&server->wm_views, &view->link);
 }
 
 /*
  * Class implementation
  */
 void wm_server_init(struct wm_server* server){
+    wl_list_init(&server->wm_views);
+
     /* Wayland and wlroots resources */
     server->wl_display = wl_display_create();
     assert(server->wl_display);
@@ -57,6 +76,9 @@ void wm_server_init(struct wm_server* server){
     server->wlr_data_device_manager = wlr_data_device_manager_create(server->wl_display);
     assert(server->wlr_data_device_manager);
 
+    server->wlr_xdg_shell = wlr_xdg_shell_create(server->wl_display);
+    assert(server->wlr_xdg_shell);
+
     /* Children */
     server->wm_layout = calloc(1, sizeof(struct wm_layout));
     wm_layout_init(server->wm_layout, server);
@@ -70,6 +92,9 @@ void wm_server_init(struct wm_server* server){
 
     server->new_output.notify = handle_new_output;
     wl_signal_add(&server->wlr_backend->events.new_output, &server->new_output);
+
+    server->new_xdg_surface.notify = handle_new_xdg_surface;
+    wl_signal_add(&server->wlr_xdg_shell->events.new_surface, &server->new_xdg_surface);
 }
 
 void wm_server_destroy(struct wm_server* server){

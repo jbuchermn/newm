@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200112L
+
 #include <assert.h>
 #include <wlr/util/log.h>
 #include "wm_cursor.h"

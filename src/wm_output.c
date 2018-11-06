@@ -1,8 +1,11 @@
-#define _POSIX_C_SOURCE 199309L
+#define _POSIX_C_SOURCE 200112L
 
+#include <assert.h>
 #include <time.h>
 #include <wlr/util/log.h>
+#include <wlr/types/wlr_matrix.h>
 #include "wm_output.h"
+#include "wm_view.h"
 
 /*
  * Callbacks
@@ -24,11 +27,52 @@ static void handle_transform(struct wl_listener* listener, void* data){
 
 static void handle_present(struct wl_listener* listener, void* data){
     struct wm_output* output = wl_container_of(listener, output, present);
-    wlr_log(WLR_DEBUG, "Present event");
+}
+
+struct render_data {
+	struct wm_output *output;
+	struct wlr_renderer *renderer;
+	struct wm_view *view;
+	struct timespec *when;
+};
+
+static void render_surface(struct wlr_surface *surface, int sx, int sy, void *data) {
+	struct render_data *rdata = data;
+	struct wm_view *view = rdata->view;
+	struct wm_output *output = rdata->output;
+
+	struct wlr_texture *texture = wlr_surface_get_texture(surface);
+	if(!texture) {
+		return;
+	}
+
+	double ox = 0, oy = 0;
+	wlr_output_layout_output_coords(output->wm_layout->wlr_output_layout, output->wlr_output, &ox, &oy);
+	ox += view->x + sx;
+    oy += view->y + sy;
+
+	struct wlr_box box = {
+		.x = ox * output->wlr_output->scale,
+		.y = oy * output->wlr_output->scale,
+		.width = surface->current.width * output->wlr_output->scale,
+		.height = surface->current.height * output->wlr_output->scale,
+	};
+
+	float matrix[9];
+	enum wl_output_transform transform = wlr_output_transform_invert(surface->current.transform);
+    assert(output->wlr_output->transform_matrix);
+	wlr_matrix_project_box(matrix, &box, transform, 0, output->wlr_output->transform_matrix);
+
+    /* Actual rendering */
+	wlr_render_texture_with_matrix(rdata->renderer, texture, matrix, 1);
+
+    /* Notify client */
+	wlr_surface_send_frame_done(surface, rdata->when);
 }
 
 static void handle_frame(struct wl_listener* listener, void* data){
     struct wm_output* output = wl_container_of(listener, output, frame);
+    struct wlr_renderer* wlr_renderer = output->wm_server->wlr_renderer;
 
 	struct timespec now;
 	clock_gettime(CLOCK_MONOTONIC, &now);
@@ -39,22 +83,39 @@ static void handle_frame(struct wl_listener* listener, void* data){
 
 	int width, height;
 	wlr_output_effective_resolution(output->wlr_output, &width, &height);
-	wlr_renderer_begin(output->wlr_renderer, width, height);
+	wlr_renderer_begin(wlr_renderer, width, height);
 
 	float color[4] = { 0.3, 0.3, 0.3, 1.0 };
-	wlr_renderer_clear(output->wlr_renderer, color);
+	wlr_renderer_clear(wlr_renderer, color);
 
-	wlr_renderer_end(output->wlr_renderer);
+	struct wm_view *view;
+	wl_list_for_each_reverse(view, &output->wm_server->wm_views, link) {
+		if (!view->mapped) {
+			continue;
+		}
+
+		struct render_data rdata = {
+			.output = output,
+			.view = view,
+			.renderer = wlr_renderer,
+			.when = &now,
+		};
+
+		wlr_xdg_surface_for_each_surface(view->wlr_xdg_surface,
+				render_surface, &rdata);
+	}
+
+	wlr_renderer_end(wlr_renderer);
 	wlr_output_swap_buffers(output->wlr_output, NULL, NULL);
 }
 
 /*
  * Class implementation
  */
-void wm_output_init(struct wm_output* output, struct wm_layout* layout, struct wlr_output* out, struct wlr_renderer* renderer){
+void wm_output_init(struct wm_output* output, struct wm_server* server, struct wm_layout* layout, struct wlr_output* out){
+    output->wm_server = server;
     output->wm_layout = layout;
     output->wlr_output = out;
-    output->wlr_renderer = renderer;
 
     output->destroy.notify = handle_destroy;
     wl_signal_add(&output->wlr_output->events.destroy, &output->destroy);

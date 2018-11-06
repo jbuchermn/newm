@@ -4,6 +4,7 @@
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
+#include <wlr/types/wlr_xdg_shell.h>
 
 #include "wm_seat.h"
 #include "wm_layout.h"
@@ -16,12 +17,15 @@ struct wm_server{
     struct wlr_compositor* wlr_compositor;
     struct wlr_renderer* wlr_renderer;
     struct wlr_data_device_manager* wlr_data_device_manager;
+    struct wlr_xdg_shell* wlr_xdg_shell;
 
     struct wm_seat* wm_seat;
     struct wm_layout* wm_layout;
+    struct wl_list wm_views;  // wm_view::link
 
     struct wl_listener new_input;
     struct wl_listener new_output;
+    struct wl_listener new_xdg_surface;
 };
 
 void wm_server_init(struct wm_server* server);
