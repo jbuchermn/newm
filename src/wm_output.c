@@ -33,7 +33,7 @@ struct render_data {
 	struct wm_output *output;
 	struct wlr_renderer *renderer;
 	struct wm_view *view;
-	struct timespec *when;
+	struct timespec when;
 };
 
 static void render_surface(struct wlr_surface *surface, int sx, int sy, void *data) {
@@ -46,6 +46,8 @@ static void render_surface(struct wlr_surface *surface, int sx, int sy, void *da
 		return;
 	}
 
+    wm_view_update(view, rdata->when);
+
 	double ox = 0, oy = 0;
 	wlr_output_layout_output_coords(output->wm_layout->wlr_output_layout, output->wlr_output, &ox, &oy);
 	ox += view->x + sx;
@@ -54,20 +56,19 @@ static void render_surface(struct wlr_surface *surface, int sx, int sy, void *da
 	struct wlr_box box = {
 		.x = ox * output->wlr_output->scale,
 		.y = oy * output->wlr_output->scale,
-		.width = surface->current.width * output->wlr_output->scale,
-		.height = surface->current.height * output->wlr_output->scale,
+		.width = view->scale * surface->current.width * output->wlr_output->scale,
+		.height = view->scale * surface->current.height * output->wlr_output->scale,
 	};
 
 	float matrix[9];
 	enum wl_output_transform transform = wlr_output_transform_invert(surface->current.transform);
-    assert(output->wlr_output->transform_matrix);
 	wlr_matrix_project_box(matrix, &box, transform, 0, output->wlr_output->transform_matrix);
 
     /* Actual rendering */
-	wlr_render_texture_with_matrix(rdata->renderer, texture, matrix, 1);
+	wlr_render_texture_with_matrix(output->wm_server->wlr_renderer, texture, matrix, 1);
 
     /* Notify client */
-	wlr_surface_send_frame_done(surface, rdata->when);
+	wlr_surface_send_frame_done(surface, &rdata->when);
 }
 
 static void handle_frame(struct wl_listener* listener, void* data){
@@ -97,8 +98,7 @@ static void handle_frame(struct wl_listener* listener, void* data){
 		struct render_data rdata = {
 			.output = output,
 			.view = view,
-			.renderer = wlr_renderer,
-			.when = &now,
+			.when = now,
 		};
 
 		wlr_xdg_surface_for_each_surface(view->wlr_xdg_surface,

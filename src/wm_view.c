@@ -28,15 +28,15 @@ static void handle_destroy(struct wl_listener* listener, void* data){
 }
 
 
-
 /*
  * Class implementation
  */
 void wm_view_init(struct wm_view* view, struct wlr_xdg_surface* surface){
     view->wlr_xdg_surface = surface;
     view->mapped = false;
-    view->x = 20;
-    view->y = 20;
+    view->x = 0;
+    view->y = 0;
+    view->scale = 10.;
 
     wlr_log(WLR_DEBUG, "New view");
 
@@ -50,4 +50,8 @@ void wm_view_init(struct wm_view* view, struct wlr_xdg_surface* surface){
 
 void wm_view_destroy(struct wm_view* view){
     wl_list_remove(&view->link);
+}
+
+void wm_view_update(struct wm_view* view, struct timespec when){
+    view->scale -= 0.01;
 }
