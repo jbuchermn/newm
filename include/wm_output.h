@@ -10,6 +10,7 @@ struct wm_output {
     struct wl_list link; // wm_layout::wm_outputs
 
     struct wlr_output* wlr_output;
+    struct wlr_renderer* wlr_renderer;
 
     struct wl_listener destroy;
     struct wl_listener mode;
@@ -18,7 +19,7 @@ struct wm_output {
     struct wl_listener frame;
 };
 
-void wm_output_init(struct wm_output* output, struct wm_layout* layout, struct wlr_output* out);
+void wm_output_init(struct wm_output* output, struct wm_layout* layout, struct wlr_output* out, struct wlr_renderer* renderer);
 void wm_output_destroy(struct wm_output* output);
 
 

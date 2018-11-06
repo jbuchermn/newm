@@ -58,11 +58,11 @@ void wm_server_init(struct wm_server* server){
     assert(server->wlr_data_device_manager);
 
     /* Children */
-    server->wm_seat = calloc(1, sizeof(struct wm_seat));
-    wm_seat_init(server->wm_seat, server);
-
     server->wm_layout = calloc(1, sizeof(struct wm_layout));
     wm_layout_init(server->wm_layout, server);
+
+    server->wm_seat = calloc(1, sizeof(struct wm_seat));
+    wm_seat_init(server->wm_seat, server, server->wm_layout);
 
     /* Handlers */
     server->new_input.notify = handle_new_input;

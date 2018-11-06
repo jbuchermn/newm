@@ -7,32 +7,43 @@
  */
 static void handle_motion(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, motion);
-    wlr_log(WLR_DEBUG, "Motion event");
+    struct wlr_event_pointer_motion* event = data;
+
+    wlr_cursor_move(cursor->wlr_cursor, event->device, event->delta_x, event->delta_y);
+    wlr_xcursor_manager_set_cursor_image(cursor->wlr_xcursor_manager, "left_ptr", cursor->wlr_cursor);
 }
 
 static void handle_motion_absolute(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, motion_absolute);
-    wlr_log(WLR_DEBUG, "MotionAbsolute event");
+    struct wlr_event_pointer_motion_absolute* event = data;
+
+    wlr_cursor_warp_absolute(cursor->wlr_cursor, event->device, event->x, event->y);
+    wlr_xcursor_manager_set_cursor_image(cursor->wlr_xcursor_manager, "left_ptr", cursor->wlr_cursor);
 }
 
 static void handle_button(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, button);
-    wlr_log(WLR_DEBUG, "Button event");
+    struct wlr_event_pointer_button* event = data;
 }
 
 static void handle_axis(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, axis);
-    wlr_log(WLR_DEBUG, "Axis event");
+    struct wlr_event_pointer_axis* event = data;
 }
 
 /*
  * Class implementation
  */
-void wm_cursor_init(struct wm_cursor* cursor, struct wm_seat* seat){
+void wm_cursor_init(struct wm_cursor* cursor, struct wm_seat* seat, struct wm_layout* layout){
     cursor->wm_seat = seat;
 
     cursor->wlr_cursor = wlr_cursor_create();
     assert(cursor->wlr_cursor);
+
+    wlr_cursor_attach_output_layout(cursor->wlr_cursor, layout->wlr_output_layout);
+
+    cursor->wlr_xcursor_manager = wlr_xcursor_manager_create(NULL, 24);
+    wlr_xcursor_manager_load(cursor->wlr_xcursor_manager, 1);
 
     cursor->motion.notify = handle_motion;
     wl_signal_add(&cursor->wlr_cursor->events.motion, &cursor->motion);

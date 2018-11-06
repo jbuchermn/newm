@@ -17,7 +17,7 @@ static void handle_destroy(struct wl_listener* listener, void* data){
 /*
  * Class implementation
  */
-void wm_seat_init(struct wm_seat* seat, struct wm_server* server){
+void wm_seat_init(struct wm_seat* seat, struct wm_server* server, struct wm_layout* layout){
     seat->wm_server = server;
     wl_list_init(&seat->wm_keyboards);
     wl_list_init(&seat->wm_pointers);
@@ -26,7 +26,7 @@ void wm_seat_init(struct wm_seat* seat, struct wm_server* server){
     assert(seat->wlr_seat);
 
     seat->wm_cursor = calloc(1, sizeof(struct wm_cursor));
-    wm_cursor_init(seat->wm_cursor, seat);
+    wm_cursor_init(seat->wm_cursor, seat, layout);
 
     seat->destroy.notify = handle_destroy;
     wl_signal_add(&seat->wlr_seat->events.destroy, &seat->destroy);

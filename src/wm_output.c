@@ -1,3 +1,6 @@
+#define _POSIX_C_SOURCE 199309L
+
+#include <time.h>
 #include <wlr/util/log.h>
 #include "wm_output.h"
 
@@ -26,15 +29,32 @@ static void handle_present(struct wl_listener* listener, void* data){
 
 static void handle_frame(struct wl_listener* listener, void* data){
     struct wm_output* output = wl_container_of(listener, output, frame);
-    wlr_log(WLR_DEBUG, "Frame");
+
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+
+	if(!wlr_output_make_current(output->wlr_output, NULL)) {
+		return;
+	}
+
+	int width, height;
+	wlr_output_effective_resolution(output->wlr_output, &width, &height);
+	wlr_renderer_begin(output->wlr_renderer, width, height);
+
+	float color[4] = { 0.3, 0.3, 0.3, 1.0 };
+	wlr_renderer_clear(output->wlr_renderer, color);
+
+	wlr_renderer_end(output->wlr_renderer);
+	wlr_output_swap_buffers(output->wlr_output, NULL, NULL);
 }
 
 /*
  * Class implementation
  */
-void wm_output_init(struct wm_output* output, struct wm_layout* layout, struct wlr_output* out){
+void wm_output_init(struct wm_output* output, struct wm_layout* layout, struct wlr_output* out, struct wlr_renderer* renderer){
     output->wm_layout = layout;
     output->wlr_output = out;
+    output->wlr_renderer = renderer;
 
     output->destroy.notify = handle_destroy;
     wl_signal_add(&output->wlr_output->events.destroy, &output->destroy);

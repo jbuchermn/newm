@@ -13,8 +13,8 @@ struct wm_server{
     struct wl_event_loop* wl_event_loop;
 
     struct wlr_backend* wlr_backend;
-    struct wlr_renderer* wlr_renderer;
     struct wlr_compositor* wlr_compositor;
+    struct wlr_renderer* wlr_renderer;
     struct wlr_data_device_manager* wlr_data_device_manager;
 
     struct wm_seat* wm_seat;

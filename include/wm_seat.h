@@ -19,7 +19,7 @@ struct wm_seat{
     struct wl_listener destroy;
 };
 
-void wm_seat_init(struct wm_seat* seat, struct wm_server* server);
+void wm_seat_init(struct wm_seat* seat, struct wm_server* server, struct wm_layout* layout);
 void wm_seat_destroy(struct wm_seat* seat);
 
 void wm_seat_add_input_device(struct wm_seat* seat, struct wlr_input_device* input_device);

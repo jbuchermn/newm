@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <assert.h>
 #include <wlr/util/log.h>
 #include "wm_layout.h"
@@ -20,7 +21,7 @@ void wm_layout_add_output(struct wm_layout* layout, struct wlr_output* out){
     wlr_log(WLR_DEBUG, "New output: %s", out->name);
 
     struct wm_output* output = calloc(1, sizeof(struct wm_output));
-    wm_output_init(output, layout, out);
+    wm_output_init(output, layout, out, layout->wm_server->wlr_renderer);
     wl_list_insert(&layout->wm_outputs, &output->link);
 
     wlr_output_layout_add_auto(layout->wlr_output_layout, out);
