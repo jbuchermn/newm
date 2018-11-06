@@ -44,7 +44,7 @@ static void handle_new_xdg_surface(struct wl_listener* listener, void* data){
     }
 
     struct wm_view* view = calloc(1, sizeof(struct wm_view));
-    wm_view_init(view, surface);
+    wm_view_init(view, server, surface);
 
     wl_list_insert(&server->wm_views, &view->link);
 }

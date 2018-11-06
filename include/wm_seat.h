@@ -4,6 +4,7 @@
 #include <wayland-server.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_surface.h>
 #include "wm_server.h"
 #include "wm_cursor.h"
 
@@ -23,5 +24,9 @@ void wm_seat_init(struct wm_seat* seat, struct wm_server* server, struct wm_layo
 void wm_seat_destroy(struct wm_seat* seat);
 
 void wm_seat_add_input_device(struct wm_seat* seat, struct wlr_input_device* input_device);
+
+void wm_seat_focus_surface(struct wm_seat* seat, struct wlr_surface* surface);
+void wm_seat_dispatch_key(struct wm_seat* seat, struct wlr_input_device* input_device, struct wlr_event_keyboard_key* event);
+void wm_seat_dispatch_modifiers(struct wm_seat* seat, struct wlr_input_device* input_device);
 
 #endif

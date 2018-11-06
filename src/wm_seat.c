@@ -74,3 +74,31 @@ void wm_seat_add_input_device(struct wm_seat* seat, struct wlr_input_device* inp
     wlr_seat_set_capabilities(seat->wlr_seat, capabilities);
 }
 
+void wm_seat_focus_surface(struct wm_seat* seat, struct wlr_surface* surface){
+    struct wlr_surface* prev = seat->wlr_seat->keyboard_state.focused_surface;
+    if(prev == surface){
+        return;
+    }
+
+    if(prev){
+        struct wlr_xdg_surface* prev_xdg = wlr_xdg_surface_from_wlr_surface(prev);
+        wlr_xdg_toplevel_set_activated(prev_xdg, false);
+    }
+
+    struct wlr_xdg_surface* xdg = wlr_xdg_surface_from_wlr_surface(surface);
+    wlr_xdg_toplevel_set_activated(xdg, true);
+
+    struct wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->wlr_seat);
+    wlr_seat_keyboard_notify_enter(seat->wlr_seat, surface,
+            keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+}
+
+void wm_seat_dispatch_key(struct wm_seat* seat, struct wlr_input_device* input_device, struct wlr_event_keyboard_key* event){
+    wlr_seat_set_keyboard(seat->wlr_seat, input_device);
+    wlr_seat_keyboard_notify_key(seat->wlr_seat, event->time_msec, event->keycode, event->state);
+}
+
+void wm_seat_dispatch_modifiers(struct wm_seat* seat, struct wlr_input_device* input_device){
+    wlr_seat_set_keyboard(seat->wlr_seat, input_device);
+    wlr_seat_keyboard_notify_modifiers(seat->wlr_seat, &input_device->keyboard->modifiers);
+}

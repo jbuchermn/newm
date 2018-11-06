@@ -17,12 +17,19 @@ static void handle_destroy(struct wl_listener* listener, void* data){
 
 static void handle_key(struct wl_listener* listener, void* data){
     struct wm_keyboard* keyboard = wl_container_of(listener, keyboard, key);
-    wlr_log(WLR_DEBUG, "Key event");
+    struct wlr_event_keyboard_key* event = data;
+
+    /* Custom input handling here */
+
+    wm_seat_dispatch_key(keyboard->wm_seat, keyboard->wlr_input_device, event);
 }
 
 static void handle_modifiers(struct wl_listener* listener, void* data){
     struct wm_keyboard* keyboard = wl_container_of(listener, keyboard, modifiers);
-    wlr_log(WLR_DEBUG, "Modifiers event");
+
+    /* Custom input handling here */
+
+    wm_seat_dispatch_modifiers(keyboard->wm_seat, keyboard->wlr_input_device);
 }
 
 /*
