@@ -21,10 +21,12 @@ void wm_destroy(){
     if(!wm.server) return;
 
     wm_server_destroy(wm.server);
+    free(wm.server);
+    wm.server = 0;
 }
 
-static int run(){
-    if(!wm.server) return 2;
+void* run(void* ignore){
+    if(!wm.server) return NULL;
 
     wlr_log_init(WLR_DEBUG, NULL);
 
@@ -35,7 +37,7 @@ static int run(){
 	if (!socket) {
 		wlr_log_errno(WLR_ERROR, "Unable to open wayland socket");
 		wlr_backend_destroy(wm.server->wlr_backend);
-		return 1;
+		return NULL;
 	}
 
 	wlr_log(WLR_INFO, "Running compositor on wayland display '%s'", socket);
@@ -45,7 +47,7 @@ static int run(){
 		wlr_log(WLR_ERROR, "Failed to start backend");
 		wlr_backend_destroy(wm.server->wlr_backend);
 		wl_display_destroy(wm.server->wl_display);
-		return 1;
+		return NULL;
 	}
 
 	setenv("WAYLAND_DISPLAY", socket, true);
@@ -53,7 +55,7 @@ static int run(){
     /* Main */
     wl_display_run(wm.server->wl_display);
 
-    return 0;
+    return NULL;
 }
 
 int wm_run(){

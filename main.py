@@ -1,5 +1,4 @@
 import time
-from threading import Thread
 from pywm import PyWM
 
 p = PyWM()
