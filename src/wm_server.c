@@ -101,3 +101,25 @@ void wm_server_destroy(struct wm_server* server){
     wl_display_destroy_clients(server->wl_display);
     wl_display_destroy(server->wl_display);
 }
+
+void wm_server_surface_at(struct wm_server* server, double at_x, double at_y, 
+        struct wlr_surface** result, double* result_sx, double* result_sy){
+    struct wm_view* view;
+    wl_list_for_each(view, &server->wm_views, link){
+        int view_at_x = at_x - view->x;
+        int view_at_y = at_y - view->y;
+
+        double sx;
+        double sy;
+        struct wlr_surface* surface = wlr_xdg_surface_surface_at(view->wlr_xdg_surface, view_at_x, view_at_y, &sx, &sy);
+
+        if(surface){
+            *result = surface;
+            *result_sx = sx;
+            *result_sy = sy;
+            return;
+        }
+    }
+
+    *result = NULL;
+}

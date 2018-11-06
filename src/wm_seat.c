@@ -102,3 +102,31 @@ void wm_seat_dispatch_modifiers(struct wm_seat* seat, struct wlr_input_device* i
     wlr_seat_set_keyboard(seat->wlr_seat, input_device);
     wlr_seat_keyboard_notify_modifiers(seat->wlr_seat, &input_device->keyboard->modifiers);
 }
+
+bool wm_seat_dispatch_motion(struct wm_seat* seat, double x, double y, uint32_t time_msec){
+    struct wlr_surface* surface;
+    double sx;
+    double sy;
+
+    wm_server_surface_at(seat->wm_server, x, y, &surface, &sx, &sy);
+    if(!surface){
+        wlr_seat_pointer_clear_focus(seat->wlr_seat);
+        return false;
+    }
+
+    bool focus_change = (surface != seat->wlr_seat->pointer_state.focused_surface);
+    wlr_seat_pointer_notify_enter(seat->wlr_seat, surface, sx, sy);
+    if(!focus_change){
+        wlr_seat_pointer_notify_motion(seat->wlr_seat, time_msec, sx, sy);
+    }
+
+    return true;
+}
+
+void wm_seat_dispatch_button(struct wm_seat* seat, struct wlr_event_pointer_button* event){
+    wlr_seat_pointer_notify_button(seat->wlr_seat, event->time_msec, event->button, event->state);
+}
+void wm_seat_dispatch_axis(struct wm_seat* seat, struct wlr_event_pointer_axis* event){
+    wlr_seat_pointer_notify_axis(seat->wlr_seat,
+            event->time_msec, event->orientation, event->delta, event->delta_discrete, event->source);
+}
