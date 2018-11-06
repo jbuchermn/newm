@@ -22,7 +22,7 @@ struct wm_view{
     struct wl_listener map;
     struct wl_listener unmap;
     struct wl_listener destroy;
-    struct wl_listener commit;
+    struct wl_listener new_popup;
 };
 
 void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface);

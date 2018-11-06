@@ -5,8 +5,10 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_surface.h>
-#include "wm_server.h"
-#include "wm_cursor.h"
+
+struct wm_server;
+struct wm_cursor;
+struct wm_layout;
 
 struct wm_seat{
     struct wm_server* wm_server;

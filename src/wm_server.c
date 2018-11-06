@@ -16,6 +16,7 @@
 #include "wm_server.h"
 #include "wm_seat.h"
 #include "wm_view.h"
+#include "wm_layout.h"
 
 
 /*

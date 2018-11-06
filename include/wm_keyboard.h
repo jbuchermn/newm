@@ -3,7 +3,8 @@
 
 #include <wayland-server.h>
 #include <wlr/types/wlr_input_device.h>
-#include "wm_seat.h"
+
+struct wm_seat;
 
 struct wm_keyboard {
     struct wl_list link;   // wm_seat::wm_keyboards

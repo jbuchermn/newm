@@ -4,9 +4,11 @@
 #include <wayland-server.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_xcursor_manager.h>
-#include "wm_seat.h"
-#include "wm_pointer.h"
-#include "wm_layout.h"
+
+struct wm_cursor;
+struct wm_seat;
+struct wm_layout;
+struct wm_pointer;
 
 struct wm_cursor {
     struct wm_seat* wm_seat;

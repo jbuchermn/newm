@@ -28,8 +28,10 @@ static void handle_destroy(struct wl_listener* listener, void* data){
     free(view);
 }
 
-static void handle_commit(struct wl_listener* listener, void* data){
-    struct wm_view* view = wl_container_of(listener, view, commit);
+static void handle_new_popup(struct wl_listener* listener, void* data){
+    struct wm_view* view = wl_container_of(listener, view, new_popup);
+
+    /* TODO! */
 }
 
 
@@ -40,16 +42,12 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
     view->wm_server = server;
     view->wlr_xdg_surface = surface;
     view->mapped = false;
-    static int x = 0;
-    view->x = x;
+    view->x = 0;
     view->y = 0;
     view->scale = 1.;
 
-    view->width = 400;
-    view->height = 400;
-
-    x+=400;
-
+    view->width = 1000;
+    view->height = 1000;
 
     view->map.notify = &handle_map;
     wl_signal_add(&surface->events.map, &view->map);
@@ -60,8 +58,8 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
     view->destroy.notify = &handle_destroy;
     wl_signal_add(&surface->events.destroy, &view->destroy);
 
-    view->commit.notify = &handle_commit;
-    wl_signal_add(&surface->surface_commit, &view->commit);
+    view->new_popup.notify = &handle_new_popup;
+    wl_signal_add(&surface->events.new_popup, &view->new_popup);
 }
 
 void wm_view_destroy(struct wm_view* view){
@@ -69,16 +67,6 @@ void wm_view_destroy(struct wm_view* view){
 }
 
 void wm_view_update(struct wm_view* view, struct timespec when){
-
-    static int counter = 0;
-    counter++;
-
-    if(counter % 10 == 0){
-        view->width*=1.01;
-        view->height*=1.01;
-        view->scale=400./view->width;
-
-    }
     
     /* Custom handling of x, y, width, height, scale */
 

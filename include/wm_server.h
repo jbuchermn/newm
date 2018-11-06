@@ -6,8 +6,8 @@
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
-#include "wm_seat.h"
-#include "wm_layout.h"
+struct wm_seat;
+struct wm_layout;
 
 struct wm_server{
     struct wl_display* wl_display;

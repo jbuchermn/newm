@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <wlr/util/log.h>
 #include "wm_seat.h"
+#include "wm_server.h"
 #include "wm_keyboard.h"
 #include "wm_pointer.h"
 #include "wm_cursor.h"
@@ -61,6 +62,10 @@ void wm_seat_add_input_device(struct wm_seat* seat, struct wlr_input_device* inp
 
         wm_cursor_add_pointer(seat->wm_cursor, pointer);
         break;
+    case WLR_INPUT_DEVICE_TOUCH:
+    case WLR_INPUT_DEVICE_TABLET_TOOL:
+    case WLR_INPUT_DEVICE_TABLET_PAD:
+        wlr_log(WLR_DEBUG, "Unsupported input device");
     }
 
     uint32_t capabilities = 0;

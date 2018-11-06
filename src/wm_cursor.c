@@ -3,6 +3,9 @@
 #include <assert.h>
 #include <wlr/util/log.h>
 #include "wm_cursor.h"
+#include "wm_seat.h"
+#include "wm_layout.h"
+#include "wm_pointer.h"
 
 /*
  * Callbacks

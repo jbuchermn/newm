@@ -4,7 +4,8 @@
 #include <wayland-server.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
-#include "wm_server.h"
+
+struct wm_server;
 
 struct wm_layout {
     struct wm_server* wm_server;

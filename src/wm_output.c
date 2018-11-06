@@ -3,9 +3,12 @@
 #include <assert.h>
 #include <time.h>
 #include <wlr/util/log.h>
+#include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_matrix.h>
+#include "wm_server.h"
 #include "wm_output.h"
 #include "wm_view.h"
+#include "wm_layout.h"
 
 /*
  * Callbacks
