@@ -114,6 +114,12 @@ bool wm_seat_dispatch_motion(struct wm_seat* seat, double x, double y, uint32_t 
         return false;
     }
 
+    /* 
+     * TODO! Configurable!
+     * Automatically focus surface on mouse enter 
+     */
+    wm_seat_focus_surface(seat, surface);
+
     bool focus_change = (surface != seat->wlr_seat->pointer_state.focused_surface);
     wlr_seat_pointer_notify_enter(seat->wlr_seat, surface, sx, sy);
     if(!focus_change){

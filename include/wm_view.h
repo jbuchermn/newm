@@ -11,13 +11,10 @@ struct wm_view{
 
     bool mapped;
 
-    /*
-     * The surfaces of the wlr_xdg_surface are displayed on coordinates (x + sx, y + sy) with actual 
-     *     width = scale*wlr_surface->current.width
-     *     height = scale*wlr_surface->current.height
-     */
     int x;
     int y;
+    int width;
+    int height;
     double scale;
 
     struct wlr_xdg_surface* wlr_xdg_surface;
@@ -25,6 +22,7 @@ struct wm_view{
     struct wl_listener map;
     struct wl_listener unmap;
     struct wl_listener destroy;
+    struct wl_listener commit;
 };
 
 void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface);
