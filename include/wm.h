@@ -13,6 +13,7 @@ struct wm {
 void wm_init();
 void wm_destroy();
 int wm_run();
+void wm_join();
 void wm_terminate();
 
 #endif

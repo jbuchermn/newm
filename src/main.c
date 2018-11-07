@@ -8,10 +8,10 @@
 
 
 int main(int argc, char** argv){
-    struct wm wm;
-    wm_init(&wm);
-    int status = wm_run(&wm);
-    wm_destroy(&wm);
+    wm_init();
+    wm_run();
+    wm_join();
+    wm_destroy();
 
-    return status;
+    return 0;
 }

@@ -127,8 +127,8 @@ void wm_server_surface_at(struct wm_server* server, double at_x, double at_y,
         struct wlr_surface** result, double* result_sx, double* result_sy){
     struct wm_view* view;
     wl_list_for_each(view, &server->wm_views, link){
-        int view_at_x = at_x - view->x;
-        int view_at_y = at_y - view->y;
+        int view_at_x = at_x - view->display_x;
+        int view_at_y = at_y - view->display_y;
 
         double sx;
         double sy;

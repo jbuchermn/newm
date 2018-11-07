@@ -22,13 +22,14 @@ struct wm_view {
     struct wl_list link;  // wm_server::wm_views
     struct wm_server* wm_server;
 
+    const char* title;
+    const char* app_id;
     bool mapped;
 
-    int x;
-    int y;
-    int width;
-    int height;
-    double scale;
+    double display_x;
+    double display_y;
+    double display_width;
+    double display_height;
 
     struct wlr_xdg_surface* wlr_xdg_surface;
 
@@ -41,6 +42,8 @@ struct wm_view {
 void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface);
 void wm_view_destroy(struct wm_view* view);
 
+void wm_view_request_size(struct wm_view* view, int width, int height);
+void wm_view_get_size(struct wm_view* view, int* width, int* height);
 void wm_view_update(struct wm_view* view, struct timespec when);
 
 #endif

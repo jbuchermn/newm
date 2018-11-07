@@ -66,11 +66,17 @@ int wm_run(){
     return 0;
 }
 
+void wm_join(){
+    if(!wm.server) return;
+
+    pthread_join(wm.thread, NULL);
+}
+
 
 
 void wm_terminate(){
     if(!wm.server) return;
 
     wl_display_terminate(wm.server->wl_display);
-    pthread_join(wm.thread, NULL);
+    wm_join();
 }

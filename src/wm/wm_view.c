@@ -70,13 +70,17 @@ void wm_view_decoration_destroy(struct wm_view_decoration* deco){
 void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface){
     view->wm_server = server;
     view->wlr_xdg_surface = surface;
-    view->mapped = false;
-    view->x = 0;
-    view->y = 0;
-    view->scale = 1.;
+    view->title = surface->toplevel->title;
+    view->app_id = surface->toplevel->app_id;
 
-    view->width = 1000;
-    view->height = 1000;
+    wlr_log(WLR_DEBUG, "New wm_view: %s, %s", view->title, view->app_id);
+
+    view->mapped = false;
+    view->display_x = 0;
+    view->display_y = 0;
+
+    view->display_width =400;
+    view->display_height = 400;
 
     view->map.notify = &handle_map;
     wl_signal_add(&surface->events.map, &view->map);
@@ -99,12 +103,16 @@ void wm_view_destroy(struct wm_view* view){
     wl_list_remove(&view->link);
 }
 
+void wm_view_request_size(struct wm_view* view, int width, int height){
+    wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
+}
+
+void wm_view_get_size(struct wm_view* view, int* width, int* height){
+    *width = view->wlr_xdg_surface->surface->current.width;
+    *height = view->wlr_xdg_surface->surface->current.height;
+}
+
 void wm_view_update(struct wm_view* view, struct timespec when){
     
-    /* Custom handling of x, y, width, height, scale */
-
-    if(view->wlr_xdg_surface->surface->current.width != view->width &&
-            view->wlr_xdg_surface->surface->current.height != view->height){
-        wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, view->width, view->height);
-    }
+    /* Custom handling of display_x, display_y, display_width, display_height */
 }

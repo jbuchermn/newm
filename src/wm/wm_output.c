@@ -51,16 +51,16 @@ static void render_surface(struct wlr_surface *surface, int sx, int sy, void *da
 
     wm_view_update(view, rdata->when);
 
-	double ox = 0, oy = 0;
-	wlr_output_layout_output_coords(output->wm_layout->wlr_output_layout, output->wlr_output, &ox, &oy);
-	ox += view->x + sx;
-    oy += view->y + sy;
-
+	/* 
+     * TODO!
+     * * wlr_output_layout_output_coords: Placement of output within layout
+     * * sx, sy: placement of popups
+     */
 	struct wlr_box box = {
-		.x = ox * output->wlr_output->scale,
-		.y = oy * output->wlr_output->scale,
-		.width = view->scale * surface->current.width * output->wlr_output->scale,
-		.height = view->scale * surface->current.height * output->wlr_output->scale,
+		.x = view->display_x * output->wlr_output->scale,
+		.y = view->display_y * output->wlr_output->scale,
+		.width = view->display_width * output->wlr_output->scale,
+		.height = view->display_height * output->wlr_output->scale
 	};
 
 	float matrix[9];
