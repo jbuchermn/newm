@@ -6,6 +6,7 @@
 #include <xkbcommon/xkbcommon.h>
 #include "wm_keyboard.h"
 #include "wm_seat.h"
+#include "wm.h"
 
 /*
  * Callbacks
@@ -19,7 +20,9 @@ static void handle_key(struct wl_listener* listener, void* data){
     struct wm_keyboard* keyboard = wl_container_of(listener, keyboard, key);
     struct wlr_event_keyboard_key* event = data;
 
-    /* Custom input handling here */
+    if(wm_callback_key(event)){
+        return;
+    }
 
     wm_seat_dispatch_key(keyboard->wm_seat, keyboard->wlr_input_device, event);
 }
@@ -27,7 +30,9 @@ static void handle_key(struct wl_listener* listener, void* data){
 static void handle_modifiers(struct wl_listener* listener, void* data){
     struct wm_keyboard* keyboard = wl_container_of(listener, keyboard, modifiers);
 
-    /* Custom input handling here */
+    if(wm_callback_modifiers(&keyboard->wlr_input_device->keyboard->modifiers)){
+        return;
+    }
 
     wm_seat_dispatch_modifiers(keyboard->wm_seat, keyboard->wlr_input_device);
 }

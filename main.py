@@ -7,8 +7,10 @@ print("Running...")
 p.run()
 print("...done")
 
-time.sleep(10)
-
-print("Terminating...")
-p.terminate()
-print("...done")
+try:
+    while True:
+        time.sleep(1)
+finally:
+    print("Terminating...")
+    p.terminate()
+    print("...done")

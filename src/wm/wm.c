@@ -72,11 +72,64 @@ void wm_join(){
     pthread_join(wm.thread, NULL);
 }
 
-
-
 void wm_terminate(){
     if(!wm.server) return;
 
     wl_display_terminate(wm.server->wl_display);
     wm_join();
+}
+
+struct wm* get_wm(){
+    return &wm;
+}
+
+/*
+ * Callbacks
+ */
+bool wm_callback_key(struct wlr_event_keyboard_key* event){
+    if(!wm.callback_key){
+        return false;
+    }
+
+    return (*wm.callback_key)(event);
+}
+
+bool wm_callback_modifiers(struct wlr_keyboard_modifiers* modifiers){
+    if(!wm.callback_modifiers){
+        return false;
+    }
+
+    return (*wm.callback_modifiers)(modifiers);
+}
+
+bool wm_callback_motion(double delta_x, double delta_y, uint32_t time_msec){
+    if(!wm.callback_motion){
+        return false;
+    }
+
+    return (*wm.callback_motion)(delta_x, delta_y, time_msec);
+}
+
+bool wm_callback_motion_absolute(double x, double y, uint32_t time_msec){
+    if(!wm.callback_motion_absolute){
+        return false;
+    }
+
+    return (*wm.callback_motion_absolute)(x, y, time_msec);
+}
+
+bool wm_callback_button(struct wlr_event_pointer_button* event){
+    if(!wm.callback_button){
+        return false;
+    }
+
+    return (*wm.callback_button)(event);
+}
+
+bool wm_callback_axis(struct wlr_event_pointer_axis* event){
+    if(!wm.callback_axis){
+        return false;
+    }
+
+    return (*wm.callback_axis)(event);
 }

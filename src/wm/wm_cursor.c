@@ -6,6 +6,7 @@
 #include "wm_seat.h"
 #include "wm_layout.h"
 #include "wm_pointer.h"
+#include "wm.h"
 
 /*
  * Callbacks
@@ -14,7 +15,9 @@ static void handle_motion(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, motion);
     struct wlr_event_pointer_motion* event = data;
 
-    /* Custom input handling here */
+    if(wm_callback_motion(event->delta_x, event->delta_y, event->time_msec)){
+        return;
+    }
 
     wlr_cursor_move(cursor->wlr_cursor, event->device, event->delta_x, event->delta_y);
     if(!wm_seat_dispatch_motion(cursor->wm_seat, cursor->wlr_cursor->x, cursor->wlr_cursor->y, event->time_msec)){
@@ -26,7 +29,9 @@ static void handle_motion_absolute(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, motion_absolute);
     struct wlr_event_pointer_motion_absolute* event = data;
 
-    /* Custom input handling here */
+    if(wm_callback_motion_absolute(event->x, event->y, event->time_msec)){
+        return;
+    }
 
     wlr_cursor_warp_absolute(cursor->wlr_cursor, event->device, event->x, event->y);
     if(!wm_seat_dispatch_motion(cursor->wm_seat, cursor->wlr_cursor->x, cursor->wlr_cursor->y, event->time_msec)){
@@ -38,7 +43,9 @@ static void handle_button(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, button);
     struct wlr_event_pointer_button* event = data;
 
-    /* Custom input handling here */
+    if(wm_callback_button(event)){
+        return;
+    }
 
     wm_seat_dispatch_button(cursor->wm_seat, event);
 }
@@ -47,7 +54,9 @@ static void handle_axis(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, axis);
     struct wlr_event_pointer_axis* event = data;
 
-    /* Custom input handling here */
+    if(wm_callback_axis(event)){
+        return;
+    }
 
     wm_seat_dispatch_axis(cursor->wm_seat, event);
 }
