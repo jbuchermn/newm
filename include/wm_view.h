@@ -5,6 +5,7 @@
 #include <wayland-server.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
+#include <wlr/types/wlr_box.h>
 
 struct wm_view_decoration {
     struct wl_list link; // wm_server::wm_view_decorations
@@ -26,6 +27,7 @@ struct wm_view {
     const char* app_id;
 
     bool mapped;
+
     double display_x;
     double display_y;
     double display_width;

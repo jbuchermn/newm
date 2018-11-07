@@ -61,6 +61,7 @@ class PyWM:
     def _layout_change(self, width, height):
         self.width = width
         self.height = height
+        print(width, height)
 
     def _motion(self, *args):
         return False
@@ -83,7 +84,7 @@ class PyWM:
     def _init_view(self, handle):
         try:
             view = self._view_class(self, handle)
-            self._views += [view];
+            self.views += [view];
         except Exception as ex:
             print(ex)
 

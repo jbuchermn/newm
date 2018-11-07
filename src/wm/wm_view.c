@@ -92,6 +92,9 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
     wl_signal_add(&surface->events.new_popup, &view->new_popup);
 
     wm_callback_init_view(view);
+
+    /* Get rid of white spaces around; therefore geometry.width/height should always equal current.width/height */
+    wlr_xdg_toplevel_set_tiled(surface, 15);
 }
 
 void wm_view_destroy(struct wm_view* view){
@@ -108,17 +111,14 @@ void wm_view_update(struct wm_view* view, struct timespec when){
 }
 
 uint32_t wm_view_request_size(struct wm_view* view, int width, int height){
-    /* -46 for csd */
-    return wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width - 46, height - 46);
+    return wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
 }
 
 void wm_view_get_size(struct wm_view* view, int* width, int* height){
-    /* Returns size without decorations */
-    /* *width = view->wlr_xdg_surface->geometry.width; */
-    /* *height = view->wlr_xdg_surface->geometry.height; */
+    /* Fixed by set_tiled */
+    assert(view->wlr_xdg_surface->geometry.width == view->wlr_xdg_surface->surface->current.width);
+    assert(view->wlr_xdg_surface->geometry.height == view->wlr_xdg_surface->surface->current.height);
 
-    /* Returns size with decorations */
-    *width = view->wlr_xdg_surface->surface->current.width;
-    *height = view->wlr_xdg_surface->surface->current.height;
+    *width = view->wlr_xdg_surface->geometry.width;
+    *height = view->wlr_xdg_surface->geometry.height;
 }
-

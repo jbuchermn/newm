@@ -7,7 +7,7 @@ class Anim(Thread):
     def __init__(self, view):
         super().__init__()
         self._view = view
-        self._start = time.time() + 10.
+        self._start = time.time() + 2.
         self.start()
 
     def run(self):
@@ -17,7 +17,8 @@ class Anim(Thread):
                 self._view.set_box(0, 0, (1. - 2.*dt) * self._view.wm.width, (1. - 2.*dt) * self._view.wm.height)
             time.sleep(0.02)
 
-        self._view.set_dimensions(.5 * self._view.wm.width, .5 * self._view.wm.height)
+        self._view.set_box(0., 0., .5 * self._view.wm.width, .5 * self._view.wm.height)
+        # self._view.set_dimensions(.5 * self._view.wm.width, .5 * self._view.wm.height)
 
 
 class MyView(PyWMView):

@@ -127,8 +127,15 @@ void wm_server_surface_at(struct wm_server* server, double at_x, double at_y,
         struct wlr_surface** result, double* result_sx, double* result_sy){
     struct wm_view* view;
     wl_list_for_each(view, &server->wm_views, link){
-        int view_at_x = at_x - view->display_x;
-        int view_at_y = at_y - view->display_y;
+        int width;
+        int height;
+        wm_view_get_size(view, &width, &height);
+
+        double scale_x = view->display_width/width;
+        double scale_y = view->display_height/height;
+
+        int view_at_x = round((at_x - view->display_x) / scale_x);
+        int view_at_y = round((at_y - view->display_y) / scale_y);
 
         double sx;
         double sy;
