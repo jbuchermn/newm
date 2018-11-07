@@ -2,13 +2,31 @@ import sys
 import os
 
 sys.path.append(os.path.join(__file__, ".."))
-from build._pywm import (run, terminate, register, view_set_box, view_set_dimensions)
+from build._pywm import (run, terminate, register, view_get_box, view_get_dimensions, view_set_box, view_set_dimensions)
 
 
 _instance = None
 
+class PyWMView:
+    def __init__(self, handle):
+        self._handle = handle
+        self._box = view_get_box(self._handle)
+
+    def set_box(self, x, y, w, h):
+        view_set_box(self._handle, x, y, w, h)
+        self._box = (x, y, w, h)
+
+    def get_dimensions(self):
+        return view_get_dimensions(self._handle)
+
+    def set_dimensions(self, width, height):
+        view_set_dimensions(self._handle, round(width), round(height))
+
+    def destroy(self):
+        pass
+
 class PyWM:
-    def __init__(self):
+    def __init__(self, view_class=PyWMView):
         global _instance
         if _instance is not None:
             raise Exception("Can only have one instance!")
@@ -23,6 +41,44 @@ class PyWM:
         register("init_view", self._init_view)
         register("destroy_view", self._destroy_view)
 
+        self._views = []
+        self._view_class = view_class
+
+
+    def _motion(self, *args):
+        return False
+
+    def _motion_absolute(self, *args):
+        return False
+
+    def _button(self, *args):
+        return False
+
+    def _axis(self, *args):
+        return False
+
+    def _key(self, *args):
+        return False
+
+    def _modifiers(self, *args):
+        return False
+
+    def _init_view(self, handle):
+        try:
+            view = self._view_class(handle)
+            self._views += [view];
+        except Exception as ex:
+            print(ex)
+
+    def _destroy_view(self, handle):
+        for view in self._views:
+            if view._handle == handle:
+                view.destroy()
+        self._views = [v for v in self._views if v._handle != handle]
+
+    """
+    Public API
+    """
     
     def run(self):
         return run()
@@ -30,36 +86,6 @@ class PyWM:
     def terminate(self):
         return terminate()
 
-    def _motion(self, *args):
-        print("motion")
-        return False
+    def init_view(self, view):
+        pass
 
-    def _motion_absolute(self, *args):
-        print("motion_absolute")
-        return False
-
-    def _button(self, *args):
-        print("button")
-        return False
-
-    def _axis(self, *args):
-        print("axis")
-        return False
-
-    def _key(self, *args):
-        print("key")
-        return False
-
-    def _modifiers(self, *args):
-        print("modifiers")
-        return False
-
-    def _init_view(self, handle):
-        print("init_view", handle)
-        view_set_box(handle, 100., 100., 400., 400.);
-        view_set_dimensions(handle, 400, 400);
-        return False
-
-    def _destroy_view(self, handle):
-        print("destroy_view", handle)
-        return False

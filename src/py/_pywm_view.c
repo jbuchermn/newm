@@ -60,7 +60,6 @@ struct wm_view* _pywm_views_from_handle(long handle){
         if(view->handle == handle) return view->view;
     }
 
-    assert(0 && "Should not happen");
     return NULL;
 }
 
@@ -72,6 +71,10 @@ PyObject* _pywm_view_get_box(PyObject* self, PyObject* args){
     }
 
     struct wm_view* view = _pywm_views_from_handle(handle);
+    if(!view){
+        PyErr_SetString(PyExc_TypeError, "View has been destroyed");
+        return NULL;
+    }
 
     return Py_BuildValue("(dddd)", view->display_x, view->display_y, view->display_height, view->display_width);
 }
@@ -84,6 +87,11 @@ PyObject* _pywm_view_get_dimensions(PyObject* self, PyObject* args){
     }
 
     struct wm_view* view = _pywm_views_from_handle(handle);
+    if(!view){
+        PyErr_SetString(PyExc_TypeError, "View has been destroyed");
+        return NULL;
+    }
+
     int width, height;
     wm_view_get_size(view, &width, &height);
 
@@ -99,6 +107,10 @@ PyObject* _pywm_view_get_title_app_id(PyObject* self, PyObject* args){
     }
 
     struct wm_view* view = _pywm_views_from_handle(handle);
+    if(!view){
+        PyErr_SetString(PyExc_TypeError, "View has been destroyed");
+        return NULL;
+    }
 
     return Py_BuildValue("(ss)", view->title, view->app_id);
 
@@ -113,6 +125,11 @@ PyObject* _pywm_view_set_box(PyObject* self, PyObject* args){
     }
 
     struct wm_view* view = _pywm_views_from_handle(handle);
+    if(!view){
+        PyErr_SetString(PyExc_TypeError, "View has been destroyed");
+        return NULL;
+    }
+
     view->display_x = x;
     view->display_y = y;
     view->display_width = width;
@@ -131,6 +148,11 @@ PyObject* _pywm_view_set_dimensions(PyObject* self, PyObject* args){
     }
 
     struct wm_view* view = _pywm_views_from_handle(handle);
+    if(!view){
+        PyErr_SetString(PyExc_TypeError, "View has been destroyed");
+        return NULL;
+    }
+
     wm_view_request_size(view, width, height);
 
     Py_INCREF(Py_None);

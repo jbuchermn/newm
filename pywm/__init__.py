@@ -1,1 +1,1 @@
-from .pywm import PyWM
+from .pywm import PyWM, PyWMView
