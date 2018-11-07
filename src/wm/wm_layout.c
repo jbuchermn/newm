@@ -5,6 +5,16 @@
 #include <wlr/util/log.h>
 #include "wm_layout.h"
 #include "wm_output.h"
+#include "wm.h"
+
+/*
+ * Callbacks
+ */
+static void handle_change(struct wl_listener* listener, void* data){
+    struct wm_layout* layout = wl_container_of(listener, layout, change);
+
+    wm_callback_layout_change(layout);
+}
 
 /*
  * Class implementation
@@ -15,9 +25,14 @@ void wm_layout_init(struct wm_layout* layout, struct wm_server* server){
 
     layout->wlr_output_layout = wlr_output_layout_create();
     assert(layout->wlr_output_layout);
+
+    layout->change.notify = &handle_change;
+    wl_signal_add(&layout->wlr_output_layout->events.change, &layout->change);
 }
 
-void wm_layout_destroy(struct wm_layout* layout) {}
+void wm_layout_destroy(struct wm_layout* layout) {
+    wl_list_remove(&layout->change.link);
+}
 
 void wm_layout_add_output(struct wm_layout* layout, struct wlr_output* out){
     wlr_log(WLR_DEBUG, "New output: %s", out->name);

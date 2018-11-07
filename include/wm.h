@@ -9,11 +9,13 @@
 
 struct wm_view;
 struct wm_server;
+struct wm_layout;
 
 struct wm {
     pthread_t thread;
     struct wm_server* server;
 
+    void (*callback_layout_change)(struct wm_layout*);
     bool (*callback_key)(struct wlr_event_keyboard_key*);
     bool (*callback_modifiers)(struct wlr_keyboard_modifiers*);
     bool (*callback_motion)(double, double, uint32_t);
@@ -36,6 +38,8 @@ void wm_terminate();
  * just put them in this object
  */
 struct wm* get_wm();
+
+void wm_callback_layout_change(struct wm_layout* layout);
 
 /*
  * Return false if event should be dispatched to clients

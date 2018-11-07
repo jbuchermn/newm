@@ -4,6 +4,8 @@
 #include <Python.h>
 
 struct _pywm_callbacks {
+    PyObject* layout_change;
+
     PyObject* motion;
     PyObject* motion_absolute;
     PyObject* button;

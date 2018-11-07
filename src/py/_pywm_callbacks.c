@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <wlr/util/log.h>
 #include "wm.h"
+#include "wm_layout.h"
 #include "_pywm_callbacks.h"
 #include "_pywm_view.h"
 
@@ -44,6 +45,14 @@ static void call_void(PyObject* callable, PyObject* args){
 /*
  * Callbacks
  */
+static void call_layout_change(struct wm_layout* layout){
+    if(callbacks.layout_change){
+        struct wlr_box* box = wlr_output_layout_get_box(layout->wlr_output_layout, NULL);
+        PyObject* args = Py_BuildValue("(ii)", box->width, box->height);
+        call_void(callbacks.layout_change, args);
+    }
+}
+
 static bool call_key(struct wlr_event_keyboard_key* event){
     if(callbacks.key){
         return call_bool(callbacks.key, NULL);
@@ -112,6 +121,7 @@ static void call_destroy_view(struct wm_view* view){
  * Public interface
  */
 void _pywm_callbacks_init(){
+    get_wm()->callback_layout_change = &call_layout_change;
     get_wm()->callback_key = &call_key;
     get_wm()->callback_modifiers = &call_modifiers;
     get_wm()->callback_motion = &call_motion;
@@ -139,6 +149,8 @@ PyObject** _pywm_callbacks_get(const char* name){
         return &callbacks.init_view;
     }else if(!strcmp(name, "destroy_view")){
         return &callbacks.destroy_view;
+    }else if(!strcmp(name, "layout_change")){
+        return &callbacks.layout_change;
     }
 
     return NULL;

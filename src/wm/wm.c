@@ -10,6 +10,7 @@
 #include <wlr/util/log.h>
 
 #include "wm_server.h"
+#include "wm_layout.h"
 #include "wm_view.h"
 
 struct wm wm = { 0 };
@@ -87,6 +88,14 @@ struct wm* get_wm(){
 /*
  * Callbacks
  */
+void wm_callback_layout_change(struct wm_layout* layout){
+    if(!wm.callback_layout_change){
+        return;
+    }
+
+    return (*wm.callback_layout_change)(layout);
+}
+
 bool wm_callback_key(struct wlr_event_keyboard_key* event){
     if(!wm.callback_key){
         return false;
