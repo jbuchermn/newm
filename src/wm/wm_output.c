@@ -94,9 +94,9 @@ static void handle_frame(struct wl_listener* listener, void* data){
 
 	struct wm_view *view;
 	wl_list_for_each_reverse(view, &output->wm_server->wm_views, link) {
-		if (!view->mapped) {
-			continue;
-		}
+        if(!view->mapped){
+            return false;
+        }
 
 		struct render_data rdata = {
 			.output = output,

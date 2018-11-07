@@ -76,11 +76,20 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
     wlr_log(WLR_DEBUG, "New wm_view: %s, %s", view->title, view->app_id);
 
     view->mapped = false;
-    view->display_x = 0;
-    view->display_y = 0;
 
-    view->display_width =400;
-    view->display_height = 400;
+    static int d = 200;
+    view->display_x = d - 200;
+    view->display_y = 0;
+    /*
+     * Fucking client-side decorations
+     *
+     * Rendering like this makes pixels match (which actually should happen for display_width == width)
+     */
+    view->display_width = d + 46;
+    view->display_height = d + 46;
+    wm_view_request_size(view, d, d);
+
+    d += 100;
 
     view->map.notify = &handle_map;
     wl_signal_add(&surface->events.map, &view->map);
@@ -103,16 +112,26 @@ void wm_view_destroy(struct wm_view* view){
     wl_list_remove(&view->link);
 }
 
-void wm_view_request_size(struct wm_view* view, int width, int height){
-    wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
+
+void wm_view_update(struct wm_view* view, struct timespec when){
+    int width;
+    int height;
+    wm_view_get_size(view, &width, &height);
+    printf("%d x %d\n", width, height);
+    /* Custom handling of display_x, display_y, display_width, display_height */
+}
+
+uint32_t wm_view_request_size(struct wm_view* view, int width, int height){
+    return wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
 }
 
 void wm_view_get_size(struct wm_view* view, int* width, int* height){
+    /* Returns size without decorations */
+    /* *width = view->wlr_xdg_surface->geometry.width; */
+    /* *height = view->wlr_xdg_surface->geometry.height; */
+
+    /* Returns size with decorations */
     *width = view->wlr_xdg_surface->surface->current.width;
     *height = view->wlr_xdg_surface->surface->current.height;
 }
 
-void wm_view_update(struct wm_view* view, struct timespec when){
-    
-    /* Custom handling of display_x, display_y, display_width, display_height */
-}
