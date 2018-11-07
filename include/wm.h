@@ -1,11 +1,13 @@
 #ifndef WM_H
 #define WM_H
 
+#include <time.h>
 #include <stdbool.h>
 #include <pthread.h>
 #include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_pointer.h>
 
+struct wm_view;
 struct wm_server;
 
 struct wm {
@@ -18,6 +20,9 @@ struct wm {
     bool (*callback_motion_absolute)(double, double, uint32_t);
     bool (*callback_button)(struct wlr_event_pointer_button*);
     bool (*callback_axis)(struct wlr_event_pointer_axis*);
+    void (*callback_init_view)(struct wm_view*);
+    void (*callback_update_view)(struct wm_view*, struct timespec);
+    void (*callback_destroy_view)(struct wm_view*);
 };
 
 void wm_init();
@@ -41,5 +46,13 @@ bool wm_callback_motion(double delta_x, double delta_y, uint32_t time_msec);
 bool wm_callback_motion_absolute(double x, double y, uint32_t time_msec);
 bool wm_callback_button(struct wlr_event_pointer_button* event);
 bool wm_callback_axis(struct wlr_event_pointer_axis* event);
+
+/*
+ * Should set display_x, display_y, display_height, display_width
+ * Can also call set_size
+ */
+void wm_callback_init_view(struct wm_view* view);
+void wm_callback_update_view(struct wm_view* view, struct timespec when);
+void wm_callback_destroy_view(struct wm_view* view);
 
 #endif

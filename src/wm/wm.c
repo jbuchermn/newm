@@ -10,6 +10,7 @@
 #include <wlr/util/log.h>
 
 #include "wm_server.h"
+#include "wm_view.h"
 
 struct wm wm = { 0 };
 
@@ -132,4 +133,28 @@ bool wm_callback_axis(struct wlr_event_pointer_axis* event){
     }
 
     return (*wm.callback_axis)(event);
+}
+
+void wm_callback_init_view(struct wm_view* view){
+    if(!wm.callback_init_view){
+        return;
+    }
+
+    return (*wm.callback_init_view)(view);
+}
+
+void wm_callback_update_view(struct wm_view* view, struct timespec when){
+    if(!wm.callback_update_view){
+        return;
+    }
+
+    return (*wm.callback_update_view)(view, when);
+}
+
+void wm_callback_destroy_view(struct wm_view* view){
+    if(!wm.callback_destroy_view){
+        return;
+    }
+
+    return (*wm.callback_destroy_view)(view);
 }

@@ -6,103 +6,13 @@
 #include <unistd.h>
 #include <wlr/util/log.h>
 #include "wm.h"
-#include "_pywmmodule.h"
+#include "_pywm_callbacks.h"
+#include "_pywm_view.h"
 
-static struct _pywm_callbacks callbacks = { 0 };
-
-static bool call_bool(PyObject* callable, PyObject* args){
-    PyGILState_STATE gil = PyGILState_Ensure();
-    PyObject *_result = PyEval_CallObject(callable, args);
-    PyGILState_Release(gil);
-
-    Py_XDECREF(args);
-    bool result = false;
-    if(!_result || _result == Py_None || !PyArg_Parse(_result, "b", &result)){
-        wlr_log(WLR_DEBUG, "Python error: Expected boolean return");
-    }
-    Py_DECREF(_result);
-
-    return result;
-}
-
-static bool call_key(struct wlr_event_keyboard_key* event){
-    if(callbacks.key){
-        return call_bool(callbacks.key, NULL);
-    }
-
-    return false;
-}
-
-static bool call_modifiers(struct wlr_keyboard_modifiers* modifiers){
-    if(callbacks.modifiers){
-        return call_bool(callbacks.modifiers, NULL);
-    }
-
-    return false;
-}
-
-static bool call_motion(double delta_x, double delta_y, uint32_t time_msec){
-    if(callbacks.motion){
-        return call_bool(callbacks.motion, NULL);
-    }
-
-    return false;
-}
-
-static bool call_motion_absolute(double x, double y, uint32_t time_msec){
-    if(callbacks.motion_absolute){
-        return call_bool(callbacks.motion_absolute, NULL);
-    }
-
-    return false;
-}
-
-static bool call_button(struct wlr_event_pointer_button* event){
-    if(callbacks.button){
-        return call_bool(callbacks.button, NULL);
-    }
-
-    return false;
-}
-
-static bool call_axis(struct wlr_event_pointer_axis* event){
-    if(callbacks.axis){
-        return call_bool(callbacks.axis, NULL);
-    }
-
-    return false;
-}
-
-void _pywm_init_callbacks(){
-    get_wm()->callback_key = &call_key;
-    get_wm()->callback_modifiers = &call_modifiers;
-    get_wm()->callback_motion = &call_motion;
-    get_wm()->callback_motion_absolute = &call_motion_absolute;
-    get_wm()->callback_button = &call_button;
-    get_wm()->callback_axis = &call_axis;
-}
-
-PyObject** _pywm_get_callback(const char* name){
-    if(!strcmp(name, "motion")){
-        return &callbacks.motion;
-    }else if(!strcmp(name, "motion_absolute")){
-        return &callbacks.motion_absolute;
-    }else if(!strcmp(name, "button")){
-        return &callbacks.button;
-    }else if(!strcmp(name, "axis")){
-        return &callbacks.axis;
-    }else if(!strcmp(name, "key")){
-        return &callbacks.key;
-    }else if(!strcmp(name, "modifiers")){
-        return &callbacks.modifiers;
-    }
-
-    return NULL;
-}
 
 static PyObject* _pywm_run(PyObject* self, PyObject* args){
     wm_init();
-    _pywm_init_callbacks();
+    _pywm_callbacks_init();
 
     int status = wm_run();
 
@@ -138,7 +48,7 @@ static PyObject* _pywm_register(PyObject* self, PyObject* args){
         return NULL;
     }
     
-    PyObject** target = _pywm_get_callback(name);
+    PyObject** target = _pywm_callbacks_get(name);
     if(!target){
         PyErr_SetString(PyExc_TypeError, "Unknown callback");
         return NULL;
@@ -153,10 +63,15 @@ static PyObject* _pywm_register(PyObject* self, PyObject* args){
 }
 
 static PyMethodDef _pywm_methods[] = {
-    { "run",        &_pywm_run,        METH_VARARGS,   "Start the compoitor in a new thread"  },
-    { "join",       &_pywm_join,       METH_VARARGS,   "Join compositor thread"  },
-    { "terminate",  &_pywm_terminate,  METH_VARARGS,   "Terminate compositor and join"  },
-    { "register",   &_pywm_register,   METH_VARARGS,   "Register callback" },
+    { "run",                    &_pywm_run,                    METH_VARARGS,   "Start the compoitor in a new thread" },
+    { "join",                   &_pywm_join,                   METH_VARARGS,   "Join compositor thread"  },
+    { "terminate",              &_pywm_terminate,              METH_VARARGS,   "Terminate compositor and join"  },
+    { "register",               &_pywm_register,               METH_VARARGS,   "Register callback"  },
+    { "view_get_box",           &_pywm_view_get_box,           METH_VARARGS,   "" },
+    { "view_get_dimensions",    &_pywm_view_get_dimensions,    METH_VARARGS,   "" },
+    { "view_get_title_app_id",  &_pywm_view_get_title_app_id,  METH_VARARGS,   "" },
+    { "view_set_box",           &_pywm_view_set_box,           METH_VARARGS,   "" },
+    { "view_set_dimensions",    &_pywm_view_set_dimensions,    METH_VARARGS,   "" },
 
     { NULL, NULL, 0, NULL }
 };

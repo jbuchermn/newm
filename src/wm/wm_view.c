@@ -8,6 +8,7 @@
 
 #include "wm_view.h"
 #include "wm_server.h"
+#include "wm.h"
 
 /*
  * Callbacks
@@ -33,6 +34,7 @@ static void handle_map(struct wl_listener* listener, void* data){
 static void handle_unmap(struct wl_listener* listener, void* data){
     struct wm_view* view = wl_container_of(listener, view, unmap);
     view->mapped = false;
+    wm_callback_destroy_view(view);
 }
 
 static void handle_destroy(struct wl_listener* listener, void* data){
@@ -77,20 +79,6 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
 
     view->mapped = false;
 
-    static int d = 200;
-    view->display_x = d - 200;
-    view->display_y = 0;
-    /*
-     * Fucking client-side decorations
-     *
-     * Rendering like this makes pixels match (which actually should happen for display_width == width)
-     */
-    view->display_width = d + 46;
-    view->display_height = d + 46;
-    wm_view_request_size(view, d, d);
-
-    d += 100;
-
     view->map.notify = &handle_map;
     wl_signal_add(&surface->events.map, &view->map);
 
@@ -102,6 +90,8 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
 
     view->new_popup.notify = &handle_new_popup;
     wl_signal_add(&surface->events.new_popup, &view->new_popup);
+
+    wm_callback_init_view(view);
 }
 
 void wm_view_destroy(struct wm_view* view){
@@ -114,15 +104,12 @@ void wm_view_destroy(struct wm_view* view){
 
 
 void wm_view_update(struct wm_view* view, struct timespec when){
-    int width;
-    int height;
-    wm_view_get_size(view, &width, &height);
-    printf("%d x %d\n", width, height);
-    /* Custom handling of display_x, display_y, display_width, display_height */
+    wm_callback_update_view(view, when);
 }
 
 uint32_t wm_view_request_size(struct wm_view* view, int width, int height){
-    return wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
+    /* -46 for csd */
+    return wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width - 46, height - 46);
 }
 
 void wm_view_get_size(struct wm_view* view, int* width, int* height){
