@@ -1,4 +1,4 @@
-from build._pywm import (
+from ._pywm import (
     view_get_box,
     view_get_dimensions,
     view_get_title_app_id,

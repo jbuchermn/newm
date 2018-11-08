@@ -1,11 +1,8 @@
-import sys
-import os
 import traceback
 
 from .pywm_view import PyWMView
 
-sys.path.append(os.path.join(__file__, ".."))
-from build._pywm import (  # noqa E402
+from ._pywm import (  # noqa E402
     run,
     terminate,
     register,
