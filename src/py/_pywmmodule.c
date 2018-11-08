@@ -82,7 +82,11 @@ static struct PyModuleDef _pywm = {
     "_pywm",
     "",
     -1,
-    _pywm_methods
+    _pywm_methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 PyMODINIT_FUNC PyInit__pywm(void){

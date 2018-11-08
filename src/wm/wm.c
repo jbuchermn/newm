@@ -9,6 +9,7 @@
 #include <wlr/backend.h>
 #include <wlr/util/log.h>
 
+#include "wm_seat.h"
 #include "wm_server.h"
 #include "wm_layout.h"
 #include "wm_view.h"
