@@ -16,8 +16,14 @@ class View(PyWMView):
         self.h = 0
 
         self.wm.place_initial(self)
+        self.focus()
 
     def update(self):
+        if self.w <= 0:
+            self.w = 1
+        if self.h <= 0:
+            self.h = 1
+
         i = self.i
         j = self.j
         w = self.w
@@ -39,7 +45,6 @@ class View(PyWMView):
 
         self.set_box(x, y, w, h)
         if (width, height) != self.get_dimensions():
-            print(width, height, self.get_dimensions())
             self.set_dimensions(width, height)
 
 
@@ -88,6 +93,11 @@ class Layout(PyWM):
         view.update()
 
     def update(self):
+        if self.size <= 0:
+            self.size = 1
+        if self.scale <= 0:
+            self.scale = 1
+
         for v in self.views:
             v.update()
 
@@ -113,6 +123,11 @@ class Layout(PyWM):
             return True
 
         return False
+
+    # def on_motion_absolute(self, time_msec, x, y):
+    #     self.i = (-x + 0.5) * 4
+    #     self.update()
+    #     return True
 
 
 main = Layout()

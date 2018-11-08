@@ -45,7 +45,7 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
 void wm_view_destroy(struct wm_view* view);
 
 void wm_view_update(struct wm_view* view, struct timespec when);
-uint32_t wm_view_request_size(struct wm_view* view, int width, int height);
+void wm_view_request_size(struct wm_view* view, int width, int height);
 void wm_view_get_size(struct wm_view* view, int* width, int* height);
 
 #endif

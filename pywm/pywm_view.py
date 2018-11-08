@@ -3,7 +3,8 @@ from build._pywm import (
     view_get_dimensions,
     view_get_title_app_id,
     view_set_box,
-    view_set_dimensions
+    view_set_dimensions,
+    view_focus
 )
 
 
@@ -17,6 +18,9 @@ class PyWMView:
         self.wm = wm
         self.box = view_get_box(self._handle)
         self.title, self.app_id = view_get_title_app_id(self._handle)
+
+    def focus(self):
+        view_focus(self._handle)
 
     def set_box(self, x, y, w, h):
         view_set_box(self._handle, x, y, w, h)

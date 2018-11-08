@@ -32,6 +32,8 @@ int wm_run();
 void wm_join();
 void wm_terminate();
 
+void wm_focus_view(struct wm_view* view);
+
 /*
  * Instead of writing setters for every single callback,
  * just put them in this object

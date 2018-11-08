@@ -159,3 +159,21 @@ PyObject* _pywm_view_set_dimensions(PyObject* self, PyObject* args){
     return Py_None;
 }
 
+PyObject* _pywm_view_focus(PyObject* self, PyObject* args){
+    long handle;
+    if(!PyArg_ParseTuple(args, "l", &handle)){
+        PyErr_SetString(PyExc_TypeError, "Arguments");
+        return NULL;
+    }
+
+    struct wm_view* view = _pywm_views_from_handle(handle);
+    if(!view){
+        PyErr_SetString(PyExc_TypeError, "View has been destroyed");
+        return NULL;
+    }
+
+    wm_focus_view(view);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}

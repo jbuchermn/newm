@@ -81,6 +81,12 @@ void wm_terminate(){
     wm_join();
 }
 
+void wm_focus_view(struct wm_view* view){
+    if(!wm.server) return;
+
+    wm_seat_focus_surface(wm.server->wm_seat, view->wlr_xdg_surface->surface);
+}
+
 struct wm* get_wm(){
     return &wm;
 }

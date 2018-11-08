@@ -85,13 +85,17 @@ void wm_seat_focus_surface(struct wm_seat* seat, struct wlr_surface* surface){
         return;
     }
 
-    if(prev){
+    if(prev && wlr_surface_is_xdg_surface(prev)){
         struct wlr_xdg_surface* prev_xdg = wlr_xdg_surface_from_wlr_surface(prev);
         wlr_xdg_toplevel_set_activated(prev_xdg, false);
     }
 
-    struct wlr_xdg_surface* xdg = wlr_xdg_surface_from_wlr_surface(surface);
-    wlr_xdg_toplevel_set_activated(xdg, true);
+    if(wlr_surface_is_xdg_surface(surface)){
+        struct wlr_xdg_surface* xdg = wlr_xdg_surface_from_wlr_surface(surface);
+        if(xdg->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL){
+            wlr_xdg_toplevel_set_activated(xdg, true);
+        }
+    }
 
     struct wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->wlr_seat);
     wlr_seat_keyboard_notify_enter(seat->wlr_seat, surface,

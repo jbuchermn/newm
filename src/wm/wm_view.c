@@ -105,8 +105,17 @@ void wm_view_destroy(struct wm_view* view){
     wl_list_remove(&view->link);
 }
 
-uint32_t wm_view_request_size(struct wm_view* view, int width, int height){
-    return wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
+void wm_view_request_size(struct wm_view* view, int width, int height){
+    if(!view->wlr_xdg_surface){
+        wlr_log(WLR_DEBUG, "Warning: view with wlr_xdg_surface == 0");
+        return;
+    }
+
+    if(view->wlr_xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL){
+        wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
+    }else{
+        wlr_log(WLR_DEBUG, "Warning: Can only set size on toplevel");
+    }
 }
 
 void wm_view_get_size(struct wm_view* view, int* width, int* height){
@@ -114,6 +123,14 @@ void wm_view_get_size(struct wm_view* view, int* width, int* height){
     /* Although during updates not strictly equal? */
     /* assert(view->wlr_xdg_surface->geometry.width == view->wlr_xdg_surface->surface->current.width); */
     /* assert(view->wlr_xdg_surface->geometry.height == view->wlr_xdg_surface->surface->current.height); */
+
+    if(!view->wlr_xdg_surface){
+        *width = 0;
+        *height = 0;
+
+        wlr_log(WLR_DEBUG, "Warning: view with wlr_xdg_surface == 0");
+        return;
+    }
 
     *width = view->wlr_xdg_surface->geometry.width;
     *height = view->wlr_xdg_surface->geometry.height;

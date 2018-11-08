@@ -72,6 +72,7 @@ static PyMethodDef _pywm_methods[] = {
     { "view_get_title_app_id",  &_pywm_view_get_title_app_id,  METH_VARARGS,   "" },
     { "view_set_box",           &_pywm_view_set_box,           METH_VARARGS,   "" },
     { "view_set_dimensions",    &_pywm_view_set_dimensions,    METH_VARARGS,   "" },
+    { "view_focus",             &_pywm_view_focus,             METH_VARARGS,   "" },
 
     { NULL, NULL, 0, NULL }
 };
