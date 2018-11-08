@@ -1,6 +1,111 @@
 import time
+from threading import Thread
+from abc import abstractmethod
+from itertools import product
 
-from pywm import PyWM, PyWMView
+from pywm import PyWM, PyWMView, MOD_CTRL
+
+
+class Animation:
+    def __init__(self, target, prop, func, final):
+        self._target = target
+        self._prop = prop
+        self._func = func
+        self._final = final
+
+    def set(self, ts):
+        self._target.__dict__[self._prop] = self._func(ts)
+
+    def set_final(self):
+        self._target.__dict__[self._prop] = self._final
+
+
+class InterAnimation:
+    def __init__(self, target, prop, delta):
+        self._target = target
+        self._prop = prop
+        self._initial = None
+        self._delta = delta
+
+    def set(self, ts):
+        if self._initial is None:
+            self._initial = self._target.__dict__[self._prop]
+        self._target.__dict__[self._prop] = self._initial + \
+            ts * self._delta
+
+    def set_final(self):
+        self._target.__dict__[self._prop] = self._initial + self._delta
+
+
+class FinalAnimation:
+    def __init__(self, target, prop, delta):
+        self._target = target
+        self._prop = prop
+        self._initial = None
+        self._delta = delta
+
+    def set(self, ts):
+        if self._initial is None:
+            self._initial = self._target.__dict__[self._prop]
+
+    def set_final(self):
+        self._target.__dict__[self._prop] = self._initial + self._delta
+
+
+class AnimateThread(Thread):
+    def __init__(self, parent, targets, animations, duration):
+        super().__init__()
+        self._parent = parent
+        self._targets = targets
+        self._animations = animations
+        self._duration = duration
+        self.finished = False
+
+    def run(self):
+        initial = time.time()
+        ts = initial
+        while ts < initial + self._duration:
+            for anim in self._animations:
+                anim.set((ts - initial)/self._duration)
+            for target in self._targets:
+                target.update()
+
+            time.sleep(0.02)
+
+            ts = time.time()
+
+        for anim in self._animations:
+            anim.set_final()
+        for target in self._targets:
+            target.update()
+        self.finished = True
+        self._parent.animation_finished()
+
+
+class Animate:
+    def __init__(self):
+        self._current_animation = None
+        self._pending_animation = None
+
+    @abstractmethod
+    def update(self):
+        pass
+
+    def animation_finished(self):
+        if self._pending_animation is not None:
+            self._current_animation = self._pending_animation
+            self._pending_animation = None
+            self._current_animation.start()
+
+    def animate(self, animations, duration):
+        anim = AnimateThread(self, [self], animations, duration)
+        if self._current_animation is not None:
+            if not self._current_animation.finished:
+                self._pending_animation = anim
+                return
+
+        self._current_animation = anim
+        self._current_animation.start()
 
 
 class View(PyWMView):
@@ -48,9 +153,10 @@ class View(PyWMView):
             self.set_dimensions(width, height)
 
 
-class Layout(PyWM):
+class Layout(PyWM, Animate):
     def __init__(self):
-        super().__init__(View)
+        PyWM.__init__(self, View)
+        Animate.__init__(self)
 
         """
         Position (index of top-left visible tile) and size
@@ -81,15 +187,18 @@ class Layout(PyWM):
         return None
 
     def place_initial(self, view):
-        i, j = 0, 0
-        w, h = 1, 1
-        while self.find_at_tile(i, j) is not None:
-            i += 1
+        for i, j in product(range(self.i, self.i + self.size),
+                            range(self.j, self.j + self.size)):
+            if not self.find_at_tile(i, j):
+                view.i, view.j = i, j
+                break
+        else:
+            i, j = self.i, self.j
+            while self.find_at_tile(i, j) is not None:
+                i += 1
 
-        view.i = i
-        view.j = j
-        view.w = w
-        view.h = h
+        view.w = 1
+        view.h = 1
         view.update()
 
     def update(self):
@@ -105,21 +214,30 @@ class Layout(PyWM):
         if state == 0:
             return False
 
-        if keycode == 30:
-            self.scale += 1
-            self.update()
+        if not self.modifiers & MOD_CTRL:
+            return False
+
+        if keycode == 105:
+            self.animate([InterAnimation(self, 'i', -1)], 0.2)
+            return True
+        elif keycode == 106:
+            self.animate([InterAnimation(self, 'i', +1)], 0.2)
+            return True
+        elif keycode == 103:
+            self.animate([InterAnimation(self, 'j', -1)], 0.2)
+            return True
+        elif keycode == 108:
+            self.animate([InterAnimation(self, 'j', +1)], 0.2)
+            return True
+        elif keycode == 30:
+            self.animate([
+                InterAnimation(self, 'size', +1),
+                FinalAnimation(self, 'scale', +1)], 0.2)
             return True
         elif keycode == 31:
-            self.scale -= 1
-            self.update()
-            return True
-        elif keycode == 32:
-            self.size += 1
-            self.update()
-            return True
-        elif keycode == 33:
-            self.size -= 1
-            self.update()
+            self.animate([
+                InterAnimation(self, 'size', -1),
+                FinalAnimation(self, 'scale', -1)], 0.2)
             return True
 
         return False

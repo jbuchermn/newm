@@ -1,12 +1,11 @@
 import sys
 import os
-import time
 import traceback
 
 from .pywm_view import PyWMView
 
 sys.path.append(os.path.join(__file__, ".."))
-from build._pywm import (
+from build._pywm import (  # noqa E402
     run,
     terminate,
     register,
@@ -14,6 +13,15 @@ from build._pywm import (
 
 
 _instance = None
+
+MOD_SHIFT = 1
+MOD_CAPS = 2
+MOD_CTRL = 4
+MOD_ALT = 8
+MOD_MOD2 = 16
+MOD_MOD3 = 32
+MOD_LOGO = 64
+MOD_MOD5 = 128
 
 
 def callback(func):
@@ -50,6 +58,7 @@ class PyWM:
         self.views = []
         self.width = 0
         self.height = 0
+        self.modifiers = 0
 
     @callback
     def _motion(self, time_msec, delta_x, delta_y):
@@ -74,7 +83,8 @@ class PyWM:
 
     @callback
     def _modifiers(self, depressed, latched, locked, group):
-        return False
+        self.modifiers = depressed
+        return self.on_modifiers(self.modifiers)
 
     @callback
     def _layout_change(self, width, height):
@@ -126,5 +136,6 @@ class PyWM:
     def on_key(self, time_msec, keycode, state):
         return False
 
-    def on_modifiers(self, depressed, latched, locked, group):
+    def on_modifiers(self, modifiers):
         return False
+
