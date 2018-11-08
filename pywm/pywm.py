@@ -1,6 +1,9 @@
 import sys
 import os
 import time
+import traceback
+
+from .pywm_view import PyWMView
 
 sys.path.append(os.path.join(__file__, ".."))
 from build._pywm import (
@@ -17,24 +20,15 @@ from build._pywm import (
 
 _instance = None
 
-class PyWMView:
-    def __init__(self, wm, handle):
-        self._handle = handle
-        self.wm = wm
-        self.box = view_get_box(self._handle)
 
-    def set_box(self, x, y, w, h):
-        view_set_box(self._handle, x, y, w, h)
-        self.box = (x, y, w, h)
+def callback(func):
+    def wrapped_func(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            traceback.print_exc()
+    return wrapped_func
 
-    def get_dimensions(self):
-        return view_get_dimensions(self._handle)
-
-    def set_dimensions(self, width, height):
-        view_set_dimensions(self._handle, round(width), round(height))
-
-    def destroy(self):
-        pass
 
 class PyWM:
     def __init__(self, view_class=PyWMView):
@@ -45,7 +39,7 @@ class PyWM:
 
         register("layout_change", self._layout_change)
         register("motion", self._motion)
-        register("motion_absolute", self._motion)
+        register("motion_absolute", self._motion_absolute)
         register("button", self._button)
         register("axis", self._axis)
         register("key", self._key)
@@ -54,39 +48,51 @@ class PyWM:
         register("destroy_view", self._destroy_view)
 
         self._view_class = view_class
+
+        """
+        Consider these read-only
+        """
         self.views = []
         self.width = 0
         self.height = 0
 
+    @callback
+    def _motion(self, time_msec, delta_x, delta_y):
+        return self.on_motion(time_msec, delta_x, delta_y)
+
+    @callback
+    def _motion_absolute(self, time_msec, x, y):
+        return self.on_motion_absolute(time_msec, x, y)
+
+    @callback
+    def _button(self, time_msec, button, state):
+        return self.on_button(time_msec, button, state)
+
+    @callback
+    def _axis(self, time_msec, source, orientation, delta, delta_discrete):
+        return self.on_axis(time_msec, source, orientation, delta, delta_discrete)
+
+    @callback
+    def _key(self, time_msec, keycode, state):
+        return self.on_key(time_msec, keycode, state)
+
+    @callback
+    def _modifiers(self, depressed, latched, locked, group):
+        return False
+
+    @callback
     def _layout_change(self, width, height):
         self.width = width
         self.height = height
+        self.on_layout_change()
 
-    def _motion(self, *args):
-        return False
 
-    def _motion_absolute(self, *args):
-        return False
-
-    def _button(self, *args):
-        return False
-
-    def _axis(self, *args):
-        return False
-
-    def _key(self, *args):
-        return False
-
-    def _modifiers(self, *args):
-        return False
-
+    @callback
     def _init_view(self, handle):
-        try:
-            view = self._view_class(self, handle)
-            self.views += [view];
-        except Exception as ex:
-            print(ex)
+        view = self._view_class(self, handle)
+        self.views += [view];
 
+    @callback
     def _destroy_view(self, handle):
         for view in self.views:
             if view._handle == handle:
@@ -96,13 +102,34 @@ class PyWM:
     """
     Public API
     """
-    
+
     def run(self):
         run()
 
     def terminate(self):
         return terminate()
 
-    def init_view(self, view):
+    """
+    Virtual methods
+    """
+
+    def on_layout_change(self):
         pass
 
+    def on_motion(self, time_msec, delta_x, delta_y):
+        return False
+
+    def on_motion_absolute(self, time_msec, x, y):
+        return False
+
+    def on_button(self, time_msec, button, state):
+        return False
+
+    def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
+        return False
+
+    def on_key(self, time_msec, keycode, state):
+        return False
+
+    def on_modifiers(self, depressed, latched, locked, group):
+        return False

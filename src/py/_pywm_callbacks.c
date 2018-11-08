@@ -18,10 +18,10 @@ static struct _pywm_callbacks callbacks = { 0 };
 static bool call_bool(PyObject* callable, PyObject* args){
     PyGILState_STATE gil = PyGILState_Ensure();
     PyObject *_result = PyEval_CallObject(callable, args);
+    Py_XDECREF(args); // Needs to happen inside lock
     PyGILState_Release(gil);
 
-    /* Py_XDECREF(args); */
-    bool result = false;
+    int result = false;
     if(!_result || _result == Py_None || !PyArg_Parse(_result, "b", &result)){
         wlr_log(WLR_DEBUG, "Python error: Expected boolean return");
     }
@@ -33,9 +33,9 @@ static bool call_bool(PyObject* callable, PyObject* args){
 static void call_void(PyObject* callable, PyObject* args){
     PyGILState_STATE gil = PyGILState_Ensure();
     PyObject *_result = PyEval_CallObject(callable, args);
+    Py_XDECREF(args);
     PyGILState_Release(gil);
 
-    /* Py_XDECREF(args); */
     if(!_result){
         wlr_log(WLR_DEBUG, "Python error: Exception thrown");
     }
@@ -55,7 +55,8 @@ static void call_layout_change(struct wm_layout* layout){
 
 static bool call_key(struct wlr_event_keyboard_key* event){
     if(callbacks.key){
-        return call_bool(callbacks.key, NULL);
+        PyObject* args = Py_BuildValue("(iii)", event->time_msec, event->keycode, event->state);
+        return call_bool(callbacks.key, args);
     }
 
     return false;
@@ -63,7 +64,8 @@ static bool call_key(struct wlr_event_keyboard_key* event){
 
 static bool call_modifiers(struct wlr_keyboard_modifiers* modifiers){
     if(callbacks.modifiers){
-        return call_bool(callbacks.modifiers, NULL);
+        PyObject* args = Py_BuildValue("(iiii)", modifiers->depressed, modifiers->latched, modifiers->locked, modifiers->group);
+        return call_bool(callbacks.modifiers, args);
     }
 
     return false;
@@ -71,7 +73,8 @@ static bool call_modifiers(struct wlr_keyboard_modifiers* modifiers){
 
 static bool call_motion(double delta_x, double delta_y, uint32_t time_msec){
     if(callbacks.motion){
-        return call_bool(callbacks.motion, NULL);
+        PyObject* args = Py_BuildValue("(idd)", time_msec, delta_x, delta_y);
+        return call_bool(callbacks.motion, args);
     }
 
     return false;
@@ -79,7 +82,8 @@ static bool call_motion(double delta_x, double delta_y, uint32_t time_msec){
 
 static bool call_motion_absolute(double x, double y, uint32_t time_msec){
     if(callbacks.motion_absolute){
-        return call_bool(callbacks.motion_absolute, NULL);
+        PyObject* args = Py_BuildValue("(idd)", time_msec, x, y);
+        return call_bool(callbacks.motion_absolute, args);
     }
 
     return false;
@@ -87,7 +91,8 @@ static bool call_motion_absolute(double x, double y, uint32_t time_msec){
 
 static bool call_button(struct wlr_event_pointer_button* event){
     if(callbacks.button){
-        return call_bool(callbacks.button, NULL);
+        PyObject* args = Py_BuildValue("(iii)", event->time_msec, event->button, event->state);
+        return call_bool(callbacks.button, args);
     }
 
     return false;
@@ -95,7 +100,9 @@ static bool call_button(struct wlr_event_pointer_button* event){
 
 static bool call_axis(struct wlr_event_pointer_axis* event){
     if(callbacks.axis){
-        return call_bool(callbacks.axis, NULL);
+        PyObject* args = Py_BuildValue("(iiidi)", event->time_msec, event->source, event->orientation,
+                event->delta, event->delta_discrete);
+        return call_bool(callbacks.axis, args);
     }
 
     return false;
