@@ -111,8 +111,9 @@ uint32_t wm_view_request_size(struct wm_view* view, int width, int height){
 
 void wm_view_get_size(struct wm_view* view, int* width, int* height){
     /* Fixed by set_tiled */
-    assert(view->wlr_xdg_surface->geometry.width == view->wlr_xdg_surface->surface->current.width);
-    assert(view->wlr_xdg_surface->geometry.height == view->wlr_xdg_surface->surface->current.height);
+    /* Although during updates not strictly equal? */
+    /* assert(view->wlr_xdg_surface->geometry.width == view->wlr_xdg_surface->surface->current.width); */
+    /* assert(view->wlr_xdg_surface->geometry.height == view->wlr_xdg_surface->surface->current.height); */
 
     *width = view->wlr_xdg_surface->geometry.width;
     *height = view->wlr_xdg_surface->geometry.height;

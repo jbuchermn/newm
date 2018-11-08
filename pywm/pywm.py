@@ -10,11 +10,6 @@ from build._pywm import (
     run,
     terminate,
     register,
-    view_get_box,
-    view_get_dimensions,
-    view_get_title_app_id,
-    view_set_box,
-    view_set_dimensions
 )
 
 
@@ -70,7 +65,8 @@ class PyWM:
 
     @callback
     def _axis(self, time_msec, source, orientation, delta, delta_discrete):
-        return self.on_axis(time_msec, source, orientation, delta, delta_discrete)
+        return self.on_axis(time_msec, source, orientation, delta,
+                            delta_discrete)
 
     @callback
     def _key(self, time_msec, keycode, state):
@@ -86,11 +82,10 @@ class PyWM:
         self.height = height
         self.on_layout_change()
 
-
     @callback
     def _init_view(self, handle):
         view = self._view_class(self, handle)
-        self.views += [view];
+        self.views += [view]
 
     @callback
     def _destroy_view(self, handle):
