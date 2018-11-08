@@ -6,9 +6,9 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
 
-#include "wm_view.h"
-#include "wm_server.h"
-#include "wm.h"
+#include "wm/wm_view.h"
+#include "wm/wm_server.h"
+#include "wm/wm.h"
 
 /*
  * Callbacks

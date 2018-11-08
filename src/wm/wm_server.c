@@ -14,10 +14,10 @@
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/util/log.h>
 
-#include "wm_server.h"
-#include "wm_seat.h"
-#include "wm_view.h"
-#include "wm_layout.h"
+#include "wm/wm_server.h"
+#include "wm/wm_seat.h"
+#include "wm/wm_view.h"
+#include "wm/wm_layout.h"
 
 
 /*

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "wm.h"
+#include "wm/wm.h"
 
 
 int main(int argc, char** argv){

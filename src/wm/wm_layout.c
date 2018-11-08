@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <wlr/util/log.h>
-#include "wm_layout.h"
-#include "wm_output.h"
-#include "wm.h"
+#include "wm/wm_layout.h"
+#include "wm/wm_output.h"
+#include "wm/wm.h"
 
 /*
  * Callbacks

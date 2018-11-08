@@ -2,11 +2,11 @@
 
 #include <assert.h>
 #include <wlr/util/log.h>
-#include "wm_cursor.h"
-#include "wm_seat.h"
-#include "wm_layout.h"
-#include "wm_pointer.h"
-#include "wm.h"
+#include "wm/wm_cursor.h"
+#include "wm/wm_seat.h"
+#include "wm/wm_layout.h"
+#include "wm/wm_pointer.h"
+#include "wm/wm.h"
 
 /*
  * Callbacks

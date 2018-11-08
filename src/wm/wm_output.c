@@ -5,10 +5,10 @@
 #include <wlr/util/log.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_matrix.h>
-#include "wm_server.h"
-#include "wm_output.h"
-#include "wm_view.h"
-#include "wm_layout.h"
+#include "wm/wm_server.h"
+#include "wm/wm_output.h"
+#include "wm/wm_view.h"
+#include "wm/wm_layout.h"
 
 /*
  * Callbacks

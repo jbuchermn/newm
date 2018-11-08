@@ -4,9 +4,9 @@
 #include <wayland-server.h>
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
-#include "wm_keyboard.h"
-#include "wm_seat.h"
-#include "wm.h"
+#include "wm/wm_keyboard.h"
+#include "wm/wm_seat.h"
+#include "wm/wm.h"
 
 /*
  * Callbacks

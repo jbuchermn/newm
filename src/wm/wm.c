@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200112L
 
-#include "wm.h"
+#include "wm/wm.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -9,10 +9,10 @@
 #include <wlr/backend.h>
 #include <wlr/util/log.h>
 
-#include "wm_seat.h"
-#include "wm_server.h"
-#include "wm_layout.h"
-#include "wm_view.h"
+#include "wm/wm_seat.h"
+#include "wm/wm_server.h"
+#include "wm/wm_layout.h"
+#include "wm/wm_view.h"
 
 struct wm wm = { 0 };
 

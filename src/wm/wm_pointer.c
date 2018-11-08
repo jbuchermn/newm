@@ -2,8 +2,8 @@
 
 #include <wayland-server.h>
 #include <wlr/util/log.h>
-#include "wm_pointer.h"
-#include "wm_seat.h"
+#include "wm/wm_pointer.h"
+#include "wm/wm_seat.h"
 
 /*
  * Callbacks

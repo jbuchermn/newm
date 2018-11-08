@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <wlr/util/log.h>
-#include "wm.h"
-#include "wm_layout.h"
-#include "_pywm_callbacks.h"
-#include "_pywm_view.h"
+#include "wm/wm.h"
+#include "wm/wm_layout.h"
+#include "py/_pywm_callbacks.h"
+#include "py/_pywm_view.h"
 
 static struct _pywm_callbacks callbacks = { 0 };
 

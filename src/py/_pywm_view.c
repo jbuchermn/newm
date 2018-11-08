@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "_pywm_view.h"
-#include "wm.h"
-#include "wm_view.h"
+#include "wm/wm.h"
+#include "wm/wm_view.h"
+#include "py/_pywm_view.h"
 
 static struct _pywm_views views = { 0 };
 

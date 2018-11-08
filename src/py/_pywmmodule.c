@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <wlr/util/log.h>
-#include "wm.h"
-#include "_pywm_callbacks.h"
-#include "_pywm_view.h"
+#include "wm/wm.h"
+#include "py/_pywm_callbacks.h"
+#include "py/_pywm_view.h"
 
 
 static PyObject* _pywm_run(PyObject* self, PyObject* args){
