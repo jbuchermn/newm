@@ -189,13 +189,15 @@ class Layout(PyWM, Animate):
     def place_initial(self, view):
         for i, j in product(range(self.i, self.i + self.size),
                             range(self.j, self.j + self.size)):
-            if not self.find_at_tile(i, j):
+            if self.find_at_tile(i, j) is None:
                 view.i, view.j = i, j
                 break
         else:
             i, j = self.i, self.j
             while self.find_at_tile(i, j) is not None:
                 i += 1
+            view.i = i
+            view.j = j
 
         view.w = 1
         view.h = 1
