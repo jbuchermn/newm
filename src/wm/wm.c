@@ -152,14 +152,6 @@ void wm_callback_init_view(struct wm_view* view){
     return (*wm.callback_init_view)(view);
 }
 
-void wm_callback_update_view(struct wm_view* view, struct timespec when){
-    if(!wm.callback_update_view){
-        return;
-    }
-
-    return (*wm.callback_update_view)(view, when);
-}
-
 void wm_callback_destroy_view(struct wm_view* view){
     if(!wm.callback_destroy_view){
         return;

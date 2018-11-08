@@ -34,14 +34,15 @@ static void handle_present(struct wl_listener* listener, void* data){
 
 struct render_data {
 	struct wm_output *output;
-	struct wlr_renderer *renderer;
-	struct wm_view *view;
 	struct timespec when;
+    double x;
+    double y;
+    double x_scale;
+    double y_scale;
 };
 
 static void render_surface(struct wlr_surface *surface, int sx, int sy, void *data) {
 	struct render_data *rdata = data;
-	struct wm_view *view = rdata->view;
 	struct wm_output *output = rdata->output;
 
 	struct wlr_texture *texture = wlr_surface_get_texture(surface);
@@ -49,18 +50,15 @@ static void render_surface(struct wlr_surface *surface, int sx, int sy, void *da
 		return;
 	}
 
-    wm_view_update(view, rdata->when);
-
 	/* 
      * TODO!
      * * wlr_output_layout_output_coords: Placement of output within layout
-     * * sx, sy: placement of popups
      */
 	struct wlr_box box = {
-		.x = view->display_x * output->wlr_output->scale,
-		.y = view->display_y * output->wlr_output->scale,
-		.width = view->display_width * output->wlr_output->scale,
-		.height = view->display_height * output->wlr_output->scale
+		.x = round((rdata->x + sx*rdata->x_scale) * output->wlr_output->scale),
+		.y = round((rdata->y + sy*rdata->y_scale) * output->wlr_output->scale),
+		.width = round(surface->current.width * rdata->x_scale * output->wlr_output->scale),
+		.height = round(surface->current.height * rdata->y_scale * output->wlr_output->scale)
 	};
 
 	float matrix[9];
@@ -98,10 +96,16 @@ static void handle_frame(struct wl_listener* listener, void* data){
             continue;
         }
 
+        int width, height;
+        wm_view_get_size(view, &width, &height);
+
 		struct render_data rdata = {
 			.output = output,
-			.view = view,
 			.when = now,
+            .x = view->display_x,
+            .y = view->display_y,
+            .x_scale = view->display_width / width,
+            .y_scale = view->display_height / height
 		};
 
 		wlr_xdg_surface_for_each_surface(view->wlr_xdg_surface,

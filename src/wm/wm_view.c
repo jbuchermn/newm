@@ -105,11 +105,6 @@ void wm_view_destroy(struct wm_view* view){
     wl_list_remove(&view->link);
 }
 
-
-void wm_view_update(struct wm_view* view, struct timespec when){
-    wm_callback_update_view(view, when);
-}
-
 uint32_t wm_view_request_size(struct wm_view* view, int width, int height){
     return wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
 }

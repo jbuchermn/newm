@@ -61,7 +61,6 @@ class PyWM:
     def _layout_change(self, width, height):
         self.width = width
         self.height = height
-        print(width, height)
 
     def _motion(self, *args):
         return False

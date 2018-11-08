@@ -23,7 +23,6 @@ struct wm {
     bool (*callback_button)(struct wlr_event_pointer_button*);
     bool (*callback_axis)(struct wlr_event_pointer_axis*);
     void (*callback_init_view)(struct wm_view*);
-    void (*callback_update_view)(struct wm_view*, struct timespec);
     void (*callback_destroy_view)(struct wm_view*);
 };
 
@@ -56,7 +55,6 @@ bool wm_callback_axis(struct wlr_event_pointer_axis* event);
  * Can also call set_size
  */
 void wm_callback_init_view(struct wm_view* view);
-void wm_callback_update_view(struct wm_view* view, struct timespec when);
 void wm_callback_destroy_view(struct wm_view* view);
 
 #endif

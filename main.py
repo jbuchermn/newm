@@ -18,7 +18,7 @@ class Anim(Thread):
             time.sleep(0.02)
 
         self._view.set_box(0., 0., .5 * self._view.wm.width, .5 * self._view.wm.height)
-        # self._view.set_dimensions(.5 * self._view.wm.width, .5 * self._view.wm.height)
+        self._view.set_dimensions(.5 * self._view.wm.width, .5 * self._view.wm.height)
 
 
 class MyView(PyWMView):
