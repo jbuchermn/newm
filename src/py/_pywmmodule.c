@@ -9,19 +9,18 @@
 
 
 static PyObject* _pywm_run(PyObject* self, PyObject* args){
+    int status;
+
+    Py_BEGIN_ALLOW_THREADS;
+
     wm_init();
     _pywm_callbacks_init();
 
-    int status = wm_run();
+    status = wm_run();
+
+    Py_END_ALLOW_THREADS;
 
     return Py_BuildValue("i", status);
-}
-
-static PyObject* _pywm_join(PyObject* self, PyObject* args){
-    wm_join();
-
-    Py_INCREF(Py_None);
-    return Py_None;
 }
 
 static PyObject* _pywm_terminate(PyObject* self, PyObject* args){
@@ -61,9 +60,8 @@ static PyObject* _pywm_register(PyObject* self, PyObject* args){
 }
 
 static PyMethodDef _pywm_methods[] = {
-    { "run",                    &_pywm_run,                    METH_VARARGS,   "Start the compoitor in a new thread" },
-    { "join",                   &_pywm_join,                   METH_VARARGS,   "Join compositor thread"  },
-    { "terminate",              &_pywm_terminate,              METH_VARARGS,   "Terminate compositor and join"  },
+    { "run",                    &_pywm_run,                    METH_VARARGS,   "Start the compoitor in this thread" },
+    { "terminate",              &_pywm_terminate,              METH_VARARGS,   "Terminate compositor"  },
     { "register",               &_pywm_register,               METH_VARARGS,   "Register callback"  },
     { "view_get_box",           &_pywm_view_get_box,           METH_VARARGS,   "" },
     { "view_get_dimensions",    &_pywm_view_get_dimensions,    METH_VARARGS,   "" },

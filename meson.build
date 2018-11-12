@@ -20,6 +20,11 @@ add_project_arguments(
 	language: 'c',
 )
 
+add_project_arguments(
+	'-DPYWM_XWAYLAND',
+	language: 'c',
+)
+
 
 
 # Dependencies

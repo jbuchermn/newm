@@ -23,6 +23,11 @@ struct wm_view {
     struct wl_list link;  // wm_server::wm_views
     struct wm_server* wm_server;
 
+    enum {
+        WM_VIEW_XDG,
+        WM_VIEW_XWAYLAND
+    } kind;
+
     const char* title;
     const char* app_id;
 
@@ -34,6 +39,7 @@ struct wm_view {
     double display_height;
 
     struct wlr_xdg_surface* wlr_xdg_surface;
+    struct wlr_xwayland_surface* wlr_xwayland_surface;
 
     struct wl_listener map;
     struct wl_listener unmap;
@@ -41,7 +47,8 @@ struct wm_view {
     struct wl_listener new_popup;
 };
 
-void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface);
+void wm_view_init_xdg(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface);
+void wm_view_init_xwayland(struct wm_view* view, struct wm_server* server, struct wlr_xwayland_surface* surface);
 void wm_view_destroy(struct wm_view* view);
 
 void wm_view_update(struct wm_view* view, struct timespec when);

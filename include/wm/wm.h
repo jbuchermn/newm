@@ -3,7 +3,6 @@
 
 #include <time.h>
 #include <stdbool.h>
-#include <pthread.h>
 #include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_pointer.h>
 
@@ -12,7 +11,6 @@ struct wm_server;
 struct wm_layout;
 
 struct wm {
-    pthread_t thread;
     struct wm_server* server;
 
     void (*callback_layout_change)(struct wm_layout*);
@@ -29,7 +27,6 @@ struct wm {
 void wm_init();
 void wm_destroy();
 int wm_run();
-void wm_join();
 void wm_terminate();
 
 void wm_focus_view(struct wm_view* view);

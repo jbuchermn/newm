@@ -20,6 +20,10 @@ struct wm_server{
     struct wlr_data_device_manager* wlr_data_device_manager;
     struct wlr_xdg_shell* wlr_xdg_shell;
     struct wlr_xdg_decoration_manager_v1* wlr_xdg_decoration_manager;
+#ifdef PYWM_XWAYLAND
+    struct wlr_xwayland* wlr_xwayland;
+    struct wlr_xcursor_manager* wlr_xcursor_manager;
+#endif
 
     struct wm_seat* wm_seat;
     struct wm_layout* wm_layout;
@@ -30,6 +34,9 @@ struct wm_server{
     struct wl_listener new_output;
     struct wl_listener new_xdg_surface;
     struct wl_listener new_xdg_decoration;
+#ifdef PYWM_XWAYLAND
+    struct wl_listener new_xwayland_surface;
+#endif
 };
 
 void wm_server_init(struct wm_server* server);

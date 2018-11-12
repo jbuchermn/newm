@@ -10,7 +10,6 @@
 int main(int argc, char** argv){
     wm_init();
     wm_run();
-    wm_join();
     wm_destroy();
 
     return 0;

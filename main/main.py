@@ -262,11 +262,9 @@ class Layout(PyWM, Animate):
 main = Layout()
 
 print("Running...")
-main.run()
 
 try:
-    while True:
-        time.sleep(1)
+    main.run()
 finally:
     print("Terminating...")
     main.terminate()

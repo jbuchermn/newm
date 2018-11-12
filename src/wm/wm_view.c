@@ -5,6 +5,7 @@
 #include <wayland-server.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
+#include <wlr/xwayland.h>
 
 #include "wm/wm_view.h"
 #include "wm/wm_server.h"
@@ -69,13 +70,15 @@ void wm_view_decoration_destroy(struct wm_view_decoration* deco){
     wl_list_remove(&deco->link);
 }
 
-void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface){
+void wm_view_init_xdg(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface){
+    view->kind = WM_VIEW_XDG;
+
     view->wm_server = server;
     view->wlr_xdg_surface = surface;
     view->title = surface->toplevel->title;
     view->app_id = surface->toplevel->app_id;
 
-    wlr_log(WLR_DEBUG, "New wm_view: %s, %s", view->title, view->app_id);
+    wlr_log(WLR_DEBUG, "New wm_view (xdg): %s, %s", view->title, view->app_id);
 
     view->mapped = false;
 
@@ -95,6 +98,22 @@ void wm_view_init(struct wm_view* view, struct wm_server* server, struct wlr_xdg
 
     /* Get rid of white spaces around; therefore geometry.width/height should always equal current.width/height */
     wlr_xdg_toplevel_set_tiled(surface, 15);
+}
+
+void wm_view_init_xwayland(struct wm_view* view, struct wm_server* server, struct wlr_xwayland_surface* surface){
+    view->kind = WM_VIEW_XWAYLAND;
+
+    view->wm_server = server;
+    view->wlr_xwayland_surface = surface;
+    view->title = surface->title;
+    view->app_id = surface->instance;
+
+    wlr_log(WLR_DEBUG, "New wm_view (xwayland): %s, %s", view->title, view->app_id);
+
+    view->mapped = false;
+
+    wm_callback_init_view(view);
+
 }
 
 void wm_view_destroy(struct wm_view* view){

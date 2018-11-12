@@ -12,7 +12,9 @@
 #include <wlr/config.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
+#include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
+#include <wlr/xwayland.h>
 
 #include "wm/wm_server.h"
 #include "wm/wm_seat.h"
@@ -45,10 +47,25 @@ static void handle_new_xdg_surface(struct wl_listener* listener, void* data){
         return;
     }
 
+    wlr_xdg_surface_ping(surface);
+
     struct wm_view* view = calloc(1, sizeof(struct wm_view));
-    wm_view_init(view, server, surface);
+    wm_view_init_xdg(view, server, surface);
 
     wl_list_insert(&server->wm_views, &view->link);
+}
+
+static void handle_new_xwayland_surface(struct wl_listener* listener, void* data){
+    struct wm_server* server = wl_container_of(listener, server, new_xwayland_surface);
+    struct wlr_xwayland_surface* surface = data;
+
+    wlr_xwayland_surface_ping(surface);
+
+    struct wm_view* view = calloc(1, sizeof(struct wm_view));
+    wm_view_init_xwayland(view, server, surface);
+
+    wl_list_insert(&server->wm_views, &view->link);
+
 }
 
 static void handle_new_xdg_decoration(struct wl_listener* listener, void* data){
@@ -95,12 +112,36 @@ void wm_server_init(struct wm_server* server){
     server->wlr_xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create(server->wl_display);
     assert(server->wlr_xdg_decoration_manager);
 
+    server->wlr_xwayland = 0;
+#ifdef PYWM_XWAYLAND
+    server->wlr_xwayland = wlr_xwayland_create(server->wl_display, server->wlr_compositor, false);
+    assert(server->wlr_xwayland);
+
+    server->wlr_xcursor_manager = wlr_xcursor_manager_create(NULL, 24);
+    assert(server->wlr_xcursor_manager);
+
+    if(wlr_xcursor_manager_load(server->wlr_xcursor_manager, 1)){
+        wlr_log(WLR_ERROR, "Cannot load XCursor");
+    }
+
+    struct wlr_xcursor* xcursor = wlr_xcursor_manager_get_xcursor(server->wlr_xcursor_manager, "left_ptr", 1);
+    if(xcursor){
+        struct wlr_xcursor_image* image = xcursor->images[0];
+        wlr_xwayland_set_cursor(server->wlr_xwayland,
+                image->buffer, image->width * 4, image->width, image->height, image->hotspot_x, image->hotspot_y);
+    }
+#endif
+
     /* Children */
     server->wm_layout = calloc(1, sizeof(struct wm_layout));
     wm_layout_init(server->wm_layout, server);
 
     server->wm_seat = calloc(1, sizeof(struct wm_seat));
     wm_seat_init(server->wm_seat, server, server->wm_layout);
+
+#ifdef PYWM_XWAYLAND
+    wlr_xwayland_set_seat(server->wlr_xwayland, server->wm_seat->wlr_seat);
+#endif
 
     /* Handlers */
     server->new_input.notify = handle_new_input;
@@ -114,11 +155,20 @@ void wm_server_init(struct wm_server* server){
 
     server->new_xdg_decoration.notify = handle_new_xdg_decoration;
     wl_signal_add(&server->wlr_xdg_decoration_manager->events.new_toplevel_decoration, &server->new_xdg_decoration);
+
+#ifdef PYWM_XWAYLAND
+    server->new_xwayland_surface.notify = handle_new_xwayland_surface;
+    wl_signal_add(&server->wlr_xwayland->events.new_surface, &server->new_xwayland_surface);
+#endif
 }
 
 void wm_server_destroy(struct wm_server* server){
+#ifdef PYWM_XWAYLAND
+    wlr_xwayland_destroy(server->wlr_xwayland);
+#endif
     wl_display_destroy_clients(server->wl_display);
     wl_display_destroy(server->wl_display);
+
 }
 
 void wm_server_surface_at(struct wm_server* server, double at_x, double at_y, 

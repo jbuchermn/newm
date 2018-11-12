@@ -28,7 +28,7 @@ void wm_destroy(){
     wm.server = 0;
 }
 
-void* run(void* ignore){
+void* run(){
     if(!wm.server) return NULL;
 
     wlr_log_init(WLR_DEBUG, NULL);
@@ -64,22 +64,15 @@ void* run(void* ignore){
 int wm_run(){
     if(!wm.server) return 2;
 
-    pthread_create(&wm.thread, NULL, &run, NULL);
+    run();
 
     return 0;
-}
-
-void wm_join(){
-    if(!wm.server) return;
-
-    pthread_join(wm.thread, NULL);
 }
 
 void wm_terminate(){
     if(!wm.server) return;
 
     wl_display_terminate(wm.server->wl_display);
-    wm_join();
 }
 
 void wm_focus_view(struct wm_view* view){
