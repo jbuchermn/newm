@@ -8,11 +8,12 @@
 #include <wlr/xwayland.h>
 
 #include "wm/wm_view.h"
+#include "wm/wm_seat.h"
 #include "wm/wm_server.h"
 #include "wm/wm.h"
 
 /*
- * Callbacks
+ * Callbacks: xdg_toplevel_decoration
  */
 static void handle_deco_request_mode(struct wl_listener* listener, void* data){
     struct wm_view_decoration* deco = wl_container_of(listener, deco, request_mode);
@@ -27,28 +28,30 @@ static void handle_deco_destroy(struct wl_listener* listener, void* data){
     free(deco);
 }
 
-static void handle_map(struct wl_listener* listener, void* data){
+/*
+ * Callbacks: xdg_surface
+ */
+static void handle_xdg_map(struct wl_listener* listener, void* data){
     struct wm_view* view = wl_container_of(listener, view, map);
     view->mapped = true;
 }
 
-static void handle_unmap(struct wl_listener* listener, void* data){
+static void handle_xdg_unmap(struct wl_listener* listener, void* data){
     struct wm_view* view = wl_container_of(listener, view, unmap);
     view->mapped = false;
     wm_callback_destroy_view(view);
 }
 
-static void handle_destroy(struct wl_listener* listener, void* data){
+static void handle_xdg_destroy(struct wl_listener* listener, void* data){
     struct wm_view* view = wl_container_of(listener, view, destroy);
     wm_view_destroy(view);
     free(view);
 }
 
-static void handle_new_popup(struct wl_listener* listener, void* data){
-    struct wm_view* view = wl_container_of(listener, view, new_popup);
 
-    /* TODO! */
-}
+/*
+ * Callbacks: xwayland_surface
+ */
 
 
 /*
@@ -82,17 +85,14 @@ void wm_view_init_xdg(struct wm_view* view, struct wm_server* server, struct wlr
 
     view->mapped = false;
 
-    view->map.notify = &handle_map;
+    view->map.notify = &handle_xdg_map;
     wl_signal_add(&surface->events.map, &view->map);
 
-    view->unmap.notify = &handle_unmap;
+    view->unmap.notify = &handle_xdg_unmap;
     wl_signal_add(&surface->events.unmap, &view->unmap);
 
-    view->destroy.notify = &handle_destroy;
+    view->destroy.notify = &handle_xdg_destroy;
     wl_signal_add(&surface->events.destroy, &view->destroy);
-
-    view->new_popup.notify = &handle_new_popup;
-    wl_signal_add(&surface->events.new_popup, &view->new_popup);
 
     wm_callback_init_view(view);
 
@@ -120,37 +120,58 @@ void wm_view_destroy(struct wm_view* view){
     wl_list_remove(&view->map.link);
     wl_list_remove(&view->unmap.link);
     wl_list_remove(&view->destroy.link);
-    wl_list_remove(&view->new_popup.link);
     wl_list_remove(&view->link);
 }
 
 void wm_view_request_size(struct wm_view* view, int width, int height){
-    if(!view->wlr_xdg_surface){
-        wlr_log(WLR_DEBUG, "Warning: view with wlr_xdg_surface == 0");
-        return;
-    }
+    switch(view->kind){
+    case WM_VIEW_XDG:
+        if(!view->wlr_xdg_surface){
+            wlr_log(WLR_DEBUG, "Warning: view with wlr_xdg_surface == 0");
+            return;
+        }
 
-    if(view->wlr_xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL){
-        wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
-    }else{
-        wlr_log(WLR_DEBUG, "Warning: Can only set size on toplevel");
+        if(view->wlr_xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL){
+            wlr_xdg_toplevel_set_size(view->wlr_xdg_surface, width, height);
+        }else{
+            wlr_log(WLR_DEBUG, "Warning: Can only set size on toplevel");
+        }
+        break;
+    case WM_VIEW_XWAYLAND:
+        break;
     }
 }
 
 void wm_view_get_size(struct wm_view* view, int* width, int* height){
-    /* Fixed by set_tiled */
-    /* Although during updates not strictly equal? */
-    /* assert(view->wlr_xdg_surface->geometry.width == view->wlr_xdg_surface->surface->current.width); */
-    /* assert(view->wlr_xdg_surface->geometry.height == view->wlr_xdg_surface->surface->current.height); */
+    switch(view->kind){
+    case WM_VIEW_XDG:
+        /* Fixed by set_tiled */
+        /* Although during updates not strictly equal? */
+        /* assert(view->wlr_xdg_surface->geometry.width == view->wlr_xdg_surface->surface->current.width); */
+        /* assert(view->wlr_xdg_surface->geometry.height == view->wlr_xdg_surface->surface->current.height); */
 
-    if(!view->wlr_xdg_surface){
-        *width = 0;
-        *height = 0;
+        if(!view->wlr_xdg_surface){
+            *width = 0;
+            *height = 0;
 
-        wlr_log(WLR_DEBUG, "Warning: view with wlr_xdg_surface == 0");
-        return;
+            wlr_log(WLR_DEBUG, "Warning: view with wlr_xdg_surface == 0");
+            return;
+        }
+
+        *width = view->wlr_xdg_surface->geometry.width;
+        *height = view->wlr_xdg_surface->geometry.height;
+        break;
+    case WM_VIEW_XWAYLAND:
+        break;
     }
+}
 
-    *width = view->wlr_xdg_surface->geometry.width;
-    *height = view->wlr_xdg_surface->geometry.height;
+void wm_view_focus(struct wm_view* view, struct wm_seat* seat){
+    switch(view->kind){
+    case WM_VIEW_XDG:
+        wm_seat_focus_surface(seat, view->wlr_xdg_surface->surface);
+        break;
+    case WM_VIEW_XWAYLAND:
+        break;
+    }
 }

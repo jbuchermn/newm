@@ -78,7 +78,7 @@ void wm_terminate(){
 void wm_focus_view(struct wm_view* view){
     if(!wm.server) return;
 
-    wm_seat_focus_surface(wm.server->wm_seat, view->wlr_xdg_surface->surface);
+    wm_view_focus(view, wm.server->wm_seat);
 }
 
 struct wm* get_wm(){

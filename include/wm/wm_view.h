@@ -7,6 +7,8 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_box.h>
 
+struct wm_seat;
+
 struct wm_view_decoration {
     struct wl_list link; // wm_server::wm_view_decorations
 
@@ -44,15 +46,14 @@ struct wm_view {
     struct wl_listener map;
     struct wl_listener unmap;
     struct wl_listener destroy;
-    struct wl_listener new_popup;
 };
 
 void wm_view_init_xdg(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface);
 void wm_view_init_xwayland(struct wm_view* view, struct wm_server* server, struct wlr_xwayland_surface* surface);
 void wm_view_destroy(struct wm_view* view);
 
-void wm_view_update(struct wm_view* view, struct timespec when);
 void wm_view_request_size(struct wm_view* view, int width, int height);
 void wm_view_get_size(struct wm_view* view, int* width, int* height);
+void wm_view_focus(struct wm_view* view, struct wm_seat* seat);
 
 #endif
