@@ -10,27 +10,44 @@ project(
     ],
 )
 
-python = import('python').find_installation('python3')
-
-wlroots_proj = subproject('wlroots')
-
-# Dependencies
-wlroots     = wlroots_proj.get_variable('wlroots')
-wlr_protos  = wlroots_proj.get_variable('wlr_protos')
-pixman      = dependency('pixman-1')
-pthread     = meson.get_compiler('c').find_library('pthread')
-
-deps = [wlroots, wlr_protos, pixman, pthread]
+add_project_arguments(
+	'-Wno-unused-parameter',
+	language: 'c',
+)
 
 add_project_arguments(
 	'-DWLR_USE_UNSTABLE',
 	language: 'c',
 )
 
-add_project_arguments(
-	'-Wno-unused-parameter',
-	language: 'c',
-)
+
+
+# Dependencies
+wlroots        = dependency('wlroots')
+wayland_server = dependency('wayland-server')
+wayland_client = dependency('wayland-client')
+wayland_cursor = dependency('wayland-cursor')
+wayland_egl    = dependency('wayland-egl')
+wayland_protos = dependency('wayland-protocols', version: '>=1.14')
+xkbcommon      = dependency('xkbcommon')
+pixman         = dependency('pixman-1')
+pthread        = meson.get_compiler('c').find_library('pthread')
+math           = meson.get_compiler('c').find_library('m')
+
+
+subdir('protocols')
+
+
+deps = [
+    wlroots,
+    wayland_server,
+    server_protos,
+    xkbcommon,
+    pixman,
+    pthread,
+    math
+]
+
 
 sources = [
     'src/wm/wm.c',
@@ -58,6 +75,8 @@ executable(
     include_directories: incs,
 	dependencies: deps,
 )
+
+python = import('python').find_installation('python3')
 
 python.extension_module(
     '_pywm',

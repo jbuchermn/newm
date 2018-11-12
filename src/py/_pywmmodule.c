@@ -1,5 +1,3 @@
-#define _POSIX_C_SOURCE 200112L
-
 #include <Python.h>
 #include <assert.h>
 #include <stdlib.h>
