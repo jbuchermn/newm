@@ -103,12 +103,12 @@ void wm_callback_layout_change(struct wm_layout* layout){
     return (*wm.callback_layout_change)(layout);
 }
 
-bool wm_callback_key(struct wlr_event_keyboard_key* event){
+bool wm_callback_key(struct wlr_event_keyboard_key* event, const char* keysyms){
     if(!wm.callback_key){
         return false;
     }
 
-    return (*wm.callback_key)(event);
+    return (*wm.callback_key)(event, keysyms);
 }
 
 bool wm_callback_modifiers(struct wlr_keyboard_modifiers* modifiers){

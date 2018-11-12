@@ -1,9 +1,10 @@
+import os
 import time
 from threading import Thread
 from abc import abstractmethod
 from itertools import product
 
-from pywm import PyWM, PyWMView, MOD_CTRL
+from pywm import PyWM, PyWMView, PYWM_MOD_CTRL, PYWM_PRESSED
 
 
 class Animation:
@@ -212,35 +213,43 @@ class Layout(PyWM, Animate):
         for v in self.views:
             v.update()
 
-    def on_key(self, time_msec, keycode, state):
-        if state == 0:
+    def on_key(self, time_msec, keycode, state, keysyms):
+        if state == PYWM_PRESSED:
             return False
 
-        if not self.modifiers & MOD_CTRL:
+        if not self.modifiers & PYWM_MOD_CTRL:
             return False
 
-        if keycode == 105:
+        if keysyms == "Left":
             self.animate([InterAnimation(self, 'i', -1)], 0.2)
             return True
-        elif keycode == 106:
+        elif keysyms == "Right":
             self.animate([InterAnimation(self, 'i', +1)], 0.2)
             return True
-        elif keycode == 103:
+        elif keysyms == "Up":
             self.animate([InterAnimation(self, 'j', -1)], 0.2)
             return True
-        elif keycode == 108:
+        elif keysyms == "Down":
             self.animate([InterAnimation(self, 'j', +1)], 0.2)
             return True
-        elif keycode == 30:
+        elif keysyms == "Return":
+            os.system("termite &")
+            return True
+        elif keysyms == "C":
+            self.terminate()
+            return True
+        elif keysyms == "a":
             self.animate([
                 InterAnimation(self, 'size', +1),
                 FinalAnimation(self, 'scale', +1)], 0.2)
             return True
-        elif keycode == 31:
+        elif keysyms == "s":
             self.animate([
                 InterAnimation(self, 'size', -1),
                 FinalAnimation(self, 'scale', -1)], 0.2)
             return True
+        else:
+            print(keysyms)
 
         return False
 

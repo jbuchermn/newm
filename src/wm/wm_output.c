@@ -124,6 +124,12 @@ void wm_output_init(struct wm_output* output, struct wm_server* server, struct w
     output->wm_layout = layout;
     output->wlr_output = out;
 
+    /* Set mode */
+    if(!wl_list_empty(&output->wlr_output->modes)){
+        struct wlr_output_mode* mode = wl_container_of(output->wlr_output->modes.prev, mode, link);
+        wlr_output_set_mode(output->wlr_output, mode);
+    }
+
     output->destroy.notify = handle_destroy;
     wl_signal_add(&output->wlr_output->events.destroy, &output->destroy);
 

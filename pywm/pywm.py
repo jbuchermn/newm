@@ -11,14 +11,17 @@ from ._pywm import (  # noqa E402
 
 _instance = None
 
-MOD_SHIFT = 1
-MOD_CAPS = 2
-MOD_CTRL = 4
-MOD_ALT = 8
-MOD_MOD2 = 16
-MOD_MOD3 = 32
-MOD_LOGO = 64
-MOD_MOD5 = 128
+PYWM_MOD_SHIFT = 1
+PYWM_MOD_CAPS = 2
+PYWM_MOD_CTRL = 4
+PYWM_MOD_ALT = 8
+PYWM_MOD_MOD2 = 16
+PYWM_MOD_MOD3 = 32
+PYWM_MOD_LOGO = 64
+PYWM_MOD_MOD5 = 128
+
+PYWM_RELEASED = 0
+PYWM_PRESSED = 1
 
 
 def callback(func):
@@ -75,8 +78,8 @@ class PyWM:
                             delta_discrete)
 
     @callback
-    def _key(self, time_msec, keycode, state):
-        return self.on_key(time_msec, keycode, state)
+    def _key(self, time_msec, keycode, state, keysyms):
+        return self.on_key(time_msec, keycode, state, keysyms)
 
     @callback
     def _modifiers(self, depressed, latched, locked, group):
@@ -130,7 +133,12 @@ class PyWM:
     def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
         return False
 
-    def on_key(self, time_msec, keycode, state):
+    def on_key(self, time_msec, keycode, state, keysyms):
+        """
+        keycode: raw xkb keycode, probably useless
+        state: PYWM_PRESSED, PYWM_RELEASED
+        keysyms: translated keysymbols, like "a", "b", "A", "Left", ...
+        """
         return False
 
     def on_modifiers(self, modifiers):

@@ -82,7 +82,6 @@ void wm_server_init(struct wm_server* server){
     assert(server->wlr_renderer);
 
     wlr_renderer_init_wl_display(server->wlr_renderer, server->wl_display);
-    wlr_linux_dmabuf_v1_create(server->wl_display, server->wlr_renderer);
 
     server->wlr_compositor = wlr_compositor_create(server->wl_display, server->wlr_renderer);
     assert(server->wlr_compositor);
@@ -95,7 +94,6 @@ void wm_server_init(struct wm_server* server){
 
     server->wlr_xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create(server->wl_display);
     assert(server->wlr_xdg_decoration_manager);
-
 
     /* Children */
     server->wm_layout = calloc(1, sizeof(struct wm_layout));

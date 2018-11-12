@@ -51,9 +51,9 @@ static void call_layout_change(struct wm_layout* layout){
     }
 }
 
-static bool call_key(struct wlr_event_keyboard_key* event){
+static bool call_key(struct wlr_event_keyboard_key* event, const char* keysyms){
     if(callbacks.key){
-        PyObject* args = Py_BuildValue("(iii)", event->time_msec, event->keycode, event->state);
+        PyObject* args = Py_BuildValue("(iiis)", event->time_msec, event->keycode, event->state, keysyms);
         return call_bool(callbacks.key, args);
     }
 

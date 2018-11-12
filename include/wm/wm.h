@@ -16,7 +16,7 @@ struct wm {
     struct wm_server* server;
 
     void (*callback_layout_change)(struct wm_layout*);
-    bool (*callback_key)(struct wlr_event_keyboard_key*);
+    bool (*callback_key)(struct wlr_event_keyboard_key*, const char* keysyms);
     bool (*callback_modifiers)(struct wlr_keyboard_modifiers*);
     bool (*callback_motion)(double, double, uint32_t);
     bool (*callback_motion_absolute)(double, double, uint32_t);
@@ -45,7 +45,7 @@ void wm_callback_layout_change(struct wm_layout* layout);
 /*
  * Return false if event should be dispatched to clients
  */
-bool wm_callback_key(struct wlr_event_keyboard_key* event);
+bool wm_callback_key(struct wlr_event_keyboard_key* event, const char* keysyms);
 bool wm_callback_modifiers(struct wlr_keyboard_modifiers* modifiers);
 bool wm_callback_motion(double delta_x, double delta_y, uint32_t time_msec);
 bool wm_callback_motion_absolute(double x, double y, uint32_t time_msec);
