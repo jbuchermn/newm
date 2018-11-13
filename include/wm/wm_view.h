@@ -9,18 +9,6 @@
 
 struct wm_seat;
 
-struct wm_view_decoration {
-    struct wl_list link; // wm_server::wm_view_decorations
-
-    struct wlr_xdg_toplevel_decoration_v1* wlr_xdg_toplevel_decoration;
-
-    struct wl_listener request_mode;
-    struct wl_listener destroy;
-};
-
-void wm_view_decoration_init(struct wm_view_decoration* deco, struct wlr_xdg_toplevel_decoration_v1* wlr_deco);
-void wm_view_decoration_destroy(struct wm_view_decoration* deco);
-
 struct wm_view {
     struct wl_list link;  // wm_server::wm_views
     struct wm_server* wm_server;

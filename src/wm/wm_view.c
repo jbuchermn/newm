@@ -13,22 +13,6 @@
 #include "wm/wm.h"
 
 /*
- * Callbacks: xdg_toplevel_decoration
- */
-static void handle_deco_request_mode(struct wl_listener* listener, void* data){
-    struct wm_view_decoration* deco = wl_container_of(listener, deco, request_mode);
-    
-    wlr_xdg_toplevel_decoration_v1_set_mode(deco->wlr_xdg_toplevel_decoration,
-        WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
-}
-
-static void handle_deco_destroy(struct wl_listener* listener, void* data){
-    struct wm_view_decoration* deco = wl_container_of(listener, deco, destroy);
-    wm_view_decoration_destroy(deco);
-    free(deco);
-}
-
-/*
  * Callbacks: xdg_surface
  */
 static void handle_xdg_map(struct wl_listener* listener, void* data){
@@ -81,22 +65,6 @@ static void handle_xwayland_destroy(struct wl_listener* listener, void* data){
 /*
  * Class implementation
  */
-void wm_view_decoration_init(struct wm_view_decoration* deco, struct wlr_xdg_toplevel_decoration_v1* wlr_deco){
-    deco->wlr_xdg_toplevel_decoration = wlr_deco;
-
-    deco->request_mode.notify = &handle_deco_request_mode;
-    wl_signal_add(&wlr_deco->events.request_mode, &deco->request_mode);
-
-    deco->destroy.notify = &handle_deco_destroy;
-    wl_signal_add(&wlr_deco->events.destroy, &deco->destroy);
-}
-
-void wm_view_decoration_destroy(struct wm_view_decoration* deco){
-    wl_list_remove(&deco->request_mode.link);
-    wl_list_remove(&deco->destroy.link);
-    wl_list_remove(&deco->link);
-}
-
 void wm_view_init_xdg(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface){
     view->kind = WM_VIEW_XDG;
 
@@ -279,6 +247,9 @@ struct wlr_surface* wm_view_surface_at(struct wm_view* view, double at_x, double
 
         return wlr_surface_surface_at(view->wlr_xwayland_surface->surface, at_x, at_y, sx, sy);
     }
+
+    /* prevent warning */
+    return NULL;
 }
 
 void wm_view_for_each_surface(struct wm_view* view, wlr_surface_iterator_func_t iterator, void* user_data){

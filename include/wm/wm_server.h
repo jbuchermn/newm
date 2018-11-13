@@ -5,6 +5,7 @@
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 
 struct wm_seat;
@@ -19,6 +20,7 @@ struct wm_server{
     struct wlr_renderer* wlr_renderer;
     struct wlr_data_device_manager* wlr_data_device_manager;
     struct wlr_xdg_shell* wlr_xdg_shell;
+    struct wlr_server_decoration_manager* wlr_server_decoration_manager;
     struct wlr_xdg_decoration_manager_v1* wlr_xdg_decoration_manager;
 #ifdef PYWM_XWAYLAND
     struct wlr_xwayland* wlr_xwayland;
@@ -28,11 +30,11 @@ struct wm_server{
     struct wm_seat* wm_seat;
     struct wm_layout* wm_layout;
     struct wl_list wm_views;  // wm_view::link
-    struct wl_list wm_view_decorations;  // wm_view_decoration::link
 
     struct wl_listener new_input;
     struct wl_listener new_output;
     struct wl_listener new_xdg_surface;
+    struct wl_listener new_server_decoration;
     struct wl_listener new_xdg_decoration;
 #ifdef PYWM_XWAYLAND
     struct wl_listener new_xwayland_surface;
