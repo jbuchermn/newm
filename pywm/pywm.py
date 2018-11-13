@@ -56,6 +56,7 @@ class PyWM:
         Consider these read-only
         """
         self.views = []
+        self.widgets = []
         self.width = 0
         self.height = 0
         self.modifiers = 0
@@ -104,6 +105,9 @@ class PyWM:
                 view.destroy()
         self.views = [v for v in self.views if v._handle != handle]
 
+    def on_widget_destroy(self, widget):
+        self.widgets = [v for v in self.widgets if id(v) != id(widget)]
+
     """
     Public API
     """
@@ -113,6 +117,11 @@ class PyWM:
 
     def terminate(self):
         return terminate()
+
+    def create_widget(self, widget_class, *args, **kwargs):
+        widget = widget_class(self, *args, **kwargs)
+        self.widgets += [widget]
+        return widget
 
     """
     Virtual methods

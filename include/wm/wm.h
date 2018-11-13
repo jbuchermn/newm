@@ -9,6 +9,7 @@
 struct wm_view;
 struct wm_server;
 struct wm_layout;
+struct wm_widget;
 
 struct wm {
     struct wm_server* server;
@@ -30,6 +31,9 @@ int wm_run();
 void wm_terminate();
 
 void wm_focus_view(struct wm_view* view);
+
+struct wm_widget* wm_create_widget();
+void wm_destroy_widget(struct wm_widget* widget);
 
 /*
  * Instead of writing setters for every single callback,

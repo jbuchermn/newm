@@ -56,16 +56,6 @@ void* run(){
 
 	setenv("WAYLAND_DISPLAY", socket, true);
 
-    /* Create a dummy widget */
-    struct wm_widget* widget = wm_server_create_widget(wm.server);
-    wm_widget_set_box(widget, 10, 10, 1000, 1000);
-
-    unsigned char* data = malloc(4 * 100 * 100);
-    for(int i=0; i< 4 * 100 * 100; i++){
-        data[i] = rand();
-    }
-    wm_widget_set_pixels(widget, WL_SHM_FORMAT_ARGB8888, 100, 100, 100, data);
-
     /* Main */
     wl_display_run(wm.server->wl_display);
 
@@ -90,6 +80,17 @@ void wm_focus_view(struct wm_view* view){
     if(!wm.server) return;
 
     wm_view_focus(view, wm.server->wm_seat);
+}
+
+struct wm_widget* wm_create_widget(){
+    if(!wm.server) return NULL;
+
+    return wm_server_create_widget(wm.server);
+}
+
+void wm_destroy_widget(struct wm_widget* widget){
+    wm_widget_destroy(widget);
+    free(widget);
 }
 
 struct wm* get_wm(){

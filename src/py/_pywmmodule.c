@@ -6,6 +6,7 @@
 #include "wm/wm.h"
 #include "py/_pywm_callbacks.h"
 #include "py/_pywm_view.h"
+#include "py/_pywm_widget.h"
 
 
 static PyObject* _pywm_run(PyObject* self, PyObject* args){
@@ -69,6 +70,11 @@ static PyMethodDef _pywm_methods[] = {
     { "view_set_box",           &_pywm_view_set_box,           METH_VARARGS,   "" },
     { "view_set_dimensions",    &_pywm_view_set_dimensions,    METH_VARARGS,   "" },
     { "view_focus",             &_pywm_view_focus,             METH_VARARGS,   "" },
+    { "widget_create",          &_pywm_widget_create,          METH_VARARGS,   "" },
+    { "widget_destroy",         &_pywm_widget_destroy,         METH_VARARGS,   "" },
+    { "widget_set_box",         &_pywm_widget_set_box,         METH_VARARGS,   "" },
+    { "widget_set_layer",       &_pywm_widget_set_layer,       METH_VARARGS,   "" },
+    { "widget_set_pixels",      &_pywm_widget_set_pixels,      METH_VARARGS,   "" },
 
     { NULL, NULL, 0, NULL }
 };

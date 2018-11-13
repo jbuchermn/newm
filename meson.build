@@ -70,7 +70,8 @@ sources = [
 py_sources = [
     'src/py/_pywmmodule.c',
     'src/py/_pywm_callbacks.c',
-    'src/py/_pywm_view.c'
+    'src/py/_pywm_view.c',
+    'src/py/_pywm_widget.c'
 ]
 
 incs = include_directories('include')

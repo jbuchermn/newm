@@ -7,8 +7,11 @@ from itertools import product
 from pywm import (
     PyWM,
     PyWMView,
+    PyWMWidget,
     PYWM_MOD_CTRL,
-    PYWM_PRESSED
+    PYWM_PRESSED,
+    PYWM_LAYER_BACK,
+    PYWM_FORMATS
 )
 
 
@@ -245,20 +248,26 @@ class Layout(PyWM, Animate):
             self.animate([
                 InterAnimation(self, 'size', -1),
                 FinalAnimation(self, 'scale', -1)], 0.2)
+
+        elif keysyms == "w":
+            widget = self.create_widget(PyWMWidget)
+            widget.set_box(0, 0, 500, 500)
+            widget.set_layer(PYWM_LAYER_BACK)
+
+            data = bytearray(4 * 500 * 500)
+            for i in range(len(data)):
+                data[i] = (7*i) % 256
+            widget.set_pixels(PYWM_FORMATS['ARGB8888'], 500, 500, 500, bytes(data))
         else:
             print(keysyms)
 
         return True
 
-    # def on_motion_absolute(self, time_msec, x, y):
-    #     self.i = (-x + 0.5) * 4
-    #     self.update()
-    #     return True
-
 
 main = Layout()
 
 print("Running...")
+
 
 try:
     main.run()
