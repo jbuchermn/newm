@@ -163,9 +163,21 @@ class View(PyWMView):
             self.set_dimensions(width, height)
 
 
+def main_func(wm):
+    time.sleep(.1)
+    widget = wm.create_widget(PyWMWidget)
+    widget.set_box(0, 0, 500, 500)
+    widget.set_layer(PYWM_LAYER_BACK)
+
+    data = bytearray(4 * 500 * 500)
+    for i in range(len(data)):
+        data[i] = (7*i) % 256
+    widget.set_pixels(PYWM_FORMATS['ARGB8888'], 500, 500, 500, bytes(data))
+
+
 class Layout(PyWM, Animate):
     def __init__(self):
-        PyWM.__init__(self, View)
+        PyWM.__init__(self, View, main_func)
         Animate.__init__(self)
 
         """
@@ -255,28 +267,13 @@ class Layout(PyWM, Animate):
         return True
 
 
-main = Layout()
 
-
+wm = Layout()
 try:
-    print("Running...")
-    main.start()
-
-    widget = main.create_widget(PyWMWidget)
-    widget.set_box(0, 0, 500, 500)
-    widget.set_layer(PYWM_LAYER_BACK)
-
-    data = bytearray(4 * 500 * 500)
-    for i in range(len(data)):
-        data[i] = (7*i) % 256
-    widget.set_pixels(PYWM_FORMATS['ARGB8888'], 500, 500, 500, bytes(data))
-
-    while True:
-        time.sleep(1)
+    wm.run()
 
 except Exception:
     traceback.print_exc()
 
 finally:
-    print("Terminating...")
-    main.terminate()
+    wm.terminate()

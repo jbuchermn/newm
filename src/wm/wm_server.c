@@ -17,6 +17,7 @@
 #include <wlr/xwayland.h>
 
 #include "wm/wm_server.h"
+#include "wm/wm.h"
 #include "wm/wm_seat.h"
 #include "wm/wm_view.h"
 #include "wm/wm_layout.h"
@@ -82,6 +83,11 @@ static void handle_new_xdg_decoration(struct wl_listener* listener, void* data){
     /* struct wlr_xdg_toplevel_decoration_v1* wlr_deco = data; */
 
     wlr_log(WLR_DEBUG, "New XDG toplevel decoration");
+}
+
+static void handle_ready(struct wl_listener* listener, void* data){
+    /* Both parameters ignored */
+    wm_callback_ready();
 }
 
 /*
@@ -170,6 +176,18 @@ void wm_server_init(struct wm_server* server){
 #ifdef PYWM_XWAYLAND
     server->new_xwayland_surface.notify = handle_new_xwayland_surface;
     wl_signal_add(&server->wlr_xwayland->events.new_surface, &server->new_xwayland_surface);
+
+    /*
+     * Due to the unfortunate handling of XWayland forks via SIGUSR1, we need to be sure not
+     * to create any threads before the XWayland server is ready
+     */
+    server->xwayland_ready.notify = handle_ready;
+    wl_signal_add(&server->wlr_xwayland->events.ready, &server->xwayland_ready);
+#else
+    /*
+     * Without XWayland we are ready immediately
+     */
+    handle_ready(NULL, NULL);
 #endif
 }
 

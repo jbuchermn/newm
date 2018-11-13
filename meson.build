@@ -21,7 +21,7 @@ add_project_arguments(
 )
 
 add_project_arguments(
-	'-DPYWM_NO_XWAYLAND',
+	'-DPYWM_XWAYLAND',
 	language: 'c',
 )
 

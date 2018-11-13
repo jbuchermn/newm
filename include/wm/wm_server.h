@@ -38,6 +38,7 @@ struct wm_server{
     struct wl_listener new_server_decoration;
     struct wl_listener new_xdg_decoration;
 #ifdef PYWM_XWAYLAND
+    struct wl_listener xwayland_ready;
     struct wl_listener new_xwayland_surface;
 #endif
 };

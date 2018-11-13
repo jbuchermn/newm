@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <wlr/util/log.h>
 #include "wm/wm.h"
 #include "py/_pywm_callbacks.h"
@@ -9,17 +10,22 @@
 #include "py/_pywm_widget.h"
 
 
+static void handle_update(){
+    _pywm_widgets_update();
+}
+
+
 static PyObject* _pywm_run(PyObject* self, PyObject* args){
     int status;
 
-    Py_BEGIN_ALLOW_THREADS;
+    /* Register callbacks immediately, might be called during init */
+    get_wm()->callback_update = handle_update;
+    _pywm_callbacks_init();
 
     wm_init();
-    _pywm_callbacks_init();
-    _pywm_widgets_init_callbacks();
 
+    Py_BEGIN_ALLOW_THREADS;
     status = wm_run();
-
     Py_END_ALLOW_THREADS;
 
     return Py_BuildValue("i", status);

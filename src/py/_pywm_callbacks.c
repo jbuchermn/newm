@@ -122,6 +122,12 @@ static void call_destroy_view(struct wm_view* view){
     }
 }
 
+static void call_ready(){
+    if(callbacks.ready){
+        call_void(callbacks.ready, NULL);
+    }
+}
+
 /*
  * Public interface
  */
@@ -135,6 +141,7 @@ void _pywm_callbacks_init(){
     get_wm()->callback_axis = &call_axis;
     get_wm()->callback_init_view = &call_init_view;
     get_wm()->callback_destroy_view = &call_destroy_view;
+    get_wm()->callback_ready = &call_ready;
 }
 
 PyObject** _pywm_callbacks_get(const char* name){
@@ -156,6 +163,8 @@ PyObject** _pywm_callbacks_get(const char* name){
         return &callbacks.destroy_view;
     }else if(!strcmp(name, "layout_change")){
         return &callbacks.layout_change;
+    }else if(!strcmp(name, "ready")){
+        return &callbacks.ready;
     }
 
     return NULL;

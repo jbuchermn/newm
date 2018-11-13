@@ -18,7 +18,11 @@
 struct wm wm = { 0 };
 
 void wm_init(){
-    if(!wm.server) wm.server = calloc(1, sizeof(struct wm_server));
+    if(wm.server) return;
+
+    wlr_log_init(WLR_DEBUG, NULL);
+    wm.server = calloc(1, sizeof(struct wm_server));
+    wm_server_init(wm.server);
 }
 
 void wm_destroy(){
@@ -30,11 +34,7 @@ void wm_destroy(){
 }
 
 void* run(){
-    if(!wm.server) return NULL;
-
-    wlr_log_init(WLR_DEBUG, NULL);
-
-    wm_server_init(wm.server);
+    if(!wm.server || !wm.server->wl_display) return NULL;
 
     /* Setup socket and set env */
 	const char *socket = wl_display_add_socket_auto(wm.server->wl_display);
@@ -172,10 +172,18 @@ void wm_callback_destroy_view(struct wm_view* view){
     return (*wm.callback_destroy_view)(view);
 }
 
-void wm_callback_widgets_update(){
-    if(!wm.callback_widgets_update){
+void wm_callback_update(){
+    if(!wm.callback_update){
         return;
     }
 
-    return (*wm.callback_widgets_update)();
+    return (*wm.callback_update)();
+}
+
+void wm_callback_ready(){
+    if(!wm.callback_ready){
+        return;
+    }
+
+    return (*wm.callback_ready)();
 }

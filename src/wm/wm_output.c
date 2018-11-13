@@ -98,7 +98,8 @@ static void handle_frame(struct wl_listener* listener, void* data){
 	struct timespec now;
 	clock_gettime(CLOCK_MONOTONIC, &now);
 
-    wm_callback_widgets_update();
+    /* Synchronous updates */
+    wm_callback_update();
 
 	if(!wlr_output_make_current(output->wlr_output, NULL)) {
 		return;

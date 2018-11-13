@@ -23,7 +23,12 @@ struct wm {
     bool (*callback_axis)(struct wlr_event_pointer_axis*);
     void (*callback_init_view)(struct wm_view*);
     void (*callback_destroy_view)(struct wm_view*);
-    void (*callback_widgets_update)(void);
+
+    /* Once the server is ready, and we can create new threads */
+    void (*callback_ready)(void);
+
+    /* Synchronous update once per frame */
+    void (*callback_update)(void);
 };
 
 void wm_init();
@@ -61,6 +66,7 @@ bool wm_callback_axis(struct wlr_event_pointer_axis* event);
 void wm_callback_init_view(struct wm_view* view);
 void wm_callback_destroy_view(struct wm_view* view);
 
-void wm_callback_widgets_update();
+void wm_callback_update();
+void wm_callback_ready();
 
 #endif

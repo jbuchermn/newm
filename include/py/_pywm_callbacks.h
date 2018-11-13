@@ -15,6 +15,8 @@ struct _pywm_callbacks {
 
     PyObject* init_view;
     PyObject* destroy_view;
+
+    PyObject* ready;
 };
 
 void _pywm_callbacks_init();

@@ -51,6 +51,6 @@ PyObject* _pywm_widget_set_pixels(PyObject* self, PyObject* args);
 /*
  * Callbacks
  */
-void _pywm_widgets_init_callbacks();
+void _pywm_widgets_update();
 
 #endif

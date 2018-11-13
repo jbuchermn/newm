@@ -175,7 +175,7 @@ PyObject* _pywm_widget_set_pixels(PyObject* self, PyObject* args){
     return Py_None;
 }
 
-static void _pywm_widgets_update(){
+void _pywm_widgets_update(){
     for(struct _pywm_widget* widget = widgets.first_widget; widget; widget=widget->next_widget){
         if(widget->pixels_pending){
             wm_widget_set_pixels(widget->widget,
@@ -190,8 +190,4 @@ static void _pywm_widgets_update(){
             widget->pixels.data = NULL;
         }
     }
-}
-
-void _pywm_widgets_init_callbacks(){
-    get_wm()->callback_widgets_update = &_pywm_widgets_update;
 }

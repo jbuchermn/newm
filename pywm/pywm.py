@@ -1,5 +1,4 @@
 import traceback
-import signal
 import time
 from threading import Thread
 
@@ -27,13 +26,6 @@ PYWM_RELEASED = 0
 PYWM_PRESSED = 1
 
 
-# def handle_sigusr1(signum, frame):
-#     print("SIGUSR1")
-#
-#
-# signal.signal(signal.SIGUSR1, handle_sigusr1)
-
-
 def callback(func):
     def wrapped_func(*args, **kwargs):
         try:
@@ -43,15 +35,14 @@ def callback(func):
     return wrapped_func
 
 
-class PyWM(Thread):
-    def __init__(self, view_class=PyWMView):
-        super().__init__()
-
+class PyWM:
+    def __init__(self, view_class=PyWMView, main=None):
         global _instance
         if _instance is not None:
             raise Exception("Can only have one instance!")
         _instance = self
 
+        register("ready", self._ready)
         register("layout_change", self._layout_change)
         register("motion", self._motion)
         register("motion_absolute", self._motion_absolute)
@@ -62,6 +53,7 @@ class PyWM(Thread):
         register("init_view", self._init_view)
         register("destroy_view", self._destroy_view)
 
+        self._main = main
         self._view_class = view_class
 
         """
@@ -72,6 +64,19 @@ class PyWM(Thread):
         self.width = 0
         self.height = 0
         self.modifiers = 0
+
+    def _exec_main(self):
+        """
+        Without XWayland we should wait a little bit
+        """
+        time.sleep(.1)
+
+        if self._main is not None:
+            self._main(self)
+
+    @callback
+    def _ready(self):
+        Thread(target=self._exec_main).start()
 
     @callback
     def _motion(self, time_msec, delta_x, delta_y):
@@ -120,23 +125,15 @@ class PyWM(Thread):
     def on_widget_destroy(self, widget):
         self.widgets = [v for v in self.widgets if id(v) != id(widget)]
 
-    def start(self):
-        super().start()
-        """
-        Allow for some time to get everything set up
-        """
-        time.sleep(1)
-
-    def run(self):
-        run()
-
     """
     Public API
     """
 
+    def run(self):
+        run()
+
     def terminate(self):
         terminate()
-        self.join()
 
     def create_widget(self, widget_class, *args, **kwargs):
         widget = widget_class(self, *args, **kwargs)
