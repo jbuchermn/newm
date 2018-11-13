@@ -36,6 +36,7 @@ static void handle_xdg_destroy(struct wl_listener* listener, void* data){
 /*
  * Callbacks: xwayland_surface
  */
+#ifdef PYWM_XWAYLAND
 static void handle_xwayland_map(struct wl_listener* listener, void* data){
     struct wm_view* view = wl_container_of(listener, view, map);
 
@@ -60,6 +61,7 @@ static void handle_xwayland_destroy(struct wl_listener* listener, void* data){
     wm_view_destroy(view);
     free(view);
 }
+#endif
 
 
 /*
@@ -97,6 +99,7 @@ void wm_view_init_xdg(struct wm_view* view, struct wm_server* server, struct wlr
     wlr_xdg_toplevel_set_tiled(surface, 15);
 }
 
+#ifdef PYWM_XWAYLAND
 void wm_view_init_xwayland(struct wm_view* view, struct wm_server* server, struct wlr_xwayland_surface* surface){
     view->kind = WM_VIEW_XWAYLAND;
 
@@ -120,6 +123,7 @@ void wm_view_init_xwayland(struct wm_view* view, struct wm_server* server, struc
      */
 
 }
+#endif
 
 void wm_view_destroy(struct wm_view* view){
     wl_list_remove(&view->map.link);
@@ -142,11 +146,13 @@ void wm_view_get_info(struct wm_view* view, const char** title, const char** app
         *app_id = view->wlr_xdg_surface->toplevel->app_id;
         *role = "toplevel";
         break;
+#ifdef PYWM_XWAYLAND
     case WM_VIEW_XWAYLAND:
         *title = view->wlr_xwayland_surface->title;
         *app_id = view->wlr_xwayland_surface->class;
         *role = view->wlr_xwayland_surface->instance;
         break;
+#endif
     }
 
 }
@@ -165,9 +171,11 @@ void wm_view_request_size(struct wm_view* view, int width, int height){
             wlr_log(WLR_DEBUG, "Warning: Can only set size on toplevel");
         }
         break;
+#ifdef PYWM_XWAYLAND
     case WM_VIEW_XWAYLAND:
         wlr_xwayland_surface_configure(view->wlr_xwayland_surface, 0, 0, width, height);
         break;
+#endif
     }
 }
 
@@ -190,6 +198,7 @@ void wm_view_get_size(struct wm_view* view, int* width, int* height){
         *width = view->wlr_xdg_surface->geometry.width;
         *height = view->wlr_xdg_surface->geometry.height;
         break;
+#ifdef PYWM_XWAYLAND
     case WM_VIEW_XWAYLAND:
         if(!view->wlr_xwayland_surface->surface){
             *width = 0;
@@ -200,6 +209,7 @@ void wm_view_get_size(struct wm_view* view, int* width, int* height){
         *width = view->wlr_xwayland_surface->surface->current.width;
         *height = view->wlr_xwayland_surface->surface->current.height;
         break;
+#endif
     }
 }
 
@@ -209,12 +219,14 @@ void wm_view_focus(struct wm_view* view, struct wm_seat* seat){
     case WM_VIEW_XDG:
         wm_seat_focus_surface(seat, view->wlr_xdg_surface->surface);
         break;
+#ifdef PYWM_XWAYLAND
     case WM_VIEW_XWAYLAND:
         if(!view->wlr_xwayland_surface->surface){
             return;
         }
         wm_seat_focus_surface(seat, view->wlr_xwayland_surface->surface);
         break;
+#endif
     }
 }
 
@@ -226,12 +238,14 @@ void wm_view_set_activated(struct wm_view* view, bool activated){
         }
         wlr_xdg_toplevel_set_activated(view->wlr_xdg_surface, activated);
         break;
+#ifdef PYWM_XWAYLAND
     case WM_VIEW_XWAYLAND:
         if(!view->wlr_xwayland_surface->surface){
             return;
         }
         wlr_xwayland_surface_activate(view->wlr_xwayland_surface, activated);
         break;
+#endif
     }
 
 }
@@ -240,12 +254,14 @@ struct wlr_surface* wm_view_surface_at(struct wm_view* view, double at_x, double
     switch(view->kind){
     case WM_VIEW_XDG:
         return wlr_xdg_surface_surface_at(view->wlr_xdg_surface, at_x, at_y, sx, sy);
+#ifdef PYWM_XWAYLAND
     case WM_VIEW_XWAYLAND:
         if(!view->wlr_xwayland_surface->surface){
             return NULL;
         }
 
         return wlr_surface_surface_at(view->wlr_xwayland_surface->surface, at_x, at_y, sx, sy);
+#endif
     }
 
     /* prevent warning */
@@ -257,11 +273,13 @@ void wm_view_for_each_surface(struct wm_view* view, wlr_surface_iterator_func_t 
     case WM_VIEW_XDG:
         wlr_xdg_surface_for_each_surface(view->wlr_xdg_surface, iterator, user_data);
         break;
+#ifdef PYWM_XWAYLAND
     case WM_VIEW_XWAYLAND:
         if(!view->wlr_xwayland_surface->surface){
             return;
         }
         wlr_surface_for_each_surface(view->wlr_xwayland_surface->surface, iterator, user_data);
         break;
+#endif
     }
 }

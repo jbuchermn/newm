@@ -15,7 +15,9 @@ struct wm_view {
 
     enum {
         WM_VIEW_XDG,
+#ifdef PYWM_XWAYLAND
         WM_VIEW_XWAYLAND
+#endif
     } kind;
 
     bool mapped;
@@ -26,7 +28,9 @@ struct wm_view {
     double display_height;
 
     struct wlr_xdg_surface* wlr_xdg_surface;
+#ifdef PYWM_XWAYLAND
     struct wlr_xwayland_surface* wlr_xwayland_surface;
+#endif
 
     struct wl_listener map;
     struct wl_listener unmap;
@@ -34,7 +38,9 @@ struct wm_view {
 };
 
 void wm_view_init_xdg(struct wm_view* view, struct wm_server* server, struct wlr_xdg_surface* surface);
+#ifdef PYWM_XWAYLAND
 void wm_view_init_xwayland(struct wm_view* view, struct wm_server* server, struct wlr_xwayland_surface* surface);
+#endif
 void wm_view_destroy(struct wm_view* view);
 void wm_view_set_box(struct wm_view* view, double x, double y, double width, double height);
 void wm_view_get_info(struct wm_view* view, const char** title, const char** app_id, const char** role);

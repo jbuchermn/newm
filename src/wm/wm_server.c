@@ -55,6 +55,7 @@ static void handle_new_xdg_surface(struct wl_listener* listener, void* data){
     wl_list_insert(&server->wm_views, &view->link);
 }
 
+#ifdef PYWM_XWAYLAND
 static void handle_new_xwayland_surface(struct wl_listener* listener, void* data){
     struct wm_server* server = wl_container_of(listener, server, new_xwayland_surface);
     struct wlr_xwayland_surface* surface = data;
@@ -65,8 +66,8 @@ static void handle_new_xwayland_surface(struct wl_listener* listener, void* data
     wm_view_init_xwayland(view, server, surface);
 
     wl_list_insert(&server->wm_views, &view->link);
-
 }
+#endif
 
 static void handle_new_server_decoration(struct wl_listener* listener, void* data){
     /* struct wm_server* server = wl_container_of(listener, server, new_xdg_decoration); */
@@ -118,7 +119,6 @@ void wm_server_init(struct wm_server* server){
     server->wlr_xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create(server->wl_display);
     assert(server->wlr_xdg_decoration_manager);
 
-    server->wlr_xwayland = 0;
 #ifdef PYWM_XWAYLAND
     server->wlr_xwayland = wlr_xwayland_create(server->wl_display, server->wlr_compositor, false);
     assert(server->wlr_xwayland);
