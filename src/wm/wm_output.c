@@ -45,6 +45,7 @@ static void render_surface(struct wlr_surface *surface, int sx, int sy, void *da
 	struct render_data *rdata = data;
 	struct wm_output *output = rdata->output;
 
+
 	struct wlr_texture *texture = wlr_surface_get_texture(surface);
 	if(!texture) {
 		return;
@@ -108,8 +109,7 @@ static void handle_frame(struct wl_listener* listener, void* data){
             .y_scale = view->display_height / height
 		};
 
-		wlr_xdg_surface_for_each_surface(view->wlr_xdg_surface,
-				render_surface, &rdata);
+		wm_view_for_each_surface(view, render_surface, &rdata);
 	}
 
 	wlr_renderer_end(wlr_renderer);

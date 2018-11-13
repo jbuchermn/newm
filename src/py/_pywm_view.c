@@ -129,10 +129,7 @@ PyObject* _pywm_view_set_box(PyObject* self, PyObject* args){
         return NULL;
     }
 
-    view->display_x = x;
-    view->display_y = y;
-    view->display_width = width;
-    view->display_height = height;
+    wm_view_set_box(view, x, y, width, height);
 
     Py_INCREF(Py_None);
     return Py_None;

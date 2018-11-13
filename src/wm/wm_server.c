@@ -187,7 +187,7 @@ void wm_server_surface_at(struct wm_server* server, double at_x, double at_y,
 
         double sx;
         double sy;
-        struct wlr_surface* surface = wlr_xdg_surface_surface_at(view->wlr_xdg_surface, view_at_x, view_at_y, &sx, &sy);
+        struct wlr_surface* surface = wm_view_surface_at(view, view_at_x, view_at_y, &sx, &sy);
 
         if(surface){
             *result = surface;
