@@ -29,7 +29,7 @@ struct wm_view* _pywm_views_from_handle(long handle);
  */
 PyObject* _pywm_view_get_box(PyObject* self, PyObject* args);
 PyObject* _pywm_view_get_dimensions(PyObject* self, PyObject* args);
-PyObject* _pywm_view_get_title_app_id(PyObject* self, PyObject* args);
+PyObject* _pywm_view_get_info(PyObject* self, PyObject* args);
 PyObject* _pywm_view_set_box(PyObject* self, PyObject* args);
 PyObject* _pywm_view_set_dimensions(PyObject* self, PyObject* args);
 PyObject* _pywm_view_focus(PyObject* self, PyObject* args);

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <wlr/util/log.h>
 #include "wm/wm_seat.h"
+#include "wm/wm_view.h"
 #include "wm/wm_server.h"
 #include "wm/wm_keyboard.h"
 #include "wm/wm_pointer.h"
@@ -79,22 +80,22 @@ void wm_seat_add_input_device(struct wm_seat* seat, struct wlr_input_device* inp
     wlr_seat_set_capabilities(seat->wlr_seat, capabilities);
 }
 
+
 void wm_seat_focus_surface(struct wm_seat* seat, struct wlr_surface* surface){
     struct wlr_surface* prev = seat->wlr_seat->keyboard_state.focused_surface;
     if(prev == surface){
         return;
     }
 
-    if(prev && wlr_surface_is_xdg_surface(prev)){
-        struct wlr_xdg_surface* prev_xdg = wlr_xdg_surface_from_wlr_surface(prev);
-        wlr_xdg_toplevel_set_activated(prev_xdg, false);
+    struct wm_view* prev_view = wm_server_view_for_surface(seat->wm_server, prev);
+    if(prev_view){
+        wm_view_set_activated(prev_view, false);
     }
 
-    if(wlr_surface_is_xdg_surface(surface)){
-        struct wlr_xdg_surface* xdg = wlr_xdg_surface_from_wlr_surface(surface);
-        if(xdg->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL){
-            wlr_xdg_toplevel_set_activated(xdg, true);
-        }
+
+    struct wm_view* view = wm_server_view_for_surface(seat->wm_server, surface);
+    if(view){
+        wm_view_set_activated(view, true);
     }
 
     struct wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->wlr_seat);
@@ -119,6 +120,7 @@ bool wm_seat_dispatch_motion(struct wm_seat* seat, double x, double y, uint32_t 
 
     wm_server_surface_at(seat->wm_server, x, y, &surface, &sx, &sy);
     if(!surface){
+        wlr_log(WLR_DEBUG, "Clearing focus");
         wlr_seat_pointer_clear_focus(seat->wlr_seat);
         return false;
     }

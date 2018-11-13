@@ -4,7 +4,12 @@ from threading import Thread
 from abc import abstractmethod
 from itertools import product
 
-from pywm import PyWM, PyWMView, PYWM_MOD_CTRL, PYWM_PRESSED
+from pywm import (
+    PyWM,
+    PyWMView,
+    PYWM_MOD_CTRL,
+    PYWM_PRESSED
+)
 
 
 class Animation:
@@ -214,44 +219,36 @@ class Layout(PyWM, Animate):
             v.update()
 
     def on_key(self, time_msec, keycode, state, keysyms):
-        if state == PYWM_PRESSED:
-            return False
-
         if not self.modifiers & PYWM_MOD_CTRL:
             return False
 
+        if state != PYWM_PRESSED:
+            return True
+
         if keysyms == "Left":
             self.animate([InterAnimation(self, 'i', -1)], 0.2)
-            return True
         elif keysyms == "Right":
             self.animate([InterAnimation(self, 'i', +1)], 0.2)
-            return True
         elif keysyms == "Up":
             self.animate([InterAnimation(self, 'j', -1)], 0.2)
-            return True
         elif keysyms == "Down":
             self.animate([InterAnimation(self, 'j', +1)], 0.2)
-            return True
         elif keysyms == "Return":
             os.system("termite &")
-            return True
         elif keysyms == "C":
             self.terminate()
-            return True
         elif keysyms == "a":
             self.animate([
                 InterAnimation(self, 'size', +1),
                 FinalAnimation(self, 'scale', +1)], 0.2)
-            return True
         elif keysyms == "s":
             self.animate([
                 InterAnimation(self, 'size', -1),
                 FinalAnimation(self, 'scale', -1)], 0.2)
-            return True
         else:
             print(keysyms)
 
-        return False
+        return True
 
     # def on_motion_absolute(self, time_msec, x, y):
     #     self.i = (-x + 0.5) * 4

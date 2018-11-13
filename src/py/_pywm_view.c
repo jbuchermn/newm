@@ -98,7 +98,7 @@ PyObject* _pywm_view_get_dimensions(PyObject* self, PyObject* args){
 
 }
 
-PyObject* _pywm_view_get_title_app_id(PyObject* self, PyObject* args){
+PyObject* _pywm_view_get_info(PyObject* self, PyObject* args){
     long handle;
     if(!PyArg_ParseTuple(args, "l", &handle)){
         PyErr_SetString(PyExc_TypeError, "Arguments");
@@ -111,7 +111,12 @@ PyObject* _pywm_view_get_title_app_id(PyObject* self, PyObject* args){
         return NULL;
     }
 
-    return Py_BuildValue("(ss)", view->title, view->app_id);
+    const char* title;
+    const char* app_id; 
+    const char* role;
+    wm_view_get_info(view, &title, &app_id, &role);
+
+    return Py_BuildValue("(sss)", title, app_id, role);
 
 }
 

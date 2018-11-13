@@ -44,5 +44,6 @@ void wm_server_destroy(struct wm_server* server);
 
 void wm_server_surface_at(struct wm_server* server, double at_x, double at_y, 
         struct wlr_surface** result, double* result_sx, double* result_sy);
+struct wm_view* wm_server_view_for_surface(struct wm_server* server, struct wlr_surface* surface);
 
 #endif

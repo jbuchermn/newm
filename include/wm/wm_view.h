@@ -30,9 +30,6 @@ struct wm_view {
         WM_VIEW_XWAYLAND
     } kind;
 
-    const char* title;
-    const char* app_id;
-
     bool mapped;
 
     double display_x;
@@ -52,10 +49,12 @@ void wm_view_init_xdg(struct wm_view* view, struct wm_server* server, struct wlr
 void wm_view_init_xwayland(struct wm_view* view, struct wm_server* server, struct wlr_xwayland_surface* surface);
 void wm_view_destroy(struct wm_view* view);
 void wm_view_set_box(struct wm_view* view, double x, double y, double width, double height);
+void wm_view_get_info(struct wm_view* view, const char** title, const char** app_id, const char** role);
 
 void wm_view_request_size(struct wm_view* view, int width, int height);
 void wm_view_get_size(struct wm_view* view, int* width, int* height);
 void wm_view_focus(struct wm_view* view, struct wm_seat* seat);
+void wm_view_set_activated(struct wm_view* view, bool activated);
 struct wlr_surface* wm_view_surface_at(struct wm_view* view, double at_x, double at_y, double* sx, double* sy);
 void wm_view_for_each_surface(struct wm_view* view, wlr_surface_iterator_func_t iterator, void* user_data);
 

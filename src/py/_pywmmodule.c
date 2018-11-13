@@ -65,7 +65,7 @@ static PyMethodDef _pywm_methods[] = {
     { "register",               &_pywm_register,               METH_VARARGS,   "Register callback"  },
     { "view_get_box",           &_pywm_view_get_box,           METH_VARARGS,   "" },
     { "view_get_dimensions",    &_pywm_view_get_dimensions,    METH_VARARGS,   "" },
-    { "view_get_title_app_id",  &_pywm_view_get_title_app_id,  METH_VARARGS,   "" },
+    { "view_get_info",          &_pywm_view_get_info,          METH_VARARGS,   "" },
     { "view_set_box",           &_pywm_view_set_box,           METH_VARARGS,   "" },
     { "view_set_dimensions",    &_pywm_view_set_dimensions,    METH_VARARGS,   "" },
     { "view_focus",             &_pywm_view_focus,             METH_VARARGS,   "" },

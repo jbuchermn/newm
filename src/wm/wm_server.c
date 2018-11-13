@@ -175,6 +175,8 @@ void wm_server_surface_at(struct wm_server* server, double at_x, double at_y,
         struct wlr_surface** result, double* result_sx, double* result_sy){
     struct wm_view* view;
     wl_list_for_each(view, &server->wm_views, link){
+        if(!view->mapped) continue;
+
         int width;
         int height;
         wm_view_get_size(view, &width, &height);
@@ -198,4 +200,31 @@ void wm_server_surface_at(struct wm_server* server, double at_x, double at_y,
     }
 
     *result = NULL;
+}
+
+struct _view_for_surface_data {
+    struct wlr_surface* surface;
+    bool result;
+};
+
+static void _view_for_surface(struct wlr_surface* surface, int sx, int sy, void* _data){
+    struct _view_for_surface_data* data = _data;
+    if(surface == data->surface){
+        data->result = true;
+        return;
+    }
+}
+
+struct wm_view* wm_server_view_for_surface(struct wm_server* server, struct wlr_surface* surface){
+    struct wm_view* view;
+    wl_list_for_each(view, &server->wm_views, link){
+        struct _view_for_surface_data data = { 0 };
+        data.surface = surface;
+        wm_view_for_each_surface(view, _view_for_surface, &data);
+        if(data.result){
+            return view;
+        }
+    }
+
+    return NULL;
 }
