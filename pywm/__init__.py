@@ -15,3 +15,5 @@ from .pywm_widget import (  # noqa F401
     PYWM_LAYER_FRONT,
     PYWM_FORMATS
 )
+
+from .pywm_background_widget import PyWMBackgroundWidget  # noqa F401

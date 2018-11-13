@@ -8,7 +8,8 @@ from itertools import product
 from pywm import (
     PyWM,
     PyWMView,
-    PyWMWidget,
+    PyWMBackgroundWidget,
+    PYWM_MOD_LOGO,
     PYWM_MOD_CTRL,
     PYWM_PRESSED,
     PYWM_LAYER_BACK,
@@ -163,21 +164,9 @@ class View(PyWMView):
             self.set_dimensions(width, height)
 
 
-def main_func(wm):
-    time.sleep(.1)
-    widget = wm.create_widget(PyWMWidget)
-    widget.set_box(0, 0, 500, 500)
-    widget.set_layer(PYWM_LAYER_BACK)
-
-    data = bytearray(4 * 500 * 500)
-    for i in range(len(data)):
-        data[i] = (7*i) % 256
-    widget.set_pixels(PYWM_FORMATS['ARGB8888'], 500, 500, 500, bytes(data))
-
-
 class Layout(PyWM, Animate):
     def __init__(self):
-        PyWM.__init__(self, View, main_func)
+        PyWM.__init__(self, View)
         Animate.__init__(self)
 
         """
@@ -266,6 +255,8 @@ class Layout(PyWM, Animate):
 
         return True
 
+    def main(self):
+        background = self.create_widget(PyWMBackgroundWidget, '/home/jonas/wallpaper.jpg')
 
 
 wm = Layout()

@@ -36,7 +36,7 @@ def callback(func):
 
 
 class PyWM:
-    def __init__(self, view_class=PyWMView, main=None):
+    def __init__(self, view_class=PyWMView):
         global _instance
         if _instance is not None:
             raise Exception("Can only have one instance!")
@@ -53,7 +53,6 @@ class PyWM:
         register("init_view", self._init_view)
         register("destroy_view", self._destroy_view)
 
-        self._main = main
         self._view_class = view_class
 
         """
@@ -71,8 +70,7 @@ class PyWM:
         """
         time.sleep(.1)
 
-        if self._main is not None:
-            self._main(self)
+        self.main()
 
     @callback
     def _ready(self):
@@ -143,6 +141,9 @@ class PyWM:
     """
     Virtual methods
     """
+
+    def main(self):
+        pass
 
     def on_layout_change(self):
         pass
