@@ -13,6 +13,7 @@
 #include "wm/wm_server.h"
 #include "wm/wm_layout.h"
 #include "wm/wm_view.h"
+#include "wm/wm_widget.h"
 
 struct wm wm = { 0 };
 
@@ -54,6 +55,16 @@ void* run(){
 	}
 
 	setenv("WAYLAND_DISPLAY", socket, true);
+
+    /* Create a dummy widget */
+    struct wm_widget* widget = wm_server_create_widget(wm.server);
+    wm_widget_set_box(widget, 10, 10, 1000, 1000);
+
+    unsigned char* data = malloc(4 * 100 * 100);
+    for(int i=0; i< 4 * 100 * 100; i++){
+        data[i] = rand();
+    }
+    wm_widget_set_pixels(widget, WL_SHM_FORMAT_ARGB8888, 100, 100, 100, data);
 
     /* Main */
     wl_display_run(wm.server->wl_display);

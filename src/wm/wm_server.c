@@ -20,6 +20,7 @@
 #include "wm/wm_seat.h"
 #include "wm/wm_view.h"
 #include "wm/wm_layout.h"
+#include "wm/wm_widget.h"
 
 
 /*
@@ -88,6 +89,7 @@ static void handle_new_xdg_decoration(struct wl_listener* listener, void* data){
  */
 void wm_server_init(struct wm_server* server){
     wl_list_init(&server->wm_views);
+    wl_list_init(&server->wm_widgets);
 
     /* Wayland and wlroots resources */
     server->wl_display = wl_display_create();
@@ -236,4 +238,12 @@ struct wm_view* wm_server_view_for_surface(struct wm_server* server, struct wlr_
     }
 
     return NULL;
+}
+
+struct wm_widget* wm_server_create_widget(struct wm_server* server){
+    struct wm_widget* widget = calloc(1, sizeof(struct wm_widget));
+    wm_widget_init(widget, server);
+    wl_list_insert(&server->wm_widgets, &widget->link);
+
+    return widget;
 }

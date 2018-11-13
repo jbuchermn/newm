@@ -64,6 +64,7 @@ sources = [
     'src/wm/wm_layout.c',
     'src/wm/wm_output.c',
     'src/wm/wm_view.c',
+    'src/wm/wm_widget.c',
 ]
 
 py_sources = [

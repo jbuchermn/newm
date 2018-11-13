@@ -9,6 +9,7 @@
 #include "wm/wm_output.h"
 #include "wm/wm_view.h"
 #include "wm/wm_layout.h"
+#include "wm/wm_widget.h"
 
 /*
  * Callbacks
@@ -73,6 +74,22 @@ static void render_surface(struct wlr_surface *surface, int sx, int sy, void *da
 	wlr_surface_send_frame_done(surface, &rdata->when);
 }
 
+static void render_widget(struct wm_output* output, struct wm_widget* widget){
+    if(!widget->wlr_texture) return;
+
+    struct wlr_box box = {
+        .x = round(widget->display_x * output->wlr_output->scale),
+        .y = round(widget->display_y * output->wlr_output->scale),
+        .width = round(widget->display_width * output->wlr_output->scale),
+        .height = round(widget->display_height * output->wlr_output->scale)
+    };
+
+    float matrix[9];
+    wlr_matrix_project_box(matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL, 0, output->wlr_output->transform_matrix);
+    wlr_render_texture_with_matrix(output->wm_server->wlr_renderer, widget->wlr_texture, matrix, 1);
+
+}
+
 static void handle_frame(struct wl_listener* listener, void* data){
     struct wm_output* output = wl_container_of(listener, output, frame);
     struct wlr_renderer* wlr_renderer = output->wm_server->wlr_renderer;
@@ -91,6 +108,14 @@ static void handle_frame(struct wl_listener* listener, void* data){
 	float color[4] = { 0.3, 0.3, 0.3, 1.0 };
 	wlr_renderer_clear(wlr_renderer, color);
 
+    /* Render background widgets */
+    struct wm_widget* widget;
+    wl_list_for_each_reverse(widget, &output->wm_server->wm_widgets, link){
+        if(widget->layer != WM_WIDGET_BACK) continue;
+        render_widget(output, widget);
+    }
+
+    /* Render views */
 	struct wm_view *view;
 	wl_list_for_each_reverse(view, &output->wm_server->wm_views, link) {
         if(!view->mapped){
@@ -111,6 +136,12 @@ static void handle_frame(struct wl_listener* listener, void* data){
 
 		wm_view_for_each_surface(view, render_surface, &rdata);
 	}
+
+    /* Render foreground widgets */
+    wl_list_for_each_reverse(widget, &output->wm_server->wm_widgets, link){
+        if(widget->layer != WM_WIDGET_FRONT) continue;
+        render_widget(output, widget);
+    }
 
 	wlr_renderer_end(wlr_renderer);
 	wlr_output_swap_buffers(output->wlr_output, NULL, NULL);
