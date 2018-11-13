@@ -1,5 +1,6 @@
 import os
 import time
+import traceback
 from threading import Thread
 from abc import abstractmethod
 from itertools import product
@@ -248,16 +249,6 @@ class Layout(PyWM, Animate):
             self.animate([
                 InterAnimation(self, 'size', -1),
                 FinalAnimation(self, 'scale', -1)], 0.2)
-
-        elif keysyms == "w":
-            widget = self.create_widget(PyWMWidget)
-            widget.set_box(0, 0, 500, 500)
-            widget.set_layer(PYWM_LAYER_BACK)
-
-            data = bytearray(4 * 500 * 500)
-            for i in range(len(data)):
-                data[i] = (7*i) % 256
-            widget.set_pixels(PYWM_FORMATS['ARGB8888'], 500, 500, 500, bytes(data))
         else:
             print(keysyms)
 
@@ -266,11 +257,26 @@ class Layout(PyWM, Animate):
 
 main = Layout()
 
-print("Running...")
-
 
 try:
-    main.run()
+    print("Running...")
+    main.start()
+
+    widget = main.create_widget(PyWMWidget)
+    widget.set_box(0, 0, 500, 500)
+    widget.set_layer(PYWM_LAYER_BACK)
+
+    data = bytearray(4 * 500 * 500)
+    for i in range(len(data)):
+        data[i] = (7*i) % 256
+    widget.set_pixels(PYWM_FORMATS['ARGB8888'], 500, 500, 500, bytes(data))
+
+    while True:
+        time.sleep(1)
+
+except Exception:
+    traceback.print_exc()
+
 finally:
     print("Terminating...")
     main.terminate()

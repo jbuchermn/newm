@@ -120,7 +120,6 @@ bool wm_seat_dispatch_motion(struct wm_seat* seat, double x, double y, uint32_t 
 
     wm_server_surface_at(seat->wm_server, x, y, &surface, &sx, &sy);
     if(!surface){
-        wlr_log(WLR_DEBUG, "Clearing focus");
         wlr_seat_pointer_clear_focus(seat->wlr_seat);
         return false;
     }

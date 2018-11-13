@@ -23,6 +23,7 @@ struct wm {
     bool (*callback_axis)(struct wlr_event_pointer_axis*);
     void (*callback_init_view)(struct wm_view*);
     void (*callback_destroy_view)(struct wm_view*);
+    void (*callback_widgets_update)(void);
 };
 
 void wm_init();
@@ -59,5 +60,7 @@ bool wm_callback_axis(struct wlr_event_pointer_axis* event);
  */
 void wm_callback_init_view(struct wm_view* view);
 void wm_callback_destroy_view(struct wm_view* view);
+
+void wm_callback_widgets_update();
 
 #endif

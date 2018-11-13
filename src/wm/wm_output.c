@@ -10,6 +10,7 @@
 #include "wm/wm_view.h"
 #include "wm/wm_layout.h"
 #include "wm/wm_widget.h"
+#include "wm/wm.h"
 
 /*
  * Callbacks
@@ -96,6 +97,8 @@ static void handle_frame(struct wl_listener* listener, void* data){
 
 	struct timespec now;
 	clock_gettime(CLOCK_MONOTONIC, &now);
+
+    wm_callback_widgets_update();
 
 	if(!wlr_output_make_current(output->wlr_output, NULL)) {
 		return;

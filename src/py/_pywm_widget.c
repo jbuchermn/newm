@@ -54,13 +54,24 @@ long _pywm_widgets_remove(struct wm_widget* widget){
     return handle;
 }
 
-struct wm_widget* _pywm_widgets_from_handle(long handle){
+struct _pywm_widget* _pywm_widgets_container_from_handle(long handle){
+
     for(struct _pywm_widget* widget = widgets.first_widget; widget; widget=widget->next_widget){
-        if(widget->handle == handle) return widget->widget;
+        if(widget->handle == handle) return widget;
     }
 
     return NULL;
 }
+
+struct wm_widget* _pywm_widgets_from_handle(long handle){
+    struct _pywm_widget* widget = _pywm_widgets_container_from_handle(handle);
+    if(!widget){
+        return NULL;
+    }
+
+    return widget->widget;
+}
+
 
 PyObject* _pywm_widget_create(PyObject* self, PyObject* args){
     struct wm_widget* widget = wm_create_widget();
@@ -145,14 +156,42 @@ PyObject* _pywm_widget_set_pixels(PyObject* self, PyObject* args){
         return NULL;
     }
 
-    struct wm_widget* widget = _pywm_widgets_from_handle(handle);
+    struct _pywm_widget* widget = _pywm_widgets_container_from_handle(handle);
     if(!widget){
         PyErr_SetString(PyExc_TypeError, "Widget has been destroyed");
         return NULL;
     }
 
-    wm_widget_set_pixels(widget, format, stride, width, height, PyBytes_AsString(data));
+    widget->pixels_pending = true;
+    widget->pixels.format = format;
+    widget->pixels.stride = stride;
+    widget->pixels.width = width;
+    widget->pixels.height = height;
+    widget->pixels.data = data;
+
+    Py_INCREF(data);
 
     Py_INCREF(Py_None);
     return Py_None;
+}
+
+static void _pywm_widgets_update(){
+    for(struct _pywm_widget* widget = widgets.first_widget; widget; widget=widget->next_widget){
+        if(widget->pixels_pending){
+            wm_widget_set_pixels(widget->widget,
+                    widget->pixels.format,
+                    widget->pixels.stride,
+                    widget->pixels.width,
+                    widget->pixels.height,
+                    PyBytes_AsString(widget->pixels.data));
+
+            widget->pixels_pending = false;
+            Py_DECREF(widget->pixels.data);
+            widget->pixels.data = NULL;
+        }
+    }
+}
+
+void _pywm_widgets_init_callbacks(){
+    get_wm()->callback_widgets_update = &_pywm_widgets_update;
 }

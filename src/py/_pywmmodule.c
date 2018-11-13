@@ -16,6 +16,7 @@ static PyObject* _pywm_run(PyObject* self, PyObject* args){
 
     wm_init();
     _pywm_callbacks_init();
+    _pywm_widgets_init_callbacks();
 
     status = wm_run();
 

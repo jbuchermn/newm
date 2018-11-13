@@ -171,3 +171,11 @@ void wm_callback_destroy_view(struct wm_view* view){
 
     return (*wm.callback_destroy_view)(view);
 }
+
+void wm_callback_widgets_update(){
+    if(!wm.callback_widgets_update){
+        return;
+    }
+
+    return (*wm.callback_widgets_update)();
+}

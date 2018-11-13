@@ -1,4 +1,7 @@
 import traceback
+import signal
+import time
+from threading import Thread
 
 from .pywm_view import PyWMView
 
@@ -24,6 +27,13 @@ PYWM_RELEASED = 0
 PYWM_PRESSED = 1
 
 
+# def handle_sigusr1(signum, frame):
+#     print("SIGUSR1")
+#
+#
+# signal.signal(signal.SIGUSR1, handle_sigusr1)
+
+
 def callback(func):
     def wrapped_func(*args, **kwargs):
         try:
@@ -33,8 +43,10 @@ def callback(func):
     return wrapped_func
 
 
-class PyWM:
+class PyWM(Thread):
     def __init__(self, view_class=PyWMView):
+        super().__init__()
+
         global _instance
         if _instance is not None:
             raise Exception("Can only have one instance!")
@@ -108,15 +120,23 @@ class PyWM:
     def on_widget_destroy(self, widget):
         self.widgets = [v for v in self.widgets if id(v) != id(widget)]
 
-    """
-    Public API
-    """
+    def start(self):
+        super().start()
+        """
+        Allow for some time to get everything set up
+        """
+        time.sleep(1)
 
     def run(self):
         run()
 
+    """
+    Public API
+    """
+
     def terminate(self):
-        return terminate()
+        terminate()
+        self.join()
 
     def create_widget(self, widget_class, *args, **kwargs):
         widget = widget_class(self, *args, **kwargs)
