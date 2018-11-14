@@ -53,13 +53,11 @@ static void render_surface(struct wlr_surface *surface, int sx, int sy, void *da
 		return;
 	}
 
-	/* 
-     * TODO!
-     * * wlr_output_layout_output_coords: Placement of output within layout
-     */
+    double ox, oy;
+    wlr_output_layout_output_coords(output->wm_layout->wlr_output_layout, output->wlr_output, &ox, &oy);
 	struct wlr_box box = {
-		.x = round((rdata->x + sx*rdata->x_scale) * output->wlr_output->scale),
-		.y = round((rdata->y + sy*rdata->y_scale) * output->wlr_output->scale),
+		.x = round((ox + rdata->x + sx*rdata->x_scale) * output->wlr_output->scale),
+		.y = round((oy + rdata->y + sy*rdata->y_scale) * output->wlr_output->scale),
 		.width = round(surface->current.width * rdata->x_scale * output->wlr_output->scale),
 		.height = round(surface->current.height * rdata->y_scale * output->wlr_output->scale)
 	};
@@ -87,7 +85,7 @@ static void render_widget(struct wm_output* output, struct wm_widget* widget){
 
     float matrix[9];
     wlr_matrix_project_box(matrix, &box, WL_OUTPUT_TRANSFORM_NORMAL, 0, output->wlr_output->transform_matrix);
-    wlr_render_texture_with_matrix(output->wm_server->wlr_renderer, widget->wlr_texture, matrix, 1);
+    wlr_render_texture_with_matrix(output->wm_server->wlr_renderer, widget->wlr_texture, matrix, 1.);
 
 }
 
@@ -105,9 +103,7 @@ static void handle_frame(struct wl_listener* listener, void* data){
 		return;
 	}
 
-	int width, height;
-	wlr_output_effective_resolution(output->wlr_output, &width, &height);
-	wlr_renderer_begin(wlr_renderer, width, height);
+	wlr_renderer_begin(wlr_renderer, output->wlr_output->width, output->wlr_output->height);
 
 	float color[4] = { 0.3, 0.3, 0.3, 1.0 };
 	wlr_renderer_clear(wlr_renderer, color);
@@ -164,6 +160,12 @@ void wm_output_init(struct wm_output* output, struct wm_server* server, struct w
         struct wlr_output_mode* mode = wl_container_of(output->wlr_output->modes.prev, mode, link);
         wlr_output_set_mode(output->wlr_output, mode);
     }
+
+    /*
+     * HiDPI
+     * TODO: Make configurable
+     */
+    wlr_output_set_scale(output->wlr_output, 2.);
 
     output->destroy.notify = handle_destroy;
     wl_signal_add(&output->wlr_output->events.destroy, &output->destroy);
