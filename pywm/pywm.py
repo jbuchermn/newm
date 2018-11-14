@@ -127,8 +127,8 @@ class PyWM:
     Public API
     """
 
-    def run(self):
-        run()
+    def run(self, **kwargs):
+        run(**kwargs)
 
     def terminate(self):
         terminate()

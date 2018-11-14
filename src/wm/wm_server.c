@@ -22,6 +22,7 @@
 #include "wm/wm_view.h"
 #include "wm/wm_layout.h"
 #include "wm/wm_widget.h"
+#include "wm/wm_config.h"
 
 
 /*
@@ -93,9 +94,10 @@ static void handle_ready(struct wl_listener* listener, void* data){
 /*
  * Class implementation
  */
-void wm_server_init(struct wm_server* server){
+void wm_server_init(struct wm_server* server, struct wm_config* config){
     wl_list_init(&server->wm_views);
     wl_list_init(&server->wm_widgets);
+    server->wm_config = config;
 
     /* Wayland and wlroots resources */
     server->wl_display = wl_display_create();
@@ -134,7 +136,7 @@ void wm_server_init(struct wm_server* server){
     server->wlr_xcursor_manager = wlr_xcursor_manager_create(NULL, 24);
     assert(server->wlr_xcursor_manager);
 
-    if(wlr_xcursor_manager_load(server->wlr_xcursor_manager, 1)){
+    if(wlr_xcursor_manager_load(server->wlr_xcursor_manager, server->wm_config->output_scale)){
         wlr_log(WLR_ERROR, "Cannot load XCursor");
     }
 
@@ -197,7 +199,6 @@ void wm_server_destroy(struct wm_server* server){
 #endif
     wl_display_destroy_clients(server->wl_display);
     wl_display_destroy(server->wl_display);
-
 }
 
 void wm_server_surface_at(struct wm_server* server, double at_x, double at_y, 

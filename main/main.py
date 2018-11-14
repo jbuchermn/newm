@@ -224,7 +224,7 @@ class Layout(PyWM, Animate):
             v.update()
 
     def on_key(self, time_msec, keycode, state, keysyms):
-        if not self.modifiers & PYWM_MOD_CTRL:
+        if not self.modifiers & PYWM_MOD_LOGO:
             return False
 
         if state != PYWM_PRESSED:
@@ -261,7 +261,7 @@ class Layout(PyWM, Animate):
 
 wm = Layout()
 try:
-    wm.run()
+    wm.run(output_scale=1.4)
 
 except Exception:
     traceback.print_exc()

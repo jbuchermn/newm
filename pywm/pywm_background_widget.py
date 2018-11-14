@@ -32,4 +32,4 @@ class PyWMBackgroundWidget(PyWMWidget):
                         self.width, self.height,
                         im_alpha.tobytes())
 
-        self.set_box(0, 0, self.width, self.height)
+        self.set_box(0, 0, self.wm.width, self.wm.height)

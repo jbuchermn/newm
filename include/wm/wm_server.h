@@ -8,10 +8,13 @@
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 
+struct wm_config;
 struct wm_seat;
 struct wm_layout;
 
 struct wm_server{
+    struct wm_config* wm_config;
+
     struct wl_display* wl_display;
     struct wl_event_loop* wl_event_loop;
 
@@ -43,7 +46,7 @@ struct wm_server{
 #endif
 };
 
-void wm_server_init(struct wm_server* server);
+void wm_server_init(struct wm_server* server, struct wm_config* config);
 void wm_server_destroy(struct wm_server* server);
 
 void wm_server_surface_at(struct wm_server* server, double at_x, double at_y, 

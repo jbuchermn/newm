@@ -6,6 +6,8 @@
 #include "wm/wm_seat.h"
 #include "wm/wm_layout.h"
 #include "wm/wm_pointer.h"
+#include "wm/wm_config.h"
+#include "wm/wm_server.h"
 #include "wm/wm.h"
 
 /*
@@ -73,7 +75,8 @@ void wm_cursor_init(struct wm_cursor* cursor, struct wm_seat* seat, struct wm_la
     wlr_cursor_attach_output_layout(cursor->wlr_cursor, layout->wlr_output_layout);
 
     cursor->wlr_xcursor_manager = wlr_xcursor_manager_create(NULL, 24);
-    wlr_xcursor_manager_load(cursor->wlr_xcursor_manager, 1);
+    wlr_xcursor_manager_load(cursor->wlr_xcursor_manager,
+            cursor->wm_seat->wm_server->wm_config->output_scale);
 
     cursor->motion.notify = handle_motion;
     wl_signal_add(&cursor->wlr_cursor->events.motion, &cursor->motion);

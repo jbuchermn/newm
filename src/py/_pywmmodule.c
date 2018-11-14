@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <wlr/util/log.h>
 #include "wm/wm.h"
+#include "wm/wm_config.h"
 #include "py/_pywm_callbacks.h"
 #include "py/_pywm_view.h"
 #include "py/_pywm_widget.h"
@@ -15,14 +16,28 @@ static void handle_update(){
 }
 
 
-static PyObject* _pywm_run(PyObject* self, PyObject* args){
+static PyObject* _pywm_run(PyObject* self, PyObject* args, PyObject* kwargs){
     int status;
+
+    double output_scale = 1.;
+    char* kwlist[] = {
+        "output_scale",
+        NULL
+    };
+    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|d", kwlist, &output_scale)){
+        PyErr_SetString(PyExc_TypeError, "Arguments");
+        return NULL;
+    }
 
     /* Register callbacks immediately, might be called during init */
     get_wm()->callback_update = handle_update;
     _pywm_callbacks_init();
 
-    wm_init();
+    /* Hardcoded for the moment */
+    struct wm_config config = {
+        .output_scale = output_scale
+    };
+    wm_init(&config);
 
     Py_BEGIN_ALLOW_THREADS;
     status = wm_run();
@@ -68,20 +83,20 @@ static PyObject* _pywm_register(PyObject* self, PyObject* args){
 }
 
 static PyMethodDef _pywm_methods[] = {
-    { "run",                    &_pywm_run,                    METH_VARARGS,   "Start the compoitor in this thread" },
-    { "terminate",              &_pywm_terminate,              METH_VARARGS,   "Terminate compositor"  },
-    { "register",               &_pywm_register,               METH_VARARGS,   "Register callback"  },
-    { "view_get_box",           &_pywm_view_get_box,           METH_VARARGS,   "" },
-    { "view_get_dimensions",    &_pywm_view_get_dimensions,    METH_VARARGS,   "" },
-    { "view_get_info",          &_pywm_view_get_info,          METH_VARARGS,   "" },
-    { "view_set_box",           &_pywm_view_set_box,           METH_VARARGS,   "" },
-    { "view_set_dimensions",    &_pywm_view_set_dimensions,    METH_VARARGS,   "" },
-    { "view_focus",             &_pywm_view_focus,             METH_VARARGS,   "" },
-    { "widget_create",          &_pywm_widget_create,          METH_VARARGS,   "" },
-    { "widget_destroy",         &_pywm_widget_destroy,         METH_VARARGS,   "" },
-    { "widget_set_box",         &_pywm_widget_set_box,         METH_VARARGS,   "" },
-    { "widget_set_layer",       &_pywm_widget_set_layer,       METH_VARARGS,   "" },
-    { "widget_set_pixels",      &_pywm_widget_set_pixels,      METH_VARARGS,   "" },
+    { "run",                    (PyCFunction)_pywm_run,       METH_VARARGS | METH_KEYWORDS,   "Start the compoitor in this thread" },
+    { "terminate",              _pywm_terminate,              METH_VARARGS,                   "Terminate compositor"  },
+    { "register",               _pywm_register,               METH_VARARGS,                   "Register callback"  },
+    { "view_get_box",           _pywm_view_get_box,           METH_VARARGS,                   "" },
+    { "view_get_dimensions",    _pywm_view_get_dimensions,    METH_VARARGS,                   "" },
+    { "view_get_info",          _pywm_view_get_info,          METH_VARARGS,                   "" },
+    { "view_set_box",           _pywm_view_set_box,           METH_VARARGS,                   "" },
+    { "view_set_dimensions",    _pywm_view_set_dimensions,    METH_VARARGS,                   "" },
+    { "view_focus",             _pywm_view_focus,             METH_VARARGS,                   "" },
+    { "widget_create",          _pywm_widget_create,          METH_VARARGS,                   "" },
+    { "widget_destroy",         _pywm_widget_destroy,         METH_VARARGS,                   "" },
+    { "widget_set_box",         _pywm_widget_set_box,         METH_VARARGS,                   "" },
+    { "widget_set_layer",       _pywm_widget_set_layer,       METH_VARARGS,                   "" },
+    { "widget_set_pixels",      _pywm_widget_set_pixels,      METH_VARARGS,                   "" },
 
     { NULL, NULL, 0, NULL }
 };

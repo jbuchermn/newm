@@ -17,12 +17,12 @@
 
 struct wm wm = { 0 };
 
-void wm_init(){
+void wm_init(struct wm_config* config){
     if(wm.server) return;
 
     wlr_log_init(WLR_DEBUG, NULL);
     wm.server = calloc(1, sizeof(struct wm_server));
-    wm_server_init(wm.server);
+    wm_server_init(wm.server, config);
 }
 
 void wm_destroy(){

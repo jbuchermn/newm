@@ -10,6 +10,7 @@
 #include "wm/wm_view.h"
 #include "wm/wm_layout.h"
 #include "wm/wm_widget.h"
+#include "wm/wm_config.h"
 #include "wm/wm.h"
 
 /*
@@ -161,11 +162,7 @@ void wm_output_init(struct wm_output* output, struct wm_server* server, struct w
         wlr_output_set_mode(output->wlr_output, mode);
     }
 
-    /*
-     * HiDPI
-     * TODO: Make configurable
-     */
-    wlr_output_set_scale(output->wlr_output, 2.);
+    wlr_output_set_scale(output->wlr_output, output->wm_server->wm_config->output_scale);
 
     output->destroy.notify = handle_destroy;
     wl_signal_add(&output->wlr_output->events.destroy, &output->destroy);
