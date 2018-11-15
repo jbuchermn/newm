@@ -52,14 +52,36 @@ class Layout(PyWM, Animate):
 
     def get_extent(self):
         if len(self.views) == 0:
-            return 0, 0, 0, 0
+            return self.i, self.j, \
+                self.i + self.size - 1, self.j + self.size - 1
 
         min_i = min([view.i for view in self.views])
         min_j = min([view.j for view in self.views])
         max_i = max([view.i for view in self.views])
         max_j = max([view.j for view in self.views])
 
+        """
+        Borders around, such that views can be at the edges
+        """
+        min_i -= self.size - 1
+        min_j -= self.size - 1
+        max_i += self.size - 1
+        max_j += self.size - 1
+
         return min_i, min_j, max_i, max_j
+
+    def lies_within_extent(self, i, j):
+        min_i, min_j, max_i, max_j = self.get_extent()
+        if i < min_i:
+            return False
+        if j < min_j:
+            return False
+        if i + self.size - 1 > max_i:
+            return False
+        if j + self.size - 1 > max_j:
+            return False
+
+        return True
 
     def place_initial(self, view):
         for i, j in product(range(math.floor(self.i),
@@ -122,6 +144,9 @@ class Layout(PyWM, Animate):
         return True
 
     def move(self, delta_i, delta_j):
+        if not self.lies_within_extent(self.i + delta_i, self.j + delta_j):
+            return
+
         self.animate([InterAnimation(self, 'i', delta_i),
                       InterAnimation(self, 'j', delta_j)], 0.2)
 
@@ -152,3 +177,4 @@ class Layout(PyWM, Animate):
     def main(self):
         self.background = self.create_widget(Background,
                                              '/home/jonas/wallpaper.jpg')
+        self.background.update()
