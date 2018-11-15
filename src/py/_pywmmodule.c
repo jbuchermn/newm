@@ -32,11 +32,17 @@ static PyObject* _pywm_run(PyObject* self, PyObject* args, PyObject* kwargs){
     int status;
 
     double output_scale = 1.;
+    const char* xcursor_theme = NULL;
+    const char* xcursor_name = "left_ptr";
+    int xcursor_size = 24;
     char* kwlist[] = {
         "output_scale",
+        "xcursor_theme",
+        "xcursor_name",
+        "xcursor_size",
         NULL
     };
-    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|d", kwlist, &output_scale)){
+    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|dssi", kwlist, &output_scale, &xcursor_theme, &xcursor_name, &xcursor_size)){
         PyErr_SetString(PyExc_TypeError, "Arguments");
         return NULL;
     }
@@ -45,9 +51,11 @@ static PyObject* _pywm_run(PyObject* self, PyObject* args, PyObject* kwargs){
     get_wm()->callback_update = handle_update;
     _pywm_callbacks_init();
 
-    /* Hardcoded for the moment */
     struct wm_config config = {
-        .output_scale = output_scale
+        .output_scale = output_scale,
+        .xcursor_theme = xcursor_theme,
+        .xcursor_name = xcursor_name,
+        .xcursor_size = xcursor_size
     };
     wm_init(&config);
 

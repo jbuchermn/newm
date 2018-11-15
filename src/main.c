@@ -9,9 +9,8 @@
 
 
 int main(int argc, char** argv){
-    struct wm_config config = {
-        .output_scale = 1.25
-    };
+    struct wm_config config;
+    wm_config_init_default(&config);
     wm_init();
     wm_run();
     wm_destroy();

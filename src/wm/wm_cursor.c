@@ -22,6 +22,7 @@ static void handle_motion(struct wl_listener* listener, void* data){
     cursor->msec_delta = event->time_msec - t_msec;
 
     if(wm_callback_motion(event->delta_x, event->delta_y, event->time_msec)){
+        /* TODO: Do not show cursor */
         return;
     }
 
@@ -38,6 +39,7 @@ static void handle_motion_absolute(struct wl_listener* listener, void* data){
     cursor->msec_delta = event->time_msec - t_msec;
 
     if(wm_callback_motion_absolute(event->x, event->y, event->time_msec)){
+        /* TODO: Do not show cursor */
         return;
     }
 
@@ -78,7 +80,9 @@ void wm_cursor_init(struct wm_cursor* cursor, struct wm_seat* seat, struct wm_la
 
     wlr_cursor_attach_output_layout(cursor->wlr_cursor, layout->wlr_output_layout);
 
-    cursor->wlr_xcursor_manager = wlr_xcursor_manager_create(NULL, 24);
+    cursor->wlr_xcursor_manager = wlr_xcursor_manager_create(
+            cursor->wm_seat->wm_server->wm_config->xcursor_theme,
+            cursor->wm_seat->wm_server->wm_config->xcursor_size);
     wlr_xcursor_manager_load(cursor->wlr_xcursor_manager,
             cursor->wm_seat->wm_server->wm_config->output_scale);
 
@@ -109,7 +113,9 @@ void wm_cursor_add_pointer(struct wm_cursor* cursor, struct wm_pointer* pointer)
 
 void wm_cursor_update(struct wm_cursor* cursor){
     clock_t t_msec = clock() * 1000 / CLOCKS_PER_SEC;
-    if(!wm_seat_dispatch_motion(cursor->wm_seat, cursor->wlr_cursor->x, cursor->wlr_cursor->y, t_msec + cursor->msec_delta)){
-        wlr_xcursor_manager_set_cursor_image(cursor->wlr_xcursor_manager, "left_ptr", cursor->wlr_cursor);
+    if(!wm_seat_dispatch_motion(cursor->wm_seat, cursor->wlr_cursor->x, cursor->wlr_cursor->y,
+                t_msec + cursor->msec_delta)){
+        wlr_xcursor_manager_set_cursor_image(cursor->wlr_xcursor_manager,
+                cursor->wm_seat->wm_server->wm_config->xcursor_name, cursor->wlr_cursor);
     }
 }

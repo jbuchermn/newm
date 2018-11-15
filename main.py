@@ -215,6 +215,8 @@ class Layout(PyWM, Animate):
         """
         self.scale = 2
 
+        self.overview = False
+
     def find_at_tile(self, i, j):
         for view in self.views:
             if (view.i <= i < view.i + view.w) and \
@@ -264,13 +266,20 @@ class Layout(PyWM, Animate):
             v.update()
 
         self.background.update()
-        self.update_cursor()
+        if not self.overview:
+            self.update_cursor()
 
     def on_key(self, time_msec, keycode, state, keysyms):
         if not self.modifiers & PYWM_MOD_CTRL:
             return False
 
         if state != PYWM_PRESSED:
+            if self.overview:
+                self.i = round(self.i)
+                self.j = round(self.j)
+                self.size /= 1.5
+                self.overview = False
+                self.update()
             return True
 
         if keysyms == "h":
@@ -297,10 +306,33 @@ class Layout(PyWM, Animate):
         elif keysyms == "f":
             self.animate([
                 InterAnimation(self, 'scale', -self.scale/2.)], 0.2)
+        elif keysyms == "y":
+            if not self.overview:
+                self.overview = True
+                self.size *= 1.5
+                self.update()
         else:
             print(keysyms)
 
         return True
+
+    def on_motion(self, time_msec, delta_x, delta_y):
+        if self.overview:
+            self.i += -4 * delta_x / self.width
+            self.j += -4 * delta_y / self.height
+            self.update()
+            return True
+
+        return False
+
+    def on_motion_absolute(self, time_msec, x, y):
+        if self.overview:
+            self.i = -4 * (x - 0.5)
+            self.j = -4 * (y - 0.5)
+            self.update()
+            return True
+
+        return False
 
     def main(self):
         self.background = self.create_widget(Background,
