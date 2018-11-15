@@ -2,9 +2,7 @@ from pywm import PyWMView
 
 
 class View(PyWMView):
-    def __init__(self, wm, handle):
-        super().__init__(wm, handle)
-
+    def main(self):
         """
         Position, width and height in terms of tiles
         """
@@ -24,6 +22,8 @@ class View(PyWMView):
             HiDPI themselves
             """
             self.client_side_scale = self.wm.config['output_scale']
+
+        self.wm.update()
 
     def update(self):
         if self.w <= 0:
@@ -55,3 +55,7 @@ class View(PyWMView):
         self.set_box(x, y, w, h)
         if (width, height) != self.get_dimensions():
             self.set_dimensions(width, height)
+
+    def on_focus_change(self):
+        title, _, _, _ = self.get_info()
+        print("%s: focused == %s" % (title, self.focused))

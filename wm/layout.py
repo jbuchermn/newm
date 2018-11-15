@@ -4,9 +4,10 @@ from itertools import product
 
 from pywm import (
     PyWM,
+    PYWM_MOD_ALT,
     PYWM_MOD_LOGO,
     PYWM_MOD_CTRL,
-    PYWM_PRESSED,
+    PYWM_RELEASED,
 )
 
 from .background import Background
@@ -78,10 +79,6 @@ class Layout(PyWM, Animate):
         view.w = 1
         view.h = 1
 
-    def on_new_view(self, view):
-        view.update()
-        self.background.update()
-
     def update(self):
         if self.size <= 0:
             self.size = 1
@@ -92,55 +89,47 @@ class Layout(PyWM, Animate):
             v.update()
 
         self.background.update()
-        if not self.overview:
-            self.update_cursor()
+        self.update_cursor()
 
     def on_key(self, time_msec, keycode, state, keysyms):
-        if not self.modifiers & PYWM_MOD_CTRL:
+        """
+        All events with  our modifier are consumed.
+        No events without our modifier are consumed.
+        """
+        if not self.modifiers & PYWM_MOD_ALT:
             return False
 
-        if state != PYWM_PRESSED:
-            if self.overview:
-                self.i = round(self.i)
-                self.j = round(self.j)
-                self.size /= 1.5
-                self.overview = False
-                self.update()
-            return True
+        if state == PYWM_RELEASED:
+            if keysyms == "y":
+                self.exit_overview()
 
-        if keysyms == "h":
-            self.animate([InterAnimation(self, 'i', -1)], 0.2)
-        elif keysyms == "l":
-            self.animate([InterAnimation(self, 'i', +1)], 0.2)
-        elif keysyms == "k":
-            self.animate([InterAnimation(self, 'j', -1)], 0.2)
-        elif keysyms == "j":
-            self.animate([InterAnimation(self, 'j', +1)], 0.2)
-        elif keysyms == "Return":
-            os.system("termite &")
-        elif keysyms == "C":
-            self.terminate()
-        elif keysyms == "a":
-            self.animate([
-                InterAnimation(self, 'size', self.size)], 0.2)
-        elif keysyms == "s":
-            self.animate([
-                InterAnimation(self, 'size', -self.size/2.)], 0.2)
-        elif keysyms == "d":
-            self.animate([
-                InterAnimation(self, 'scale', self.scale)], 0.2)
-        elif keysyms == "f":
-            self.animate([
-                InterAnimation(self, 'scale', -self.scale/2.)], 0.2)
-        elif keysyms == "y":
-            if not self.overview:
-                self.overview = True
-                self.size *= 1.5
-                self.update()
         else:
-            print(keysyms)
+            if keysyms == "h":
+                self.move(-1, 0)
+            elif keysyms == "l":
+                self.move(1, 0)
+            elif keysyms == "k":
+                self.move(0, -1)
+            elif keysyms == "j":
+                self.move(0, 1)
+            elif keysyms == "Return":
+                os.system("termite &")
+            elif keysyms == "C":
+                self.terminate()
+            elif keysyms == "a":
+                self.enter_overview()
 
         return True
+
+    def move(self, delta_i, delta_j):
+        self.animate([InterAnimation(self, 'i', delta_i),
+                      InterAnimation(self, 'j', delta_j)], 0.2)
+
+    def enter_overview(self):
+        pass
+
+    def exit_overview(self):
+        pass
 
     def on_motion(self, time_msec, delta_x, delta_y):
         if self.overview:
