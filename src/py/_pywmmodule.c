@@ -10,9 +10,21 @@
 #include "py/_pywm_view.h"
 #include "py/_pywm_widget.h"
 
+static bool cursor_update_pending = false;
 
 static void handle_update(){
+    if(cursor_update_pending){
+        wm_update_cursor();
+        cursor_update_pending = false;
+    }
     _pywm_widgets_update();
+}
+
+static PyObject* _pywm_update_cursor(PyObject* self, PyObject* args){
+    cursor_update_pending = true;
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 
@@ -82,10 +94,12 @@ static PyObject* _pywm_register(PyObject* self, PyObject* args){
     return Py_None;
 }
 
+
 static PyMethodDef _pywm_methods[] = {
     { "run",                    (PyCFunction)_pywm_run,       METH_VARARGS | METH_KEYWORDS,   "Start the compoitor in this thread" },
     { "terminate",              _pywm_terminate,              METH_VARARGS,                   "Terminate compositor"  },
     { "register",               _pywm_register,               METH_VARARGS,                   "Register callback"  },
+    { "update_cursor",          _pywm_update_cursor,          METH_VARARGS,                   "Update cursor position within clients after moving a client"  },
     { "view_get_box",           _pywm_view_get_box,           METH_VARARGS,                   "" },
     { "view_get_dimensions",    _pywm_view_get_dimensions,    METH_VARARGS,                   "" },
     { "view_get_info",          _pywm_view_get_info,          METH_VARARGS,                   "" },

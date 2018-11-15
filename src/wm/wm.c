@@ -10,6 +10,7 @@
 #include <wlr/util/log.h>
 
 #include "wm/wm_seat.h"
+#include "wm/wm_cursor.h"
 #include "wm/wm_server.h"
 #include "wm/wm_layout.h"
 #include "wm/wm_view.h"
@@ -80,6 +81,12 @@ void wm_focus_view(struct wm_view* view){
     if(!wm.server) return;
 
     wm_view_focus(view, wm.server->wm_seat);
+}
+
+void wm_update_cursor(){
+    if(!wm.server) return;
+
+    wm_cursor_update(wm.server->wm_seat->wm_cursor);
 }
 
 struct wm_widget* wm_create_widget(){

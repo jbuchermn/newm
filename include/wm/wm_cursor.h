@@ -20,11 +20,14 @@ struct wm_cursor {
     struct wl_listener motion_absolute;
     struct wl_listener button;
     struct wl_listener axis;
+
+    uint32_t msec_delta;
 };
 
 void wm_cursor_init(struct wm_cursor* cursor, struct wm_seat* seat, struct wm_layout* layout);
 void wm_cursor_destroy(struct wm_cursor* cursor);
 void wm_cursor_add_pointer(struct wm_cursor* cursor, struct wm_pointer* pointer);
+void wm_cursor_update(struct wm_cursor* cursor);
 
 
 #endif

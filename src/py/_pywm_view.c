@@ -116,7 +116,12 @@ PyObject* _pywm_view_get_info(PyObject* self, PyObject* args){
     const char* role;
     wm_view_get_info(view, &title, &app_id, &role);
 
-    return Py_BuildValue("(sss)", title, app_id, role);
+    bool xwayland = false;
+#ifdef PYWM_XWAYLAND
+    xwayland = view->kind == WM_VIEW_XWAYLAND;
+#endif
+
+    return Py_BuildValue("(sssb)", title, app_id, role, xwayland);
 
 }
 

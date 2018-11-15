@@ -8,6 +8,7 @@ from ._pywm import (  # noqa E402
     run,
     terminate,
     register,
+    update_cursor
 )
 
 
@@ -112,6 +113,7 @@ class PyWM:
     def _init_view(self, handle):
         view = self._view_class(self, handle)
         self.views += [view]
+        self.on_new_view(view)
 
     @callback
     def _destroy_view(self, handle):
@@ -138,11 +140,17 @@ class PyWM:
         self.widgets += [widget]
         return widget
 
+    def update_cursor(self):
+        update_cursor()
+
     """
     Virtual methods
     """
 
     def main(self):
+        pass
+
+    def on_new_view(self, view):
         pass
 
     def on_layout_change(self):

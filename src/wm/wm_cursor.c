@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200112L
 
+#include <time.h>
 #include <assert.h>
 #include <wlr/util/log.h>
 #include "wm/wm_cursor.h"
@@ -17,28 +18,31 @@ static void handle_motion(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, motion);
     struct wlr_event_pointer_motion* event = data;
 
+    clock_t t_msec = clock() * 1000 / CLOCKS_PER_SEC;
+    cursor->msec_delta = event->time_msec - t_msec;
+
     if(wm_callback_motion(event->delta_x, event->delta_y, event->time_msec)){
         return;
     }
 
+
     wlr_cursor_move(cursor->wlr_cursor, event->device, event->delta_x, event->delta_y);
-    if(!wm_seat_dispatch_motion(cursor->wm_seat, cursor->wlr_cursor->x, cursor->wlr_cursor->y, event->time_msec)){
-        wlr_xcursor_manager_set_cursor_image(cursor->wlr_xcursor_manager, "left_ptr", cursor->wlr_cursor);
-    }
+    wm_cursor_update(cursor);
 }
 
 static void handle_motion_absolute(struct wl_listener* listener, void* data){
     struct wm_cursor* cursor = wl_container_of(listener, cursor, motion_absolute);
     struct wlr_event_pointer_motion_absolute* event = data;
 
+    clock_t t_msec = clock() * 1000 / CLOCKS_PER_SEC;
+    cursor->msec_delta = event->time_msec - t_msec;
+
     if(wm_callback_motion_absolute(event->x, event->y, event->time_msec)){
         return;
     }
 
     wlr_cursor_warp_absolute(cursor->wlr_cursor, event->device, event->x, event->y);
-    if(!wm_seat_dispatch_motion(cursor->wm_seat, cursor->wlr_cursor->x, cursor->wlr_cursor->y, event->time_msec)){
-        wlr_xcursor_manager_set_cursor_image(cursor->wlr_xcursor_manager, "left_ptr", cursor->wlr_cursor);
-    }
+    wm_cursor_update(cursor);
 }
 
 static void handle_button(struct wl_listener* listener, void* data){
@@ -101,4 +105,11 @@ void wm_cursor_destroy(struct wm_cursor* cursor) {
 
 void wm_cursor_add_pointer(struct wm_cursor* cursor, struct wm_pointer* pointer){
     wlr_cursor_attach_input_device(cursor->wlr_cursor, pointer->wlr_input_device);
+}
+
+void wm_cursor_update(struct wm_cursor* cursor){
+    clock_t t_msec = clock() * 1000 / CLOCKS_PER_SEC;
+    if(!wm_seat_dispatch_motion(cursor->wm_seat, cursor->wlr_cursor->x, cursor->wlr_cursor->y, t_msec + cursor->msec_delta)){
+        wlr_xcursor_manager_set_cursor_image(cursor->wlr_xcursor_manager, "left_ptr", cursor->wlr_cursor);
+    }
 }

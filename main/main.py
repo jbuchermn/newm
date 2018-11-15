@@ -1,3 +1,4 @@
+import math
 import os
 import time
 import traceback
@@ -16,6 +17,8 @@ from pywm import (
     PYWM_FORMATS
 )
 
+
+OUTPUT_SCALE = 2.
 
 class Animation:
     def __init__(self, target, prop, func, final):
@@ -134,6 +137,15 @@ class View(PyWMView):
         self.wm.place_initial(self)
         self.focus()
 
+        self.client_side_scale = 1.
+        _, _, _, xwayland = self.get_info()
+        if xwayland:
+            """
+            X cleints are responsible to handle
+            HiDPI themselves
+            """
+            self.client_side_scale = OUTPUT_SCALE
+
     def update(self):
         if self.w <= 0:
             self.w = 1
@@ -156,12 +168,26 @@ class View(PyWMView):
         w *= self.wm.width / self.wm.size
         h *= self.wm.height / self.wm.size
 
-        width = round(w * self.wm.size / self.wm.scale)
-        height = round(h * self.wm.size / self.wm.scale)
+        width = round(w * self.wm.size / self.wm.scale * self.client_side_scale)
+        height = round(h * self.wm.size / self.wm.scale * self.client_side_scale)
 
         self.set_box(x, y, w, h)
         if (width, height) != self.get_dimensions():
             self.set_dimensions(width, height)
+
+
+
+class Background(PyWMBackgroundWidget):
+    def __init__(self, wm, path):
+        super().__init__(wm, path)
+
+    def update(self):
+        min_i, min_j, max_i, max_j = self.wm.get_extent()
+        w = 2 * (max_i - min_i + 1) / self.wm.size * self.wm.width
+        h = 2 * (max_j - min_j + 1) / self.wm.size * self.wm.height
+        x = - .2 * (self.wm.i - min_i + 3) / self.wm.size * self.wm.height
+        y = - .2 * (self.wm.j - min_j + 3) / self.wm.size * self.wm.height
+        self.set_box(x, y, w, h)
 
 
 class Layout(PyWM, Animate):
@@ -197,9 +223,20 @@ class Layout(PyWM, Animate):
 
         return None
 
+    def get_extent(self):
+        if len(self.views) == 0:
+            return 0, 0, 0, 0
+
+        min_i = min([view.i for view in self.views])
+        min_j = min([view.j for view in self.views])
+        max_i = max([view.i for view in self.views])
+        max_j = max([view.j for view in self.views])
+
+        return min_i, min_j, max_i, max_j
+
     def place_initial(self, view):
-        for i, j in product(range(self.i, self.i + self.size),
-                            range(self.j, self.j + self.size)):
+        for i, j in product(range(math.floor(self.i), math.ceil(self.i + self.size)),
+                            range(math.floor(self.j), math.ceil(self.j + self.size))):
             if self.find_at_tile(i, j) is None:
                 view.i, view.j = i, j
                 break
@@ -212,7 +249,10 @@ class Layout(PyWM, Animate):
 
         view.w = 1
         view.h = 1
+
+    def on_new_view(self, view):
         view.update()
+        self.background.update()
 
     def update(self):
         if self.size <= 0:
@@ -223,20 +263,23 @@ class Layout(PyWM, Animate):
         for v in self.views:
             v.update()
 
+        self.background.update()
+        self.update_cursor()
+
     def on_key(self, time_msec, keycode, state, keysyms):
-        if not self.modifiers & PYWM_MOD_LOGO:
+        if not self.modifiers & PYWM_MOD_CTRL:
             return False
 
         if state != PYWM_PRESSED:
             return True
 
-        if keysyms == "Left":
+        if keysyms == "h":
             self.animate([InterAnimation(self, 'i', -1)], 0.2)
-        elif keysyms == "Right":
+        elif keysyms == "l":
             self.animate([InterAnimation(self, 'i', +1)], 0.2)
-        elif keysyms == "Up":
+        elif keysyms == "k":
             self.animate([InterAnimation(self, 'j', -1)], 0.2)
-        elif keysyms == "Down":
+        elif keysyms == "j":
             self.animate([InterAnimation(self, 'j', +1)], 0.2)
         elif keysyms == "Return":
             os.system("termite &")
@@ -244,24 +287,29 @@ class Layout(PyWM, Animate):
             self.terminate()
         elif keysyms == "a":
             self.animate([
-                InterAnimation(self, 'size', +1),
-                FinalAnimation(self, 'scale', +1)], 0.2)
+                InterAnimation(self, 'size', self.size)], 0.2)
         elif keysyms == "s":
             self.animate([
-                InterAnimation(self, 'size', -1),
-                FinalAnimation(self, 'scale', -1)], 0.2)
+                InterAnimation(self, 'size', -self.size/2.)], 0.2)
+        elif keysyms == "d":
+            self.animate([
+                InterAnimation(self, 'scale', self.scale)], 0.2)
+        elif keysyms == "f":
+            self.animate([
+                InterAnimation(self, 'scale', -self.scale/2.)], 0.2)
         else:
             print(keysyms)
 
         return True
 
     def main(self):
-        background = self.create_widget(PyWMBackgroundWidget, '/home/jonas/wallpaper.jpg')
+        self.background = self.create_widget(Background,
+                                             '/home/jonas/wallpaper.jpg')
 
 
 wm = Layout()
 try:
-    wm.run(output_scale=1.4)
+    wm.run(output_scale=OUTPUT_SCALE)
 
 except Exception:
     traceback.print_exc()
