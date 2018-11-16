@@ -37,7 +37,7 @@ class Background(PyWMBackgroundWidget):
         """
         Enlarge box and viewport
         """
-        factor = 3.
+        factor = wm_state.background_factor
 
         cx = x + w/2
         cy = y + h/2

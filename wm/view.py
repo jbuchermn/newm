@@ -1,6 +1,7 @@
 from pywm import PyWMView
 
 from .state import State
+from .animate import Animate
 
 
 class ViewState(State):
@@ -12,9 +13,10 @@ class ViewState(State):
         self.h = h
 
 
-class View(PyWMView):
+class View(PyWMView, Animate):
     def __init__(self, wm, handle):
-        super().__init__(wm, handle)
+        PyWMView.__init__(self, wm, handle)
+        Animate.__init__(self)
         self.state = ViewState(0, 0, 0, 0)
 
     def main(self):
@@ -27,10 +29,12 @@ class View(PyWMView):
             """
             self.client_side_scale = self.wm.config['output_scale']
 
-        self.focus()
         self.wm.place_initial(self)
 
-    def update(self, wm_state, state):
+    def update(self, state, wm_state=None):
+        if wm_state is None:
+            wm_state = self.wm.state
+
         i = state.i
         j = state.j
         w = state.w
@@ -49,10 +53,13 @@ class View(PyWMView):
 
         self.set_box(x, y, w, h)
 
-    def update_dimensions(self):
-        width = round(self.state.w * self.wm.width * self.wm.scale *
+    def update_dimensions(self, state=None):
+        if state is None:
+            state = self.state
+
+        width = round(state.w * self.wm.width / self.wm.scale *
                       self.client_side_scale)
-        height = round(self.state.h * self.wm.height * self.wm.scale *
+        height = round(state.h * self.wm.height / self.wm.scale *
                        self.client_side_scale)
 
         if (width, height) != self.get_dimensions():

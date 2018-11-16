@@ -25,7 +25,6 @@ class _Thread(Thread):
         self.dt = dt
 
     def run(self):
-        print("S")
         initial = time.time()
         current = time.time()
         while current - initial < self.dt:
@@ -33,7 +32,6 @@ class _Thread(Thread):
             current = time.time()
 
         self.animate._update_final()
-        print("F")
 
 
 class Animate:
@@ -46,9 +44,13 @@ class Animate:
         self._thread = None
 
     def transition(self, new_state, dt):
+        if self._thread is not None:
+            return False
         self._interpolate = _StateInterpolate(self.state, new_state)
         self._thread = _Thread(self, dt)
         self._thread.start()
+
+        return True
 
     def _update(self, perc):
         self.update(self._interpolate.get(perc))
