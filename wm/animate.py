@@ -1,106 +1,65 @@
 from threading import Thread
-import time
 from abc import abstractmethod
+import time
 
 
-class Animation:
-    def __init__(self, target, prop, func, final):
-        self._target = target
-        self._prop = prop
-        self._func = func
-        self._final = final
+class _StateInterpolate:
+    def __init__(self, state, new_state):
+        self.state = state
+        self.new_state = new_state
+        assert self.state.__class__ == self.new_state.__class__
 
-    def set(self, ts):
-        self._target.__dict__[self._prop] = self._func(ts)
-
-    def set_final(self):
-        self._target.__dict__[self._prop] = self._final
-
-
-class InterAnimation:
-    def __init__(self, target, prop, delta):
-        self._target = target
-        self._prop = prop
-        self._initial = None
-        self._delta = delta
-
-    def set(self, ts):
-        if self._initial is None:
-            self._initial = self._target.__dict__[self._prop]
-        self._target.__dict__[self._prop] = self._initial + \
-            ts * self._delta
-
-    def set_final(self):
-        self._target.__dict__[self._prop] = self._initial + self._delta
+    def get(self, perc):
+        result = self.state.copy()
+        for v in self.state.var:
+            result.__dict__[v] = \
+                self.state.__dict__[v] + perc * \
+                (self.new_state.__dict__[v] - self.state.__dict__[v])
+        return result
 
 
-class FinalAnimation:
-    def __init__(self, target, prop, delta):
-        self._target = target
-        self._prop = prop
-        self._initial = None
-        self._delta = delta
-
-    def set(self, ts):
-        if self._initial is None:
-            self._initial = self._target.__dict__[self._prop]
-
-    def set_final(self):
-        self._target.__dict__[self._prop] = self._initial + self._delta
-
-
-class AnimateThread(Thread):
-    def __init__(self, parent, targets, animations, duration):
+class _Thread(Thread):
+    def __init__(self, animate, dt):
         super().__init__()
-        self._parent = parent
-        self._targets = targets
-        self._animations = animations
-        self._duration = duration
-        self.finished = False
+        self.animate = animate
+        self.dt = dt
 
     def run(self):
+        print("S")
         initial = time.time()
-        ts = initial
-        while ts < initial + self._duration:
-            for anim in self._animations:
-                anim.set((ts - initial)/self._duration)
-            for target in self._targets:
-                target.update()
+        current = time.time()
+        while current - initial < self.dt:
+            self.animate._update((current - initial) / self.dt)
+            current = time.time()
 
-            time.sleep(0.02)
-
-            ts = time.time()
-
-        for anim in self._animations:
-            anim.set_final()
-        for target in self._targets:
-            target.update()
-        self.finished = True
-        self._parent.animation_finished()
+        self.animate._update_final()
+        print("F")
 
 
 class Animate:
     def __init__(self):
-        self._current_animation = None
-        self._pending_animation = None
+        """
+        Animate subclasses need a state member
+        """
+        self.state = None
+        self._interpolate = None
+        self._thread = None
+
+    def transition(self, new_state, dt):
+        self._interpolate = _StateInterpolate(self.state, new_state)
+        self._thread = _Thread(self, dt)
+        self._thread.start()
+
+    def _update(self, perc):
+        self.update(self._interpolate.get(perc))
+
+    def _update_final(self):
+        self.state = self._interpolate.get(1.)
+        self.update(self.state)
+
+        self._interpolate = None
+        self._thread = None
 
     @abstractmethod
-    def update(self):
+    def update(self, state):
         pass
-
-    def animation_finished(self):
-        if self._pending_animation is not None:
-            self._current_animation = self._pending_animation
-            self._pending_animation = None
-            self._current_animation.start()
-
-    def animate(self, animations, duration):
-        anim = AnimateThread(self, [self], animations, duration)
-        if self._current_animation is not None:
-            if not self._current_animation.finished:
-                self._pending_animation = anim
-                return
-
-        self._current_animation = anim
-        self._current_animation.start()
-

@@ -11,8 +11,37 @@ from pywm import (
 )
 
 from .background import Background
-from .view import View
-from .animate import Animate, InterAnimation
+from .view import View, ViewState
+from .state import State
+from .animate import Animate
+
+
+class LayoutState(State):
+    def __init__(self, i, j, size, min_i, min_j, max_i, max_j, padding):
+        super().__init__(['i', 'j', 'size',
+                          'min_i', 'min_j', 'max_i', 'max_j',
+                          'padding'])
+
+        self.i = i
+        self.j = j
+        self.size = size
+        self.min_i = min_i
+        self.min_j = min_j
+        self.max_i = max_i
+        self.max_j = max_j
+        self.padding = padding
+
+    def lies_within_extent(self, i, j):
+        if i < self.min_i:
+            return False
+        if j < self.min_j:
+            return False
+        if i + self.size - 1 > self.max_i:
+            return False
+        if j + self.size - 1 > self.max_j:
+            return False
+
+        return True
 
 
 class Layout(PyWM, Animate):
@@ -20,98 +49,78 @@ class Layout(PyWM, Animate):
         PyWM.__init__(self, View, **kwargs)
         Animate.__init__(self)
 
-        """
-        Position (index of top-left visible tile) and size
-        (2x2 tiles, 3x3 tiles, ...) in terms of tiles
-        """
-        self.i = 0
-        self.j = 0
-        self.size = 2
+        self.state = LayoutState(0, 0, 2, 0, 0, 1, 1, 0.05)
+
+        self.background = None
 
         """
-        padding at scale == 0 in terms of tiles
+        scale == size: pixel-to-pixel
+        scale == 2 * size: client-side width height are twice as
+            high as rendered width, height => Appears half as big
+        ...
         """
-        self.padding = 0.01
-
-        """
-        size <  scale => width, height <  w, h
-        size == scale => width, height == w, h
-        size >  scale => width, height >  w, h
-        """
-        self.scale = 2
-
+        self.scale = 1
         self.overview = False
+
+    def update(self, state):
+        for v in self.views:
+            v.update(state, v.state)
+
+        if self.background is not None:
+            self.background.update(state, self.background.state)
 
     def find_at_tile(self, i, j):
         for view in self.views:
-            if (view.i <= i < view.i + view.w) and \
-                    (view.j <= j < view.j + view.h):
+            if (view.state.i <= i < view.state.i + view.state.w) and \
+                    (view.state.j <= j < view.state.j + view.state.h):
                 return view
 
         return None
 
     def get_extent(self):
         if len(self.views) == 0:
-            return self.i, self.j, \
-                self.i + self.size - 1, self.j + self.size - 1
+            return self.state.i, self.state.j, \
+                self.state.i + self.state.size - 1, \
+                self.state.j + self.state.size - 1
 
-        min_i = min([view.i for view in self.views])
-        min_j = min([view.j for view in self.views])
-        max_i = max([view.i for view in self.views])
-        max_j = max([view.j for view in self.views])
+        min_i = min([view.state.i for view in self.views])
+        min_j = min([view.state.j for view in self.views])
+        max_i = max([view.state.i for view in self.views])
+        max_j = max([view.state.j for view in self.views])
 
         """
         Borders around, such that views can be at the edges
         """
-        min_i -= self.size - 1
-        min_j -= self.size - 1
-        max_i += self.size - 1
-        max_j += self.size - 1
+        min_i -= self.state.size - 1
+        min_j -= self.state.size - 1
+        max_i += self.state.size - 1
+        max_j += self.state.size - 1
 
         return min_i, min_j, max_i, max_j
 
-    def lies_within_extent(self, i, j):
-        min_i, min_j, max_i, max_j = self.get_extent()
-        if i < min_i:
-            return False
-        if j < min_j:
-            return False
-        if i + self.size - 1 > max_i:
-            return False
-        if j + self.size - 1 > max_j:
-            return False
-
-        return True
-
     def place_initial(self, view):
-        for i, j in product(range(math.floor(self.i),
-                                  math.ceil(self.i + self.size)),
-                            range(math.floor(self.j),
-                                  math.ceil(self.j + self.size))):
+        place_i = 0
+        place_j = 0
+        for j, i in product(range(math.floor(self.state.j),
+                                  math.ceil(self.state.j + self.state.size)),
+                            range(math.floor(self.state.i),
+                                  math.ceil(self.state.i + self.state.size))):
             if self.find_at_tile(i, j) is None:
-                view.i, view.j = i, j
+                place_i, place_j = i, j
                 break
         else:
-            i, j = self.i, self.j
-            while self.find_at_tile(i, j) is not None:
-                i += 1
-            view.i = i
-            view.j = j
+            place_i, place_j = self.state.i, self.state.j
+            while self.find_at_tile(place_i, place_j) is not None:
+                place_i += 1
 
-        view.w = 1
-        view.h = 1
+        view.state = ViewState(place_i, place_j, 1, 1)
+        view.update_dimensions()
 
-    def update(self):
-        if self.size <= 0:
-            self.size = 1
-        if self.scale <= 0:
-            self.scale = 1
+        new_state = self.state.copy()
+        new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j = \
+            self.get_extent()
 
-        for v in self.views:
-            v.update()
-
-        self.background.update()
-        self.update_cursor()
+        self.transition(new_state, .2)
 
     def on_key(self, time_msec, keycode, state, keysyms):
         """
@@ -143,12 +152,17 @@ class Layout(PyWM, Animate):
 
         return True
 
+
     def move(self, delta_i, delta_j):
-        if not self.lies_within_extent(self.i + delta_i, self.j + delta_j):
+        if not self.state.lies_within_extent(self.state.i + delta_i,
+                                             self.state.j + delta_j):
             return
 
-        self.animate([InterAnimation(self, 'i', delta_i),
-                      InterAnimation(self, 'j', delta_j)], 0.2)
+        new_state = self.state.copy()
+        new_state.i += delta_i
+        new_state.j += delta_j
+
+        self.transition(new_state, .2)
 
     def enter_overview(self):
         pass
@@ -177,4 +191,4 @@ class Layout(PyWM, Animate):
     def main(self):
         self.background = self.create_widget(Background,
                                              '/home/jonas/wallpaper.jpg')
-        self.background.update()
+        self.background.update(self.state, self.background.state)

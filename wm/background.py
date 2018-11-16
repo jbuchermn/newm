@@ -1,12 +1,22 @@
 from pywm import PyWMBackgroundWidget
 
+from .state import State
+
+
+class BackgroundState(State):
+    def __init__(self):
+        super().__init__([])
+
 
 class Background(PyWMBackgroundWidget):
     def __init__(self, wm, path):
         super().__init__(wm, path)
 
-    def update(self):
-        min_i, min_j, max_i, max_j = self.wm.get_extent()
+        self.state = BackgroundState()
+
+    def update(self, wm_state, state):
+        min_i, min_j, max_i, max_j = \
+            wm_state.min_i, wm_state.min_j, wm_state.max_i, wm_state.max_j
 
         """
         Box of background
@@ -19,10 +29,10 @@ class Background(PyWMBackgroundWidget):
         """
         Box of viewport within background
         """
-        vp_x = self.wm.i - min_i
-        vp_y = self.wm.j - min_j
-        vp_w = self.wm.size
-        vp_h = self.wm.size
+        vp_x = wm_state.i - min_i
+        vp_y = wm_state.j - min_j
+        vp_w = wm_state.size
+        vp_h = wm_state.size
 
         """
         Enlarge box and viewport
