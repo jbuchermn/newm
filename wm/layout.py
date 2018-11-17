@@ -1,6 +1,8 @@
 import math
+import time
 import os
 from itertools import product
+from threading import Thread
 
 from pywm import (
     PyWM,
@@ -11,52 +13,12 @@ from pywm import (
     PYWM_PRESSED,
 )
 
+
 from .background import Background
 from .view import View, ViewState
 from .state import State
 from .animate import Animate
-
-
-class Overview:
-    def __init__(self, layout):
-        self.layout = layout
-        self.state = self.layout.state.copy()
-
-        """
-        Enlarge view port and recenter
-        """
-        self.state.i -= .5*(1.5 - 1.)*self.state.size
-        self.state.j -= .5*(1.5 - 1.)*self.state.size
-        self.state.size *= 1.5
-        self.state.background_factor *= 1.5
-
-    def get_initial_state(self):
-        return self.state
-
-    def get_final_state(self):
-        new_state = self.state.copy()
-        new_state.size = round(new_state.size / 1.5)
-        new_state.background_factor /= 1.5
-        new_state.i = round(new_state.i)
-        new_state.j = round(new_state.j)
-        return self.state, new_state
-
-    def init(self):
-        pass
-
-    def destroy(self):
-        pass
-
-    def on_motion(self, delta_x, delta_y):
-        self.state.i -= self.state.size * delta_x
-        self.state.j -= self.state.size * delta_y
-        self.layout.update(self.state)
-
-    def on_axis(self, orientation, delta):
-        self.state.i -= .5*0.01*delta
-        self.state.j -= .5*0.01*delta
-        self.state.size += 0.01*delta
-        self.layout.update(self.state)
+from .overview import Overview
 
 
 class LayoutState(State):
@@ -90,9 +52,11 @@ class LayoutState(State):
 
 
 class Layout(PyWM, Animate):
-    def __init__(self, **kwargs):
+    def __init__(self, mod, **kwargs):
         PyWM.__init__(self, View, **kwargs)
         Animate.__init__(self)
+
+        self.mod = mod
 
         self.default_padding = 0.01
         self.state = LayoutState(0, 0, 2, 0, 0, 1, 1, self.default_padding, 3)
@@ -181,10 +145,11 @@ class Layout(PyWM, Animate):
         All events with  our modifier are consumed.
         No events without our modifier are consumed.
         """
-        if not self.modifiers & PYWM_MOD_LOGO:
+        if not self.modifiers & self.mod:
             if self.overview is not None:
-                self.exit_overview()
-                return True
+                if not self.overview.multitouch_in_progress():
+                    self.exit_overview()
+                    return True
             return False
 
         if state == PYWM_PRESSED:
@@ -230,10 +195,11 @@ class Layout(PyWM, Animate):
         return True
 
     def on_modifiers(self, modifiers):
-        if not self.modifiers & PYWM_MOD_ALT:
+        if not self.modifiers & self.mod:
             if self.overview is not None:
-                self.exit_overview()
-                return True
+                if not self.overview.multitouch_in_progress():
+                    self.exit_overview()
+                    return True
         return False
 
     def move(self, delta_i, delta_j):
@@ -261,13 +227,17 @@ class Layout(PyWM, Animate):
 
     def box_intersects(self, box1, box2):
         box1_tiles = []
-        for i, j in product(range(math.floor(box1[0]), math.ceil(box1[0] + box1[2])),
-                            range(math.floor(box1[1]), math.ceil(box1[1] + box1[3]))):
+        for i, j in product(range(math.floor(box1[0]),
+                                  math.ceil(box1[0] + box1[2])),
+                            range(math.floor(box1[1]),
+                                  math.ceil(box1[1] + box1[3]))):
             box1_tiles += [(i, j)]
 
         box2_tiles = []
-        for i, j in product(range(math.floor(box2[0]), math.ceil(box2[0] + box2[2])),
-                            range(math.floor(box2[1]), math.ceil(box2[1] + box2[3]))):
+        for i, j in product(range(math.floor(box2[0]),
+                                  math.ceil(box2[0] + box2[2])),
+                            range(math.floor(box2[1]),
+                                  math.ceil(box2[1] + box2[3]))):
             box2_tiles += [(i, j)]
 
         for t in box1_tiles:
@@ -368,15 +338,13 @@ class Layout(PyWM, Animate):
 
         self.transition(new_state, .2)
 
-    def enter_overview(self):
+    def enter_overview(self, touches=None):
         if self.overview is not None:
             return
 
-        ovr = Overview(self)
-        new_state = ovr.get_initial_state()
-        if self.transition(new_state, .2):
-            self.overview = ovr
-            self.overview.init()
+        self.overview = Overview(self)
+        if touches is not None:
+            self.overview.multitouch_begin(touches)
 
     def exit_overview(self):
         if self.overview is None:
@@ -389,6 +357,14 @@ class Layout(PyWM, Animate):
             self.overview = None
             self.rescale()
             self.update_cursor()
+        else:
+            print("Retrying exit_overview...")
+
+            def retry(self):
+                time.sleep(.2)
+                self.exit_overview()
+
+            Thread(target=retry, args=(self,)).start()
 
     def on_motion(self, time_msec, delta_x, delta_y):
         if self.overview is not None:
@@ -403,6 +379,26 @@ class Layout(PyWM, Animate):
             return True
 
         return False
+
+    def on_multitouch_begin(self, touches):
+        if self.overview is not None:
+            self.overview.multitouch_begin(touches)
+            return True
+
+        if self.modifiers & self.mod:
+            self.enter_overview(touches)
+            return True
+
+    def on_multitouch_end(self):
+        if self.overview is not None:
+            self.overview.multitouch_end()
+
+            if not self.modifiers & self.mod:
+                self.exit_overview()
+
+    def on_multitouch_update(self, touches):
+        if self.overview is not None:
+            self.overview.multitouch_update(touches)
 
     def main(self):
         self.background = self.create_widget(Background,
