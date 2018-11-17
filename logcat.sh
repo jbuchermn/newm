@@ -1,2 +1,2 @@
 #!/bin/sh
-tail -f /tmp/wm_log
+tail -f $HOME/.wm_log

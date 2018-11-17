@@ -77,7 +77,7 @@ class Overview:
             (touches[0].x - touches[1].x)**2 +
             (touches[0].y - touches[1].y)**2)
 
-        return cog_x, cog_y, max(dist, 1000)
+        return cog_x, cog_y, max(dist, 0.1)
 
     def multitouch_begin(self, touches):
         self.touches_cog_x, self.touches_cog_y, self.touches_dist = \
@@ -102,8 +102,8 @@ class Overview:
         cog_y = self.touches_lp_cog_y.next(cog_y)
         dist = self.touches_lp_dist.next(dist)
 
-        self.x = self.touches_x - .001*(cog_x - self.touches_cog_x)
-        self.y = self.touches_y - .001*(cog_y - self.touches_cog_y)
+        self.x = self.touches_x - 4*(cog_x - self.touches_cog_x)
+        self.y = self.touches_y - 4*(cog_y - self.touches_cog_y)
         self.size = self.touches_size * self.touches_dist / dist
 
         self._set_state()

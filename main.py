@@ -19,7 +19,7 @@ else:
     print("Using modifier LOGO")
 
 faulthandler.enable()
-wm = Layout(mod, output_scale=OUTPUT_SCALE, multitouch='/dev/input/event19')
+wm = Layout(mod, output_scale=OUTPUT_SCALE, multitouch='SynPS/2')
 try:
     wm.run()
 except Exception:
