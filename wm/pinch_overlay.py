@@ -51,6 +51,11 @@ class PinchOverlay(Overlay):
     def keep_alive(self):
         return self.touches_x is not None
 
+    def _exit_finished(self):
+        self.layout.rescale()
+        self.layout.update_cursor()
+        super()._exit_finished()
+
     def _exit_transition(self):
         self.layout.state = self.state
         return ExitOverlayTransition(

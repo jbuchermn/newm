@@ -14,6 +14,7 @@ from .view import View, ViewState
 from .state import State
 from .animate import Animate, Transition
 from .pinch_overlay import PinchOverlay
+from .overview_overlay import OverviewOverlay
 
 
 class LayoutState(State):
@@ -278,7 +279,7 @@ class Layout(PyWM, Animate):
             elif keysyms == "C":
                 self.terminate()
             elif keysyms == "a":
-                self.enter_overlay(PinchOverlay(self))
+                self.enter_overlay(OverviewOverlay(self))
             elif keysyms == "s":
                 self.toggle_half_scale()
             elif keysyms == "f":
@@ -355,9 +356,7 @@ class Layout(PyWM, Animate):
 
         self.animation(Transition(self, .2,
                                   finished_func=lambda: self.rescale(),
-                                  i=new_state.i,
-                                  j=new_state.j,
-                                  size=new_state.size), pend=True)
+                                  **new_state.kwargs()), pend=True)
 
     def toggle_half_scale(self):
         self.is_half_scale = not self.is_half_scale

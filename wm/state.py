@@ -23,3 +23,6 @@ class State:
     def copy(self):
         vals = [self.__dict__[k] for k in self.var]
         return self.__class__(*vals)
+
+    def kwargs(self):
+        return {k:self.__dict__[k] for k in self.var}
