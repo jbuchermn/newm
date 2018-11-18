@@ -1,8 +1,13 @@
 import math
 from .lowpass import Lowpass
+from .overlay import Overlay, ExitOverlayTransition
+from .animate import Transition
 
-class Overview:
+
+class PinchOverlay(Overlay):
     def __init__(self, layout):
+        super().__init__(self)
+
         self.layout = layout
         self.state = self.layout.state.copy()
         self.state.background_factor *= 1.5
@@ -43,6 +48,18 @@ class Overview:
 
         self._set_state()
 
+    def keep_alive(self):
+        return self.touches_x is not None
+
+    def _exit_transition(self):
+        self.layout.state = self.state
+        return ExitOverlayTransition(
+            self, .2,
+            background_factor=self.state.background_factor / 1.5,
+            size=round(self.size),
+            i=round(self.x - .5*self.size),
+            j=round(self.y - .5*self.size))
+
     def _set_state(self):
         self.x = max(self.x, self.x_bounds[0])
         self.x = min(self.x, self.x_bounds[1])
@@ -58,17 +75,6 @@ class Overview:
 
         self.state = new_state
 
-    def get_final_state(self):
-        new_state = self.state.copy()
-        new_state.size = round(self.size)
-        new_state.background_factor /= 1.5
-        new_state.i = round(self.x - .5*self.size)
-        new_state.j = round(self.y - .5*self.size)
-        return self.state, new_state
-
-    def destroy(self):
-        pass
-
     def _process_touches(self, touches):
         cog_x = (touches[0].x + touches[1].x) / 2.
         cog_y = (touches[0].y + touches[1].y) / 2.
@@ -79,7 +85,7 @@ class Overview:
 
         return cog_x, cog_y, max(dist, 0.1)
 
-    def multitouch_begin(self, touches):
+    def on_multitouch_begin(self, touches):
         self.touches_cog_x, self.touches_cog_y, self.touches_dist = \
             self._process_touches(touches)
 
@@ -95,7 +101,9 @@ class Overview:
         self.touches_lp_cog_y.next(self.touches_cog_y)
         self.touches_lp_dist.next(self.touches_dist)
 
-    def multitouch_update(self, touches):
+        return True
+
+    def on_multitouch_update(self, touches):
         cog_x, cog_y, dist = self._process_touches(touches)
 
         cog_x = self.touches_lp_cog_x.next(cog_x)
@@ -109,7 +117,9 @@ class Overview:
         self._set_state()
         self.layout.update(self.state)
 
-    def multitouch_end(self):
+        return True
+
+    def on_multitouch_end(self):
         self.touches_x = None
         self.touches_y = None
         self.touches_size = None
@@ -117,8 +127,7 @@ class Overview:
         self.touches_cog_y = None
         self.touches_size = None
 
-    def multitouch_in_progress(self):
-        return self.touches_x is not None
+        return True
 
     def on_motion(self, delta_x, delta_y):
         self.x -= self.size * delta_x
@@ -126,8 +135,12 @@ class Overview:
         self._set_state()
         self.layout.update(self.state)
 
+        return True
+
     def on_axis(self, orientation, delta):
         self.size += 0.01*delta
         self._set_state()
         self.layout.update(self.state)
+
+        return True
 

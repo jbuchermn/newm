@@ -1,15 +1,10 @@
 import math
-import time
 import os
 from itertools import product
-from threading import Thread
 
 from pywm import (
     PyWM,
-    PYWM_MOD_ALT,
-    PYWM_MOD_LOGO,
     PYWM_MOD_CTRL,
-    PYWM_RELEASED,
     PYWM_PRESSED,
 )
 
@@ -17,8 +12,8 @@ from pywm import (
 from .background import Background
 from .view import View, ViewState
 from .state import State
-from .animate import Animate
-from .overview import Overview
+from .animate import Animate, Transition
+from .pinch_overlay import PinchOverlay
 
 
 class LayoutState(State):
@@ -51,6 +46,98 @@ class LayoutState(State):
         return True
 
 
+def _box_intersects(box1, box2):
+    box1_tiles = []
+    for i, j in product(range(math.floor(box1[0]),
+                              math.ceil(box1[0] + box1[2])),
+                        range(math.floor(box1[1]),
+                              math.ceil(box1[1] + box1[3]))):
+        box1_tiles += [(i, j)]
+
+    box2_tiles = []
+    for i, j in product(range(math.floor(box2[0]),
+                              math.ceil(box2[0] + box2[2])),
+                        range(math.floor(box2[1]),
+                              math.ceil(box2[1] + box2[3]))):
+        box2_tiles += [(i, j)]
+
+    for t in box1_tiles:
+        if t in box2_tiles:
+            return True
+    return False
+
+
+class ResizeViewTransition(Transition):
+    def __init__(self, layout, view, duration, delta_i, delta_j):
+        super().__init__(view, duration)
+        self.layout = layout
+        self.view = view
+        self.delta_i = delta_i
+        self.delta_j = delta_j
+
+    def setup(self):
+        new_view_box = [self.view.state.i,
+                        self.view.state.j,
+                        self.view.state.w + self.delta_i,
+                        self.view.state.h + self.delta_j]
+
+        while new_view_box[2] <= 0:
+            new_view_box[2] += 1
+            new_view_box[0] -= 1
+
+        while new_view_box[3] <= 0:
+            new_view_box[3] += 1
+            new_view_box[1] -= 1
+
+        for v in self.layout.views:
+            if v == self.view:
+                continue
+            if _box_intersects(new_view_box, [v.state.i, v.state.j,
+                                              v.state.w, v.state.h]):
+                return
+
+        print(self.view.state.w, self.view.state.h)
+        new_state = self.view.state.copy()
+        new_state.i = new_view_box[0]
+        new_state.j = new_view_box[1]
+        new_state.w = new_view_box[2]
+        new_state.h = new_view_box[3]
+        super().setup(new_state)
+
+    def finish(self):
+        super().finish()
+        self.layout.rescale()
+
+
+class MoveViewTransition(Transition):
+    def __init__(self, layout, view, duration, delta_i, delta_j):
+        super().__init__(view, duration)
+        self.layout = layout
+        self.view = view
+        self.delta_i = delta_i
+        self.delta_j = delta_j
+
+    def setup(self):
+        new_view_box = [self.view.state.i + self.delta_i,
+                        self.view.state.j + self.delta_j,
+                        self.view.state.w,
+                        self.view.state.h]
+
+        for v in self.layout.views:
+            if v == self.view:
+                continue
+            if _box_intersects(new_view_box, [v.state.i, v.state.j,
+                                              v.state.w, v.state.h]):
+                return
+
+        new_state = self.view.state.copy()
+        new_state.i = new_view_box[0]
+        new_state.j = new_view_box[1]
+        new_state.w = new_view_box[2]
+        new_state.h = new_view_box[3]
+        super().setup(new_state)
+
+
 class Layout(PyWM, Animate):
     def __init__(self, mod, **kwargs):
         PyWM.__init__(self, View, **kwargs)
@@ -60,7 +147,8 @@ class Layout(PyWM, Animate):
 
         self.default_padding = 0.01
         self.state = LayoutState(0, 0, 2, 0, 0, 1, 1, self.default_padding, 3)
-        self.overview = None
+
+        self.overlay = None
 
         self.background = None
 
@@ -145,10 +233,14 @@ class Layout(PyWM, Animate):
         All events with  our modifier are consumed.
         No events without our modifier are consumed.
         """
+        if self.overlay is not None and self.overlay.ready():
+            if self.overlay.on_key(time_msec, keycode, state, keysyms):
+                return True
+
         if not self.modifiers & self.mod:
-            if self.overview is not None:
-                if not self.overview.multitouch_in_progress():
-                    self.exit_overview()
+            if self.overlay is not None:
+                if not self.overlay.keep_alive():
+                    self.exit_overlay()
                     return True
             return False
 
@@ -186,7 +278,7 @@ class Layout(PyWM, Animate):
             elif keysyms == "C":
                 self.terminate()
             elif keysyms == "a":
-                self.enter_overview()
+                self.enter_overlay(PinchOverlay(self))
             elif keysyms == "s":
                 self.toggle_half_scale()
             elif keysyms == "f":
@@ -196,9 +288,9 @@ class Layout(PyWM, Animate):
 
     def on_modifiers(self, modifiers):
         if not self.modifiers & self.mod:
-            if self.overview is not None:
-                if not self.overview.multitouch_in_progress():
-                    self.exit_overview()
+            if self.overlay is not None:
+                if not self.overlay.keep_alive():
+                    self.exit_overlay()
                     return True
         return False
 
@@ -225,80 +317,21 @@ class Layout(PyWM, Animate):
         if best_view is not None:
             self.focus_view(best_view)
 
-    def box_intersects(self, box1, box2):
-        box1_tiles = []
-        for i, j in product(range(math.floor(box1[0]),
-                                  math.ceil(box1[0] + box1[2])),
-                            range(math.floor(box1[1]),
-                                  math.ceil(box1[1] + box1[3]))):
-            box1_tiles += [(i, j)]
-
-        box2_tiles = []
-        for i, j in product(range(math.floor(box2[0]),
-                                  math.ceil(box2[0] + box2[2])),
-                            range(math.floor(box2[1]),
-                                  math.ceil(box2[1] + box2[3]))):
-            box2_tiles += [(i, j)]
-
-        for t in box1_tiles:
-            if t in box2_tiles:
-                return True
-        return False
-
     def move_view(self, delta_i, delta_j):
         view = [v for v in self.views if v.focused]
         if len(view) == 0:
             return
         view = view[0]
-        new_view_box = view.state.i + delta_i, \
-            view.state.j + delta_j, view.state.w, view.state.h
-
-        for v in self.views:
-            if v == view:
-                continue
-            if self.box_intersects(new_view_box, [v.state.i, v.state.j,
-                                                  v.state.w, v.state.h]):
-                return
-
-        new_view_state = view.state.copy()
-        new_view_state.i = new_view_box[0]
-        new_view_state.j = new_view_box[1]
-        new_view_state.w = new_view_box[2]
-        new_view_state.h = new_view_box[3]
-
-        view.transition(new_view_state, .2)
+        view.animation(MoveViewTransition(self, view, .2, delta_i, delta_j),
+                       pend=True)
 
     def resize_view(self, delta_i, delta_j):
         view = [v for v in self.views if v.focused]
         if len(view) == 0:
             return
         view = view[0]
-        new_view_box = view.state.i, view.state.j, \
-            view.state.w + delta_i, view.state.h + delta_j
-
-        while new_view_box[2] <= 0:
-            new_view_box[2] += 1
-            new_view_box[0] -= 1
-
-        while new_view_box[3] <= 0:
-            new_view_box[3] += 1
-            new_view_box[1] -= 1
-
-        for v in self.views:
-            if v == view:
-                continue
-            if self.box_intersects(new_view_box, [v.state.i, v.state.j,
-                                                  v.state.w, v.state.h]):
-                return
-
-        new_view_state = view.state.copy()
-        new_view_state.i = new_view_box[0]
-        new_view_state.j = new_view_box[1]
-        new_view_state.w = new_view_box[2]
-        new_view_state.h = new_view_box[3]
-
-        if view.transition(new_view_state, .2):
-            view.update_dimensions(new_view_state)
+        view.animation(ResizeViewTransition(self, view, .2, delta_i, delta_j),
+                       pend=True)
 
     def focus_view(self, view, new_state=None):
         view.focus()
@@ -320,7 +353,11 @@ class Layout(PyWM, Animate):
         new_state.j = target_j
         new_state.size = target_size
 
-        self.transition(new_state, .2)
+        self.animation(Transition(self, .2,
+                                  finished_func=lambda: self.rescale(),
+                                  i=new_state.i,
+                                  j=new_state.j,
+                                  size=new_state.size), pend=True)
 
     def toggle_half_scale(self):
         self.is_half_scale = not self.is_half_scale
@@ -332,73 +369,65 @@ class Layout(PyWM, Animate):
             v.update_dimensions()
 
     def toggle_padding(self):
-        new_state = self.state.copy()
-        new_state.padding = self.default_padding \
-            if new_state.padding == 0 else 0
+        padding = self.default_padding \
+            if self.state.padding == 0 else 0
 
-        self.transition(new_state, .2)
+        self.animation(Transition(self, .2, padding=padding))
 
-    def enter_overview(self, touches=None):
-        if self.overview is not None:
+    def enter_overlay(self, overlay):
+        if self.overlay is not None:
             return
 
-        self.overview = Overview(self)
-        if touches is not None:
-            self.overview.multitouch_begin(touches)
+        self.overlay = overlay
+        self.overlay.init()
 
-    def exit_overview(self):
-        if self.overview is None:
+    def exit_overlay(self):
+        if self.overlay is None:
             return
 
-        state, new_state = self.overview.get_final_state()
-        self.state = state
-        if self.transition(new_state, .2):
-            self.overview.destroy()
-            self.overview = None
-            self.rescale()
-            self.update_cursor()
-        else:
-            print("Retrying exit_overview...")
+        self.overlay.destroy()
 
-            def retry(self):
-                time.sleep(.2)
-                self.exit_overview()
-
-            Thread(target=retry, args=(self,)).start()
+    def on_overlay_destroyed(self):
+        self.overlay = None
 
     def on_motion(self, time_msec, delta_x, delta_y):
-        if self.overview is not None:
-            self.overview.on_motion(delta_x, delta_y)
-            return True
+        if self.overlay is not None and self.overlay.ready():
+            if self.overlay.on_motion(delta_x, delta_y):
+                return True
 
         return False
 
     def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
-        if self.overview is not None:
-            self.overview.on_axis(orientation, delta)
-            return True
+        if self.overlay is not None and self.overlay.ready():
+            if self.overlay.on_axis(orientation, delta):
+                return True
 
         return False
 
     def on_multitouch_begin(self, touches):
-        if self.overview is not None:
-            self.overview.multitouch_begin(touches)
-            return True
+        if self.overlay is not None and self.overlay.ready():
+            if self.overlay.on_multitouch_begin(touches):
+                return True
 
         if self.modifiers & self.mod:
-            self.enter_overview(touches)
+            ovr = PinchOverlay(self)
+            ovr.on_multitouch_begin(touches)
+            self.enter_overlay(ovr)
             return True
 
-    def on_multitouch_end(self):
-        if self.overview is not None:
-            self.overview.multitouch_end()
+        return False
 
+    def on_multitouch_end(self):
+        if self.overlay is not None and self.overlay.ready():
+            self.overlay.on_multitouch_end()
+
+        if isinstance(self.overlay, PinchOverlay):
             if not self.modifiers & self.mod:
-                self.exit_overview()
+                self.exit_overlay()
 
     def on_multitouch_update(self, touches):
-        if self.overview is not None:
-            self.overview.multitouch_update(touches)
+        if self.overlay is not None and self.overlay.ready():
+            self.overlay.on_multitouch_update(touches)
 
     def main(self):
         self.background = self.create_widget(Background,
