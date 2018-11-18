@@ -10,6 +10,7 @@ from pywm import (
 
 
 from .background import Background
+from .bar import TopBar, BottomBar
 from .view import View, ViewState
 from .state import State
 from .animate import Animate, Transition
@@ -19,10 +20,11 @@ from .overview_overlay import OverviewOverlay
 
 class LayoutState(State):
     def __init__(self, i, j, size, min_i, min_j, max_i, max_j, padding,
-                 background_factor):
+                 background_factor, top_bar_dy, bottom_bar_dy):
         super().__init__(['i', 'j', 'size',
                           'min_i', 'min_j', 'max_i', 'max_j',
-                          'padding', 'background_factor'])
+                          'padding', 'background_factor',
+                          'top_bar_dy', 'bottom_bar_dy'])
 
         self.i = i
         self.j = j
@@ -33,6 +35,8 @@ class LayoutState(State):
         self.max_j = max_j
         self.padding = padding
         self.background_factor = background_factor
+        self.top_bar_dy = top_bar_dy
+        self.bottom_bar_dy = bottom_bar_dy
 
     def lies_within_extent(self, i, j):
         if i < self.min_i:
@@ -147,11 +151,14 @@ class Layout(PyWM, Animate):
         self.mod = mod
 
         self.default_padding = 0.01
-        self.state = LayoutState(0, 0, 2, 0, 0, 1, 1, self.default_padding, 3)
+        self.state = LayoutState(0, 0, 2, 0, 0, 1, 1,
+                                 self.default_padding, 3, 0, 0)
 
         self.overlay = None
 
         self.background = None
+        self.top_bar = None
+        self.bottom_bar = None
 
         """
         scale == size: pixel-to-pixel
@@ -167,7 +174,13 @@ class Layout(PyWM, Animate):
             v.update(v.state, state)
 
         if self.background is not None:
-            self.background.update(state, self.background.state)
+            self.background.update(state)
+
+        if self.top_bar is not None:
+            self.top_bar.update(state)
+
+        if self.bottom_bar is not None:
+            self.bottom_bar.update(state)
 
     def find_at_tile(self, i, j):
         for view in self.views:
@@ -428,4 +441,6 @@ class Layout(PyWM, Animate):
     def main(self):
         self.background = self.create_widget(Background,
                                              '/home/jonas/wallpaper.jpg')
+        self.top_bar = self.create_widget(TopBar)
+        self.bottom_bar = self.create_widget(BottomBar)
         self.background.update(self.state, self.background.state)

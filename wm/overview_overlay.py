@@ -15,7 +15,9 @@ class OverviewOverlay(Overlay):
                      self._original_state.min_i + 1,
                      self._original_state.max_j -
                      self._original_state.min_j + 1),
-            background_factor=1.
+            background_factor=1.,
+            top_bar_dy=1.,
+            bottom_bar_dy=1.
         )
 
     def _exit_transition(self):

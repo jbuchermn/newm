@@ -1,20 +1,8 @@
 from pywm import PyWMBackgroundWidget
 
-from .state import State
-
-
-class BackgroundState(State):
-    def __init__(self):
-        super().__init__([])
-
 
 class Background(PyWMBackgroundWidget):
-    def __init__(self, wm, path):
-        super().__init__(wm, path)
-
-        self.state = BackgroundState()
-
-    def update(self, wm_state, state):
+    def update(self, wm_state):
         min_i, min_j, max_i, max_j = \
             wm_state.min_i, wm_state.min_j, wm_state.max_i, wm_state.max_j
 
