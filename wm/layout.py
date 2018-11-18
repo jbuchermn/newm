@@ -230,14 +230,13 @@ class Layout(PyWM, Animate):
         self.focus_view(view, new_state)
 
     def on_key(self, time_msec, keycode, state, keysyms):
+        if self.overlay is not None and self.overlay.ready():
+            return self.overlay.on_key(time_msec, keycode, state, keysyms)
+
         """
         All events with  our modifier are consumed.
         No events without our modifier are consumed.
         """
-        if self.overlay is not None and self.overlay.ready():
-            if self.overlay.on_key(time_msec, keycode, state, keysyms):
-                return True
-
         if not self.modifiers & self.mod:
             if self.overlay is not None:
                 if not self.overlay.keep_alive():
@@ -391,22 +390,20 @@ class Layout(PyWM, Animate):
 
     def on_motion(self, time_msec, delta_x, delta_y):
         if self.overlay is not None and self.overlay.ready():
-            if self.overlay.on_motion(delta_x, delta_y):
-                return True
+            return self.overlay.on_motion(time_msec, delta_x, delta_y)
 
         return False
 
     def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
         if self.overlay is not None and self.overlay.ready():
-            if self.overlay.on_axis(orientation, delta):
-                return True
+            return self.overlay.on_axis(time_msec, source, orientation,
+                                        delta, delta_discrete)
 
         return False
 
     def on_multitouch_begin(self, touches):
         if self.overlay is not None and self.overlay.ready():
-            if self.overlay.on_multitouch_begin(touches):
-                return True
+            return self.overlay.on_multitouch_begin(touches)
 
         if self.modifiers & self.mod:
             ovr = PinchOverlay(self)

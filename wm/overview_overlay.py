@@ -14,13 +14,12 @@ class OverviewOverlay(Overlay):
             size=max(self._original_state.max_i -
                      self._original_state.min_i + 1,
                      self._original_state.max_j -
-                     self._original_state.min_j + 1)
+                     self._original_state.min_j + 1),
+            background_factor=1.
         )
 
     def _exit_transition(self):
         return ExitOverlayTransition(
             self, .2,
-            i=self._original_state.i,
-            j=self._original_state.j,
-            size=self._original_state.size
+            **self._original_state.kwargs()
         )

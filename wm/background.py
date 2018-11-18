@@ -25,6 +25,7 @@ class Background(PyWMBackgroundWidget):
         y = 0
         w = (max_i - min_i + 1)
         h = (max_j - min_j + 1)
+        w, h = max(w, h), max(w, h)
 
         """
         Box of viewport within background

@@ -64,7 +64,7 @@ class Overlay:
     def on_motion(self, time_msec, delta_x, delta_y):
         return False
 
-    def on_axis(self, time_msec, delta, delta_discrete):
+    def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
         return False
 
     def on_multitouch_begin(self, touches):
