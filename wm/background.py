@@ -2,6 +2,10 @@ from pywm import PyWMBackgroundWidget
 
 
 class Background(PyWMBackgroundWidget):
+    def __init__(self, wm, path):
+        super().__init__(wm, path)
+        self.update(wm.state)
+
     def update(self, wm_state):
         min_i, min_j, max_i, max_j = \
             wm_state.min_i, wm_state.min_j, wm_state.max_i, wm_state.max_j

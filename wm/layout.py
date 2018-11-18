@@ -443,4 +443,8 @@ class Layout(PyWM, Animate):
                                              '/home/jonas/wallpaper.jpg')
         self.top_bar = self.create_widget(TopBar)
         self.bottom_bar = self.create_widget(BottomBar)
-        self.background.update(self.state, self.background.state)
+
+    def terminate(self):
+        super().terminate()
+        self.top_bar.stop()
+        self.bottom_bar.stop()
