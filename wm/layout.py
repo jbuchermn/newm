@@ -101,7 +101,6 @@ class ResizeViewTransition(Transition):
                                               v.state.w, v.state.h]):
                 return
 
-        print(self.view.state.w, self.view.state.h)
         new_state = self.view.state.copy()
         new_state.i = new_view_box[0]
         new_state.j = new_view_box[1]

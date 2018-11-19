@@ -17,8 +17,8 @@ class ExitOverlayTransition(Transition):
         self.overlay = overlay
 
     def finish(self):
-        self.overlay._exit_finished()
         super().finish()
+        self.overlay._exit_finished()
 
 
 class Overlay:
