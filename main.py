@@ -12,7 +12,7 @@ from pywm import (
 OUTPUT_SCALE = 1.5
 
 mod = PYWM_MOD_LOGO
-if len(sys.argv) > 1:
+if len(sys.argv) > 1 and sys.argv[1] == "ALT":
     print("Using modifier ALT")
     mod = PYWM_MOD_ALT
 else:
