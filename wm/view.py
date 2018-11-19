@@ -1,3 +1,5 @@
+import math
+
 from pywm import PyWMView
 
 from .state import State
@@ -29,7 +31,16 @@ class View(PyWMView, Animate):
             """
             self.client_side_scale = self.wm.config['output_scale']
 
-        self.wm.place_initial(self)
+        """
+        Ensure we are big enough
+        """
+        min_w, _, min_h, _ = self.get_size_constraints()
+
+        min_w *= self.wm.scale / self.wm.width / self.client_side_scale
+        min_h *= self.wm.scale / self.wm.height / self.client_side_scale
+
+        self.wm.place_initial(self, max(math.ceil(min_w), 1),
+                              max(math.ceil(min_h), 1))
 
     def update(self, state, wm_state=None):
         if wm_state is None:
@@ -53,7 +64,7 @@ class View(PyWMView, Animate):
 
         self.set_box(x, y, w, h)
 
-    def update_dimensions(self, state=None):
+    def update_size(self, state=None):
         if state is None:
             state = self.state
 
@@ -62,5 +73,15 @@ class View(PyWMView, Animate):
         height = round(state.h * self.wm.height / self.wm.scale *
                        self.client_side_scale)
 
-        if (width, height) != self.get_dimensions():
-            self.set_dimensions(width, height)
+        min_w, max_w, min_h, max_h = self.get_size_constraints()
+        if width < min_w and min_w > 0:
+            print("Warning: Width too small")
+        if width > max_w and max_w > 0:
+            print("Warning: Width too big")
+        if height < min_h and min_h > 0:
+            print("Warning: Height too small")
+        if height > max_h and max_h > 0:
+            print("Warning: Height too big")
+
+        if (width, height) != self.get_size():
+            self.set_size(width, height)

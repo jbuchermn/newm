@@ -217,14 +217,17 @@ class Layout(PyWM, Animate):
 
         return min_i, min_j, max_i, max_j
 
-    def place_initial(self, view):
+    def place_initial(self, view, w, h):
         place_i = 0
         place_j = 0
         for j, i in product(range(math.floor(self.state.j),
                                   math.ceil(self.state.j + self.state.size)),
                             range(math.floor(self.state.i),
                                   math.ceil(self.state.i + self.state.size))):
-            if self.find_at_tile(i, j) is None:
+            for jp, ip in product(range(j, j + h), range(i, i + w)):
+                if self.find_at_tile(ip, jp) is not None:
+                    break
+            else:
                 place_i, place_j = i, j
                 break
         else:
@@ -232,8 +235,8 @@ class Layout(PyWM, Animate):
             while self.find_at_tile(place_i, place_j) is not None:
                 place_i += 1
 
-        view.state = ViewState(place_i, place_j, 1, 1)
-        view.update_dimensions()
+        view.state = ViewState(place_i, place_j, w, h)
+        view.update_size()
 
         new_state = self.state.copy()
         new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j = \
@@ -376,7 +379,7 @@ class Layout(PyWM, Animate):
     def rescale(self):
         self.scale = self.state.size * (.5 if self.is_half_scale else 1.)
         for v in self.views:
-            v.update_dimensions()
+            v.update_size()
 
     def toggle_padding(self):
         padding = self.default_padding \
