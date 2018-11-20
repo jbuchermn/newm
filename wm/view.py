@@ -31,24 +31,25 @@ class View(PyWMView, Animate):
             """
             self.client_side_scale = self.wm.config['output_scale']
 
-        min_w, max_w, min_h, max_h = self.get_size_constraints()
-
-        if min_h > 0 and min_w > 0 and min_w == max_w and min_h == max_h:
-            """
-            Dialog: TODO
-            """
-            self.set_box(0, 0, min_w, min_h)
+        if self.floating:
+            print("FLOATING", self.parent)
+            self.state.i = 0
+            self.state.j = 0
+            self.state.w = 1
+            self.state.h = 1
+            self.update()
         else:
-            """
-            Regular window: Ensure we are big enough and place
-            """
+            min_w, _, min_h, _ = self.get_size_constraints()
             min_w *= self.wm.scale / self.wm.width / self.client_side_scale
             min_h *= self.wm.scale / self.wm.height / self.client_side_scale
 
             self.wm.place_initial(self, max(math.ceil(min_w), 1),
                                   max(math.ceil(min_h), 1))
 
-    def update(self, state, wm_state=None):
+    def update(self, state=None, wm_state=None):
+        if state is None:
+            state = self.state
+
         if wm_state is None:
             wm_state = self.wm.state
 
