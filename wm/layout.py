@@ -94,7 +94,7 @@ class ResizeViewTransition(Transition):
             new_view_box[3] += 1
             new_view_box[1] -= 1
 
-        for v in self.layout.views:
+        for v in self.layout.windows():
             if v == self.view:
                 continue
             if _box_intersects(new_view_box, [v.state.i, v.state.j,
@@ -127,7 +127,7 @@ class MoveViewTransition(Transition):
                         self.view.state.w,
                         self.view.state.h]
 
-        for v in self.layout.views:
+        for v in self.layout.windows():
             if v == self.view:
                 continue
             if _box_intersects(new_view_box, [v.state.i, v.state.j,
@@ -168,6 +168,12 @@ class Layout(PyWM, Animate):
         self.is_half_scale = False
         self.scale = 2
 
+    def windows(self):
+        return [v for v in self.views if not v.floating]
+
+    def dialogs(self):
+        return [v for v in self.views if v.floating]
+
     def update(self, state):
         for v in self.views:
             v.update(v.state, state)
@@ -182,7 +188,7 @@ class Layout(PyWM, Animate):
             self.bottom_bar.update(state)
 
     def find_at_tile(self, i, j):
-        for view in self.views:
+        for view in self.windows():
             if (view.state.i <= i < view.state.i + view.state.w) and \
                     (view.state.j <= j < view.state.j + view.state.h):
                 return view
@@ -336,15 +342,33 @@ class Layout(PyWM, Animate):
         view = [v for v in self.views if v.focused]
         if len(view) == 0:
             return
+
         view = view[0]
+        while view.floating and view.parent is not None:
+            view = view.parent
+
+        if view.floating:
+            return
+
         view.animation(MoveViewTransition(self, view, .2, delta_i, delta_j),
                        pend=True)
+
+        for v in self.dialogs():
+            if v.parent == view:
+                v.animation(MoveViewTransition(self, v, .2, delta_i, delta_j),
+                            pend=True)
 
     def resize_view(self, delta_i, delta_j):
         view = [v for v in self.views if v.focused]
         if len(view) == 0:
             return
         view = view[0]
+        while view.floating and view.parent is not None:
+            view = view.parent
+
+        if view.floating:
+            return
+
         view.animation(ResizeViewTransition(self, view, .2, delta_i, delta_j),
                        pend=True)
 

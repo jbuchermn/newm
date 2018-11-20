@@ -31,15 +31,24 @@ class View(PyWMView, Animate):
             """
             self.client_side_scale = self.wm.config['output_scale']
 
+        min_w, _, min_h, _ = self.get_size_constraints()
         if self.floating:
-            print("FLOATING", self.parent)
-            self.state.i = 0
-            self.state.j = 0
-            self.state.w = 1
-            self.state.h = 1
+            ci = self.wm.state.i + self.wm.state.size / 2.
+            cj = self.wm.state.j + self.wm.state.size / 2.
+            if self.parent is not None:
+                ci = self.parent.state.i + self.parent.state.w / 2.
+                cj = self.parent.state.j + self.parent.state.h / 2.
+
+            w, h = min_w, min_h
+            w *= self.wm.scale / self.wm.width / self.client_side_scale
+            h *= self.wm.scale / self.wm.height / self.client_side_scale
+
+            self.state.i = ci - w / 2.
+            self.state.j = cj - h / 2.
+            self.state.w = w
+            self.state.h = h
             self.update()
         else:
-            min_w, _, min_h, _ = self.get_size_constraints()
             min_w *= self.wm.scale / self.wm.width / self.client_side_scale
             min_h *= self.wm.scale / self.wm.height / self.client_side_scale
 
@@ -82,13 +91,13 @@ class View(PyWMView, Animate):
 
         min_w, max_w, min_h, max_h = self.get_size_constraints()
         if width < min_w and min_w > 0:
-            print("Warning: Width too small")
+            print("Warning: Width: %d !> %d" % (width, min_w))
         if width > max_w and max_w > 0:
-            print("Warning: Width too big")
+            print("Warning: Width: %d !< %d" % (width, max_w))
         if height < min_h and min_h > 0:
-            print("Warning: Height too small")
+            print("Warning: Height: %d !> %d" % (height, min_h))
         if height > max_h and max_h > 0:
-            print("Warning: Height too big")
+            print("Warning: Height: %d !< %d" % (height, max_h))
 
         if (width, height) != self.get_size():
             self.set_size(width, height)
