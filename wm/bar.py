@@ -76,11 +76,9 @@ class TopBar(Bar, Thread):
     def set(self):
         bat = psutil.sensors_battery()
         uname = pwd.getpwuid(os.getuid())[0]
-        ifdevice = "wlp3s0"
-        ip = psutil.net_if_addrs()[ifdevice][0].address
         self.set_texts(
             [uname,
-             "%s: %s" % (ifdevice, ip),
+             time.strftime("%c"),
              "%d%% %s" % (bat.percent, "↑" if bat.power_plugged else "↓")])
 
 
@@ -107,8 +105,11 @@ class BottomBar(Bar, Thread):
 
     def set(self):
         cpu_perc = psutil.cpu_percent(interval=1)
+        ifdevice = "wlp3s0"
+        ip = psutil.net_if_addrs()[ifdevice][0].address
         mem_perc = psutil.virtual_memory().percent
         self.set_texts(
             ["CPU: %d%%" % cpu_perc,
+             "%s: %s" % (ifdevice, ip),
              "RAM: %d%%" % mem_perc])
 
