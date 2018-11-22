@@ -16,10 +16,10 @@ class Bar(PyWMCairoWidget):
         self.texts = ["Leftp", "Middlep", "Rightp"]
         self.font_size = 12
 
-        self.update(self.wm.state)
+        self.update()
 
     @abstractmethod
-    def update(self, wm_state):
+    def update(self):
         pass
 
     def set_texts(self, texts):
@@ -64,8 +64,8 @@ class TopBar(Bar, Thread):
     def stop(self):
         self._running = False
 
-    def update(self, wm_state):
-        dy = wm_state.top_bar_dy * self.height
+    def update(self):
+        dy = self.wm.state.top_bar_dy * self.height
         self.set_box(0, dy - self.height, self.width, self.height)
 
     def run(self):
@@ -93,8 +93,8 @@ class BottomBar(Bar, Thread):
     def stop(self):
         self._running = False
 
-    def update(self, wm_state):
-        dy = wm_state.bottom_bar_dy * self.height
+    def update(self):
+        dy = self.wm.state.bottom_bar_dy * self.height
         self.set_box(0, self.wm.height - dy, self.width,
                      self.height)
 

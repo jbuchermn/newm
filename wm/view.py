@@ -55,12 +55,9 @@ class View(PyWMView, Animate):
             self.wm.place_initial(self, max(math.ceil(min_w), 1),
                                   max(math.ceil(min_h), 1))
 
-    def update(self, state=None, wm_state=None):
-        if state is None:
-            state = self.state
-
-        if wm_state is None:
-            wm_state = self.wm.state
+    def update(self):
+        state = self.state
+        wm_state = self.wm.state
 
         i = state.i
         j = state.j
@@ -80,9 +77,8 @@ class View(PyWMView, Animate):
 
         self.set_box(x, y, w, h)
 
-    def update_size(self, state=None):
-        if state is None:
-            state = self.state
+    def update_size(self):
+        state = self.state
 
         width = round(state.w * self.wm.width / self.wm.scale *
                       self.client_side_scale)
@@ -101,3 +97,6 @@ class View(PyWMView, Animate):
 
         if (width, height) != self.get_size():
             self.set_size(width, height)
+
+    def destroy(self):
+        self.wm.reset_extent()

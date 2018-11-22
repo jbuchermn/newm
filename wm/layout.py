@@ -6,6 +6,8 @@ from pywm import (
     PyWM,
     PYWM_MOD_CTRL,
     PYWM_PRESSED,
+    PYWM_MOD_ALT,
+    PYWM_MOD_LOGO
 )
 
 
@@ -83,16 +85,23 @@ class ResizeViewTransition(Transition):
     def setup(self):
         new_view_box = [self.view.state.i,
                         self.view.state.j,
-                        self.view.state.w + self.delta_i,
-                        self.view.state.h + self.delta_j]
+                        self.view.state.w,
+                        self.view.state.h]
 
-        while new_view_box[2] <= 0:
-            new_view_box[2] += 1
-            new_view_box[0] -= 1
+        delta_i = self.delta_i
+        delta_j = self.delta_j
+        if new_view_box[2] == 1 and delta_i < 0:
+            new_view_box[0] += delta_i
+            new_view_box[2] -= delta_i
+            delta_i = 0
 
-        while new_view_box[3] <= 0:
-            new_view_box[3] += 1
-            new_view_box[1] -= 1
+        if new_view_box[3] == 1 and delta_j < 0:
+            new_view_box[1] += delta_j
+            new_view_box[3] -= delta_j
+            delta_j = 0
+
+        new_view_box[2] += delta_i
+        new_view_box[3] += delta_j
 
         for v in self.layout.windows():
             if v == self.view:
@@ -111,6 +120,7 @@ class ResizeViewTransition(Transition):
     def finish(self):
         super().finish()
         self.layout.rescale()
+        self.layout.reset_extent(focus_view=self.view)
 
 
 class MoveViewTransition(Transition):
@@ -141,6 +151,10 @@ class MoveViewTransition(Transition):
         new_state.h = new_view_box[3]
         super().setup(new_state)
 
+    def finish(self):
+        super().finish()
+        self.layout.reset_extent(focus_view=self.view)
+
 
 class Layout(PyWM, Animate):
     def __init__(self, mod, **kwargs):
@@ -148,6 +162,13 @@ class Layout(PyWM, Animate):
         Animate.__init__(self)
 
         self.mod = mod
+        self.mod_sym = None
+        if mod == PYWM_MOD_ALT:
+            self.mod_sym = "Alt"
+        elif mod == PYWM_MOD_LOGO:
+            self.mod_sym = "Super"
+        else:
+            raise Exception("Unknown mod")
 
         self.default_padding = 0.01
         self.state = LayoutState(0, 0, 2, 0, 0, 1, 1,
@@ -168,24 +189,26 @@ class Layout(PyWM, Animate):
         self.is_half_scale = False
         self.scale = 2
 
+        self.fullscreen_backup = 0, 0, 1
+
     def windows(self):
         return [v for v in self.views if not v.floating]
 
     def dialogs(self):
         return [v for v in self.views if v.floating]
 
-    def update(self, state):
+    def update(self):
         for v in self.views:
-            v.update(v.state, state)
+            v.update()
 
         if self.background is not None:
-            self.background.update(state)
+            self.background.update()
 
         if self.top_bar is not None:
-            self.top_bar.update(state)
+            self.top_bar.update()
 
         if self.bottom_bar is not None:
-            self.bottom_bar.update(state)
+            self.bottom_bar.update()
 
     def find_at_tile(self, i, j):
         for view in self.windows():
@@ -210,16 +233,16 @@ class Layout(PyWM, Animate):
 
         min_i = min([view.state.i for view in self.views])
         min_j = min([view.state.j for view in self.views])
-        max_i = max([view.state.i for view in self.views])
-        max_j = max([view.state.j for view in self.views])
+        max_i = max([view.state.i + view.state.w - 1 for view in self.views])
+        max_j = max([view.state.j + view.state.h - 1 for view in self.views])
 
         """
         Borders around, such that views can be at the edges
         """
-        min_i -= self.state.size - 1
-        min_j -= self.state.size - 1
-        max_i += self.state.size - 1
-        max_j += self.state.size - 1
+        min_i -= max(self.state.size - 1, 1)
+        min_j -= max(self.state.size - 1, 1)
+        max_i += max(self.state.size - 1, 1)
+        max_j += max(self.state.size - 1, 1)
 
         return min_i, min_j, max_i, max_j
 
@@ -250,6 +273,17 @@ class Layout(PyWM, Animate):
 
         self.focus_view(view, new_state)
 
+    def reset_extent(self, focus_view=None):
+        new_state = self.state.copy()
+        new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j = \
+            self.get_extent()
+
+        if focus_view is None:
+            self.animation(Transition(self, .2,
+                                      **new_state.kwargs()), pend=True)
+        else:
+            self.focus_view(focus_view, new_state)
+
     def on_key(self, time_msec, keycode, state, keysyms):
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_key(time_msec, keycode, state, keysyms)
@@ -263,9 +297,16 @@ class Layout(PyWM, Animate):
                 if not self.overlay.keep_alive():
                     self.exit_overlay()
                     return True
+
+            """
+            Also do not dispatch release of mod
+            """
+            if self.mod_sym in keysyms:
+                return True
+
             return False
 
-        if state == PYWM_PRESSED:
+        if state != PYWM_PRESSED:
             if keysyms == "h":
                 if self.modifiers & PYWM_MOD_CTRL:
                     self.resize_view(-1, 0)
@@ -393,7 +434,7 @@ class Layout(PyWM, Animate):
         new_state.size = target_size
 
         self.animation(Transition(self, .2,
-                                  finished_func=lambda: self.rescale(),
+                                  finished_func=self.rescale,
                                   **new_state.kwargs()), pend=True)
 
     def toggle_half_scale(self):
@@ -409,7 +450,31 @@ class Layout(PyWM, Animate):
         padding = self.default_padding \
             if self.state.padding == 0 else 0
 
-        self.animation(Transition(self, .2, padding=padding))
+        if padding == 0:
+            focused = self.find_focused_box()
+            self.fullscreen_backup = self.state.i, self.state.j, \
+                self.state.size
+            self.animation(Transition(self, .2,
+                                      finished_func=self.rescale,
+                                      padding=padding,
+                                      i=focused[0],
+                                      j=focused[1],
+                                      size=max(focused[2:])))
+        else:
+            reset = self.fullscreen_backup
+            min_i, min_j, max_i, max_j = self.get_extent()
+            print(min_i, min_j, max_i, max_j, reset)
+            if reset[0] >= min_i and reset[1] >= min_j \
+                    and reset[0] + reset[2] - 1 <= max_i \
+                    and reset[1] + reset[2] - 1 <= max_j:
+                self.animation(Transition(self, .2,
+                                          finished_func=self.rescale,
+                                          padding=padding,
+                                          i=reset[0],
+                                          j=reset[1],
+                                          size=reset[2]))
+            else:
+                self.animation(Transition(self, .2, padding=padding))
 
     def enter_overlay(self, overlay):
         if self.overlay is not None:

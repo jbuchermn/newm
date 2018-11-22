@@ -32,8 +32,12 @@ class _Thread(Thread):
             initial = time.time()
             current = time.time()
             while current - initial < self.animation.duration:
+                t = time.time()
                 self.animation.update((current - initial) /
                                       self.animation.duration)
+                t = time.time() - t
+                if t > 0.01:
+                    print("WARNING: Long update time", 1000 * t)
                 current = time.time()
 
             self.animation.finish()
@@ -82,12 +86,11 @@ class Transition(Animation):
         self._interpolate = _StateInterpolate(state, new_state)
 
     def update(self, perc):
-        self._animate.update(self._interpolate.get(perc))
+        self._animate.state = self._interpolate.get(perc)
+        self._animate.update()
 
     def finish(self):
-        self._animate.state = self._interpolate.get(1.)
-        self._animate.update(self._animate.state)
-
+        self.update(1.)
         if self._finished_func is not None:
             self._finished_func()
 
@@ -122,5 +125,5 @@ class Animate:
             self.animation(p)
 
     @abstractmethod
-    def update(self, state):
+    def update(self):
         pass

@@ -120,7 +120,8 @@ class PinchOverlay(Overlay):
         self.size = self.touches_size * self.touches_dist / dist
 
         self._set_state()
-        self.layout.update(self.state)
+        self.layout.state = self.state
+        self.layout.update()
 
         return True
 
@@ -135,17 +136,8 @@ class PinchOverlay(Overlay):
         return True
 
     def on_motion(self, time_msec, delta_x, delta_y):
-        self.x -= self.size * delta_x
-        self.y -= self.size * delta_y
-        self._set_state()
-        self.layout.update(self.state)
-
-        return True
+        return False
 
     def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
-        self.size += 0.01*delta
-        self._set_state()
-        self.layout.update(self.state)
-
-        return True
+        return False
 

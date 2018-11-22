@@ -12,11 +12,6 @@ class OverviewOverlay(Overlay):
         i = self._original_state.min_i
         j = self._original_state.min_j
 
-        if width < height:
-            i -= (height - width)/2.
-        if width > height:
-            j -= (width - height)/2.
-
         return EnterOverlayTransition(
             self, .4,
             i=i,
