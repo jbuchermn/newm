@@ -496,6 +496,12 @@ class Layout(PyWM, Animate):
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_motion(time_msec, delta_x, delta_y)
 
+        if self.modifiers & self.mod:
+            ovr = PinchOverlay(self)
+            ovr.on_motion(time_msec, delta_x, delta_y)
+            self.enter_overlay(ovr)
+            return True
+
         return False
 
     def on_axis(self, time_msec, source, orientation, delta, delta_discrete):

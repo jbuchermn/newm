@@ -23,7 +23,8 @@ class View(PyWMView, Animate):
 
     def main(self):
         self.client_side_scale = 1.
-        _, _, _, xwayland = self.get_info()
+        t1, t2, t3, xwayland = self.get_info()
+        print("[Python] New View: %s, %s, %s, %s" % (t1, t2, t3, xwayland))
         if xwayland:
             """
             X cleints are responsible to handle

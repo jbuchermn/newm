@@ -81,14 +81,19 @@ class PinchOverlay(Overlay):
         self.state = new_state
 
     def _process_touches(self, touches):
-        cog_x = (touches[0].x + touches[1].x) / 2.
-        cog_y = (touches[0].y + touches[1].y) / 2.
+        if len(touches) == 2:
+            cog_x = (touches[0].x + touches[1].x) / 2.
+            cog_y = (touches[0].y + touches[1].y) / 2.
 
-        dist = math.sqrt(
-            (touches[0].x - touches[1].x)**2 +
-            (touches[0].y - touches[1].y)**2)
+            dist = math.sqrt(
+                (touches[0].x - touches[1].x)**2 +
+                (touches[0].y - touches[1].y)**2)
 
-        return cog_x, cog_y, max(dist, 0.1)
+            return cog_x, cog_y, max(dist, 0.1)
+        elif len(touches) == 1:
+            return touches[0].x, touches[0].y, 1.
+        else:
+            raise Exception("Unsupported")
 
     def on_multitouch_begin(self, touches):
         self.touches_cog_x, self.touches_cog_y, self.touches_dist = \
