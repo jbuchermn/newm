@@ -1,7 +1,6 @@
 import math
 from .lowpass import Lowpass
 from .overlay import Overlay, ExitOverlayTransition
-from .animate import Transition
 
 
 class PinchOverlay(Overlay):
@@ -10,7 +9,6 @@ class PinchOverlay(Overlay):
 
         self.layout = layout
         self.state = self.layout.state.copy()
-        self.state.background_factor *= 1.5
 
         self.x = self.state.i + .5 * self.state.size
         self.y = self.state.j + .5 * self.state.size
@@ -60,7 +58,6 @@ class PinchOverlay(Overlay):
         self.layout.state = self.state
         return ExitOverlayTransition(
             self, .2,
-            background_factor=self.state.background_factor / 1.5,
             size=round(self.size),
             i=round(self.x - .5*self.size),
             j=round(self.y - .5*self.size))
@@ -81,7 +78,7 @@ class PinchOverlay(Overlay):
         self.state = new_state
 
     def _process_touches(self, touches):
-        if len(touches) == 2:
+        if len(touches) >= 2:
             cog_x = (touches[0].x + touches[1].x) / 2.
             cog_y = (touches[0].y + touches[1].y) / 2.
 
@@ -93,19 +90,19 @@ class PinchOverlay(Overlay):
         elif len(touches) == 1:
             return touches[0].x, touches[0].y, 1.
         else:
-            raise Exception("Unsupported")
+            raise Exception("Argument: Zero touches")
 
     def on_multitouch_begin(self, touches):
         self.touches_cog_x, self.touches_cog_y, self.touches_dist = \
-            self._process_touches(touches)
+            self._process_touches(touches.touches)
 
         self.touches_x = self.x
         self.touches_y = self.y
         self.touches_size = self.size
 
-        self.touches_lp_cog_x = Lowpass(.9)
-        self.touches_lp_cog_y = Lowpass(.9)
-        self.touches_lp_dist = Lowpass(.9)
+        self.touches_lp_cog_x = Lowpass(.7)
+        self.touches_lp_cog_y = Lowpass(.7)
+        self.touches_lp_dist = Lowpass(.7)
 
         self.touches_lp_cog_x.next(self.touches_cog_x)
         self.touches_lp_cog_y.next(self.touches_cog_y)
@@ -114,7 +111,7 @@ class PinchOverlay(Overlay):
         return True
 
     def on_multitouch_update(self, touches):
-        cog_x, cog_y, dist = self._process_touches(touches)
+        cog_x, cog_y, dist = self._process_touches(touches.touches)
 
         cog_x = self.touches_lp_cog_x.next(cog_x)
         cog_y = self.touches_lp_cog_y.next(cog_y)

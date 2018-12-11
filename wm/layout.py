@@ -17,6 +17,7 @@ from .view import View, ViewState
 from .state import State
 from .animate import Animate, Transition
 from .pinch_overlay import PinchOverlay
+from .swipe_overlay import SwipeOverlay
 from .overview_overlay import OverviewOverlay
 
 
@@ -517,6 +518,12 @@ class Layout(PyWM, Animate):
 
         if self.modifiers & self.mod:
             ovr = PinchOverlay(self)
+            ovr.on_multitouch_begin(touches)
+            self.enter_overlay(ovr)
+            return True
+
+        if touches.number == 3:
+            ovr = SwipeOverlay(self)
             ovr.on_multitouch_begin(touches)
             self.enter_overlay(ovr)
             return True
