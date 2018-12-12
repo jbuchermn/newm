@@ -25,7 +25,6 @@ from .animate import Animate, Transition
 from .pinch_overlay import PinchOverlay
 from .swipe_overlay import SwipeOverlay
 from .overview_overlay import OverviewOverlay
-from .swipe_to_zoom_overlay import SwipeToZoomOverlay
 
 
 class LayoutState(State):
@@ -522,16 +521,8 @@ class Layout(PyWM, Animate):
                 self.enter_overlay(ovr)
                 return True
 
-            if isinstance(gesture, HigherSwipeGesture) \
-                    and gesture.n_touches == 3:
+            if isinstance(gesture, HigherSwipeGesture):
                 ovr = SwipeOverlay(self)
-                ovr.on_gesture(gesture)
-                self.enter_overlay(ovr)
-                return True
-
-            if isinstance(gesture, HigherSwipeGesture) \
-                    and gesture.n_touches == 4:
-                ovr = SwipeToZoomOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
                 return True
