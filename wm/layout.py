@@ -10,6 +10,8 @@ from pywm import (
     PYWM_MOD_LOGO
 )
 
+from pywm.touchpad import TwoFingerSwipePinchGesture, HigherSwipeGesture
+
 
 from .background import Background
 from .bar import TopBar, BottomBar
@@ -512,35 +514,24 @@ class Layout(PyWM, Animate):
 
         return False
 
-    def on_multitouch_begin(self, touches):
+    def on_gesture(self, gesture):
         if self.overlay is not None and self.overlay.ready():
-            return self.overlay.on_multitouch_begin(touches)
+            return self.overlay.on_gesture(gesture)
 
-        if self.modifiers & self.mod:
-            ovr = PinchOverlay(self)
-            ovr.on_multitouch_begin(touches)
-            self.enter_overlay(ovr)
-            return True
+        # if self.modifiers & self.mod and \
+        #         isinstance(gesture, TwoFingerSwipePinchGesture):
+        #     ovr = PinchOverlay(self)
+        #     ovr.on_gesture(gesture)
+        #     self.enter_overlay(ovr)
+        #     return True
 
-        if touches.number == 3:
+        if isinstance(gesture, HigherSwipeGesture) and gesture.n_touches == 3:
             ovr = SwipeOverlay(self)
-            ovr.on_multitouch_begin(touches)
+            ovr.on_gesture(gesture)
             self.enter_overlay(ovr)
             return True
 
         return False
-
-    def on_multitouch_end(self):
-        if self.overlay is not None and self.overlay.ready():
-            self.overlay.on_multitouch_end()
-
-        if isinstance(self.overlay, PinchOverlay):
-            if not self.modifiers & self.mod:
-                self.exit_overlay()
-
-    def on_multitouch_update(self, touches):
-        if self.overlay is not None and self.overlay.ready():
-            self.overlay.on_multitouch_update(touches)
 
     def main(self):
         self.background = self.create_widget(Background,

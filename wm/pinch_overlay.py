@@ -1,5 +1,4 @@
 import math
-from .lowpass import Lowpass
 from .overlay import Overlay, ExitOverlayTransition
 
 
@@ -100,9 +99,9 @@ class PinchOverlay(Overlay):
         self.touches_y = self.y
         self.touches_size = self.size
 
-        self.touches_lp_cog_x = Lowpass(.7)
-        self.touches_lp_cog_y = Lowpass(.7)
-        self.touches_lp_dist = Lowpass(.7)
+        # self.touches_lp_cog_x = Lowpass(.7)
+        # self.touches_lp_cog_y = Lowpass(.7)
+        # self.touches_lp_dist = Lowpass(.7)
 
         self.touches_lp_cog_x.next(self.touches_cog_x)
         self.touches_lp_cog_y.next(self.touches_cog_y)
@@ -111,6 +110,10 @@ class PinchOverlay(Overlay):
         return True
 
     def on_multitouch_update(self, touches):
+        """
+        TODO: Releasing the two fingers one-by-one currently moves the
+        view before exiting the overlay: Not nice at all
+        """
         cog_x, cog_y, dist = self._process_touches(touches.touches)
 
         cog_x = self.touches_lp_cog_x.next(cog_x)
