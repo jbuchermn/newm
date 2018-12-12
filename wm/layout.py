@@ -479,7 +479,10 @@ class Layout(PyWM, Animate):
         self.overlay = overlay
         self.overlay.init()
 
-    def exit_overlay(self):
+    def exit_overlay(self, require_mod_released=False):
+        if require_mod_released and self.modifiers & self.mod:
+            return
+
         if self.overlay is None:
             return
 

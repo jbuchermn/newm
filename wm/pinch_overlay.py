@@ -74,7 +74,7 @@ class PinchOverlay(Overlay):
 
     def _on_two_finger(self, values):
         if values is None:
-            self.layout.exit_overlay()
+            self.layout.exit_overlay(require_mod_released=True)
         else:
             self.x = self.gesture_start_x - 4*values['delta_x']
             self.y = self.gesture_start_y - 4*values['delta_y']
@@ -86,7 +86,7 @@ class PinchOverlay(Overlay):
 
     def _on_single_finger(self, values):
         if values is None:
-            self.layout.exit_overlay()
+            self.layout.exit_overlay(require_mod_released=True)
         else:
             self.x = self.gesture_start_x - 4*values['delta_x']
             self.y = self.gesture_start_y - 4*values['delta_y']
