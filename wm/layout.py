@@ -10,7 +10,11 @@ from pywm import (
     PYWM_MOD_LOGO
 )
 
-from pywm.touchpad import TwoFingerSwipePinchGesture, HigherSwipeGesture
+from pywm.touchpad import (
+    TwoFingerSwipePinchGesture,
+    HigherSwipeGesture,
+    SingleFingerMoveGesture
+)
 
 
 from .background import Background
@@ -21,6 +25,7 @@ from .animate import Animate, Transition
 from .pinch_overlay import PinchOverlay
 from .swipe_overlay import SwipeOverlay
 from .overview_overlay import OverviewOverlay
+from .swipe_to_zoom_overlay import SwipeToZoomOverlay
 
 
 class LayoutState(State):
@@ -296,10 +301,6 @@ class Layout(PyWM, Animate):
         No events without our modifier are consumed.
         """
         if not self.modifiers & self.mod:
-            if self.overlay is not None:
-                if not self.overlay.keep_alive():
-                    self.exit_overlay()
-                    return True
 
             """
             Also do not dispatch release of mod
@@ -350,14 +351,6 @@ class Layout(PyWM, Animate):
                 self.toggle_padding()
 
         return True
-
-    def on_modifiers(self, modifiers):
-        if not self.modifiers & self.mod:
-            if self.overlay is not None:
-                if not self.overlay.keep_alive():
-                    self.exit_overlay()
-                    return True
-        return False
 
     def move(self, delta_i, delta_j):
         i, j, w, h = self.find_focused_box()
@@ -517,21 +510,30 @@ class Layout(PyWM, Animate):
     def on_gesture(self, gesture):
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_gesture(gesture)
+        elif self.overlay is None:
+            if self.modifiers & self.mod and \
+                    (isinstance(gesture, TwoFingerSwipePinchGesture) or
+                     isinstance(gesture, SingleFingerMoveGesture)):
+                ovr = PinchOverlay(self)
+                ovr.on_gesture(gesture)
+                self.enter_overlay(ovr)
+                return True
 
-        # if self.modifiers & self.mod and \
-        #         isinstance(gesture, TwoFingerSwipePinchGesture):
-        #     ovr = PinchOverlay(self)
-        #     ovr.on_gesture(gesture)
-        #     self.enter_overlay(ovr)
-        #     return True
+            if isinstance(gesture, HigherSwipeGesture) \
+                    and gesture.n_touches == 3:
+                ovr = SwipeOverlay(self)
+                ovr.on_gesture(gesture)
+                self.enter_overlay(ovr)
+                return True
 
-        if isinstance(gesture, HigherSwipeGesture) and gesture.n_touches == 3:
-            ovr = SwipeOverlay(self)
-            ovr.on_gesture(gesture)
-            self.enter_overlay(ovr)
-            return True
+            if isinstance(gesture, HigherSwipeGesture) \
+                    and gesture.n_touches == 4:
+                ovr = SwipeToZoomOverlay(self)
+                ovr.on_gesture(gesture)
+                self.enter_overlay(ovr)
+                return True
 
-        return False
+            return False
 
     def main(self):
         self.background = self.create_widget(Background,

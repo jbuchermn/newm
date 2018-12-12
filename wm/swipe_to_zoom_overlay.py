@@ -1,7 +1,7 @@
 from .overlay import Overlay, ExitOverlayTransition
 
 
-class SwipeOverlay(Overlay):
+class SwipeToZoomOverlay(Overlay):
     def __init__(self, layout):
         super().__init__(self)
 
@@ -10,11 +10,9 @@ class SwipeOverlay(Overlay):
 
         self.x = self.state.i + .5 * self.state.size
         self.y = self.state.j + .5 * self.state.size
+        self.size = self.state.size
 
-        self.locked_x = None
-
-        self.initial_x = self.x
-        self.initial_y = self.y
+        self.initial_size = self.size
 
         """
         Boundaries of movement
@@ -23,6 +21,7 @@ class SwipeOverlay(Overlay):
                          self.state.max_i + .5 * self.state.size]
         self.y_bounds = [self.state.min_j + .5 * self.state.size,
                          self.state.max_j + .5 * self.state.size]
+        self.size_bounds = [1, 5]
 
         self._set_state()
 
@@ -55,23 +54,9 @@ class SwipeOverlay(Overlay):
     def on_gesture_update(self, values):
         if values is None:
             self.layout.exit_overlay()
+
         else:
-
-            if self.locked_x is None:
-                if values['delta_x']**2 + values['delta_y']**2 > 0.005:
-                    self.locked_x = abs(values['delta_x']) \
-                        > abs(values['delta_y'])
-
-                    if self.locked_x:
-                        self.initial_x += 4*values['delta_x']
-                    else:
-                        self.initial_y += 4*values['delta_y']
-
-            if self.locked_x is not None:
-                if self.locked_x:
-                    self.x = self.initial_x - 4*values['delta_x']
-                else:
-                    self.y = self.initial_y - 4*values['delta_y']
+            self.size = self.initial_size - values['delta_y']
 
             self._set_state()
             self.layout.state = self.state

@@ -1,4 +1,4 @@
-import math
+from pywm.touchpad import SingleFingerMoveGesture, TwoFingerSwipePinchGesture
 from .overlay import Overlay, ExitOverlayTransition
 
 
@@ -22,31 +22,11 @@ class PinchOverlay(Overlay):
                          self.state.max_j + .5 * self.state.size]
         self.size_bounds = [1, 5]
 
-        """
-        Current multitouch begin state
-        """
-        self.touches_cog_x = None
-        self.touches_cog_y = None
-        self.touches_dist = None
-
-        """
-        Current multitouch state
-        """
-        self.touches_lp_cog_x = None
-        self.touches_lp_cog_y = None
-        self.touches_lp_dist = None
-
-        """
-        Current multitouch reference
-        """
-        self.touches_x = None
-        self.touches_y = None
-        self.touches_size = None
+        self.gesture_start_x = None
+        self.gesture_start_y = None
+        self.gesture_start_size = None
 
         self._set_state()
-
-    def keep_alive(self):
-        return self.touches_x is not None
 
     def _exit_finished(self):
         self.layout.rescale()
@@ -76,69 +56,44 @@ class PinchOverlay(Overlay):
 
         self.state = new_state
 
-    def _process_touches(self, touches):
-        if len(touches) >= 2:
-            cog_x = (touches[0].x + touches[1].x) / 2.
-            cog_y = (touches[0].y + touches[1].y) / 2.
+    def on_gesture(self, gesture):
+        if isinstance(gesture, TwoFingerSwipePinchGesture):
+            self.gesture_start_x = self.x
+            self.gesture_start_y = self.y
+            self.gesture_start_size = self.size
+            gesture.lp_listener(self._on_two_finger)
+            return True
+        elif isinstance(gesture, SingleFingerMoveGesture):
+            self.gesture_start_x = self.x
+            self.gesture_start_y = self.y
+            self.gesture_start_size = self.size
+            gesture.lp_listener(self._on_single_finger)
+            return True
 
-            dist = math.sqrt(
-                (touches[0].x - touches[1].x)**2 +
-                (touches[0].y - touches[1].y)**2)
+        return False
 
-            return cog_x, cog_y, max(dist, 0.1)
-        elif len(touches) == 1:
-            return touches[0].x, touches[0].y, 1.
+    def _on_two_finger(self, values):
+        if values is None:
+            self.layout.exit_overlay()
         else:
-            raise Exception("Argument: Zero touches")
+            self.x = self.gesture_start_x - 4*values['delta_x']
+            self.y = self.gesture_start_y - 4*values['delta_y']
+            self.size = self.gesture_start_size / values['scale']
 
-    def on_multitouch_begin(self, touches):
-        self.touches_cog_x, self.touches_cog_y, self.touches_dist = \
-            self._process_touches(touches.touches)
+            self._set_state()
+            self.layout.state = self.state
+            self.layout.update()
 
-        self.touches_x = self.x
-        self.touches_y = self.y
-        self.touches_size = self.size
+    def _on_single_finger(self, values):
+        if values is None:
+            self.layout.exit_overlay()
+        else:
+            self.x = self.gesture_start_x - 4*values['delta_x']
+            self.y = self.gesture_start_y - 4*values['delta_y']
 
-        # self.touches_lp_cog_x = Lowpass(.7)
-        # self.touches_lp_cog_y = Lowpass(.7)
-        # self.touches_lp_dist = Lowpass(.7)
-
-        self.touches_lp_cog_x.next(self.touches_cog_x)
-        self.touches_lp_cog_y.next(self.touches_cog_y)
-        self.touches_lp_dist.next(self.touches_dist)
-
-        return True
-
-    def on_multitouch_update(self, touches):
-        """
-        TODO: Releasing the two fingers one-by-one currently moves the
-        view before exiting the overlay: Not nice at all
-        """
-        cog_x, cog_y, dist = self._process_touches(touches.touches)
-
-        cog_x = self.touches_lp_cog_x.next(cog_x)
-        cog_y = self.touches_lp_cog_y.next(cog_y)
-        dist = self.touches_lp_dist.next(dist)
-
-        self.x = self.touches_x - 4*(cog_x - self.touches_cog_x)
-        self.y = self.touches_y - 4*(cog_y - self.touches_cog_y)
-        self.size = self.touches_size * self.touches_dist / dist
-
-        self._set_state()
-        self.layout.state = self.state
-        self.layout.update()
-
-        return True
-
-    def on_multitouch_end(self):
-        self.touches_x = None
-        self.touches_y = None
-        self.touches_size = None
-        self.touches_cog_x = None
-        self.touches_cog_y = None
-        self.touches_size = None
-
-        return True
+            self._set_state()
+            self.layout.state = self.state
+            self.layout.update()
 
     def on_motion(self, time_msec, delta_x, delta_y):
         return False

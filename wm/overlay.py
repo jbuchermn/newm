@@ -40,6 +40,7 @@ class Overlay:
         self._ready = True
 
     def destroy(self):
+        self._ready = False
         transition = self._exit_transition()
         if transition is not None:
             self.layout.animation(transition, pend=True)
@@ -48,9 +49,6 @@ class Overlay:
 
     def _exit_finished(self):
         self.layout.on_overlay_destroyed()
-
-    def keep_alive(self):
-        return False
 
     def _enter_transition(self):
         return None
