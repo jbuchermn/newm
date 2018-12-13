@@ -1,3 +1,5 @@
+from pywm import PYWM_PRESSED
+
 from .overlay import Overlay, EnterOverlayTransition, ExitOverlayTransition
 
 
@@ -13,7 +15,7 @@ class OverviewOverlay(Overlay):
         j = self._original_state.min_j
 
         return EnterOverlayTransition(
-            self, .4,
+            self, .2,
             i=i,
             j=j,
             size=max(width, height),
@@ -24,6 +26,10 @@ class OverviewOverlay(Overlay):
 
     def _exit_transition(self):
         return ExitOverlayTransition(
-            self, .4,
+            self, .2,
             **self._original_state.kwargs()
         )
+
+    def on_key(self, time_msec, keycode, state, keysyms):
+        if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
+            self.layout.exit_overlay()

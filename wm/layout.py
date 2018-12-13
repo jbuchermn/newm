@@ -17,6 +17,7 @@ from pywm.touchpad import (
 )
 
 
+from .key_processor import KeyProcessor, KeyBinding
 from .background import Background
 from .bar import TopBar, BottomBar
 from .view import View, ViewState
@@ -178,6 +179,34 @@ class Layout(PyWM, Animate):
         else:
             raise Exception("Unknown mod")
 
+        self.key_processor = KeyProcessor(self.mod_sym)
+        self.key_processor.register_bindings(
+            ("M-h", lambda: self.move(-1, 0)),
+            ("M-C-h", lambda: self.resize_view(-1, 0)),
+            ("M-H", lambda: self.move_view(-1, 0)),
+
+            ("M-j", lambda: self.move(0, 1)),
+            ("M-C-j", lambda: self.resize_view(0, 1)),
+            ("M-J", lambda: self.move_view(0, 1)),
+
+            ("M-k", lambda: self.move(0, -1)),
+            ("M-C-k", lambda: self.resize_view(0, -1)),
+            ("M-K", lambda: self.move_view(0, -1)),
+
+            ("M-l", lambda: self.move(1, 0)),
+            ("M-C-l", lambda: self.resize_view(1, 0)),
+            ("M-L", lambda: self.move_view(1, 0)),
+
+            ("M-Return", lambda: os.system("termite &")),
+            ("M-c", lambda: os.system("chromium --force-device-scale-factor=1.5 &")),  # noqa E501
+
+            ("M-s", lambda: self.toggle_half_scale()),
+            ("M-f", lambda: self.toggle_padding()),
+
+            ("M-C", lambda: self.terminate()),
+            ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self)))  # noqa E501
+        )
+
         self.default_padding = 0.01
         self.state = LayoutState(0, 0, 2, 0, 0, 1, 1,
                                  self.default_padding, 3, 0, 0)
@@ -296,61 +325,10 @@ class Layout(PyWM, Animate):
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_key(time_msec, keycode, state, keysyms)
 
-        """
-        All events with  our modifier are consumed.
-        No events without our modifier are consumed.
-        """
-        if not self.modifiers & self.mod:
-
-            """
-            Also do not dispatch release of mod
-            """
-            if self.mod_sym in keysyms:
-                return True
-
-            return False
-
-        if state != PYWM_PRESSED:
-            if keysyms == "h":
-                if self.modifiers & PYWM_MOD_CTRL:
-                    self.resize_view(-1, 0)
-                else:
-                    self.move(-1, 0)
-            elif keysyms == "H":
-                self.move_view(-1, 0)
-            elif keysyms == "l":
-                if self.modifiers & PYWM_MOD_CTRL:
-                    self.resize_view(1, 0)
-                else:
-                    self.move(1, 0)
-            elif keysyms == "L":
-                self.move_view(1, 0)
-            elif keysyms == "k":
-                if self.modifiers & PYWM_MOD_CTRL:
-                    self.resize_view(0, -1)
-                else:
-                    self.move(0, -1)
-            elif keysyms == "K":
-                self.move_view(0, -1)
-            elif keysyms == "j":
-                if self.modifiers & PYWM_MOD_CTRL:
-                    self.resize_view(0, 1)
-                else:
-                    self.move(0, 1)
-            elif keysyms == "J":
-                self.move_view(0, 1)
-            elif keysyms == "Return":
-                os.system("termite &")
-            elif keysyms == "C":
-                self.terminate()
-            elif keysyms == "a":
-                self.enter_overlay(OverviewOverlay(self))
-            elif keysyms == "s":
-                self.toggle_half_scale()
-            elif keysyms == "f":
-                self.toggle_padding()
-
-        return True
+        return self.key_processor.on_key(state == PYWM_PRESSED,
+                                         keysyms,
+                                         self.modifiers & self.mod > 0,
+                                         self.modifiers & PYWM_MOD_CTRL > 0)
 
     def move(self, delta_i, delta_j):
         i, j, w, h = self.find_focused_box()
@@ -479,10 +457,7 @@ class Layout(PyWM, Animate):
         self.overlay = overlay
         self.overlay.init()
 
-    def exit_overlay(self, require_mod_released=False):
-        if require_mod_released and self.modifiers & self.mod:
-            return
-
+    def exit_overlay(self):
         if self.overlay is None:
             return
 

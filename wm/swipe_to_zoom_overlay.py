@@ -1,6 +1,7 @@
 from pywm.touchpad import GestureListener, LowpassGesture
 from .overlay import Overlay, ExitOverlayTransition
 
+_momentum_factor = 50.
 
 class SwipeToZoomOverlay(Overlay):
     def __init__(self, layout):
@@ -9,8 +10,6 @@ class SwipeToZoomOverlay(Overlay):
         self.layout = layout
         self.state = self.layout.state.copy()
 
-        self.x = self.state.i + .5 * self.state.size
-        self.y = self.state.j + .5 * self.state.size
         self.size = self.state.size
 
         """
@@ -21,11 +20,13 @@ class SwipeToZoomOverlay(Overlay):
         """
         Boundaries of movement
         """
-        self.x_bounds = [self.state.min_i + .5 * self.state.size,
-                         self.state.max_i + .5 * self.state.size]
-        self.y_bounds = [self.state.min_j + .5 * self.state.size,
-                         self.state.max_j + .5 * self.state.size]
         self.size_bounds = [1, 5]
+
+        """
+        Current state
+        """
+        self.last_delta_y = 0
+        self.momentum_y = 0
 
         self._set_state()
 
@@ -36,23 +37,22 @@ class SwipeToZoomOverlay(Overlay):
 
     def _exit_transition(self):
         self.layout.state = self.state
+
+        size = self.size
+        size -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
+
+        size = max(size, self.size_bounds[0])
+        size = min(size, self.size_bounds[1])
+
         return ExitOverlayTransition(
             self, .2,
-            size=round(self.size),
-            i=round(self.x - .5*self.state.size),
-            j=round(self.y - .5*self.state.size))
+            size=round(size))
 
     def _set_state(self):
-        self.x = max(self.x, self.x_bounds[0])
-        self.x = min(self.x, self.x_bounds[1])
-        self.y = max(self.y, self.y_bounds[0])
-        self.y = min(self.y, self.y_bounds[1])
         self.size = max(self.size, self.size_bounds[0])
         self.size = min(self.size, self.size_bounds[1])
 
         new_state = self.state.copy()
-        # new_state.i = self.x - .5 * self.size
-        # new_state.j = self.y - .5 * self.size
         new_state.size = self.size
 
         self.state = new_state
@@ -65,6 +65,9 @@ class SwipeToZoomOverlay(Overlay):
 
     def _on_update(self, values):
         self.size = self.initial_size - 4*values['delta_y']
+
+        self.momentum_y = values['delta_y'] - self.last_delta_y
+        self.last_delta_y = values['delta_y']
 
         self._set_state()
         self.layout.state = self.state

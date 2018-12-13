@@ -1,3 +1,5 @@
+from pywm import PYWM_PRESSED
+
 from pywm.touchpad import (
     SingleFingerMoveGesture,
     TwoFingerSwipePinchGesture,
@@ -85,7 +87,9 @@ class PinchOverlay(Overlay):
 
     def _on_two_finger(self, values):
         if values is None:
-            self.layout.exit_overlay(require_mod_released=True)
+            self.gesture_start_x = None
+            if not self.layout.modifiers & self.layout.mod:
+                self.layout.exit_overlay()
         else:
             self.x = self.gesture_start_x - 4*values['delta_x']
             self.y = self.gesture_start_y - 4*values['delta_y']
@@ -97,7 +101,9 @@ class PinchOverlay(Overlay):
 
     def _on_single_finger(self, values):
         if values is None:
-            self.layout.exit_overlay(require_mod_released=True)
+            self.gesture_start_x = None
+            if not self.layout.modifiers & self.layout.mod:
+                self.layout.exit_overlay()
         else:
             self.x = self.gesture_start_x - 4*values['delta_x']
             self.y = self.gesture_start_y - 4*values['delta_y']
@@ -111,4 +117,10 @@ class PinchOverlay(Overlay):
 
     def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
         return False
+
+    def on_key(self, time_msec, keycode, state, keysyms):
+        print(state, keysyms)
+        if state != PYWM_PRESSED and self.layout.mod_sym in keysyms \
+                and self.gesture_start_x is None:
+            self.layout.exit_overlay()
 

@@ -2,6 +2,7 @@ from pywm.touchpad import GestureListener, LowpassGesture
 from .overlay import Overlay, ExitOverlayTransition
 
 _momentum_factor = 50.
+_locked_dist = 0.05
 
 
 class SwipeOverlay(Overlay):
@@ -53,14 +54,10 @@ class SwipeOverlay(Overlay):
         i = self.x - .5*self.state.size
         j = self.y - .5*self.state.size
 
-        print("-----")
-        print(i, j)
-        print(self.momentum_x, self.momentum_y)
         if self.locked_x:
             i -= max(-.5, min(.5, self.momentum_x * _momentum_factor))
         else:
             j -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
-        print(i, j)
 
         return ExitOverlayTransition(
             self, .2,
@@ -87,7 +84,7 @@ class SwipeOverlay(Overlay):
 
     def _on_update(self, values):
         if self.locked_x is None:
-            if values['delta_x']**2 + values['delta_y']**2 > 0.005:
+            if values['delta_x']**2 + values['delta_y']**2 > _locked_dist**2:
                 self.locked_x = abs(values['delta_x']) \
                     > abs(values['delta_y'])
 
