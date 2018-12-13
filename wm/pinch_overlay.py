@@ -1,4 +1,9 @@
-from pywm.touchpad import SingleFingerMoveGesture, TwoFingerSwipePinchGesture, GestureListener
+from pywm.touchpad import (
+    SingleFingerMoveGesture,
+    TwoFingerSwipePinchGesture,
+    GestureListener,
+    LowpassGesture
+)
 from .overlay import Overlay, ExitOverlayTransition
 
 
@@ -61,19 +66,19 @@ class PinchOverlay(Overlay):
             self.gesture_start_x = self.x
             self.gesture_start_y = self.y
             self.gesture_start_size = self.size
-            gesture.listener(GestureListener(
-                None,
-                lambda: self._on_two_finger(None),
-                self._on_two_finger))
+            LowpassGesture(gesture).listener(GestureListener(
+                self._on_two_finger,
+                lambda: self._on_two_finger(None)
+            ))
             return True
         elif isinstance(gesture, SingleFingerMoveGesture):
             self.gesture_start_x = self.x
             self.gesture_start_y = self.y
             self.gesture_start_size = self.size
-            gesture.listener(GestureListener(
-                None,
-                lambda: self._on_single_finger(None),
-                self._on_single_finger))
+            LowpassGesture(gesture).listener(GestureListener(
+                self._on_single_finger,
+                lambda: self._on_single_finger(None)
+            ))
             return True
 
         return False

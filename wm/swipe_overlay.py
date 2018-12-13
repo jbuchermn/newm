@@ -1,4 +1,4 @@
-from pywm.touchpad import GestureListener, HigherSwipeGesture
+from pywm.touchpad import GestureListener, HigherSwipeGesture, LowpassGesture
 from .overlay import Overlay, ExitOverlayTransition
 
 
@@ -13,11 +13,17 @@ class SwipeOverlay(Overlay):
         self.y = self.state.j + .5 * self.state.size
         self.size = self.state.size
 
-        self.locked_x = None
-
-        self.initial_size = self.size
+        """
+        Three-Finger mode
+        """
         self.initial_x = self.x
         self.initial_y = self.y
+        self.locked_x = None
+
+        """
+        Four-finger mode
+        """
+        self.initial_size = self.size
 
         """
         Boundaries of movement
@@ -31,6 +37,7 @@ class SwipeOverlay(Overlay):
         self._set_state()
 
     def _exit_finished(self):
+        self.layout.rescale()
         self.layout.update_cursor()
         super()._exit_finished()
 
@@ -38,6 +45,7 @@ class SwipeOverlay(Overlay):
         self.layout.state = self.state
         return ExitOverlayTransition(
             self, .2,
+            size=round(self.size),
             i=round(self.x - .5*self.state.size),
             j=round(self.y - .5*self.state.size))
 
@@ -57,14 +65,22 @@ class SwipeOverlay(Overlay):
         self.state = new_state
 
     def on_gesture(self, gesture):
-        gesture.listener(GestureListener(
-            None,
-            lambda: self.layout.exit_overlay(),
-            self._on_gesture_update,
-            self._on_gesture_replace
-        ))
+        if not isinstance(gesture, HigherSwipeGesture):
+            self.layout.exit_overlay()
+            return
 
-    def _on_gesture_update(self, values):
+        if gesture.n_touches == 3:
+            LowpassGesture(gesture).listener(GestureListener(
+                self._on_swipe_update,
+                lambda: self.layout.exit_overlay()
+            ))
+        elif gesture.n_touches == 4:
+            LowpassGesture(gesture).listener(GestureListener(
+                self._on_zoom_update,
+                lambda: self.layout.exit_overlay()
+            ))
+
+    def _on_swipe_update(self, values):
         if self.locked_x is None:
             if values['delta_x']**2 + values['delta_y']**2 > 0.005:
                 self.locked_x = abs(values['delta_x']) \
@@ -79,27 +95,18 @@ class SwipeOverlay(Overlay):
             if self.locked_x:
                 self.x = self.initial_x - 4*values['delta_x']
             else:
-                self.size = self.initial_size - 4*values['delta_y']
-                # self.y = self.initial_y - 4*values['delta_y']
+                self.y = self.initial_y - 4*values['delta_y']
 
         self._set_state()
         self.layout.state = self.state
         self.layout.update()
 
-    def _on_gesture_replace(self, new_gesture):
-        if not isinstance(new_gesture, HigherSwipeGesture):
-            self.layout.exit_overlay()
-            return
+    def _on_zoom_update(self, values):
+        self.size = self.initial_size - 4*values['delta_y']
 
-        """
-        TODO: Abstract away swipe/zoom and pick according to on_gesture/here
-        -> three-finger: on_gesture with gesture.n_touches == 3
-        -> four-finger: either on_gesture with gesture.n_touches == 4 or
-                on_gesture with gesture.n_touches == 3 followed by
-                _on_gesture_replace with new_gesture.n_touches == 4
-        """
-        print("REPLACE")
-        self.layout.exit_overlay()
+        self._set_state()
+        self.layout.state = self.state
+        self.layout.update()
 
     def on_motion(self, time_msec, delta_x, delta_y):
         return False
