@@ -1,10 +1,8 @@
 from pywm.touchpad import GestureListener, LowpassGesture
 from .overlay import Overlay, ExitOverlayTransition
 
-_momentum_factor = 50.
 
-
-class SwipeOverlay(Overlay):
+class SwipeToZoomOverlay(Overlay):
     def __init__(self, layout):
         super().__init__(self)
 
@@ -15,22 +13,10 @@ class SwipeOverlay(Overlay):
         self.y = self.state.j + .5 * self.state.size
         self.size = self.state.size
 
-        self.initial_x = self.x
-        self.initial_y = self.y
-        self.locked_x = None
-
-        # """
-        # Only allow x scrolling
-        # """
-        # self.locked_x = True
-
         """
-        Current state
+        Four-finger mode
         """
-        self.last_delta_x = 0
-        self.last_delta_y = 0
-        self.momentum_x = 0
-        self.momentum_y = 0
+        self.initial_size = self.size
 
         """
         Boundaries of movement
@@ -39,6 +25,7 @@ class SwipeOverlay(Overlay):
                          self.state.max_i + .5 * self.state.size]
         self.y_bounds = [self.state.min_j + .5 * self.state.size,
                          self.state.max_j + .5 * self.state.size]
+        self.size_bounds = [1, 5]
 
         self._set_state()
 
@@ -49,33 +36,24 @@ class SwipeOverlay(Overlay):
 
     def _exit_transition(self):
         self.layout.state = self.state
-
-        i = self.x - .5*self.state.size
-        j = self.y - .5*self.state.size
-
-        print("-----")
-        print(i, j)
-        print(self.momentum_x, self.momentum_y)
-        if self.locked_x:
-            i -= max(-.5, min(.5, self.momentum_x * _momentum_factor))
-        else:
-            j -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
-        print(i, j)
-
         return ExitOverlayTransition(
             self, .2,
-            i=round(i),
-            j=round(j))
+            size=round(self.size),
+            i=round(self.x - .5*self.state.size),
+            j=round(self.y - .5*self.state.size))
 
     def _set_state(self):
         self.x = max(self.x, self.x_bounds[0])
         self.x = min(self.x, self.x_bounds[1])
         self.y = max(self.y, self.y_bounds[0])
         self.y = min(self.y, self.y_bounds[1])
+        self.size = max(self.size, self.size_bounds[0])
+        self.size = min(self.size, self.size_bounds[1])
 
         new_state = self.state.copy()
-        new_state.i = self.x - .5 * self.size
-        new_state.j = self.y - .5 * self.size
+        # new_state.i = self.x - .5 * self.size
+        # new_state.j = self.y - .5 * self.size
+        new_state.size = self.size
 
         self.state = new_state
 
@@ -86,26 +64,7 @@ class SwipeOverlay(Overlay):
         ))
 
     def _on_update(self, values):
-        if self.locked_x is None:
-            if values['delta_x']**2 + values['delta_y']**2 > 0.005:
-                self.locked_x = abs(values['delta_x']) \
-                    > abs(values['delta_y'])
-
-                if self.locked_x:
-                    self.initial_x += 4*values['delta_x']
-                else:
-                    self.initial_y += 4*values['delta_y']
-
-        if self.locked_x is not None:
-            if self.locked_x:
-                self.x = self.initial_x - 4*values['delta_x']
-            else:
-                self.y = self.initial_y - 4*values['delta_y']
-
-        self.momentum_x = values['delta_x'] - self.last_delta_x
-        self.momentum_y = values['delta_y'] - self.last_delta_y
-        self.last_delta_x = values['delta_x']
-        self.last_delta_y = values['delta_y']
+        self.size = self.initial_size - 4*values['delta_y']
 
         self._set_state()
         self.layout.state = self.state
