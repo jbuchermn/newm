@@ -58,8 +58,8 @@ class SwipeOverlay(Overlay):
         self.size = min(self.size, self.size_bounds[1])
 
         new_state = self.state.copy()
-        new_state.i = self.x - .5 * self.state.size
-        new_state.j = self.y - .5 * self.state.size
+        new_state.i = self.x - .5 * self.size
+        new_state.j = self.y - .5 * self.size
         new_state.size = self.size
 
         self.state = new_state
