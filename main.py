@@ -9,7 +9,7 @@ from pywm import (
     PYWM_MOD_ALT
 )
 
-OUTPUT_SCALE = 1.5
+OUTPUT_SCALE = 2
 
 mod = PYWM_MOD_LOGO
 if len(sys.argv) > 1 and sys.argv[1] == "ALT":
