@@ -81,7 +81,6 @@ class TopBar(Bar, Thread):
              time.strftime("%c"),
              "%d%% %s" % (bat.percent, "↑" if bat.power_plugged else "↓")])
 
-
 class BottomBar(Bar, Thread):
     def __init__(self, wm):
         Bar.__init__(self, wm)

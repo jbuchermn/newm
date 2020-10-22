@@ -514,10 +514,11 @@ class Layout(PyWM, Animate):
             return False
 
     def main(self):
-        self.background = self.create_widget(Background,
-                                             '/home/jonas/wallpaper.jpg')
         self.top_bar = self.create_widget(TopBar)
         self.bottom_bar = self.create_widget(BottomBar)
+
+        self.background = self.create_widget(Background,
+                                             '/home/jonas/wallpaper.jpg')
 
     def terminate(self):
         super().terminate()
