@@ -25,9 +25,24 @@ class OverviewOverlay(Overlay):
         )
 
     def _exit_transition(self):
+        i, j = self._original_state.i, self._original_state.j
+        fi, fj, fw, fh = self.layout.find_focused_box()
+
+        while fi < i:
+            i -= 1
+        while fj < j:
+            j -= 1
+        while fi >= i + self._original_state.size:
+            i += 1
+        while fj >= j + self._original_state.size:
+            j += 1
+
+        args = dict(self._original_state.kwargs())
+        args['i'] = i
+        args['j'] = j
         return ExitOverlayTransition(
             self, .2,
-            **self._original_state.kwargs()
+            **args
         )
 
     def on_key(self, time_msec, keycode, state, keysyms):

@@ -334,6 +334,19 @@ class Layout(PyWM, Animate):
         i, j, w, h = self.find_focused_box()
         ci, cj = i + w/2., j + h/2.
 
+        if ((i + w > self.state.i + self.state.size and delta_i > 0) or
+                (i < self.state.i and delta_i < 0) or
+                (j + h > self.state.j + self.state.size and delta_j > 0) or
+                (j < self.state.j and delta_j < 0)):
+
+            vf = None
+            for v in self.views:
+                if v.focused:
+                    vf = v
+            if vf is not None:
+                self.focus_view(vf)
+                return
+
         def score(view):
             cvi, cvj = view.state.i + view.state.w/2., \
                 view.state.j + view.state.h/2.
@@ -407,6 +420,10 @@ class Layout(PyWM, Animate):
         new_state.j = target_j
         new_state.size = target_size
 
+        if new_state.i != self.state.i or new_state.j != self.state.j or new_state.size != self.state.size:
+            if self.state.padding == 0:
+                new_state.padding = self.default_padding
+
         self.animation(Transition(self, .2,
                                   finished_func=self.rescale,
                                   **new_state.kwargs()), pend=True)
@@ -435,20 +452,20 @@ class Layout(PyWM, Animate):
                                       j=focused[1],
                                       size=max(focused[2:])))
         else:
-            reset = self.fullscreen_backup
-            min_i, min_j, max_i, max_j = self.get_extent()
-            print(min_i, min_j, max_i, max_j, reset)
-            if reset[0] >= min_i and reset[1] >= min_j \
-                    and reset[0] + reset[2] - 1 <= max_i \
-                    and reset[1] + reset[2] - 1 <= max_j:
-                self.animation(Transition(self, .2,
-                                          finished_func=self.rescale,
-                                          padding=padding,
-                                          i=reset[0],
-                                          j=reset[1],
-                                          size=reset[2]))
-            else:
-                self.animation(Transition(self, .2, padding=padding))
+            if self.fullscreen_backup:
+                reset = self.fullscreen_backup
+                min_i, min_j, max_i, max_j = self.get_extent()
+                if reset[0] >= min_i and reset[1] >= min_j \
+                        and reset[0] + reset[2] - 1 <= max_i \
+                        and reset[1] + reset[2] - 1 <= max_j:
+                    self.animation(Transition(self, .2,
+                                              finished_func=self.rescale,
+                                              padding=padding,
+                                              i=reset[0],
+                                              j=reset[1],
+                                              size=reset[2]))
+                    return
+        self.animation(Transition(self, .2, padding=padding))
 
     def enter_overlay(self, overlay):
         if self.overlay is not None:
