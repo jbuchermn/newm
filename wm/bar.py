@@ -7,14 +7,19 @@ import cairo
 import psutil
 from pywm import PyWMCairoWidget, PYWM_LAYER_FRONT
 
+# TODO use OUTPUT_SCALE coherently
+OUTPUT_SCALE = 2
+
+BAR_HEIGHT = 20
+
 
 class Bar(PyWMCairoWidget):
     def __init__(self, wm):
-        super().__init__(wm, wm.width, 20)
+        super().__init__(wm, OUTPUT_SCALE * wm.width, OUTPUT_SCALE * BAR_HEIGHT)
         self.set_layer(PYWM_LAYER_FRONT)
 
         self.texts = ["Leftp", "Middlep", "Rightp"]
-        self.font_size = 12
+        self.font_size = OUTPUT_SCALE * 12
 
         self.update()
 
@@ -65,8 +70,8 @@ class TopBar(Bar, Thread):
         self._running = False
 
     def update(self):
-        dy = self.wm.state.top_bar_dy * self.height
-        self.set_box(0, dy - self.height, self.width, self.height)
+        dy = self.wm.state.top_bar_dy * BAR_HEIGHT
+        self.set_box(0, dy - BAR_HEIGHT, self.wm.width, BAR_HEIGHT)
 
     def run(self):
         while self._running:
@@ -93,9 +98,9 @@ class BottomBar(Bar, Thread):
         self._running = False
 
     def update(self):
-        dy = self.wm.state.bottom_bar_dy * self.height
-        self.set_box(0, self.wm.height - dy, self.width,
-                     self.height)
+        dy = self.wm.state.bottom_bar_dy * BAR_HEIGHT
+        self.set_box(0, self.wm.height - dy, self.wm.width,
+                     BAR_HEIGHT)
 
     def run(self):
         while self._running:
@@ -104,8 +109,12 @@ class BottomBar(Bar, Thread):
 
     def set(self):
         cpu_perc = psutil.cpu_percent(interval=1)
-        ifdevice = "wlp3s0"
-        ip = psutil.net_if_addrs()[ifdevice][0].address
+        ifdevice = "wlan0"
+        ip = ""
+        try:
+            ip = psutil.net_if_addrs()[ifdevice][0].address
+        except Exception:
+            ip = "-/-"
         mem_perc = psutil.virtual_memory().percent
         self.set_texts(
             ["CPU: %d%%" % cpu_perc,
