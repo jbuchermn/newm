@@ -198,7 +198,7 @@ class Layout(PyWM, Animate):
             ("M-L", lambda: self.move_view(1, 0)),
 
             ("M-Return", lambda: os.system("termite &")),
-            ("M-c", lambda: os.system("chromium --force-device-scale-factor=1.5 &")),  # noqa E501
+            ("M-c", lambda: os.system("chromium --force-device-scale-factor=1.5 --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
 
             ("M-s", lambda: self.toggle_half_scale()),
             ("M-f", lambda: self.toggle_padding()),
@@ -539,5 +539,7 @@ class Layout(PyWM, Animate):
 
     def terminate(self):
         super().terminate()
-        self.top_bar.stop()
-        self.bottom_bar.stop()
+        if self.top_bar is not None:
+            self.top_bar.stop()
+        if self.bottom_bar is not None:
+            self.bottom_bar.stop()

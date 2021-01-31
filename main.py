@@ -1,6 +1,5 @@
 import sys
 import traceback
-import faulthandler
 
 from wm import Layout
 
@@ -18,7 +17,6 @@ if len(sys.argv) > 1 and sys.argv[1] == "ALT":
 else:
     print("Using modifier LOGO")
 
-faulthandler.enable()
 wm = Layout(mod, output_scale=OUTPUT_SCALE)
 try:
     wm.run()

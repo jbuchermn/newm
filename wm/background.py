@@ -64,13 +64,16 @@ class Background(PyWMBackgroundWidget):
         """
         Fix aspect ratio
         """
-        if w/h > self.width/self.height:
-            new_h = self.height * w/self.width
-            y -= (new_h - h)/2.
-            h = new_h
-        else:
-            new_w = self.width * h/self.height
-            x -= (new_w - w)/2.
-            w = new_w
+        try:
+            if w/h > self.width/self.height:
+                new_h = self.height * w/self.width
+                y -= (new_h - h)/2.
+                h = new_h
+            else:
+                new_w = self.width * h/self.height
+                x -= (new_w - w)/2.
+                w = new_w
+        except Exception as e:
+            print(e)
 
         self.set_box(x, y, w, h)
