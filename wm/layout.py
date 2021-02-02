@@ -204,7 +204,7 @@ class Layout(PyWM, Animate):
             ("M-f", lambda: self.toggle_padding()),
 
             ("M-C", lambda: self.terminate()),
-            ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self)))  # noqa E501
+            ("XF86LaunchA", lambda: self.enter_overlay(OverviewOverlay(self)))  # noqa E501
         )
 
         self.default_padding = 0.01
@@ -323,7 +323,8 @@ class Layout(PyWM, Animate):
 
     def on_key(self, time_msec, keycode, state, keysyms):
         if self.overlay is not None and self.overlay.ready():
-            return self.overlay.on_key(time_msec, keycode, state, keysyms)
+            if self.overlay.on_key(time_msec, keycode, state, keysyms):
+                return True
 
         return self.key_processor.on_key(state == PYWM_PRESSED,
                                          keysyms,
@@ -531,11 +532,10 @@ class Layout(PyWM, Animate):
             return False
 
     def main(self):
-        self.top_bar = self.create_widget(TopBar)
         self.bottom_bar = self.create_widget(BottomBar)
-
+        self.top_bar = self.create_widget(TopBar)
         self.background = self.create_widget(Background,
-                                             '/home/jonas/wallpaper.jpg')
+                                             '~/wallpaper.jpg')
 
     def terminate(self):
         super().terminate()

@@ -46,5 +46,7 @@ class OverviewOverlay(Overlay):
         )
 
     def on_key(self, time_msec, keycode, state, keysyms):
-        if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
+        if state != PYWM_PRESSED and keysyms == "XF86LaunchA":
             self.layout.exit_overlay()
+            return True
+        return False
