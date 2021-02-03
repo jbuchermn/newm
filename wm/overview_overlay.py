@@ -49,4 +49,8 @@ class OverviewOverlay(Overlay):
         if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
             self.layout.exit_overlay()
             return True
-        return False
+
+        """
+        For now capture all keys
+        """
+        return True

@@ -198,13 +198,26 @@ class Layout(PyWM, Animate):
             ("M-L", lambda: self.move_view(1, 0)),
 
             ("M-Return", lambda: os.system("termite &")),
-            ("M-c", lambda: os.system("chromium --force-device-scale-factor=2.0 --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
+            ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
 
             ("M-s", lambda: self.toggle_half_scale()),
             ("M-f", lambda: self.toggle_padding()),
 
             ("M-C", lambda: self.terminate()),
-            ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self)))  # noqa E501
+            ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self))),  # noqa E501
+
+            # ("XF86MonBrightnessUp", lambda:)
+            # ("XF86MonBrightnessDown", lambda:)
+            # ("XF86LaunchA", lambda:)
+            # ("XF86LaunchB", lambda:)
+            # ("XF86KbdBrightnessUp", lambda:)
+            # ("XF86KbdBrightnessDown", lambda:)
+            # ("XF86AudioPrev", lambda:)
+            # ("XF86AudioPlay", lambda:)
+            # ("XF86AudioNext", lambda:)
+            # ("XF86AudioMute", lambda:)
+            # ("XF86AudioLowerVolume", lambda:)
+            # ("XF86AudioRaiseVolume", lambda:)
         )
 
         self.default_padding = 0.01
