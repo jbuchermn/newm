@@ -89,15 +89,15 @@ class SwipeOverlay(Overlay):
                     > abs(values['delta_y'])
 
                 if self.locked_x:
-                    self.initial_x += 4*values['delta_x']
+                    self.initial_x += 3 * self.size * values['delta_x']
                 else:
-                    self.initial_y += 4*values['delta_y']
+                    self.initial_y += 3 * self.size * values['delta_y']
 
         if self.locked_x is not None:
             if self.locked_x:
-                self.x = self.initial_x - 4*values['delta_x']
+                self.x = self.initial_x - 3 * self.size * values['delta_x']
             else:
-                self.y = self.initial_y - 4*values['delta_y']
+                self.y = self.initial_y - 3 * self.size * values['delta_y']
 
         self.momentum_x = values['delta_x'] - self.last_delta_x
         self.momentum_y = values['delta_y'] - self.last_delta_y
