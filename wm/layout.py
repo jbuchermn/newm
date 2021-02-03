@@ -198,7 +198,7 @@ class Layout(PyWM, Animate):
             ("M-L", lambda: self.move_view(1, 0)),
 
             ("M-Return", lambda: os.system("termite &")),
-            ("M-c", lambda: os.system("chromium --force-device-scale-factor=1.666 --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
+            ("M-c", lambda: os.system("chromium --force-device-scale-factor=2.0 --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
 
             ("M-s", lambda: self.toggle_half_scale()),
             ("M-f", lambda: self.toggle_padding()),
