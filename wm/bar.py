@@ -8,7 +8,7 @@ import psutil
 from pywm import PyWMCairoWidget, PYWM_LAYER_FRONT
 
 # TODO use OUTPUT_SCALE coherently
-OUTPUT_SCALE = 2
+OUTPUT_SCALE = 1.666
 
 BAR_HEIGHT = 20
 
