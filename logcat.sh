@@ -1,2 +1,2 @@
 #!/bin/sh
-tail -f $HOME/.wm_log
+tail -f $(ls -t $HOME/.cache/wm_log* | head -n 1)
