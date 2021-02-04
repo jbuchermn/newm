@@ -180,6 +180,7 @@ class Layout(PyWM, Animate):
             raise Exception("Unknown mod")
 
         self.key_processor = KeyProcessor(self.mod_sym)
+        self.key_processor.register_xf86_bindings()
         self.key_processor.register_bindings(
             ("M-h", lambda: self.move(-1, 0)),
             ("M-C-h", lambda: self.resize_view(-1, 0)),
@@ -206,18 +207,6 @@ class Layout(PyWM, Animate):
             ("M-C", lambda: self.terminate()),
             ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self))),  # noqa E501
 
-            # ("XF86MonBrightnessUp", lambda:)
-            # ("XF86MonBrightnessDown", lambda:)
-            # ("XF86LaunchA", lambda:)
-            # ("XF86LaunchB", lambda:)
-            # ("XF86KbdBrightnessUp", lambda:)
-            # ("XF86KbdBrightnessDown", lambda:)
-            # ("XF86AudioPrev", lambda:)
-            # ("XF86AudioPlay", lambda:)
-            # ("XF86AudioNext", lambda:)
-            # ("XF86AudioMute", lambda:)
-            # ("XF86AudioLowerVolume", lambda:)
-            # ("XF86AudioRaiseVolume", lambda:)
         )
 
         self.default_padding = 0.01
