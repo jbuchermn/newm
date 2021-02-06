@@ -5,6 +5,8 @@ from pywm import PyWMView
 from .state import State
 from .animate import Animate
 
+PANEL_APP_ID = "nwjs-shell-notifiers"
+
 
 class ViewState(State):
     def __init__(self, i, j, w, h):
@@ -21,6 +23,8 @@ class View(PyWMView, Animate):
         Animate.__init__(self)
         self.state = ViewState(0, 0, 0, 0)
 
+        self.panel = False
+
     def main(self):
         self.client_side_scale = 1.
         print("[Python] New View: %s, %s, %s, %s" % (self.title, self.app_id, self.role, self.is_xwayland))
@@ -31,8 +35,15 @@ class View(PyWMView, Animate):
             """
             self.client_side_scale = self.wm.config['output_scale']
 
+        if self.app_id == PANEL_APP_ID:
+            self.panel = True
+            self.set_accepts_input(False)
+            self.set_z_index(6)
+
         min_w, _, min_h, _ = self.size_constraints
-        if self.floating:
+        if self.panel:
+            pass
+        elif self.floating:
             ci = self.wm.state.i + self.wm.state.size / 2.
             cj = self.wm.state.j + self.wm.state.size / 2.
             if self.parent is not None:
@@ -56,47 +67,53 @@ class View(PyWMView, Animate):
                                   max(math.ceil(min_h), 1))
 
     def update(self):
-        state = self.state
-        wm_state = self.wm.state
+        if self.panel:
+            self.set_box(self.wm.width * 0.4, self.wm.height * 0.7, self.wm.width * 0.2, self.wm.height * 0.3)
+        else:
+            state = self.state
+            wm_state = self.wm.state
 
-        i = state.i
-        j = state.j
-        w = state.w
-        h = state.h
+            i = state.i
+            j = state.j
+            w = state.w
+            h = state.h
 
-        x = i - wm_state.i + wm_state.padding
-        y = j - wm_state.j + wm_state.padding
+            x = i - wm_state.i + wm_state.padding
+            y = j - wm_state.j + wm_state.padding
 
-        w -= 2*wm_state.padding
-        h -= 2*wm_state.padding
+            w -= 2*wm_state.padding
+            h -= 2*wm_state.padding
 
-        x *= self.wm.width / wm_state.size
-        y *= self.wm.height / wm_state.size
-        w *= self.wm.width / wm_state.size
-        h *= self.wm.height / wm_state.size
+            x *= self.wm.width / wm_state.size
+            y *= self.wm.height / wm_state.size
+            w *= self.wm.width / wm_state.size
+            h *= self.wm.height / wm_state.size
 
-        self.set_box(x, y, w, h)
+            self.set_box(x, y, w, h)
 
     def update_size(self):
-        state = self.state
+        if self.panel:
+            self.set_size(self.box[2] * self.client_side_scale, self.box[3] * self.client_side_scale)
+        else:
+            state = self.state
 
-        width = round(state.w * self.wm.width / self.wm.scale *
-                      self.client_side_scale)
-        height = round(state.h * self.wm.height / self.wm.scale *
-                       self.client_side_scale)
+            width = round(state.w * self.wm.width / self.wm.scale *
+                          self.client_side_scale)
+            height = round(state.h * self.wm.height / self.wm.scale *
+                           self.client_side_scale)
 
-        min_w, max_w, min_h, max_h = self.size_constraints
-        if width < min_w and min_w > 0:
-            print("Warning: Width: %d !> %d" % (width, min_w))
-        if width > max_w and max_w > 0:
-            print("Warning: Width: %d !< %d" % (width, max_w))
-        if height < min_h and min_h > 0:
-            print("Warning: Height: %d !> %d" % (height, min_h))
-        if height > max_h and max_h > 0:
-            print("Warning: Height: %d !< %d" % (height, max_h))
+            min_w, max_w, min_h, max_h = self.size_constraints
+            if width < min_w and min_w > 0:
+                print("Warning: Width: %d !> %d" % (width, min_w))
+            if width > max_w and max_w > 0:
+                print("Warning: Width: %d !< %d" % (width, max_w))
+            if height < min_h and min_h > 0:
+                print("Warning: Height: %d !> %d" % (height, min_h))
+            if height > max_h and max_h > 0:
+                print("Warning: Height: %d !< %d" % (height, max_h))
 
-        if (width, height) != self.size:
-            self.set_size(width, height)
+            if (width, height) != self.size:
+                self.set_size(width, height)
 
     def destroy(self):
         self.wm.reset_extent()

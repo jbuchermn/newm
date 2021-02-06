@@ -5,21 +5,18 @@ import pwd
 import time
 import cairo
 import psutil
-from pywm import PyWMCairoWidget, PYWM_LAYER_FRONT
-
-# TODO use OUTPUT_SCALE coherently
-OUTPUT_SCALE = 2
+from pywm import PyWMCairoWidget
 
 BAR_HEIGHT = 20
 
 
 class Bar(PyWMCairoWidget):
     def __init__(self, wm):
-        super().__init__(wm, OUTPUT_SCALE * wm.width, OUTPUT_SCALE * BAR_HEIGHT)
-        self.set_layer(PYWM_LAYER_FRONT)
+        super().__init__(wm, int(wm.config['output_scale'] * wm.width), int(wm.config['output_scale'] * BAR_HEIGHT))
+        self.set_z_index(5)
 
         self.texts = ["Leftp", "Middlep", "Rightp"]
-        self.font_size = OUTPUT_SCALE * 12
+        self.font_size = wm.config['output_scale'] * 12
 
         self.update()
 

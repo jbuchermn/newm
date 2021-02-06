@@ -17,7 +17,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "ALT":
 else:
     print("Using modifier LOGO")
 
-wm = Layout(mod, output_scale=OUTPUT_SCALE)
+wm = Layout(mod, output_scale=OUTPUT_SCALE, touchpad_device_name="bcm5974")
 try:
     wm.run()
 except Exception:
