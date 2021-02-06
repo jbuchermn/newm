@@ -1,0 +1,16 @@
+{
+  "name": "newm-panel",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "restart": "cd notifiers && npm run build && cd .. && npm run start",
+    "start": "nw notifiers/build --enable-features=UseOzonePlatform --ozone-platform=wayland"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nw": "^0.51.0"
+  }
+}

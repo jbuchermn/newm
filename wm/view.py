@@ -5,7 +5,7 @@ from pywm import PyWMView
 from .state import State
 from .animate import Animate
 
-PANEL_APP_ID = "nwjs-shell-notifiers"
+PANEL_APP_ID = "newm-panel-notifiers"
 
 
 class ViewState(State):
