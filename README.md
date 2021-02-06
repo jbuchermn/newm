@@ -3,6 +3,7 @@
 ## ToDo
 
 - Media key widgets
+- Why does the panel not show up initially?
 
 ## Backlog
 

@@ -8,25 +8,31 @@
   background-color: #00000000;
 
   overflow: hidden;
+
+  font-family: "Source Code Pro for Powerline";
+  font-weight: bold;
 }
 
 .Notifier {
-
-  display: block;
   position: absolute;
   top: 100px;
   left: 100px;
   right: 100px;
   bottom: 100px;
 
-  color: white;
-  font-size: 5vh;
-  text-align: center;
-  padding: 10vw;
-
   border-radius: 50px;
 
-  background-color: #282c34dd;
+  background-color: #282c34ee;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  color: white;
+  font-size: 8vh;
+  text-align: center;
+  padding: 10vw;
 
   transform: translateY(100vh);
   transition: transform 1.0s;
@@ -34,5 +40,9 @@
 
 .Notifier.up {
     transform: translateY(0) !important;
+}
+
+.Notifier p {
+    margin: 0 auto;
 }
 
