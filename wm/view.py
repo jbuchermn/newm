@@ -23,16 +23,15 @@ class View(PyWMView, Animate):
 
     def main(self):
         self.client_side_scale = 1.
-        t1, t2, t3, xwayland = self.get_info()
-        print("[Python] New View: %s, %s, %s, %s" % (t1, t2, t3, xwayland))
-        if xwayland:
+        print("[Python] New View: %s, %s, %s, %s" % (self.title, self.app_id, self.role, self.is_xwayland))
+        if self.is_xwayland:
             """
             X cleints are responsible to handle
             HiDPI themselves
             """
             self.client_side_scale = self.wm.config['output_scale']
 
-        min_w, _, min_h, _ = self.get_size_constraints()
+        min_w, _, min_h, _ = self.size_constraints
         if self.floating:
             ci = self.wm.state.i + self.wm.state.size / 2.
             cj = self.wm.state.j + self.wm.state.size / 2.
@@ -86,7 +85,7 @@ class View(PyWMView, Animate):
         height = round(state.h * self.wm.height / self.wm.scale *
                        self.client_side_scale)
 
-        min_w, max_w, min_h, max_h = self.get_size_constraints()
+        min_w, max_w, min_h, max_h = self.size_constraints
         if width < min_w and min_w > 0:
             print("Warning: Width: %d !> %d" % (width, min_w))
         if width > max_w and max_w > 0:
@@ -96,7 +95,7 @@ class View(PyWMView, Animate):
         if height > max_h and max_h > 0:
             print("Warning: Height: %d !< %d" % (height, max_h))
 
-        if (width, height) != self.get_size():
+        if (width, height) != self.size:
             self.set_size(width, height)
 
     def destroy(self):
