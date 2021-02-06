@@ -27,6 +27,7 @@ from .pinch_overlay import PinchOverlay
 from .swipe_overlay import SwipeOverlay
 from .swipe_to_zoom_overlay import SwipeToZoomOverlay
 from .overview_overlay import OverviewOverlay
+from .panel_endpoint import PanelEndpoint
 
 
 class LayoutState(State):
@@ -219,6 +220,8 @@ class Layout(PyWM, Animate):
         self.top_bar = None
         self.bottom_bar = None
 
+        self.panel_endpoint = None
+
         """
         scale == size: pixel-to-pixel
         scale == 2 * size: client-side width height are twice as
@@ -324,6 +327,9 @@ class Layout(PyWM, Animate):
             self.focus_view(focus_view, new_state)
 
     def on_key(self, time_msec, keycode, state, keysyms):
+        if self.panel_endpoint:
+            self.panel_endpoint.broadcast({ 'keyPressed': keysyms })
+
         if self.overlay is not None and self.overlay.ready():
             if self.overlay.on_key(time_msec, keycode, state, keysyms):
                 return True
@@ -538,6 +544,7 @@ class Layout(PyWM, Animate):
         self.top_bar = self.create_widget(TopBar)
         self.background = self.create_widget(Background,
                                              '~/wallpaper.jpg')
+        self.panel_endpoint = PanelEndpoint()
 
     def terminate(self):
         super().terminate()
@@ -545,3 +552,5 @@ class Layout(PyWM, Animate):
             self.top_bar.stop()
         if self.bottom_bar is not None:
             self.bottom_bar.stop()
+        if self.panel_endpoint is not None:
+            self.panel_endpoint.stop()
