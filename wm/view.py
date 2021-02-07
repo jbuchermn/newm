@@ -3,7 +3,7 @@ import math
 from pywm import PyWMView
 
 from .state import State
-from .animate import Animate
+from .animate import Animate, Transition
 
 PANELS = {
     "newm-panel-notifiers": "notifiers",
@@ -18,6 +18,28 @@ class ViewState(State):
         self.j = j
         self.w = w
         self.h = h
+
+
+class PresentViewTransition(Transition):
+    def __init__(self, layout, view, duration, i, j, w, h):
+        super().__init__(view, duration)
+        self.layout = layout
+        self.view = view
+        self.i = i
+        self.j = j
+        self.w = w
+        self.h = h
+
+    def setup(self):
+        new_state = self.view.state.copy()
+        new_state.i = self.i
+        new_state.j = self.j
+        new_state.w = self.w
+        new_state.h = self.h
+        super().setup(new_state)
+
+    def finish(self):
+        self.layout.reset_extent(focus_view=self.view)
 
 
 class View(PyWMView, Animate):
@@ -72,6 +94,12 @@ class View(PyWMView, Animate):
 
             self.wm.place_initial(self, max(math.ceil(min_w), 1),
                                   max(math.ceil(min_h), 1))
+
+            i, j, w, h = self.state.i, self.state.j, self.state.w, self.state.h
+            self.state.w = 0
+            self.state.h = 0
+
+            self.animation(PresentViewTransition(self.wm, self, 0.2, i, j, w, h))
 
     def update(self):
         if self.panel == "notifiers":

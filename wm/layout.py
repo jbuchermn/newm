@@ -313,11 +313,6 @@ class Layout(PyWM, Animate):
         view.state = ViewState(place_i, place_j, w, h)
         view.update_size()
 
-        new_state = self.state.copy()
-        new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j = \
-            self.get_extent()
-
-        self.focus_view(view, new_state)
 
     def reset_extent(self, focus_view=None):
         new_state = self.state.copy()
