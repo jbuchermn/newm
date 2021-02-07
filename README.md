@@ -4,7 +4,6 @@
 
 - Starter panel
 - Battery warning
-- Why does the panel not show up initially? (only after overview_overlay)
 - Scale windows in on open
 - Swipe Overlay: Bouncy overswipe effect (i.e. not a whole tile)
 - Unified handling of stoppable threads spawned by layout.py

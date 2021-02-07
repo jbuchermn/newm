@@ -4,8 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "restart": "cd notifiers && npm run build && cd .. && npm run start",
-    "start": "nw notifiers/build --enable-features=UseOzonePlatform --ozone-platform=wayland"
+    "build-notifiers": "cd notifiers && npm run build",
+    "build-launcher": "cd launcher && npm run build",
+
+    "start-notifiers": "nw notifiers/build --enable-features=UseOzonePlatform --ozone-platform=wayland",
+    "start-launcher": "nw launcher/build --enable-features=UseOzonePlatform --ozone-platform=wayland",
+
+    "build": "npm run build-notifiers && npm run build-launcher",
+    "start": "npm run start-notifiers & npm run start-launcher"
   },
   "keywords": [],
   "author": "",

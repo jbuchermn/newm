@@ -5,7 +5,10 @@ from pywm import PyWMView
 from .state import State
 from .animate import Animate
 
-PANEL_APP_ID = "newm-panel-notifiers"
+PANELS = {
+    "newm-panel-notifiers": "notifiers",
+    "newm-panel-launcher": "launcher"
+}
 
 
 class ViewState(State):
@@ -23,7 +26,7 @@ class View(PyWMView, Animate):
         Animate.__init__(self)
         self.state = ViewState(0, 0, 0, 0)
 
-        self.panel = False
+        self.panel = None
 
     def main(self):
         self.client_side_scale = 1.
@@ -35,14 +38,16 @@ class View(PyWMView, Animate):
             """
             self.client_side_scale = self.wm.config['output_scale']
 
-        if self.app_id == PANEL_APP_ID:
-            self.panel = True
+        if self.app_id in PANELS:
+            self.panel = PANELS[self.app_id]
             self.set_accepts_input(False)
             self.set_z_index(6)
 
         min_w, _, min_h, _ = self.size_constraints
-        if self.panel:
-            pass
+        if self.panel is not None:
+            self.update()
+            self.update_size()
+
         elif self.floating:
             ci = self.wm.state.i + self.wm.state.size / 2.
             cj = self.wm.state.j + self.wm.state.size / 2.
@@ -58,7 +63,9 @@ class View(PyWMView, Animate):
             self.state.j = cj - h / 2.
             self.state.w = w
             self.state.h = h
+
             self.update()
+
         else:
             min_w *= self.wm.scale / self.wm.width / self.client_side_scale
             min_h *= self.wm.scale / self.wm.height / self.client_side_scale
@@ -67,8 +74,10 @@ class View(PyWMView, Animate):
                                   max(math.ceil(min_h), 1))
 
     def update(self):
-        if self.panel:
+        if self.panel == "notifiers":
             self.set_box(self.wm.width * 0.4, self.wm.height * 0.7, self.wm.width * 0.2, self.wm.height * 0.3)
+        elif self.panel == "launcher":
+            self.set_box(self.wm.width * 0.1, self.wm.height * 0.1, self.wm.width * 0.8, 0)
         else:
             state = self.state
             wm_state = self.wm.state
@@ -92,8 +101,12 @@ class View(PyWMView, Animate):
             self.set_box(x, y, w, h)
 
     def update_size(self):
-        if self.panel:
+        if self.panel == "notifiers":
             self.set_size(self.box[2] * self.client_side_scale, self.box[3] * self.client_side_scale)
+        elif self.panel == "launcher":
+            self.set_size(self.wm.width * 0.8 * self.client_side_scale,
+                          self.wm.height * 0.8 * self.client_side_scale)
+            print(self._size_pending)
         else:
             state = self.state
 

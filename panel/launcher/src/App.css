@@ -13,14 +13,14 @@
   font-weight: bold;
 }
 
-.Notifier {
+.Launcher {
   position: absolute;
-  top: 50px;
-  left: 50px;
-  right: 50px;
-  bottom: 50px;
+  top: 100px;
+  left: 100px;
+  right: 100px;
+  bottom: 100px;
 
-  border-radius: 20px;
+  border-radius: 50px;
 
   background-color: #282c34ee;
 
@@ -30,19 +30,14 @@
   align-items: center;
 
   color: white;
-  font-size: 18px;
+  font-size: 8vh;
   text-align: center;
   padding: 10vw;
 
-  transform: translateY(100vh);
-  transition: transform 1.0s;
 }
 
-.Notifier.up {
-    transform: translateY(0) !important;
-}
 
-.Notifier p {
+.Launcher p {
     margin: 0 auto;
 }
 

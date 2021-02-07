@@ -12,5 +12,5 @@ python -u $SCRIPTPATH/main.py ALT > $HOME/.cache/newm_log_$(date --iso-8601=seco
 
 sleep 5
 echo "Starting Panel..."
-cd $SCRIPTPATH/panel && npm run restart > $HOME/.cache/newm_panel_log_$(date --iso-8601=seconds) 2>&1 &
+cd $SCRIPTPATH/panel && npm run start > $HOME/.cache/newm_panel_log_$(date --iso-8601=seconds) 2>&1 &
 
