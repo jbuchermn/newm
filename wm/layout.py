@@ -28,6 +28,7 @@ from .swipe_overlay import SwipeOverlay
 from .swipe_to_zoom_overlay import SwipeToZoomOverlay
 from .overview_overlay import OverviewOverlay
 from .panel_endpoint import PanelEndpoint
+from .sys_backend import SysBackend
 
 
 class LayoutState(State):
@@ -181,7 +182,6 @@ class Layout(PyWM, Animate):
             raise Exception("Unknown mod")
 
         self.key_processor = KeyProcessor(self.mod_sym)
-        self.key_processor.register_xf86_bindings()
         self.key_processor.register_bindings(
             ("M-h", lambda: self.move(-1, 0)),
             ("M-C-h", lambda: self.resize_view(-1, 0)),
@@ -209,6 +209,9 @@ class Layout(PyWM, Animate):
             ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self))),  # noqa E501
 
         )
+
+        self.sys_backend = SysBackend(self)
+        self.sys_backend.register_xf86_keybindings()
 
         self.default_padding = 0.01
         self.state = LayoutState(0, 0, 2, 0, 0, 1, 1,
@@ -327,9 +330,6 @@ class Layout(PyWM, Animate):
             self.focus_view(focus_view, new_state)
 
     def on_key(self, time_msec, keycode, state, keysyms):
-        if self.panel_endpoint:
-            self.panel_endpoint.broadcast({ 'keyPressed': keysyms })
-
         if self.overlay is not None and self.overlay.ready():
             if self.overlay.on_key(time_msec, keycode, state, keysyms):
                 return True
