@@ -47,12 +47,12 @@ class View(PyWMView, Animate):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
         self.state = ViewState(0, 0, 0, 0)
+        self.client_side_scale = 1.
 
         self.panel = None
 
     def main(self):
-        self.client_side_scale = 1.
-        print("[Python] New View: %s, %s, %s, %s" % (self.title, self.app_id, self.role, self.is_xwayland))
+        print("[Python] New View: %s, %s, %s, %s, floating=%s" % (self.title, self.app_id, self.role, self.is_xwayland, self.floating))
         if self.is_xwayland:
             """
             X cleints are responsible to handle
@@ -65,12 +65,19 @@ class View(PyWMView, Animate):
             self.set_accepts_input(False)
             self.set_z_index(6)
 
-        min_w, _, min_h, _ = self.size_constraints
         if self.panel is not None:
             self.update()
             self.update_size()
 
         elif self.floating:
+            min_w, _, min_h, _ = self.size_constraints
+
+            if (min_w, min_h) == (0, 0):
+                (min_w, min_h) = self.size
+
+            if min_w == 0 or min_h == 0:
+                return
+
             ci = self.wm.state.i + self.wm.state.size / 2.
             cj = self.wm.state.j + self.wm.state.size / 2.
             if self.parent is not None:
@@ -85,10 +92,11 @@ class View(PyWMView, Animate):
             self.state.j = cj - h / 2.
             self.state.w = w
             self.state.h = h
-
+            
             self.update()
 
         else:
+            min_w, _, min_h, _ = self.size_constraints
             min_w *= self.wm.scale / self.wm.width / self.client_side_scale
             min_h *= self.wm.scale / self.wm.height / self.client_side_scale
 
@@ -100,6 +108,7 @@ class View(PyWMView, Animate):
             self.state.h = 0
 
             self.animation(PresentViewTransition(self.wm, self, 0.2, i, j, w, h))
+
 
     def update(self):
         if self.panel == "notifiers":

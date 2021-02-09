@@ -2,6 +2,7 @@
 
 ## ToDo
 
+- Raise z-index on focused window
 - Move PinchOverlay towards moving and resizing functionality -> get rid of Ctrl-Mod and Shift-Mod
 - Starter panel
 - Battery warning
