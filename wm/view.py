@@ -134,7 +134,6 @@ class View(PyWMView, Animate):
         elif self.panel == "launcher":
             self.set_size(self.wm.width * 0.8 * self.client_side_scale,
                           self.wm.height * 0.8 * self.client_side_scale)
-            print(self._size_pending)
         else:
             state = self.state
 
