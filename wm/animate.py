@@ -25,6 +25,7 @@ class _Thread(Thread):
         self.animate = animate
         self.animation = animation
 
+
     def run(self):
         try:
             self.animation.setup()
@@ -33,11 +34,11 @@ class _Thread(Thread):
             current = time.time()
             while current - initial < self.animation.duration:
                 t = time.time()
-                self.animation.update((current - initial) /
-                                      self.animation.duration)
+                self.animation.update(self.animation.ease_func((current - initial) /
+                                      self.animation.duration))
                 t = time.time() - t
                 if t > 0.01:
-                    print("WARNING: Long update time", 1000 * t)
+                    print("WARNING: Long update time: %dms" % (1000 * t))
                 current = time.time()
 
             self.animation.finish()
@@ -48,8 +49,14 @@ class _Thread(Thread):
 
 
 class Animation:
-    def __init__(self, duration):
+    def __init__(self, duration, ease=False):
         self.duration = duration
+        self.ease = ease
+
+    def ease_func(self, x):
+        if not self.ease:
+            return x
+        return 2 * x**2 if x < 0.5 else 1 - (-2 * x + 2)**2 / 2.
 
     """
     Virtual methods
@@ -65,8 +72,8 @@ class Animation:
 
 
 class Transition(Animation):
-    def __init__(self, animate, duration, finished_func=None, **new_state):
-        super().__init__(duration)
+    def __init__(self, animate, duration, ease=False, finished_func=None, **new_state):
+        super().__init__(duration, ease=ease)
         self._animate = animate
         self._new_state = new_state
         self._interpolate = None

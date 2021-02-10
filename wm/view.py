@@ -22,7 +22,7 @@ class ViewState(State):
 
 class PresentViewTransition(Transition):
     def __init__(self, layout, view, duration, i, j, w, h):
-        super().__init__(view, duration)
+        super().__init__(view, duration, ease=True)
         self.layout = layout
         self.view = view
         self.i = i
@@ -64,50 +64,54 @@ class View(PyWMView, Animate):
             self.panel = PANELS[self.app_id]
             self.set_accepts_input(False)
             self.set_z_index(6)
+        else:
+            self.set_z_index(0)
 
         if self.panel is not None:
             self.update()
             self.update_size()
 
-        elif self.floating:
-            min_w, _, min_h, _ = self.size_constraints
-
-            if (min_w, min_h) == (0, 0):
-                (min_w, min_h) = self.size
-
-            if min_w == 0 or min_h == 0:
-                return
-
-            ci = self.wm.state.i + self.wm.state.size / 2.
-            cj = self.wm.state.j + self.wm.state.size / 2.
-            if self.parent is not None:
-                ci = self.parent.state.i + self.parent.state.w / 2.
-                cj = self.parent.state.j + self.parent.state.h / 2.
-
-            w, h = min_w, min_h
-            w *= self.wm.scale / self.wm.width / self.client_side_scale
-            h *= self.wm.scale / self.wm.height / self.client_side_scale
-
-            self.state.i = ci - w / 2.
-            self.state.j = cj - h / 2.
-            self.state.w = w
-            self.state.h = h
-            
-            self.update()
-
         else:
-            min_w, _, min_h, _ = self.size_constraints
-            min_w *= self.wm.scale / self.wm.width / self.client_side_scale
-            min_h *= self.wm.scale / self.wm.height / self.client_side_scale
+            if self.floating:
+                min_w, _, min_h, _ = self.size_constraints
 
-            self.wm.place_initial(self, max(math.ceil(min_w), 1),
-                                  max(math.ceil(min_h), 1))
+                if (min_w, min_h) == (0, 0):
+                    (min_w, min_h) = self.size
+
+                if min_w == 0 or min_h == 0:
+                    return
+
+                ci = self.wm.state.i + self.wm.state.size / 2.
+                cj = self.wm.state.j + self.wm.state.size / 2.
+                if self.parent is not None:
+                    ci = self.parent.state.i + self.parent.state.w / 2.
+                    cj = self.parent.state.j + self.parent.state.h / 2.
+
+                w, h = min_w, min_h
+                w *= self.wm.scale / self.wm.width / self.client_side_scale
+                h *= self.wm.scale / self.wm.height / self.client_side_scale
+
+                self.state.i = ci - w / 2.
+                self.state.j = cj - h / 2.
+                self.state.w = w
+                self.state.h = h
+                
+            else:
+                min_w, _, min_h, _ = self.size_constraints
+                min_w *= self.wm.scale / self.wm.width / self.client_side_scale
+                min_h *= self.wm.scale / self.wm.height / self.client_side_scale
+
+                self.wm.place_initial(self, max(math.ceil(min_w), 1),
+                                      max(math.ceil(min_h), 1))
 
             i, j, w, h = self.state.i, self.state.j, self.state.w, self.state.h
             self.state.w = 0
             self.state.h = 0
 
-            self.animation(PresentViewTransition(self.wm, self, 0.2, i, j, w, h))
+            self.state.i += .5*w
+            self.state.j += .5*h
+
+            self.animation(PresentViewTransition(self.wm, self, .5, i, j, w, h))
 
 
     def update(self):
@@ -163,6 +167,13 @@ class View(PyWMView, Animate):
 
             if (width, height) != self.size:
                 self.set_size(width, height)
+
+    def on_update(self):
+        if self.panel is None:
+            if self.focused:
+                self.set_z_index(1 + (2 if self.floating else 0))
+            else:
+                self.set_z_index(0 + (2 if self.floating else 0))
 
     def destroy(self):
         self.wm.reset_extent()

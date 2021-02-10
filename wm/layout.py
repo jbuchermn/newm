@@ -95,10 +95,10 @@ class ResizeViewTransition(Transition):
         self.delta_j = delta_j
 
     def setup(self):
-        new_view_box = [self.view.state.i,
-                        self.view.state.j,
-                        self.view.state.w,
-                        self.view.state.h]
+        new_view_box = [round(self.view.state.i),
+                        round(self.view.state.j),
+                        round(self.view.state.w),
+                        round(self.view.state.h)]
 
         delta_i = self.delta_i
         delta_j = self.delta_j
@@ -258,8 +258,8 @@ class Layout(PyWM, Animate):
 
     def find_at_tile(self, i, j):
         for view in self.windows():
-            if (view.state.i <= i < view.state.i + view.state.w) and \
-                    (view.state.j <= j < view.state.j + view.state.h):
+            if (round(view.state.i) <= round(i) < round(view.state.i + view.state.w)) and \
+                    (round(view.state.j) <= round(j) < round(view.state.j + view.state.h)):
                 return view
 
         return None
@@ -407,6 +407,7 @@ class Layout(PyWM, Animate):
 
     def focus_view(self, view, new_state=None):
         view.focus()
+
         i, j, w, h = view.state.i, view.state.j, \
             view.state.w, view.state.h
 
