@@ -37,8 +37,11 @@ class _Thread(Thread):
                 self.animation.update(self.animation.ease_func((current - initial) /
                                       self.animation.duration))
                 t = time.time() - t
-                if t > 0.01:
+                if t > 0.008:
                     print("WARNING: Long update time: %dms" % (1000 * t))
+                else:
+                    time.sleep(0.008 - t)
+
                 current = time.time()
 
             self.animation.finish()
