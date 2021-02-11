@@ -40,6 +40,7 @@ class PresentViewTransition(Transition):
 
     def finish(self):
         self.layout.reset_extent(focus_view=self.view)
+        self.view.presented = True
 
 
 class View(PyWMView, Animate):
@@ -49,6 +50,7 @@ class View(PyWMView, Animate):
         self.state = ViewState(0, 0, 0, 0)
         self.client_side_scale = 1.
 
+        self.presented = False
         self.panel = None
 
     def main(self):
@@ -70,6 +72,7 @@ class View(PyWMView, Animate):
         if self.panel is not None:
             self.update()
             self.update_size()
+            self.presented = True
 
         else:
             if self.floating:
@@ -139,6 +142,10 @@ class View(PyWMView, Animate):
             w *= self.wm.width / wm_state.size
             h *= self.wm.height / wm_state.size
 
+            if self.size[0] > 0 and self.size[1] > 0:
+                x -= self.offset[0] / self.size[0] * w
+                y -= self.offset[1] / self.size[1] * h
+
             self.set_box(x, y, w, h)
 
     def update_size(self):
@@ -168,7 +175,18 @@ class View(PyWMView, Animate):
             if (width, height) != self.size:
                 self.set_size(width, height)
 
+        self.update()
+
     def on_update(self):
+        if self.floating and self.presented:
+            """
+            Keep floating windows scaled correctly
+            """
+            x, y, w, h = self.box
+            w = self.size[0] * self.client_side_scale
+            h = self.size[1] * self.client_side_scale
+            self.set_box(x, y, w, h)
+
         if self.panel is None:
             if self.focused:
                 self.set_z_index(1 + (2 if self.floating else 0))

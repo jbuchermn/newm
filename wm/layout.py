@@ -448,6 +448,10 @@ class Layout(PyWM, Animate):
             if self.state.padding == 0 else 0
 
         if padding == 0:
+            for v in self.views:
+                if v.panel is None:
+                    v.set_fullscreen(True)
+
             focused = self.find_focused_box()
             self.fullscreen_backup = self.state.i, self.state.j, \
                 self.state.size
@@ -457,7 +461,12 @@ class Layout(PyWM, Animate):
                                       i=focused[0],
                                       j=focused[1],
                                       size=max(focused[2:])))
+
         else:
+            for v in self.views:
+                if v.panel is None:
+                    v.set_fullscreen(False)
+
             if self.fullscreen_backup:
                 reset = self.fullscreen_backup
                 min_i, min_j, max_i, max_j = self.get_extent()
@@ -471,6 +480,7 @@ class Layout(PyWM, Animate):
                                               j=reset[1],
                                               size=reset[2]))
                     return
+
         self.animation(Transition(self, .2, padding=padding))
 
     def enter_overlay(self, overlay):
