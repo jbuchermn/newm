@@ -202,6 +202,7 @@ class Layout(PyWM, Animate):
 
             ("M-Return", lambda: os.system("termite &")),
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
+            ("M-q", lambda: self.close_view()),  # noqa E501
 
             ("M-s", lambda: self.toggle_half_scale()),
             ("M-f", lambda: self.toggle_padding()),
@@ -238,14 +239,14 @@ class Layout(PyWM, Animate):
         self.fullscreen_backup = 0, 0, 1
 
     def windows(self):
-        return [v for v in self.views if not v.floating]
+        return [v for _, v in self._views.items() if not v.up_state.is_floating]
 
-    def dialogs(self):
-        return [v for v in self.views if v.floating]
+    def dialogs(self): 
+        return [v for _, v in self._views.items() if v.up_state.is_floating]
 
-    def update(self):
-        for v in self.views:
-            v.update()
+    def update(self, finished=False):
+        for _, v in self._views.items():
+            v.update(finished=finished)
 
         if self.background is not None:
             self.background.update()
@@ -265,22 +266,22 @@ class Layout(PyWM, Animate):
         return None
 
     def find_focused_box(self):
-        for view in self.views:
-            if view.focused:
+        for _, view in self._views.items():
+            if view.up_state.is_focused:
                 return view.state.i, view.state.j, view.state.w, view.state.h
 
         return 0, 0, 1, 1
 
     def get_extent(self):
-        if len(self.views) == 0:
+        if len(self._views) == 0:
             return self.state.i, self.state.j, \
                 self.state.i + self.state.size - 1, \
                 self.state.j + self.state.size - 1
 
-        min_i = min([view.state.i for view in self.views])
-        min_j = min([view.state.j for view in self.views])
-        max_i = max([view.state.i + view.state.w - 1 for view in self.views])
-        max_j = max([view.state.j + view.state.h - 1 for view in self.views])
+        min_i = min([view.state.i for _, view in self._views.items()])
+        min_j = min([view.state.j for _, view in self._views.items()])
+        max_i = max([view.state.i + view.state.w - 1 for _, view in self._views.items()])
+        max_j = max([view.state.j + view.state.h - 1 for _, view in self._views.items()])
 
         """
         Borders around, such that views can be at the edges
@@ -311,7 +312,6 @@ class Layout(PyWM, Animate):
                 place_i += 1
 
         view.state = ViewState(place_i, place_j, w, h)
-        view.update_size()
 
 
     def reset_extent(self, focus_view=None):
@@ -345,8 +345,8 @@ class Layout(PyWM, Animate):
                 (j < self.state.j and delta_j < 0)):
 
             vf = None
-            for v in self.views:
-                if v.focused:
+            for _, v in self._views.items():
+                if v.up_state.is_focused():
                     vf = v
             if vf is not None:
                 self.focus_view(vf)
@@ -362,7 +362,7 @@ class Layout(PyWM, Animate):
         best_view = None
         best_view_score = 1000
 
-        for view in self.views:
+        for _, view in self._views.items():
             s = score(view)
             if s > 0. and s < best_view_score:
                 best_view_score = s
@@ -372,15 +372,15 @@ class Layout(PyWM, Animate):
             self.focus_view(best_view)
 
     def move_view(self, delta_i, delta_j):
-        view = [v for v in self.views if v.focused]
+        view = [v for _, v in self._views.items() if v.up_state.is_focused]
         if len(view) == 0:
             return
 
         view = view[0]
-        while view.floating and view.parent is not None:
+        while view.up_state.is_floating and view.parent is not None:
             view = view.parent
 
-        if view.floating:
+        if view.up_state.is_floating:
             return
 
         view.animation(MoveViewTransition(self, view, .2, delta_i, delta_j),
@@ -392,18 +392,27 @@ class Layout(PyWM, Animate):
                             pend=True)
 
     def resize_view(self, delta_i, delta_j):
-        view = [v for v in self.views if v.focused]
+        view = [v for _, v in self._views.items() if v.up_state.is_focused]
         if len(view) == 0:
             return
         view = view[0]
-        while view.floating and view.parent is not None:
+        while view.up_state.is_floating and view.parent is not None:
             view = view.parent
 
-        if view.floating:
+        if view.up_state.is_floating:
             return
 
         view.animation(ResizeViewTransition(self, view, .2, delta_i, delta_j),
                        pend=True)
+
+    def close_view(self):
+        view = [v for _, v in self._views.items() if v.up_state.is_focused]
+        if len(view) == 0:
+            return
+
+        view = view[0]
+        view.close()
+
 
     def focus_view(self, view, new_state=None):
         view.focus()
@@ -437,18 +446,18 @@ class Layout(PyWM, Animate):
     def toggle_half_scale(self):
         self.is_half_scale = not self.is_half_scale
         self.rescale()
+        self.update(finished=True)
 
     def rescale(self):
         self.scale = self.state.size * (.5 if self.is_half_scale else 1.)
-        for v in self.views:
-            v.update_size()
 
     def toggle_padding(self):
         padding = self.default_padding \
             if self.state.padding == 0 else 0
 
         if padding == 0:
-            for v in self.views:
+            for k in self._views:
+                v = self._views[k]
                 if v.panel is None:
                     v.set_fullscreen(True)
 
@@ -463,7 +472,7 @@ class Layout(PyWM, Animate):
                                       size=max(focused[2:])))
 
         else:
-            for v in self.views:
+            for _, v in self._views.items():
                 if v.panel is None:
                     v.set_fullscreen(False)
 
@@ -508,6 +517,12 @@ class Layout(PyWM, Animate):
             ovr.on_motion(time_msec, delta_x, delta_y)
             self.enter_overlay(ovr)
             return True
+
+        return False
+
+    def on_button(self, time_msec, button, state):
+        if self.overlay is not None and self.overlay.ready():
+            return self.overlay.on_button(time_msec, button, state)
 
         return False
 

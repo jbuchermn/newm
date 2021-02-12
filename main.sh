@@ -8,7 +8,7 @@ echo "Making PyWM"
 $SCRIPTPATH/pywm/make.sh || exit 1;
 
 echo "Starting WM..."
-python -u $SCRIPTPATH/main.py ALT > $HOME/.cache/newm_log_$(date --iso-8601=seconds) 2>&1 &
+python -u $SCRIPTPATH/main.py > $HOME/.cache/newm_log_$(date --iso-8601=seconds) 2>&1 &
 
 sleep 5
 echo "Starting Panel..."

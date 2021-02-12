@@ -67,7 +67,7 @@ class Animation:
     def setup(self):
         pass
 
-    def update(self, perc):
+    def update(self, perc, finished=False):
         pass
 
     def finish(self):
@@ -95,14 +95,14 @@ class Transition(Animation):
 
         self._interpolate = _StateInterpolate(state, new_state)
 
-    def update(self, perc):
+    def update(self, perc, finished=False):
         self._animate.state = self._interpolate.get(perc)
-        self._animate.update()
+        self._animate.update(finished=finished)
 
     def finish(self):
-        self.update(1.)
         if self._finished_func is not None:
             self._finished_func()
+        self.update(1., finished=True)
 
 
 class Animate:
@@ -135,5 +135,5 @@ class Animate:
             self.animation(p)
 
     @abstractmethod
-    def update(self):
+    def update(self, finished=False):
         pass

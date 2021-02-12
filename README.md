@@ -2,9 +2,12 @@
 
 ## ToDo
 
-- Better state handling in general
-
-- Handle GIMP sized too small issue
+- Better state handling newm-side
+    - up_state out of layout
+    - in_progres into state
+    - GIMP sizing
+    - Size during / after animation
+    - Launcher panel
 
 - Move PinchOverlay towards moving and resizing functionality -> get rid of Ctrl-Mod and Shift-Mod
 - Starter panel

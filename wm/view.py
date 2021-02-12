@@ -4,6 +4,7 @@ from pywm import PyWMView
 
 from .state import State
 from .animate import Animate, Transition
+from .move_floating_overlay import MoveFloatingOverlay
 
 PANELS = {
     "newm-panel-notifiers": "notifiers",
@@ -40,7 +41,6 @@ class PresentViewTransition(Transition):
 
     def finish(self):
         self.layout.reset_extent(focus_view=self.view)
-        self.view.presented = True
 
 
 class View(PyWMView, Animate):
@@ -50,15 +50,18 @@ class View(PyWMView, Animate):
         self.state = ViewState(0, 0, 0, 0)
         self.client_side_scale = 1.
 
-        self.presented = False
+        self.in_progress = False
         self.panel = None
 
     def main(self):
-        print("[Python] New View: %s, %s, %s, %s, floating=%s" % (self.title, self.app_id, self.role, self.is_xwayland, self.floating))
+        print("[Python] New View (%s): %s, %s, %s, xwayland=%s, floating=%s" %
+              ("child" if self.parent is not None else "root",
+               self.up_state.title, self.app_id, self.role,
+               self.is_xwayland, self.up_state.is_floating))
+
         if self.is_xwayland:
             """
-            X cleints are responsible to handle
-            HiDPI themselves
+            X clients are responsible to handle HiDPI themselves
             """
             self.client_side_scale = self.wm.config['output_scale']
 
@@ -66,20 +69,19 @@ class View(PyWMView, Animate):
             self.panel = PANELS[self.app_id]
             self.set_accepts_input(False)
             self.set_z_index(6)
+
         else:
+            self.set_accepts_input(True)
             self.set_z_index(0)
 
-        if self.panel is not None:
-            self.update()
-            self.update_size()
-            self.presented = True
-
-        else:
-            if self.floating:
-                min_w, _, min_h, _ = self.size_constraints
+            """
+            Place initially
+            """
+            if self.up_state.is_floating:
+                min_w, _, min_h, _ = self.up_state.size_constraints
 
                 if (min_w, min_h) == (0, 0):
-                    (min_w, min_h) = self.size
+                    (min_w, min_h) = self.up_state.size
 
                 if min_w == 0 or min_h == 0:
                     return
@@ -98,15 +100,20 @@ class View(PyWMView, Animate):
                 self.state.j = cj - h / 2.
                 self.state.w = w
                 self.state.h = h
-                
+
             else:
-                min_w, _, min_h, _ = self.size_constraints
+                min_w, _, min_h, _ = self.up_state.size_constraints
                 min_w *= self.wm.scale / self.wm.width / self.client_side_scale
                 min_h *= self.wm.scale / self.wm.height / self.client_side_scale
+
+                print(self.up_state.size_constraints, self.up_state.size)
 
                 self.wm.place_initial(self, max(math.ceil(min_w), 1),
                                       max(math.ceil(min_h), 1))
 
+            """
+            Present
+            """
             i, j, w, h = self.state.i, self.state.j, self.state.w, self.state.h
             self.state.w = 0
             self.state.h = 0
@@ -116,16 +123,77 @@ class View(PyWMView, Animate):
 
             self.animation(PresentViewTransition(self.wm, self, .5, i, j, w, h))
 
+    def move(self, delta_x, delta_y):
+        if not self.up_state.is_floating:
+            return
 
-    def update(self):
+        self.state.i += delta_x * self.wm.scale
+        self.state.j += delta_y * self.wm.scale
+
+        self.update()
+
+    def process(self, last_down_state, up_state):
         if self.panel == "notifiers":
-            self.set_box(self.wm.width * 0.4, self.wm.height * 0.7, self.wm.width * 0.2, self.wm.height * 0.3)
+            self.set_size(
+                self.wm.width * 0.2 * self.client_side_scale,
+                self.wm.height * 0.3 * self.client_side_scale)
+
+            self.set_box(
+                self.wm.width * 0.4,
+                self.wm.height * 0.7,
+                self.wm.width * 0.2,
+                self.wm.height * 0.3)
+
         elif self.panel == "launcher":
-            self.set_box(self.wm.width * 0.1, self.wm.height * 0.1, self.wm.width * 0.8, 0)
+            self.set_size(
+                self.wm.width * 0.8 * self.client_side_scale,
+                self.wm.height * 0.8 * self.client_side_scale)
+
+            self.set_box(
+                self.wm.width * 0.1,
+                self.wm.height * 0.1,
+                self.wm.width * 0.8,
+                0)
+
         else:
+            """
+            Keep focused view on top
+            """
+            if self.up_state.is_focused:
+                self.set_z_index(1 + (2 if self.up_state.is_floating else 0))
+            else:
+                self.set_z_index(0 + (2 if self.up_state.is_floating else 0))
+
+            """
+            Handle client size
+            """
             state = self.state
             wm_state = self.wm.state
 
+            width = round(state.w * self.wm.width / self.wm.scale *
+                          self.client_side_scale)
+            height = round(state.h * self.wm.height / self.wm.scale *
+                           self.client_side_scale)
+
+            if not self.in_progress:
+                min_w, max_w, min_h, max_h = self.up_state.size_constraints
+                if width < min_w and min_w > 0:
+                    print("Warning: Width: %d !> %d" % (width, min_w))
+                if width > max_w and max_w > 0:
+                    print("Warning: Width: %d !< %d" % (width, max_w))
+                if height < min_h and min_h > 0:
+                    print("Warning: Height: %d !> %d" % (height, min_h))
+                if height > max_h and max_h > 0:
+                    print("Warning: Height: %d !< %d" % (height, max_h))
+
+                if (width, height) != self.up_state.size:
+                    print("Setting", (width, height))
+                    self.set_size(width, height)
+
+
+            """
+            Handle box
+            """
             i = state.i
             j = state.j
             w = state.w
@@ -142,56 +210,33 @@ class View(PyWMView, Animate):
             w *= self.wm.width / wm_state.size
             h *= self.wm.height / wm_state.size
 
-            if self.size[0] > 0 and self.size[1] > 0:
-                x -= self.offset[0] / self.size[0] * w
-                y -= self.offset[1] / self.size[1] * h
+            if self.up_state.size[0] > 0 and self.up_state.size[1] > 0:
+                x -= self.up_state.offset[0] / self.up_state.size[0] * w
+                y -= self.up_state.offset[1] / self.up_state.size[1] * h
+
+
+            """
+            Override: Keep floating windows scaled correctly
+            """
+            if self.up_state.is_floating and not self.in_progress:
+                w = self.up_state.size[0] * self.client_side_scale
+                h = self.up_state.size[1] * self.client_side_scale
 
             self.set_box(x, y, w, h)
 
-    def update_size(self):
-        if self.panel == "notifiers":
-            self.set_size(self.box[2] * self.client_side_scale, self.box[3] * self.client_side_scale)
-        elif self.panel == "launcher":
-            self.set_size(self.wm.width * 0.8 * self.client_side_scale,
-                          self.wm.height * 0.8 * self.client_side_scale)
-        else:
-            state = self.state
 
-            width = round(state.w * self.wm.width / self.wm.scale *
-                          self.client_side_scale)
-            height = round(state.h * self.wm.height / self.wm.scale *
-                           self.client_side_scale)
+    def update(self, finished=False):
+        self.in_progress = not finished
+        self.process(self.last_down_state, self.up_state)
 
-            min_w, max_w, min_h, max_h = self.size_constraints
-            if width < min_w and min_w > 0:
-                print("Warning: Width: %d !> %d" % (width, min_w))
-            if width > max_w and max_w > 0:
-                print("Warning: Width: %d !< %d" % (width, max_w))
-            if height < min_h and min_h > 0:
-                print("Warning: Height: %d !> %d" % (height, min_h))
-            if height > max_h and max_h > 0:
-                print("Warning: Height: %d !< %d" % (height, max_h))
+    def on_focus_change(self):
+        pass
 
-            if (width, height) != self.size:
-                self.set_size(width, height)
-
-        self.update()
-
-    def on_update(self):
-        if self.floating and self.presented:
-            """
-            Keep floating windows scaled correctly
-            """
-            x, y, w, h = self.box
-            w = self.size[0] * self.client_side_scale
-            h = self.size[1] * self.client_side_scale
-            self.set_box(x, y, w, h)
-
-        if self.panel is None:
-            if self.focused:
-                self.set_z_index(1 + (2 if self.floating else 0))
-            else:
-                self.set_z_index(0 + (2 if self.floating else 0))
+    def on_event(self, event):
+        if event == "request_move":
+            if self.up_state.is_floating:
+                self.wm.enter_overlay(
+                    MoveFloatingOverlay(self.wm, self))
 
     def destroy(self):
         self.wm.reset_extent()
