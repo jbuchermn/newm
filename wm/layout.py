@@ -1,6 +1,8 @@
+import time
 import math
 import os
 from itertools import product
+from threading import Thread
 
 from pywm import (
     PyWM,
@@ -16,33 +18,29 @@ from pywm.touchpad import (
     SingleFingerMoveGesture
 )
 
+from .view import View, ViewState
+
+from .bar import TopBar, BottomBar
+from .background import Background
 
 from .key_processor import KeyProcessor, KeyBinding
-from .background import Background
-from .bar import TopBar, BottomBar
-from .view import View, ViewState
-from .state import State
-from .animate import Animate, Transition
+from .panel_endpoint import PanelEndpoint
+from .sys_backend import SysBackend
+
 from .pinch_overlay import PinchOverlay
 from .swipe_overlay import SwipeOverlay
 from .swipe_to_zoom_overlay import SwipeToZoomOverlay
 from .launcher_overlay import LauncherOverlay
 from .overview_overlay import OverviewOverlay
-from .panel_endpoint import PanelEndpoint
-from .sys_backend import SysBackend
 
 
-class LayoutState(State):
-    def __init__(self, i, j, size, min_i, min_j, max_i, max_j, padding,
+class LayoutState:
+    def __init__(self, i, j, size, scale, min_i, min_j, max_i, max_j, padding,
                  background_factor, top_bar_dy, bottom_bar_dy):
-        super().__init__(['i', 'j', 'size',
-                          'min_i', 'min_j', 'max_i', 'max_j',
-                          'padding', 'background_factor',
-                          'top_bar_dy', 'bottom_bar_dy'])
-
         self.i = i
         self.j = j
         self.size = size
+        self.scale = scale
         self.min_i = min_i
         self.min_j = min_j
         self.max_i = max_i
@@ -51,6 +49,21 @@ class LayoutState(State):
         self.background_factor = background_factor
         self.top_bar_dy = top_bar_dy
         self.bottom_bar_dy = bottom_bar_dy
+
+    def copy(self):
+        return LayoutState(
+            self.i,
+            self.j,
+            self.size,
+            self.scale,
+            self.min_i,
+            self.min_j,
+            self.max_i,
+            self.max_j,
+            self.padding,
+            self.background_factor,
+            self.top_bar_dy,
+            self.bottom_bar_dy)
 
     def lies_within_extent(self, i, j):
         if i < self.min_i:
@@ -63,6 +76,9 @@ class LayoutState(State):
             return False
 
         return True
+
+    def __str__(self):
+        return str(self.__dict__)
 
 
 def _box_intersects(box1, box2):
@@ -86,92 +102,10 @@ def _box_intersects(box1, box2):
     return False
 
 
-class ResizeViewTransition(Transition):
-    def __init__(self, layout, view, duration, delta_i, delta_j):
-        super().__init__(view, duration)
-        self.layout = layout
-        self.view = view
-        self.delta_i = delta_i
-        self.delta_j = delta_j
 
-    def setup(self):
-        new_view_box = [round(self.view.state.i),
-                        round(self.view.state.j),
-                        round(self.view.state.w),
-                        round(self.view.state.h)]
-
-        delta_i = self.delta_i
-        delta_j = self.delta_j
-        if new_view_box[2] == 1 and delta_i < 0:
-            new_view_box[0] += delta_i
-            new_view_box[2] -= delta_i
-            delta_i = 0
-
-        if new_view_box[3] == 1 and delta_j < 0:
-            new_view_box[1] += delta_j
-            new_view_box[3] -= delta_j
-            delta_j = 0
-
-        new_view_box[2] += delta_i
-        new_view_box[3] += delta_j
-
-        for v in self.layout.windows():
-            if v == self.view:
-                continue
-            if _box_intersects(new_view_box, [v.state.i, v.state.j,
-                                              v.state.w, v.state.h]):
-                return
-
-        new_state = self.view.state.copy()
-        new_state.i = new_view_box[0]
-        new_state.j = new_view_box[1]
-        new_state.w = new_view_box[2]
-        new_state.h = new_view_box[3]
-        super().setup(new_state)
-
-    def finish(self):
-        super().finish()
-        self.layout.rescale()
-        self.layout.reset_extent(focus_view=self.view)
-
-
-class MoveViewTransition(Transition):
-    def __init__(self, layout, view, duration, delta_i, delta_j):
-        super().__init__(view, duration)
-        self.layout = layout
-        self.view = view
-        self.delta_i = delta_i
-        self.delta_j = delta_j
-
-    def setup(self):
-        new_view_box = [self.view.state.i + self.delta_i,
-                        self.view.state.j + self.delta_j,
-                        self.view.state.w,
-                        self.view.state.h]
-
-        for v in self.layout.windows():
-            if v == self.view:
-                continue
-            if _box_intersects(new_view_box, [v.state.i, v.state.j,
-                                              v.state.w, v.state.h]):
-                return
-
-        new_state = self.view.state.copy()
-        new_state.i = new_view_box[0]
-        new_state.j = new_view_box[1]
-        new_state.w = new_view_box[2]
-        new_state.h = new_view_box[3]
-        super().setup(new_state)
-
-    def finish(self):
-        super().finish()
-        self.layout.reset_extent(focus_view=self.view)
-
-
-class Layout(PyWM, Animate):
+class Layout(PyWM):
     def __init__(self, mod, **kwargs):
-        PyWM.__init__(self, View, **kwargs)
-        Animate.__init__(self)
+        super().__init__(View, **kwargs)
 
         self.mod = mod
         self.mod_sym = None
@@ -185,26 +119,26 @@ class Layout(PyWM, Animate):
         self.key_processor = KeyProcessor(self.mod_sym)
         self.key_processor.register_bindings(
             ("M-h", lambda: self.move(-1, 0)),
-            ("M-C-h", lambda: self.resize_view(-1, 0)),
-            ("M-H", lambda: self.move_view(-1, 0)),
+            # ("M-C-h", lambda: self.resize_view(-1, 0)),
+            # ("M-H", lambda: self.move_view(-1, 0)),
 
             ("M-j", lambda: self.move(0, 1)),
-            ("M-C-j", lambda: self.resize_view(0, 1)),
-            ("M-J", lambda: self.move_view(0, 1)),
+            # ("M-C-j", lambda: self.resize_view(0, 1)),
+            # ("M-J", lambda: self.move_view(0, 1)),
 
             ("M-k", lambda: self.move(0, -1)),
-            ("M-C-k", lambda: self.resize_view(0, -1)),
-            ("M-K", lambda: self.move_view(0, -1)),
+            # ("M-C-k", lambda: self.resize_view(0, -1)),
+            # ("M-K", lambda: self.move_view(0, -1)),
 
             ("M-l", lambda: self.move(1, 0)),
-            ("M-C-l", lambda: self.resize_view(1, 0)),
-            ("M-L", lambda: self.move_view(1, 0)),
+            # ("M-C-l", lambda: self.resize_view(1, 0)),
+            # ("M-L", lambda: self.move_view(1, 0)),
 
             ("M-Return", lambda: os.system("termite &")),
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
             ("M-q", lambda: self.close_view()),  # noqa E501
 
-            ("M-s", lambda: self.toggle_half_scale()),
+            # ("M-s", lambda: self.toggle_half_scale()),
             ("M-f", lambda: self.toggle_padding()),
 
             ("M-C", lambda: self.terminate()),
@@ -216,8 +150,7 @@ class Layout(PyWM, Animate):
         self.sys_backend.register_xf86_keybindings()
 
         self.default_padding = 0.01
-        self.state = LayoutState(0, 0, 2, 0, 0, 1, 1,
-                                 self.default_padding, 3, 0, 0)
+        self.state = None
 
         self.overlay = None
 
@@ -234,31 +167,102 @@ class Layout(PyWM, Animate):
         ...
         """
         self.is_half_scale = False
-        self.scale = 2
 
         self.fullscreen_backup = 0, 0, 1
 
-    def windows(self):
-        return [v for _, v in self._views.items() if not v.up_state.is_floating]
+        """
+        - next state
+        - start time
+        - duration
+        """
+        self._animation = None
 
-    def dialogs(self): 
-        return [v for _, v in self._views.items() if v.up_state.is_floating]
+    def main(self):
 
-    def update(self, finished=False):
+        self.state = LayoutState(0, 0, 2, 2, 0, 0, 1, 1,
+                                 self.default_padding, 3, 0, 0)
+        self.bottom_bar = self.create_widget(BottomBar)
+        self.top_bar = self.create_widget(TopBar)
+        self.background = self.create_widget(Background,
+                                             '~/wallpaper.jpg')
+        self.panel_endpoint = PanelEndpoint()
+
+    def terminate(self):
+        super().terminate()
+        if self.top_bar is not None:
+            self.top_bar.stop()
+        if self.bottom_bar is not None:
+            self.bottom_bar.stop()
+        if self.panel_endpoint is not None:
+            self.panel_endpoint.stop()
+
+
+    def damage(self):
         for _, v in self._views.items():
-            v.update(finished=finished)
+            if isinstance(v.state, ViewState):
+                v.state.parent = self.state
+            v.damage()
 
         if self.background is not None:
-            self.background.update()
+            self.background.damage()
 
         if self.top_bar is not None:
-            self.top_bar.update()
+            self.top_bar.damage()
 
         if self.bottom_bar is not None:
-            self.bottom_bar.update()
+            self.bottom_bar.damage()
+
+
+    def animate_to(self, new_state, then=None):
+        if self._animation is not None:
+            return
+
+        print("Animating to %s" % new_state.__dict__)
+
+        self._animation = (new_state, time.time(), .3)
+        for _, v in self._views.items():
+            if v.is_window() or v.is_dialog():
+                state = v.state.copy()
+                state.parent = new_state
+                v.animate_to(state)
+
+        if self.background is not None:
+            self.background.animate_to(new_state)
+
+        if self.top_bar is not None:
+            self.top_bar.animate_to(new_state)
+
+        if self.bottom_bar is not None:
+            self.bottom_bar.animate_to(new_state)
+
+        def run():
+            time.sleep(self._animation[1] + self._animation[2] - time.time())
+            self.state = self._animation[0]
+            self._animation = None
+            if then is not None:
+                then()
+
+        Thread(target=run).start()
+
+
+
+    """
+    Utilities
+    """
+
+    def windows(self):
+        return [v for _, v in self._views.items() if v.is_window()]
+
+    def dialogs(self): 
+        return [v for _, v in self._views.items() if v.is_dialog()]
+
+    def panels(self):
+        return [v for _, v in self._views.items() if v.is_panel()]
 
     def find_at_tile(self, i, j):
         for view in self.windows():
+            if view.state is None:
+                continue
             if (round(view.state.i) <= round(i) < round(view.state.i + view.state.w)) and \
                     (round(view.state.j) <= round(j) < round(view.state.j + view.state.h)):
                 return view
@@ -278,10 +282,10 @@ class Layout(PyWM, Animate):
                 self.state.i + self.state.size - 1, \
                 self.state.j + self.state.size - 1
 
-        min_i = min([view.state.i for _, view in self._views.items()])
-        min_j = min([view.state.j for _, view in self._views.items()])
-        max_i = max([view.state.i + view.state.w - 1 for _, view in self._views.items()])
-        max_j = max([view.state.j + view.state.h - 1 for _, view in self._views.items()])
+        min_i = min([view.state.i for _, view in self._views.items() if view.is_window()])
+        min_j = min([view.state.j for _, view in self._views.items() if view.is_window()])
+        max_i = max([view.state.i + view.state.w - 1 for _, view in self._views.items() if view.is_window()])
+        max_j = max([view.state.j + view.state.h - 1 for _, view in self._views.items() if view.is_window()])
 
         """
         Borders around, such that views can be at the edges
@@ -311,19 +315,12 @@ class Layout(PyWM, Animate):
             while self.find_at_tile(place_i, place_j) is not None:
                 place_i += 1
 
-        view.state = ViewState(place_i, place_j, w, h)
+        return place_i, place_j
 
 
-    def reset_extent(self, focus_view=None):
-        new_state = self.state.copy()
-        new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j = \
-            self.get_extent()
-
-        if focus_view is None:
-            self.animation(Transition(self, .2,
-                                      **new_state.kwargs()), pend=True)
-        else:
-            self.focus_view(focus_view, new_state)
+    """
+    Callbacks
+    """
 
     def on_key(self, time_msec, keycode, state, keysyms):
         if self.overlay is not None and self.overlay.ready():
@@ -334,179 +331,6 @@ class Layout(PyWM, Animate):
                                          keysyms,
                                          self.modifiers & self.mod > 0,
                                          self.modifiers & PYWM_MOD_CTRL > 0)
-
-    def move(self, delta_i, delta_j):
-        i, j, w, h = self.find_focused_box()
-        ci, cj = i + w/2., j + h/2.
-
-        if ((i + w > self.state.i + self.state.size and delta_i > 0) or
-                (i < self.state.i and delta_i < 0) or
-                (j + h > self.state.j + self.state.size and delta_j > 0) or
-                (j < self.state.j and delta_j < 0)):
-
-            vf = None
-            for _, v in self._views.items():
-                if v.up_state.is_focused():
-                    vf = v
-            if vf is not None:
-                self.focus_view(vf)
-                return
-
-        def score(view):
-            cvi, cvj = view.state.i + view.state.w/2., \
-                view.state.j + view.state.h/2.
-            sp = (cvi - ci) * delta_i + (cvj - cj) * delta_j
-            sp *= ((cvi - ci) ** 2) + ((cvj - cj) ** 2)
-            return sp
-
-        best_view = None
-        best_view_score = 1000
-
-        for _, view in self._views.items():
-            s = score(view)
-            if s > 0. and s < best_view_score:
-                best_view_score = s
-                best_view = view
-
-        if best_view is not None:
-            self.focus_view(best_view)
-
-    def move_view(self, delta_i, delta_j):
-        view = [v for _, v in self._views.items() if v.up_state.is_focused]
-        if len(view) == 0:
-            return
-
-        view = view[0]
-        while view.up_state.is_floating and view.parent is not None:
-            view = view.parent
-
-        if view.up_state.is_floating:
-            return
-
-        view.animation(MoveViewTransition(self, view, .2, delta_i, delta_j),
-                       pend=True)
-
-        for v in self.dialogs():
-            if v.parent == view:
-                v.animation(MoveViewTransition(self, v, .2, delta_i, delta_j),
-                            pend=True)
-
-    def resize_view(self, delta_i, delta_j):
-        view = [v for _, v in self._views.items() if v.up_state.is_focused]
-        if len(view) == 0:
-            return
-        view = view[0]
-        while view.up_state.is_floating and view.parent is not None:
-            view = view.parent
-
-        if view.up_state.is_floating:
-            return
-
-        view.animation(ResizeViewTransition(self, view, .2, delta_i, delta_j),
-                       pend=True)
-
-    def close_view(self):
-        view = [v for _, v in self._views.items() if v.up_state.is_focused]
-        if len(view) == 0:
-            return
-
-        view = view[0]
-        view.close()
-
-
-    def focus_view(self, view, new_state=None):
-        view.focus()
-
-        i, j, w, h = view.state.i, view.state.j, \
-            view.state.w, view.state.h
-
-        target_i, target_j, target_size = self.state.i, \
-            self.state.j, self.state.size
-
-        target_size = max(target_size, w, h)
-        target_i = min(target_i, i)
-        target_j = min(target_j, j)
-        target_i = max(target_i, i + w - target_size)
-        target_j = max(target_j, j + h - target_size)
-
-        if new_state is None:
-            new_state = self.state.copy()
-        new_state.i = target_i
-        new_state.j = target_j
-        new_state.size = target_size
-
-        if new_state.i != self.state.i or new_state.j != self.state.j or new_state.size != self.state.size:
-            if self.state.padding == 0:
-                new_state.padding = self.default_padding
-
-        self.animation(Transition(self, .2,
-                                  finished_func=self.rescale,
-                                  **new_state.kwargs()), pend=True)
-
-    def toggle_half_scale(self):
-        self.is_half_scale = not self.is_half_scale
-        self.rescale()
-        self.update(finished=True)
-
-    def rescale(self):
-        self.scale = self.state.size * (.5 if self.is_half_scale else 1.)
-
-    def toggle_padding(self):
-        padding = self.default_padding \
-            if self.state.padding == 0 else 0
-
-        if padding == 0:
-            for k in self._views:
-                v = self._views[k]
-                if v.panel is None:
-                    v.set_fullscreen(True)
-
-            focused = self.find_focused_box()
-            self.fullscreen_backup = self.state.i, self.state.j, \
-                self.state.size
-            self.animation(Transition(self, .2,
-                                      finished_func=self.rescale,
-                                      padding=padding,
-                                      i=focused[0],
-                                      j=focused[1],
-                                      size=max(focused[2:])))
-
-        else:
-            for _, v in self._views.items():
-                if v.panel is None:
-                    v.set_fullscreen(False)
-
-            if self.fullscreen_backup:
-                reset = self.fullscreen_backup
-                min_i, min_j, max_i, max_j = self.get_extent()
-                if reset[0] >= min_i and reset[1] >= min_j \
-                        and reset[0] + reset[2] - 1 <= max_i \
-                        and reset[1] + reset[2] - 1 <= max_j:
-                    self.animation(Transition(self, .2,
-                                              finished_func=self.rescale,
-                                              padding=padding,
-                                              i=reset[0],
-                                              j=reset[1],
-                                              size=reset[2]))
-                    return
-
-        self.animation(Transition(self, .2, padding=padding))
-
-    def enter_overlay(self, overlay):
-        if self.overlay is not None:
-            return
-
-        self.overlay = overlay
-        self.overlay.init()
-
-    def exit_overlay(self):
-        if self.overlay is None:
-            return
-
-        self.overlay.destroy()
-
-    def on_overlay_destroyed(self):
-        self.overlay = None
 
     def on_motion(self, time_msec, delta_x, delta_y):
         if self.overlay is not None and self.overlay.ready():
@@ -568,18 +392,203 @@ class Layout(PyWM, Animate):
 
             return False
 
-    def main(self):
-        self.bottom_bar = self.create_widget(BottomBar)
-        self.top_bar = self.create_widget(TopBar)
-        self.background = self.create_widget(Background,
-                                             '~/wallpaper.jpg')
-        self.panel_endpoint = PanelEndpoint()
 
-    def terminate(self):
-        super().terminate()
-        if self.top_bar is not None:
-            self.top_bar.stop()
-        if self.bottom_bar is not None:
-            self.bottom_bar.stop()
-        if self.panel_endpoint is not None:
-            self.panel_endpoint.stop()
+    """
+    Actions
+    """
+
+    def enter_overlay(self, overlay):
+        if self.overlay is not None:
+            return
+
+        self.overlay = overlay
+        self.overlay.init()
+
+    def exit_overlay(self):
+        if self.overlay is None:
+            return
+
+        self.overlay.destroy()
+
+    def on_overlay_destroyed(self):
+        self.overlay = None
+
+
+
+    def reset_extent(self, focus_view=None):
+        new_state = self.state.copy()
+        new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j = \
+            self.get_extent()
+
+        print("Resetting extent: %d %d %d %d" % (new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j))
+
+        if focus_view is None:
+            self.animate_to(new_state)
+        else:
+            self.focus_view(focus_view, new_state)
+
+
+    def move(self, delta_i, delta_j):
+        i, j, w, h = self.find_focused_box()
+        ci, cj = i + w/2., j + h/2.
+
+        if ((i + w > self.state.i + self.state.size and delta_i > 0) or
+                (i < self.state.i and delta_i < 0) or
+                (j + h > self.state.j + self.state.size and delta_j > 0) or
+                (j < self.state.j and delta_j < 0)):
+
+            vf = None
+            for _, v in self._views.items():
+                if v.up_state.is_focused():
+                    vf = v
+            if vf is not None:
+                self.focus_view(vf)
+                return
+
+        def score(view):
+            cvi, cvj = view.state.i + view.state.w/2., \
+                view.state.j + view.state.h/2.
+            sp = (cvi - ci) * delta_i + (cvj - cj) * delta_j
+            sp *= ((cvi - ci) ** 2) + ((cvj - cj) ** 2)
+            return sp
+
+        best_view = None
+        best_view_score = 1000
+
+        for _, view in self._views.items():
+            s = score(view)
+            if s > 0. and s < best_view_score:
+                best_view_score = s
+                best_view = view
+
+        if best_view is not None:
+            self.focus_view(best_view)
+
+    # def move_view(self, delta_i, delta_j):
+    #     view = [v for _, v in self._views.items() if v.up_state.is_focused]
+    #     if len(view) == 0:
+    #         return
+    #
+    #     view = view[0]
+    #     while view.up_state.is_floating and view.parent is not None:
+    #         view = view.parent
+    #
+    #     if view.up_state.is_floating:
+    #         return
+    #
+    #     view.animation(MoveViewTransition(self, view, .2, delta_i, delta_j),
+    #                    pend=True)
+    #
+    #     for v in self.dialogs():
+    #         if v.parent == view:
+    #             v.animation(MoveViewTransition(self, v, .2, delta_i, delta_j),
+    #                         pend=True)
+    #
+    # def resize_view(self, delta_i, delta_j):
+    #     view = [v for _, v in self._views.items() if v.up_state.is_focused]
+    #     if len(view) == 0:
+    #         return
+    #     view = view[0]
+    #     while view.up_state.is_floating and view.parent is not None:
+    #         view = view.parent
+    #
+    #     if view.up_state.is_floating:
+    #         return
+    #
+    #     view.animation(ResizeViewTransition(self, view, .2, delta_i, delta_j),
+    #                    pend=True)
+
+    def close_view(self):
+        view = [v for _, v in self._views.items() if v.up_state.is_focused]
+        if len(view) == 0:
+            return
+
+        view = view[0]
+        view.close()
+
+
+    def focus_view(self, view, new_state=None):
+        print("Focussing: %s" % view.app_id)
+        view.focus()
+
+        i, j, w, h = view.state.i, view.state.j, \
+            view.state.w, view.state.h
+
+        target_i, target_j, target_size = self.state.i, \
+            self.state.j, self.state.size
+
+        target_size = max(target_size, w, h)
+        target_i = min(target_i, i)
+        target_j = min(target_j, j)
+        target_i = max(target_i, i + w - target_size)
+        target_j = max(target_j, j + h - target_size)
+
+        if new_state is None:
+            new_state = self.state.copy()
+            new_state.i = target_i
+            new_state.j = target_j
+            new_state.size = target_size
+            new_state.scale = new_state.size * (.5 if self.is_half_scale else 1.)
+
+            if new_state.i != self.state.i or new_state.j != self.state.j or new_state.size != self.state.size:
+                if self.state.padding == 0:
+                    new_state.padding = self.default_padding
+
+        self.animate_to(new_state)
+
+    # def toggle_half_scale(self):
+    #     self.is_half_scale = not self.is_half_scale
+    #     self.rescale()
+    #     self.update(finished=True)
+
+    def get_scale(self, state):
+        return state.size * (.5 if self.is_half_scale else 1.)
+
+
+    def toggle_padding(self):
+        padding = self.default_padding \
+            if self.state.padding == 0 else 0
+
+        if padding == 0:
+            for _, v in self._views.items():
+                if v.is_window():
+                    v.set_fullscreen(True)
+
+            focused = self.find_focused_box()
+            self.fullscreen_backup = self.state.i, self.state.j, \
+                self.state.size
+
+            new_state = self.state.copy()
+            new_state.padding = padding
+            new_state.i = focused[0]
+            new_state.j = focused[1]
+            new_state.size = max(focused[2:])
+            new_state.scale = int(new_state.size / self.state.size * self.state.scale)
+
+            self.animate_to(new_state)
+
+        else:
+            for _, v in self._views.items():
+                if v.is_window():
+                    v.set_fullscreen(False)
+
+
+            new_state = self.state.copy()
+            new_state.padding = padding
+            if self.fullscreen_backup:
+                reset = self.fullscreen_backup
+                min_i, min_j, max_i, max_j = self.get_extent()
+                if reset[0] >= min_i and reset[1] >= min_j \
+                        and reset[0] + reset[2] - 1 <= max_i \
+                        and reset[1] + reset[2] - 1 <= max_j:
+                    new_state.i=reset[0]
+                    new_state.j=reset[1]
+                    new_state.size=reset[2]
+
+                self.fullscreen_backup = None
+
+            new_state.scale = int(new_state.size / self.state.size * self.state.scale)
+
+            self.animate_to(new_state)
+
+

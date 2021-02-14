@@ -1,13 +1,25 @@
-from pywm import PyWMBackgroundWidget
+import time
+
+from pywm import PyWMBackgroundWidget, PyWMWidgetDownstreamState
+
+from .interpolation import WidgetDownstreamInterpolation
 
 
 class Background(PyWMBackgroundWidget):
     def __init__(self, wm, path):
         super().__init__(wm, path)
-        self.update()
 
-    def update(self):
-        wm_state = self.wm.state
+        """
+        - interpolation
+        - start
+        - duration
+        """
+        self._animation = None
+
+    def reducer(self, wm_state):
+        result = PyWMWidgetDownstreamState()
+        result.z_index = -100
+
         min_i, min_j, max_i, max_j = \
             wm_state.min_i, wm_state.min_j, wm_state.max_i, wm_state.max_j
 
@@ -64,16 +76,34 @@ class Background(PyWMBackgroundWidget):
         """
         Fix aspect ratio
         """
-        try:
-            if w/h > self.width/self.height:
-                new_h = self.height * w/self.width
-                y -= (new_h - h)/2.
-                h = new_h
-            else:
-                new_w = self.width * h/self.height
-                x -= (new_w - w)/2.
-                w = new_w
-        except Exception as e:
-            print(e)
+        if w/h > self.width/self.height:
+            new_h = self.height * w/self.width
+            y -= (new_h - h)/2.
+            h = new_h
+        else:
+            new_w = self.width * h/self.height
+            x -= (new_w - w)/2.
+            w = new_w
 
-        self.set_box(x, y, w, h)
+        result.box = (x, y, w, h)
+        return result
+
+    def process(self):
+        if self._animation is not None:
+            interpolation, s, d = self._animation
+            perc = min((time.time() - s) / d, 1.0)
+
+            if perc >= 0.99:
+                self._animation = None
+
+            self.damage()
+            return interpolation.get(perc)
+        else:
+            return self.reducer(self.wm.state)
+
+    def animate_to(self, new_state):
+        cur = self.reducer(self.wm.state)
+        nxt = self.reducer(new_state)
+
+        self._animation = (WidgetDownstreamInterpolation(cur, nxt), time.time(), .3)
+        self.damage()

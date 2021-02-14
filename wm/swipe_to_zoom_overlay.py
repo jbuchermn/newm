@@ -1,5 +1,5 @@
 from pywm.touchpad import GestureListener, LowpassGesture
-from .overlay import Overlay, ExitOverlayTransition
+from .overlay import Overlay
 
 _momentum_factor = 50.
 
@@ -31,12 +31,11 @@ class SwipeToZoomOverlay(Overlay):
         self._set_state()
 
     def _exit_finished(self):
-        self.layout.rescale()
         self.layout.update_cursor()
         super()._exit_finished()
 
     def _exit_transition(self):
-        self.layout.state = self.state
+        new_state = self.state.copy()
 
         size = self.size
         size -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
@@ -44,9 +43,9 @@ class SwipeToZoomOverlay(Overlay):
         size = max(size, self.size_bounds[0])
         size = min(size, self.size_bounds[1])
 
-        return ExitOverlayTransition(
-            self, .2,
-            size=round(size))
+        new_state.size = round(size)
+        new_state.scale = self.layout.get_scale(new_state)
+        return new_state
 
     def _set_state(self):
         self.size = max(self.size, self.size_bounds[0])
@@ -71,7 +70,7 @@ class SwipeToZoomOverlay(Overlay):
 
         self._set_state()
         self.layout.state = self.state
-        self.layout.update()
+        self.layout.damage()
 
     def on_motion(self, time_msec, delta_x, delta_y):
         return False

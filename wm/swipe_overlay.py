@@ -1,5 +1,5 @@
 from pywm.touchpad import GestureListener, LowpassGesture
-from .overlay import Overlay, ExitOverlayTransition
+from .overlay import Overlay
 
 _momentum_factor = 50.
 _locked_dist = 0.05
@@ -44,25 +44,23 @@ class SwipeOverlay(Overlay):
         self._set_state()
 
     def _exit_finished(self):
-        self.layout.rescale()
         self.layout.update_cursor()
         super()._exit_finished()
 
     def _exit_transition(self):
-        self.layout.state = self.state
+        new_state = self.state.copy()
 
-        i = self.x - .5*self.state.size
-        j = self.y - .5*self.state.size
+        new_state.i = self.x - .5*self.state.size
+        new_state.j = self.y - .5*self.state.size
 
         if self.locked_x:
-            i -= max(-.5, min(.5, self.momentum_x * _momentum_factor))
+            new_state.i -= max(-.5, min(.5, self.momentum_x * _momentum_factor))
         else:
-            j -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
+            new_state.j -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
 
-        return ExitOverlayTransition(
-            self, .2,
-            i=round(i),
-            j=round(j))
+        new_state.i = round(new_state.i)
+        new_state.j = round(new_state.j)
+        return new_state
 
     def _set_state(self):
         self.x = max(self.x, self.x_bounds[0])
@@ -106,7 +104,7 @@ class SwipeOverlay(Overlay):
 
         self._set_state()
         self.layout.state = self.state
-        self.layout.update()
+        self.layout.damage()
 
     def on_motion(self, time_msec, delta_x, delta_y):
         return False

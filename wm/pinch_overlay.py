@@ -6,7 +6,7 @@ from pywm.touchpad import (
     GestureListener,
     LowpassGesture
 )
-from .overlay import Overlay, ExitOverlayTransition
+from .overlay import Overlay
 
 
 class PinchOverlay(Overlay):
@@ -42,11 +42,11 @@ class PinchOverlay(Overlay):
 
     def _exit_transition(self):
         self.layout.state = self.state
-        return ExitOverlayTransition(
-            self, .2,
-            size=round(self.size),
-            i=round(self.x - .5*self.size),
-            j=round(self.y - .5*self.size))
+        # return ExitOverlayTransition(
+        #     self, .2,
+        #     size=round(self.size),
+        #     i=round(self.x - .5*self.size),
+        #     j=round(self.y - .5*self.size))
 
     def _set_state(self):
         self.x = max(self.x, self.x_bounds[0])

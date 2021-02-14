@@ -7,16 +7,10 @@ class LauncherOverlay(Overlay):
         super().__init__(layout)
 
         self._launcher = None
-        for view in self.layout.views:
+        for view in self.layout.panels():
             if view.panel == "launcher":
                 self._launcher = view
                 break
-
-        if self._launcher is not None:
-            x, y, w, _ = self._launcher.box
-
-            self._launcher.set_box(x, y, w, 0.8 * self.layout.height)
-            self._launcher.set_accepts_input(True)
 
         self._is_opened = False
 
@@ -50,6 +44,9 @@ class LauncherOverlay(Overlay):
                 'value': perc
             })
 
+            self._launcher.state.perc = perc
+            self._launcher.damage()
+
             if values is None:
                 self._is_opened = True
         else:
@@ -58,6 +55,9 @@ class LauncherOverlay(Overlay):
                 'kind': 'activate_launcher',
                 'value': perc
             })
+
+            self._launcher.state.perc = perc
+            self._launcher.damage()
 
             if values is None:
                 self._close()
@@ -75,9 +75,9 @@ class LauncherOverlay(Overlay):
 
     def _close(self):
         if self._launcher is not None:
-            x, y, w, _ = self._launcher.box
-            self._launcher.set_accepts_input(False)
-            self._launcher.set_box(x, y, w, 0.0)
+            new_state = self._launcher.state.copy()
+            new_state.perc = 0.
+            self._launcher.animate_to(new_state)
 
         self.layout.exit_overlay()
 

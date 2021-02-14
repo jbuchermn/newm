@@ -5,7 +5,9 @@ import pwd
 import time
 import cairo
 import psutil
-from pywm import PyWMCairoWidget
+from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
+
+from .interpolation import WidgetDownstreamInterpolation
 
 BAR_HEIGHT = 20
 
@@ -13,16 +15,16 @@ BAR_HEIGHT = 20
 class Bar(PyWMCairoWidget):
     def __init__(self, wm):
         super().__init__(wm, int(wm.config['output_scale'] * wm.width), int(wm.config['output_scale'] * BAR_HEIGHT))
-        self.set_z_index(5)
 
         self.texts = ["Leftp", "Middlep", "Rightp"]
         self.font_size = wm.config['output_scale'] * 12
 
-        self.update()
-
-    @abstractmethod
-    def update(self):
-        pass
+        """
+        - interpolation
+        - start
+        - duration
+        """
+        self._animation = None
 
     def set_texts(self, texts):
         self.texts = texts
@@ -54,6 +56,30 @@ class Bar(PyWMCairoWidget):
 
         ctx.stroke()
 
+    @abstractmethod
+    def reducer(self, wm_state):
+        pass
+
+    def process(self):
+        if self._animation is not None:
+            interpolation, s, d = self._animation
+            perc = min((time.time() - s) / d, 1.0)
+
+            if perc >= 0.99:
+                self._animation = None
+
+            self.damage()
+            return interpolation.get(perc)
+        else:
+            return self.reducer(self.wm.state)
+
+    def animate_to(self, new_state):
+        cur = self.reducer(self.wm.state)
+        nxt = self.reducer(new_state)
+
+        self._animation = (WidgetDownstreamInterpolation(cur, nxt), time.time(), .3)
+        self.damage()
+
 
 class TopBar(Bar, Thread):
     def __init__(self, wm):
@@ -66,9 +92,14 @@ class TopBar(Bar, Thread):
     def stop(self):
         self._running = False
 
-    def update(self):
-        dy = self.wm.state.top_bar_dy * BAR_HEIGHT
-        self.set_box(0, dy - BAR_HEIGHT, self.wm.width, BAR_HEIGHT)
+    def reducer(self, wm_state):
+        result = PyWMWidgetDownstreamState()
+        result.z_index = 5
+
+        dy = wm_state.top_bar_dy * BAR_HEIGHT
+        result.box = (0, dy - BAR_HEIGHT, self.wm.width, BAR_HEIGHT)
+
+        return result
 
     def run(self):
         while self._running:
@@ -94,10 +125,15 @@ class BottomBar(Bar, Thread):
     def stop(self):
         self._running = False
 
-    def update(self):
-        dy = self.wm.state.bottom_bar_dy * BAR_HEIGHT
-        self.set_box(0, self.wm.height - dy, self.wm.width,
-                     BAR_HEIGHT)
+    def reducer(self, wm_state):
+        result = PyWMWidgetDownstreamState()
+        result.z_index = 5
+
+        dy = wm_state.bottom_bar_dy * BAR_HEIGHT
+        result.box = (0, self.wm.height - dy, self.wm.width,
+                      BAR_HEIGHT)
+
+        return result
 
     def run(self):
         while self._running:

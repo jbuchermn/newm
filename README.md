@@ -2,17 +2,12 @@
 
 ## ToDo
 
-- Better state handling newm-side
-    - up_state out of layout
-    - in_progres into state
-    - GIMP sizing
-    - Size during / after animation
-    - Launcher panel
-
+- Clean up new state handling newm-side and fix bugs (animations / on_finish callbacks / queue animations / ...)
+    - Swipe Overlay: Bouncy overswipe effect (i.e. not a whole tile)
 - Move PinchOverlay towards moving and resizing functionality -> get rid of Ctrl-Mod and Shift-Mod
+
 - Starter panel
 - Battery warning
-- Swipe Overlay: Bouncy overswipe effect (i.e. not a whole tile)
 - Unified handling of stoppable threads spawned by layout.py
 
 

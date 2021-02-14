@@ -1,25 +1,3 @@
-from .animate import Transition
-
-
-class EnterOverlayTransition(Transition):
-    def __init__(self, overlay, duration, **new_state):
-        super().__init__(overlay.layout, duration, **new_state)
-        self.overlay = overlay
-
-    def finish(self):
-        self.overlay._enter_finished()
-        super().finish()
-
-
-class ExitOverlayTransition(Transition):
-    def __init__(self, overlay, duration, **new_state):
-        super().__init__(overlay.layout, duration, **new_state)
-        self.overlay = overlay
-
-    def finish(self):
-        super().finish()
-        self.overlay._exit_finished()
-
 
 class Overlay:
     def __init__(self, layout):
@@ -30,9 +8,9 @@ class Overlay:
         return self._ready
 
     def init(self):
-        transition = self._enter_transition()
-        if transition is not None:
-            self.layout.animation(transition, pend=True)
+        wm_state = self._enter_transition()
+        if wm_state is not None:
+            self.layout.animate_to(wm_state, self._enter_finished)
         else:
             self._ready = True
 
@@ -41,14 +19,19 @@ class Overlay:
 
     def destroy(self):
         self._ready = False
-        transition = self._exit_transition()
-        if transition is not None:
-            self.layout.animation(transition, pend=True)
+        wm_state = self._exit_transition()
+        if wm_state is not None:
+            self.layout.animate_to(wm_state, self._exit_finished)
         else:
             self.layout.on_overlay_destroyed()
 
     def _exit_finished(self):
         self.layout.on_overlay_destroyed()
+
+
+    """
+    Virtual methods
+    """
 
     def _enter_transition(self):
         return None
