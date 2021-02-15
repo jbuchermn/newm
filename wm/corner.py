@@ -3,7 +3,8 @@ import math
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
 
 
-CORNER_RADIUS = 12.5
+# CORNER_RADIUS = 12.5
+CORNER_RADIUS = 17.5
 
 
 class Corner(PyWMCairoWidget):

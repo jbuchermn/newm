@@ -29,6 +29,9 @@ class KeyBinding:
 
         return False
 
+    def clear(self):
+        pass
+
 
 class ModPressKeyBinding:
     def __init__(self, mod_sym, action):
@@ -47,6 +50,9 @@ class ModPressKeyBinding:
             self.action()
 
         return True
+
+    def clear(self):
+        self._ready_to_fire = False
 
 
 def keybinding_factory(processor, keys, action):
@@ -72,4 +78,8 @@ class KeyProcessor:
                 triggered = True
 
         return triggered
+
+    def on_other_action(self):
+        for b in self.bindings:
+            b.clear()
 

@@ -28,7 +28,7 @@ from .key_processor import KeyProcessor, KeyBinding
 from .panel_endpoint import PanelEndpoint
 from .sys_backend import SysBackend
 
-from .pinch_overlay import PinchOverlay
+from .move_resize_overlay import MoveResizeOverlay
 from .swipe_overlay import SwipeOverlay
 from .swipe_to_zoom_overlay import SwipeToZoomOverlay
 from .launcher_overlay import LauncherOverlay
@@ -65,18 +65,6 @@ class LayoutState:
             self.background_factor,
             self.top_bar_dy,
             self.bottom_bar_dy)
-
-    def lies_within_extent(self, i, j):
-        if i < self.min_i:
-            return False
-        if j < self.min_j:
-            return False
-        if i + self.size - 1 > self.max_i:
-            return False
-        if j + self.size - 1 > self.max_j:
-            return False
-
-        return True
 
     def __str__(self):
         return str(self.__dict__)
@@ -120,20 +108,9 @@ class Layout(PyWM):
         self.key_processor = KeyProcessor(self.mod_sym)
         self.key_processor.register_bindings(
             ("M-h", lambda: self.move(-1, 0)),
-            # ("M-C-h", lambda: self.resize_view(-1, 0)),
-            # ("M-H", lambda: self.move_view(-1, 0)),
-
             ("M-j", lambda: self.move(0, 1)),
-            # ("M-C-j", lambda: self.resize_view(0, 1)),
-            # ("M-J", lambda: self.move_view(0, 1)),
-
             ("M-k", lambda: self.move(0, -1)),
-            # ("M-C-k", lambda: self.resize_view(0, -1)),
-            # ("M-K", lambda: self.move_view(0, -1)),
-
             ("M-l", lambda: self.move(1, 0)),
-            # ("M-C-l", lambda: self.resize_view(1, 0)),
-            # ("M-L", lambda: self.move_view(1, 0)),
 
             ("M-Return", lambda: os.system("termite &")),
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
@@ -285,6 +262,13 @@ class Layout(PyWM):
 
         return 0, 0, 1, 1
 
+    def find_focused_view(self):
+        for _, view in self._views.items():
+            if view.up_state.is_focused:
+                return view
+
+        return None
+
     def get_extent(self):
         if len(self._views) == 0:
             return self.state.i, self.state.j, \
@@ -346,7 +330,7 @@ class Layout(PyWM):
             return self.overlay.on_motion(time_msec, delta_x, delta_y)
 
         if self.modifiers & self.mod:
-            ovr = PinchOverlay(self)
+            ovr = MoveResizeOverlay(self)
             ovr.on_motion(time_msec, delta_x, delta_y)
             self.enter_overlay(ovr)
             return True
@@ -373,7 +357,7 @@ class Layout(PyWM):
             if self.modifiers & self.mod and \
                     (isinstance(gesture, TwoFingerSwipePinchGesture) or
                      isinstance(gesture, SingleFingerMoveGesture)):
-                ovr = PinchOverlay(self)
+                ovr = MoveResizeOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
                 return True
@@ -407,6 +391,7 @@ class Layout(PyWM):
     """
 
     def enter_overlay(self, overlay):
+        self.key_processor.on_other_action()
         if self.overlay is not None:
             return
 
@@ -473,39 +458,6 @@ class Layout(PyWM):
         if best_view is not None:
             self.focus_view(best_view)
 
-    # def move_view(self, delta_i, delta_j):
-    #     view = [v for _, v in self._views.items() if v.up_state.is_focused]
-    #     if len(view) == 0:
-    #         return
-    #
-    #     view = view[0]
-    #     while view.up_state.is_floating and view.parent is not None:
-    #         view = view.parent
-    #
-    #     if view.up_state.is_floating:
-    #         return
-    #
-    #     view.animation(MoveViewTransition(self, view, .2, delta_i, delta_j),
-    #                    pend=True)
-    #
-    #     for v in self.dialogs():
-    #         if v.parent == view:
-    #             v.animation(MoveViewTransition(self, v, .2, delta_i, delta_j),
-    #                         pend=True)
-    #
-    # def resize_view(self, delta_i, delta_j):
-    #     view = [v for _, v in self._views.items() if v.up_state.is_focused]
-    #     if len(view) == 0:
-    #         return
-    #     view = view[0]
-    #     while view.up_state.is_floating and view.parent is not None:
-    #         view = view.parent
-    #
-    #     if view.up_state.is_floating:
-    #         return
-    #
-    #     view.animation(ResizeViewTransition(self, view, .2, delta_i, delta_j),
-    #                    pend=True)
 
     def close_view(self):
         view = [v for _, v in self._views.items() if v.up_state.is_focused]
@@ -517,7 +469,6 @@ class Layout(PyWM):
 
 
     def focus_view(self, view, new_state=None):
-        print("Focussing: %s" % view.app_id)
         view.focus()
 
         i, j, w, h = view.state.i, view.state.j, \

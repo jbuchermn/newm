@@ -2,14 +2,14 @@
 
 ## ToDo
 
-- Clean up new state handling newm-side and fix bugs (animations / on_finish callbacks / queue animations / ...)
-    - Swipe Overlay: Bouncy overswipe effect (i.e. not a whole tile)
+- Get rid of min_i, min_j, .. in state and reset_extent / rescale / ...
 - Move PinchOverlay towards moving and resizing functionality -> get rid of Ctrl-Mod and Shift-Mod
+- Swipe Overlay: Bouncy overswipe effect (i.e. not a whole tile)
+- Clean up new state handling newm-side and fix bugs (animations / on_finish callbacks / queue animations / ...)
 
 - Starter panel
 - Battery warning
 - Unified handling of stoppable threads spawned by layout.py
-- Rounded display corners: Possibly larger radius than views?
 
 
 ## Backlog
