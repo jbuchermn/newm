@@ -9,6 +9,7 @@
 - Starter panel
 - Battery warning
 - Unified handling of stoppable threads spawned by layout.py
+- Rounded display corners: Possibly larger radius than views?
 
 
 ## Backlog

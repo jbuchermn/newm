@@ -22,6 +22,7 @@ from .view import View, ViewState
 
 from .bar import TopBar, BottomBar
 from .background import Background
+from .corner import Corner
 
 from .key_processor import KeyProcessor, KeyBinding
 from .panel_endpoint import PanelEndpoint
@@ -157,6 +158,7 @@ class Layout(PyWM):
         self.background = None
         self.top_bar = None
         self.bottom_bar = None
+        self.corners = []
 
         self.panel_endpoint = None
 
@@ -185,6 +187,13 @@ class Layout(PyWM):
         self.top_bar = self.create_widget(TopBar)
         self.background = self.create_widget(Background,
                                              '~/wallpaper.jpg')
+        self.corners = [
+            self.create_widget(Corner, True, True),
+            self.create_widget(Corner, True, False),
+            self.create_widget(Corner, False, True),
+            self.create_widget(Corner, False, False)
+        ]
+
         self.panel_endpoint = PanelEndpoint()
 
     def terminate(self):

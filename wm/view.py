@@ -11,6 +11,8 @@ PANELS = {
     "newm-panel-launcher": "launcher"
 }
 
+CORNER_RADIUS = 12.5
+
 
 class ViewState:
     def __init__(self, parent, i, j, w, h):
@@ -177,6 +179,7 @@ class View(PyWMView):
 
         else:
             result.accepts_input = True
+            result.corner_radius = CORNER_RADIUS if self.parent is None else 0
 
             """
             Keep focused view on top
@@ -207,10 +210,10 @@ class View(PyWMView):
             h = state.h
 
             x = i - wm_state.i + wm_state.padding
-            y = j - wm_state.j + wm_state.padding
+            y = j - wm_state.j + wm_state.padding / (self.wm.height / self.wm.width)
 
             w -= 2*wm_state.padding
-            h -= 2*wm_state.padding
+            h -= 2*wm_state.padding / (self.wm.height / self.wm.width)
 
             x *= self.wm.width / wm_state.size
             y *= self.wm.height / wm_state.size
