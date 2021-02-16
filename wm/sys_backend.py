@@ -23,7 +23,7 @@ class SysBackend(Thread):
         while self._running:
             time.sleep(1.)
             bat = psutil.sensors_battery()
-            if bat.percent < 150 and not bat.power_plugged:
+            if bat.percent < 15 and not bat.power_plugged:
                 self.wm.panel_endpoint.broadcast({
                     'kind': 'sys_backend',
                     'battery': bat.percent / 100.
