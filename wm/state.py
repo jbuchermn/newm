@@ -159,6 +159,8 @@ class LayoutState:
                 self.j + self.size - 1
 
         for _, s in self._view_states.items():
+            if not s.is_tiled:
+                continue
             if s.w == 0 or s.h == 0:
                 continue
             min_i = min(min_i, math.floor(s.i))

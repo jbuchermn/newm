@@ -14,11 +14,12 @@ class MoveResizeOverlay(Overlay):
         super().__init__(self)
 
         self.layout = layout
-        self.state = self.layout.state.copy()
 
         self.view = self.layout.find_focused_view()
+        self.view_state = None
         self.w = 0
         self.h = 0
+
         self.gesture_started = False
         self.gesture_dx = 0
         self.gesture_dy = 0
@@ -27,8 +28,9 @@ class MoveResizeOverlay(Overlay):
     def _reset(self):
         self.layout.damage()
         if self.view is not None:
-            self.w = self.view.state.w
-            self.h = self.view.state.h
+            self.view_state = self.layout.state.get_view_state(self.view._handle)
+            self.w = self.view_state.w
+            self.h = self.view_state.h
 
     def on_gesture(self, gesture):
         if isinstance(gesture, TwoFingerSwipePinchGesture):
@@ -75,12 +77,13 @@ class MoveResizeOverlay(Overlay):
             else:
                 return
 
-            if (w, h) != (self.view.state.w, self.view.state.h):
+            if (w, h) != (self.view_state.w, self.view_state.h):
                 self.gesture_dx = values['delta_x']
                 self.gesture_dy = values['delta_y']
-                new_state = self.view.state.copy()
-                new_state.w, new_state.h = w, h
-                self.view.animate_to(new_state, self._reset)
+
+                self.layout.animate_to(
+                    self.layout.state.replacing_view_state(self.view._handle, w=w, h=h),
+                    .3, self._reset)
 
     def _on_single_finger(self, values):
         if self.view is None:

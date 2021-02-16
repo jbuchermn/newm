@@ -39,26 +39,47 @@ from .overlay import (
     OverviewOverlay
 )
 
-# def _box_intersects(box1, box2):
-#     box1_tiles = []
-#     for i, j in product(range(math.floor(box1[0]),
-#                               math.ceil(box1[0] + box1[2])),
-#                         range(math.floor(box1[1]),
-#                               math.ceil(box1[1] + box1[3]))):
-#         box1_tiles += [(i, j)]
-#
-#     box2_tiles = []
-#     for i, j in product(range(math.floor(box2[0]),
-#                               math.ceil(box2[0] + box2[2])),
-#                         range(math.floor(box2[1]),
-#                               math.ceil(box2[1] + box2[3]))):
-#         box2_tiles += [(i, j)]
-#
-#     for t in box1_tiles:
-#         if t in box2_tiles:
-#             return True
-#     return False
-#
+
+def _score(i1, j1, w1, h1,
+           im, jm,
+           i2, j2, w2, h2):
+
+    if (i1, j1, w1, h1) == (i2, j2, w2, h2):
+        return 1000
+
+    if im < 0:
+        im *= -1
+        i1 *= -1
+        i2 *= -1
+        i1 -= w1
+        i2 -= w2
+    if jm < 0:
+        jm *= -1
+        j1 *= -1
+        j2 *= -1
+        j1 -= h1
+        j2 -= h2
+
+    if jm == 1 and im == 0:
+        im, jm = jm, im
+        i1, j1, w1, h1 = j1, i1, h1, w1
+        i2, j2, w2, h2 = j2, i2, h2, w2
+
+    """
+    At this point: im == 1, jm == 0
+    """
+    d_i = i2 - (i1 + w1)
+    if d_i < 0:
+        return 1000
+
+    d_j = 0
+    if j2 > j1 + h1:
+        d_j = j2 - (j1 + h1)
+    elif j1 > j2 + h2:
+        d_j = j1 - (j2 + h2)
+
+    return d_i + d_j
+
 
 
 class Layout(PyWM):
@@ -343,39 +364,32 @@ class Layout(PyWM):
 
     def move(self, delta_i, delta_j):
         i, j, w, h = self.find_focused_box()
-        ci, cj = i + w/2., j + h/2.
 
         if ((i + w > self.state.i + self.state.size and delta_i > 0) or
                 (i < self.state.i and delta_i < 0) or
                 (j + h > self.state.j + self.state.size and delta_j > 0) or
                 (j < self.state.j and delta_j < 0)):
 
-            vf = None
-            for _, v in self._views.items():
-                if v.up_state.is_focused:
-                    vf = v
+            vf = self.find_focused_view()
             if vf is not None:
                 self.focus_view(vf)
                 return
 
-        def score(view):
-            cvi, cvj = view.state.i + view.state.w/2., \
-                view.state.j + view.state.h/2.
-            sp = (cvi - ci) * delta_i + (cvj - cj) * delta_j
-            sp *= ((cvi - ci) ** 2) + ((cvj - cj) ** 2)
-            return sp
 
         best_view = None
         best_view_score = 1000
 
-        for _, view in self._views.items():
-            s = score(view)
-            if s > 0. and s < best_view_score:
-                best_view_score = s
-                best_view = view
+        for k, s in self.state._view_states.items():
+            if not s.is_tiled:
+                continue
+
+            sc = _score(i, j, w, h, delta_i, delta_j, s.i, s.j, s.w, s.h)
+            if sc < best_view_score:
+                best_view_score = sc
+                best_view = k
 
         if best_view is not None:
-            self.focus_view(best_view)
+            self.focus_view(self._views[best_view])
 
 
     def close_view(self):
@@ -390,7 +404,7 @@ class Layout(PyWM):
     def focus_view(self, view):
         view.focus()
         self.animate_to(
-            self.state.focussing_view(
+            self.state.focusing_view(
                 view._handle),
             .3
         )
