@@ -10,11 +10,10 @@ class SwipeOverlay(Overlay):
         super().__init__(self)
 
         self.layout = layout
-        self.state = self.layout.state.copy()
 
-        self.x = self.state.i + .5 * self.state.size
-        self.y = self.state.j + .5 * self.state.size
-        self.size = self.state.size
+        self.x = self.layout.state.i + .5 * self.layout.state.size
+        self.y = self.layout.state.j + .5 * self.layout.state.size
+        self.size = self.layout.state.size
 
         self.initial_x = self.x
         self.initial_y = self.y
@@ -36,10 +35,32 @@ class SwipeOverlay(Overlay):
         """
         Boundaries of movement
         """
-        self.x_bounds = [self.state.min_i + .5 * self.state.size,
-                         self.state.max_i + .5 * self.state.size]
-        self.y_bounds = [self.state.min_j + .5 * self.state.size,
-                         self.state.max_j + .5 * self.state.size]
+        min_i, min_j, max_i, max_j = self.extent = self.layout.state.get_extent(strict=True)
+
+        min_i += .5*self.size - self.size + 1
+        min_j += .5*self.size - self.size + 1
+        max_i += .5*self.size
+        max_j += .5*self.size
+
+        def x_bound(x):
+            if x < min_i:
+                return min_i - .3 * (1 - 1/(1 + (min_i - x)))
+            elif x < max_i:
+                return x
+            else:
+                return max_i + .3 * (1 - 1/(1 + (x - max_i)))
+
+
+        self.x_bound = x_bound
+
+        def y_bound(y):
+            if y < min_j:
+                return min_i - .3 * (1 - 1/(1 + (min_j - y)))
+            elif y < max_j:
+                return y
+            else:
+                return max_j + .3 * (1 - 1/(1 + (y - max_j)))
+        self.y_bound = y_bound
 
         self._set_state()
 
@@ -48,31 +69,33 @@ class SwipeOverlay(Overlay):
         super()._exit_finished()
 
     def _exit_transition(self):
-        new_state = self.state.copy()
-
-        new_state.i = self.x - .5*self.state.size
-        new_state.j = self.y - .5*self.state.size
+        i = self.x - .5*self.layout.state.size
+        j = self.y - .5*self.layout.state.size
 
         if self.locked_x:
-            new_state.i -= max(-.5, min(.5, self.momentum_x * _momentum_factor))
+            i -= max(-.5, min(.5, self.momentum_x * _momentum_factor))
         else:
-            new_state.j -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
+            j -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
 
-        new_state.i = round(new_state.i)
-        new_state.j = round(new_state.j)
-        return new_state
+        i = max(i, self.extent[0] - self.size + 1)
+        j = max(j, self.extent[1] - self.size + 1)
+        i = min(i, self.extent[2])
+        j = min(j, self.extent[3])
+
+        fi = round(i)
+        fj = round(j)
+
+        dt = .6 * (abs(i - fi) + abs(j-fj))
+        return self.layout.state.copy(i=fi, j=fj), dt
 
     def _set_state(self):
-        self.x = max(self.x, self.x_bounds[0])
-        self.x = min(self.x, self.x_bounds[1])
-        self.y = max(self.y, self.y_bounds[0])
-        self.y = min(self.y, self.y_bounds[1])
+        self.x = self.x_bound(self.x)
+        self.y = self.y_bound(self.y)
 
-        new_state = self.state.copy()
-        new_state.i = self.x - .5 * self.size
-        new_state.j = self.y - .5 * self.size
+        self.layout.state.i = self.x - .5 * self.size
+        self.layout.state.j = self.y - .5 * self.size
+        self.layout.damage()
 
-        self.state = new_state
 
     def on_gesture(self, gesture):
         LowpassGesture(gesture).listener(GestureListener(
@@ -103,8 +126,6 @@ class SwipeOverlay(Overlay):
         self.last_delta_y = values['delta_y']
 
         self._set_state()
-        self.layout.state = self.state
-        self.layout.damage()
 
     def on_motion(self, time_msec, delta_x, delta_y):
         return False

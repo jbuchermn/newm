@@ -18,78 +18,47 @@ from pywm.touchpad import (
     SingleFingerMoveGesture
 )
 
-from .view import View, ViewState
-
-from .bar import TopBar, BottomBar
-from .background import Background
-from .corner import Corner
+from .state import LayoutState
+from .view import View
 
 from .key_processor import KeyProcessor, KeyBinding
 from .panel_endpoint import PanelEndpoint
 from .sys_backend import SysBackend
 
-from .move_resize_overlay import MoveResizeOverlay
-from .swipe_overlay import SwipeOverlay
-from .swipe_to_zoom_overlay import SwipeToZoomOverlay
-from .launcher_overlay import LauncherOverlay
-from .overview_overlay import OverviewOverlay
+from .widget import (
+    TopBar,
+    BottomBar,
+    Background,
+    Corner
+)
+from .overlay import (
+    MoveResizeOverlay,
+    SwipeOverlay,
+    SwipeToZoomOverlay,
+    LauncherOverlay,
+    OverviewOverlay
+)
 
-
-class LayoutState:
-    def __init__(self, i, j, size, scale, min_i, min_j, max_i, max_j, padding,
-                 background_factor, top_bar_dy, bottom_bar_dy):
-        self.i = i
-        self.j = j
-        self.size = size
-        self.scale = scale
-        self.min_i = min_i
-        self.min_j = min_j
-        self.max_i = max_i
-        self.max_j = max_j
-        self.padding = padding
-        self.background_factor = background_factor
-        self.top_bar_dy = top_bar_dy
-        self.bottom_bar_dy = bottom_bar_dy
-
-    def copy(self):
-        return LayoutState(
-            self.i,
-            self.j,
-            self.size,
-            self.scale,
-            self.min_i,
-            self.min_j,
-            self.max_i,
-            self.max_j,
-            self.padding,
-            self.background_factor,
-            self.top_bar_dy,
-            self.bottom_bar_dy)
-
-    def __str__(self):
-        return str(self.__dict__)
-
-
-def _box_intersects(box1, box2):
-    box1_tiles = []
-    for i, j in product(range(math.floor(box1[0]),
-                              math.ceil(box1[0] + box1[2])),
-                        range(math.floor(box1[1]),
-                              math.ceil(box1[1] + box1[3]))):
-        box1_tiles += [(i, j)]
-
-    box2_tiles = []
-    for i, j in product(range(math.floor(box2[0]),
-                              math.ceil(box2[0] + box2[2])),
-                        range(math.floor(box2[1]),
-                              math.ceil(box2[1] + box2[3]))):
-        box2_tiles += [(i, j)]
-
-    for t in box1_tiles:
-        if t in box2_tiles:
-            return True
-    return False
-
+# def _box_intersects(box1, box2):
+#     box1_tiles = []
+#     for i, j in product(range(math.floor(box1[0]),
+#                               math.ceil(box1[0] + box1[2])),
+#                         range(math.floor(box1[1]),
+#                               math.ceil(box1[1] + box1[3]))):
+#         box1_tiles += [(i, j)]
+#
+#     box2_tiles = []
+#     for i, j in product(range(math.floor(box2[0]),
+#                               math.ceil(box2[0] + box2[2])),
+#                         range(math.floor(box2[1]),
+#                               math.ceil(box2[1] + box2[3]))):
+#         box2_tiles += [(i, j)]
+#
+#     for t in box1_tiles:
+#         if t in box2_tiles:
+#             return True
+#     return False
+#
 
 
 class Layout(PyWM):
@@ -116,7 +85,6 @@ class Layout(PyWM):
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
             ("M-q", lambda: self.close_view()),  # noqa E501
 
-            # ("M-s", lambda: self.toggle_half_scale()),
             ("M-f", lambda: self.toggle_padding()),
 
             ("M-C", lambda: self.terminate()),
@@ -127,7 +95,6 @@ class Layout(PyWM):
         self.sys_backend = SysBackend(self)
         self.sys_backend.register_xf86_keybindings()
 
-        self.default_padding = 0.01
         self.state = None
 
         self.overlay = None
@@ -138,14 +105,6 @@ class Layout(PyWM):
         self.corners = []
 
         self.panel_endpoint = None
-
-        """
-        scale == size: pixel-to-pixel
-        scale == 2 * size: client-side width height are twice as
-            high as rendered width, height => Appears half as big
-        ...
-        """
-        self.is_half_scale = False
 
         self.fullscreen_backup = 0, 0, 1
 
@@ -158,8 +117,8 @@ class Layout(PyWM):
 
     def main(self):
 
-        self.state = LayoutState(0, 0, 2, 2, 0, 0, 1, 1,
-                                 self.default_padding, 3, 0, 0)
+        self.state = LayoutState()
+
         self.bottom_bar = self.create_widget(BottomBar)
         self.top_bar = self.create_widget(TopBar)
         self.background = self.create_widget(Background,
@@ -182,11 +141,11 @@ class Layout(PyWM):
         if self.panel_endpoint is not None:
             self.panel_endpoint.stop()
 
+    def _execute_view_main(self, view):
+        view.main(self.state)
 
     def damage(self):
         for _, v in self._views.items():
-            if isinstance(v.state, ViewState):
-                v.state.parent = self.state
             v.damage()
 
         if self.background is not None:
@@ -199,30 +158,35 @@ class Layout(PyWM):
             self.bottom_bar.damage()
 
 
-    def animate_to(self, new_state, then=None):
+    def update(self, new_state):
+        self.state = new_state
+        self.damage()
+
+    def animate_to(self, new_state, dt, then=None):
         if self._animation is not None:
             return
 
-        print("Animating to %s" % new_state.__dict__)
+        if id(new_state) == id(self.state):
+            return
 
-        self._animation = (new_state, time.time(), .3)
+        # Prevent devision by zero
+        dt = max(dt, 0.1)
+
+        self._animation = (new_state, time.time(), dt)
         for _, v in self._views.items():
-            if v.is_window() or v.is_dialog():
-                state = v.state.copy()
-                state.parent = new_state
-                v.animate_to(state)
+            v.animate(self.state, new_state, dt)
 
         if self.background is not None:
-            self.background.animate_to(new_state)
+            self.background.animate(self.state, new_state, dt)
 
         if self.top_bar is not None:
-            self.top_bar.animate_to(new_state)
+            self.top_bar.animate(self.state, new_state, dt)
 
         if self.bottom_bar is not None:
-            self.bottom_bar.animate_to(new_state)
+            self.bottom_bar.animate(self.state, new_state, dt)
 
         def run():
-            time.sleep(self._animation[1] + self._animation[2] - time.time())
+            time.sleep(dt)
             self.state = self._animation[0]
             self._animation = None
             if then is not None:
@@ -245,20 +209,11 @@ class Layout(PyWM):
     def panels(self):
         return [v for _, v in self._views.items() if v.is_panel()]
 
-    def find_at_tile(self, i, j):
-        for view in self.windows():
-            if view.state is None:
-                continue
-            if (round(view.state.i) <= round(i) < round(view.state.i + view.state.w)) and \
-                    (round(view.state.j) <= round(j) < round(view.state.j + view.state.h)):
-                return view
-
-        return None
-
     def find_focused_box(self):
         for _, view in self._views.items():
             if view.up_state.is_focused:
-                return view.state.i, view.state.j, view.state.w, view.state.h
+                view_state = self.state.get_view_state(view._handle)
+                return view_state.i, view_state.j, view_state.w, view_state.h
 
         return 0, 0, 1, 1
 
@@ -269,27 +224,6 @@ class Layout(PyWM):
 
         return None
 
-    def get_extent(self):
-        if len(self._views) == 0:
-            return self.state.i, self.state.j, \
-                self.state.i + self.state.size - 1, \
-                self.state.j + self.state.size - 1
-
-        min_i = min([view.state.i for _, view in self._views.items() if view.is_window()])
-        min_j = min([view.state.j for _, view in self._views.items() if view.is_window()])
-        max_i = max([view.state.i + view.state.w - 1 for _, view in self._views.items() if view.is_window()])
-        max_j = max([view.state.j + view.state.h - 1 for _, view in self._views.items() if view.is_window()])
-
-        """
-        Borders around, such that views can be at the edges
-        """
-        min_i -= max(self.state.size - 1, 1)
-        min_j -= max(self.state.size - 1, 1)
-        max_i += max(self.state.size - 1, 1)
-        max_j += max(self.state.size - 1, 1)
-
-        return min_i, min_j, max_i, max_j
-
     def place_initial(self, view, w, h):
         place_i = 0
         place_j = 0
@@ -298,14 +232,14 @@ class Layout(PyWM):
                             range(math.floor(self.state.i),
                                   math.ceil(self.state.i + self.state.size))):
             for jp, ip in product(range(j, j + h), range(i, i + w)):
-                if self.find_at_tile(ip, jp) is not None:
+                if not self.state.is_tile_free(ip, jp):
                     break
             else:
                 place_i, place_j = i, j
                 break
         else:
             place_i, place_j = self.state.i, self.state.j
-            while self.find_at_tile(place_i, place_j) is not None:
+            while not self.state.is_tile_free(place_i, place_j):
                 place_i += 1
 
         return place_i, place_j
@@ -407,21 +341,6 @@ class Layout(PyWM):
     def on_overlay_destroyed(self):
         self.overlay = None
 
-
-
-    def reset_extent(self, focus_view=None):
-        new_state = self.state.copy()
-        new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j = \
-            self.get_extent()
-
-        print("Resetting extent: %d %d %d %d" % (new_state.min_i, new_state.min_j, new_state.max_i, new_state.max_j))
-
-        if focus_view is None:
-            self.animate_to(new_state)
-        else:
-            self.focus_view(focus_view, new_state)
-
-
     def move(self, delta_i, delta_j):
         i, j, w, h = self.find_focused_box()
         ci, cj = i + w/2., j + h/2.
@@ -433,7 +352,7 @@ class Layout(PyWM):
 
             vf = None
             for _, v in self._views.items():
-                if v.up_state.is_focused():
+                if v.up_state.is_focused:
                     vf = v
             if vf is not None:
                 self.focus_view(vf)
@@ -468,87 +387,41 @@ class Layout(PyWM):
         view.close()
 
 
-    def focus_view(self, view, new_state=None):
+    def focus_view(self, view):
         view.focus()
-
-        i, j, w, h = view.state.i, view.state.j, \
-            view.state.w, view.state.h
-
-        target_i, target_j, target_size = self.state.i, \
-            self.state.j, self.state.size
-
-        target_size = max(target_size, w, h)
-        target_i = min(target_i, i)
-        target_j = min(target_j, j)
-        target_i = max(target_i, i + w - target_size)
-        target_j = max(target_j, j + h - target_size)
-
-        if new_state is None:
-            new_state = self.state.copy()
-            new_state.i = target_i
-            new_state.j = target_j
-            new_state.size = target_size
-            new_state.scale = new_state.size * (.5 if self.is_half_scale else 1.)
-
-            if new_state.i != self.state.i or new_state.j != self.state.j or new_state.size != self.state.size:
-                if self.state.padding == 0:
-                    new_state.padding = self.default_padding
-
-        self.animate_to(new_state)
-
-    # def toggle_half_scale(self):
-    #     self.is_half_scale = not self.is_half_scale
-    #     self.rescale()
-    #     self.update(finished=True)
-
-    def get_scale(self, state):
-        return state.size * (.5 if self.is_half_scale else 1.)
+        self.animate_to(
+            self.state.focussing_view(
+                view._handle),
+            .3
+        )
 
 
     def toggle_padding(self):
-        padding = self.default_padding \
-            if self.state.padding == 0 else 0
+        bu = None
+        fb = None
 
-        if padding == 0:
+        if self.state.padding > 0:
             for _, v in self._views.items():
                 if v.is_window():
                     v.set_fullscreen(True)
 
-            focused = self.find_focused_box()
             self.fullscreen_backup = self.state.i, self.state.j, \
                 self.state.size
-
-            new_state = self.state.copy()
-            new_state.padding = padding
-            new_state.i = focused[0]
-            new_state.j = focused[1]
-            new_state.size = max(focused[2:])
-            new_state.scale = int(new_state.size / self.state.size * self.state.scale)
-
-            self.animate_to(new_state)
-
+            fb = self.find_focused_box()
         else:
             for _, v in self._views.items():
                 if v.is_window():
                     v.set_fullscreen(False)
 
-
-            new_state = self.state.copy()
-            new_state.padding = padding
             if self.fullscreen_backup:
-                reset = self.fullscreen_backup
-                min_i, min_j, max_i, max_j = self.get_extent()
-                if reset[0] >= min_i and reset[1] >= min_j \
-                        and reset[0] + reset[2] - 1 <= max_i \
-                        and reset[1] + reset[2] - 1 <= max_j:
-                    new_state.i=reset[0]
-                    new_state.j=reset[1]
-                    new_state.size=reset[2]
-
+                bu = self.fullscreen_backup
                 self.fullscreen_backup = None
 
-            new_state.scale = int(new_state.size / self.state.size * self.state.scale)
 
-            self.animate_to(new_state)
+        self.animate_to(
+            self.state.with_padding_toggled(
+                reset=bu,
+                focus_box=fb
+            ), .3)
 
 

@@ -6,12 +6,6 @@ class LauncherOverlay(Overlay):
     def __init__(self, layout):
         super().__init__(layout)
 
-        self._launcher = None
-        for view in self.layout.panels():
-            if view.panel == "launcher":
-                self._launcher = view
-                break
-
         self._is_opened = False
 
     def on_gesture(self, gesture):
@@ -44,8 +38,7 @@ class LauncherOverlay(Overlay):
                 'value': perc
             })
 
-            self._launcher.state.perc = perc
-            self._launcher.damage()
+            self.layout.state.launcher_perc = perc
 
             if values is None:
                 self._is_opened = True
@@ -56,11 +49,12 @@ class LauncherOverlay(Overlay):
                 'value': perc
             })
 
-            self._launcher.state.perc = perc
-            self._launcher.damage()
+            self.layout.state.launcher_perc = perc
 
             if values is None:
                 self._close()
+
+        self.layout.damage()
 
 
     def on_key(self, time_msec, keycode, state, keysyms):
@@ -74,10 +68,8 @@ class LauncherOverlay(Overlay):
         return True
 
     def _close(self):
-        if self._launcher is not None:
-            new_state = self._launcher.state.copy()
-            new_state.perc = 0.
-            self._launcher.animate_to(new_state)
+        self.layout.state.launcher_perc = 0
+        self.layout.damage()
 
         self.layout.exit_overlay()
 

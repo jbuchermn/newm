@@ -25,6 +25,7 @@ class MoveResizeOverlay(Overlay):
         self._reset()
 
     def _reset(self):
+        self.layout.damage()
         if self.view is not None:
             self.w = self.view.state.w
             self.h = self.view.state.h

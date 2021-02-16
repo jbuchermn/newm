@@ -8,9 +8,8 @@ class SwipeToZoomOverlay(Overlay):
         super().__init__(self)
 
         self.layout = layout
-        self.state = self.layout.state.copy()
 
-        self.size = self.state.size
+        self.size = self.layout.state.size
 
         """
         Four-finger mode
@@ -20,7 +19,16 @@ class SwipeToZoomOverlay(Overlay):
         """
         Boundaries of movement
         """
-        self.size_bounds = [1, 5]
+        
+        def size_bound(s):
+            if s < 1:
+                return 1 - .3 * (1 - 1/(1 + (1 - s)))
+            elif s < self.initial_size + 1:
+                return s
+            else:
+                return self.initial_size + 1 + .3 * (1 - 1/(1 + (s - (self.initial_size + 1))))
+
+        self.size_bound = size_bound
 
         """
         Current state
@@ -35,26 +43,21 @@ class SwipeToZoomOverlay(Overlay):
         super()._exit_finished()
 
     def _exit_transition(self):
-        new_state = self.state.copy()
-
         size = self.size
         size -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
 
-        size = max(size, self.size_bounds[0])
-        size = min(size, self.size_bounds[1])
+        size = self.size_bound(size)
 
-        new_state.size = round(size)
-        new_state.scale = self.layout.get_scale(new_state)
-        return new_state
+        fsize = round(size)
+        scale = fsize
+        dt = .6 * abs(size - fsize)
+        return self.layout.state.copy(size=fsize, scale=scale), dt
 
     def _set_state(self):
-        self.size = max(self.size, self.size_bounds[0])
-        self.size = min(self.size, self.size_bounds[1])
+        self.size = self.size_bound(self.size)
 
-        new_state = self.state.copy()
-        new_state.size = self.size
-
-        self.state = new_state
+        self.layout.state.size = self.size
+        self.layout.damage()
 
     def on_gesture(self, gesture):
         LowpassGesture(gesture).listener(GestureListener(
@@ -69,8 +72,6 @@ class SwipeToZoomOverlay(Overlay):
         self.last_delta_y = values['delta_y']
 
         self._set_state()
-        self.layout.state = self.state
-        self.layout.damage()
 
     def on_motion(self, time_msec, delta_x, delta_y):
         return False

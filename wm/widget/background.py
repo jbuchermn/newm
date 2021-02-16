@@ -2,7 +2,7 @@ import time
 
 from pywm import PyWMBackgroundWidget, PyWMWidgetDownstreamState
 
-from .interpolation import WidgetDownstreamInterpolation
+from ..interpolation import WidgetDownstreamInterpolation
 
 
 class Background(PyWMBackgroundWidget):
@@ -20,23 +20,22 @@ class Background(PyWMBackgroundWidget):
         result = PyWMWidgetDownstreamState()
         result.z_index = -100
 
-        min_i, min_j, max_i, max_j = \
-            wm_state.min_i, wm_state.min_j, wm_state.max_i, wm_state.max_j
+        min_i, min_j, max_i, max_j = wm_state.get_extent()
 
         """
         Box of background
         """
         x = 0
         y = 0
-        w = (max_i - min_i + 1)
-        h = (max_j - min_j + 1)
+        w = (max_i - min_i + 3)
+        h = (max_j - min_j + 3)
         w, h = max(w, h), max(w, h)
 
         """
         Box of viewport within background
         """
-        vp_x = wm_state.i - min_i
-        vp_y = wm_state.j - min_j
+        vp_x = wm_state.i - min_i + 1
+        vp_y = wm_state.j - min_j + 1
         vp_w = wm_state.size
         vp_h = wm_state.size
 
@@ -101,9 +100,9 @@ class Background(PyWMBackgroundWidget):
         else:
             return self.reducer(self.wm.state)
 
-    def animate_to(self, new_state):
-        cur = self.reducer(self.wm.state)
+    def animate(self, old_state, new_state, dt):
+        cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
-        self._animation = (WidgetDownstreamInterpolation(cur, nxt), time.time(), .3)
+        self._animation = (WidgetDownstreamInterpolation(cur, nxt), time.time(), dt)
         self.damage()

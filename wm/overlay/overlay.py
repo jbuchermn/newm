@@ -1,4 +1,3 @@
-
 class Overlay:
     def __init__(self, layout):
         self.layout = layout
@@ -8,9 +7,9 @@ class Overlay:
         return self._ready
 
     def init(self):
-        wm_state = self._enter_transition()
+        wm_state, dt = self._enter_transition()
         if wm_state is not None:
-            self.layout.animate_to(wm_state, self._enter_finished)
+            self.layout.animate_to(wm_state, dt, self._enter_finished)
         else:
             self._ready = True
 
@@ -19,9 +18,9 @@ class Overlay:
 
     def destroy(self):
         self._ready = False
-        wm_state = self._exit_transition()
+        wm_state, dt = self._exit_transition()
         if wm_state is not None:
-            self.layout.animate_to(wm_state, self._exit_finished)
+            self.layout.animate_to(wm_state, dt, self._exit_finished)
         else:
             self.layout.on_overlay_destroyed()
 
@@ -33,11 +32,12 @@ class Overlay:
     Virtual methods
     """
 
+    
     def _enter_transition(self):
-        return None
+        return None, 0
 
     def _exit_transition(self):
-        return None
+        return None, 0
 
     def on_key(self, time_msec, keycode, state, keysyms):
         return True

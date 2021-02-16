@@ -7,7 +7,7 @@ import cairo
 import psutil
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
 
-from .interpolation import WidgetDownstreamInterpolation
+from ..interpolation import WidgetDownstreamInterpolation
 
 BAR_HEIGHT = 20
 
@@ -73,11 +73,11 @@ class Bar(PyWMCairoWidget):
         else:
             return self.reducer(self.wm.state)
 
-    def animate_to(self, new_state):
-        cur = self.reducer(self.wm.state)
+    def animate(self, old_state, new_state, dt):
+        cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
-        self._animation = (WidgetDownstreamInterpolation(cur, nxt), time.time(), .3)
+        self._animation = (WidgetDownstreamInterpolation(cur, nxt), time.time(), dt)
         self.damage()
 
 

@@ -9,17 +9,24 @@ class OverviewOverlay(Overlay):
         self._original_state = self.layout.state
 
     def _enter_transition(self):
-        new_state = self._original_state.copy()
-        new_state.width = new_state.max_i - new_state.min_i + 1
-        new_state.height = new_state.max_j - new_state.min_j + 1
-        new_state.i = self._original_state.min_i
-        new_state.j = self._original_state.min_j
-        new_state.size = max(new_state.width, new_state.height)
-        new_state.background_factor = 1.
-        new_state.top_bar_dy = 1.
-        new_state.bottom_bar_dy = 1.
+        min_i, min_j, max_i, max_j = self.layout.state.get_extent()
 
-        return new_state
+        width = max_i - min_i + 3
+        height = max_j - min_j + 3
+        i = min_i - 1
+        j = min_j - 1
+        size = max(width, height)
+
+        return self.layout.state.copy(
+            width=width,
+            height=height,
+            i=i,
+            j=j,
+            size=size,
+            background_factor=1.,
+            top_bar_dy=1.,
+            bottom_bar_dy=1.
+        ), .3
 
     def _exit_transition(self):
         i, j = self._original_state.i, self._original_state.j
@@ -34,10 +41,7 @@ class OverviewOverlay(Overlay):
         while fj >= j + self._original_state.size:
             j += 1
 
-        new_state = self._original_state.copy()
-        new_state.i = i
-        new_state.j = j
-        return new_state
+        return self._original_state.copy(i=i, j=j), .3
 
     def on_key(self, time_msec, keycode, state, keysyms):
         if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:

@@ -3,8 +3,9 @@ import time
 
 from pywm import PyWMView, PyWMViewDownstreamState
 
+from .state import ViewState
 from .interpolation import ViewDownstreamInterpolation
-from .move_floating_overlay import MoveFloatingOverlay
+from .overlay import MoveFloatingOverlay
 
 PANELS = {
     "newm-panel-notifiers": "notifiers",
@@ -14,42 +15,18 @@ PANELS = {
 CORNER_RADIUS = 12.5
 
 
-class ViewState:
-    def __init__(self, parent, i, j, w, h):
-        self.parent = parent
-
-        self.i = i
-        self.j = j
-        self.w = w
-        self.h = h
-
-    def copy(self):
-        return ViewState(self.parent, self.i, self.j, self.w, self.h)
-
-class LauncherPanelState:
-    def __init__(self, perc):
-        self.perc = perc
-
-    def copy(self):
-        return LauncherPanelState(self.perc)
-
-
 class View(PyWMView):
     def __init__(self, wm, handle):
         super().__init__(wm, handle)
 
         self.client_side_scale = 1.
 
-        self.state = None
-
         self.panel = None
 
         """
         - interpolation
-        - next state
         - start time
         - duration
-        - then
         """
         self._animation = None
 
@@ -62,7 +39,7 @@ class View(PyWMView):
     def is_panel(self):
         return self.panel is not None
 
-    def main(self):
+    def main(self, state):
         print("[Python] New View (%s): %s, %s, %s, xwayland=%s, floating=%s" %
               ("child" if self.parent is not None else "root",
                self.up_state.title, self.app_id, self.role,
@@ -76,8 +53,6 @@ class View(PyWMView):
 
         if self.app_id in PANELS:
             self.panel = PANELS[self.app_id]
-            if self.panel == "launcher":
-                self.state = LauncherPanelState(0.0)
 
         else:
             second_state = None
@@ -109,7 +84,7 @@ class View(PyWMView):
                 w = w
                 h = h
 
-                second_state = ViewState(self.wm.state, i, j, w, h)
+                second_state = (i, j, w, h)
 
             else:
                 min_w, _, min_h, _ = self.up_state.size_constraints
@@ -120,31 +95,37 @@ class View(PyWMView):
                 h = max(math.ceil(min_h), 1)
                 i, j = self.wm.place_initial(self, w, h)
 
-                second_state = ViewState(self.wm.state, i, j, w, h)
+                second_state = (i, j, w, h)
 
             """
             Present
             """
-            i, j, w, h = second_state.i, second_state.j, \
-                second_state.w, second_state.h
+            i, j, w, h = second_state
+            i1, j1, w1, h1 = second_state
 
             i += .5*w
             j += .5*h
             w = 0
             h = 0
 
-            self.state = ViewState(self.wm.state, i, j, w, h)
+            self.wm.update(
+                state.with_view_state(
+                    self._handle, 
+                    is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h))
 
-            self.animate_to(second_state, lambda: self.wm.reset_extent(focus_view=self))
+            self.focus()
 
+            self.wm.animate_to(
+                state.replacing_view_state(
+                    self._handle, i=i1, j=j1, w=w1, h=h1
+                ).focusing_view(
+                    self._handle
+                ), .3)
 
-    def move(self, delta_x, delta_y):
-        if not self.up_state.is_floating:
-            return
+    def destroy(self):
+        self.wm.update(
+            self.wm.state.without_view_state(self._handle))
 
-        self.state.i += delta_x * self.wm.state.scale
-        self.state.j += delta_y * self.wm.state.scale
-        self.damage()
 
     def reducer(self, up_state, state):
         result = PyWMViewDownstreamState()
@@ -165,7 +146,7 @@ class View(PyWMView):
 
         elif self.panel == "launcher":
             result.z_index = 5
-            result.accepts_input = state.perc > 0.0
+            result.accepts_input = state.launcher_perc > 0.0
 
             result.size = (
                 int(self.wm.width * 0.8 * self.client_side_scale),
@@ -175,7 +156,7 @@ class View(PyWMView):
                 self.wm.width * 0.1,
                 self.wm.height * 0.1,
                 self.wm.width * 0.8,
-                self.wm.height * 0.8 if state.perc > 0.0 else 0.0)
+                self.wm.height * 0.8 if state.launcher_perc > 0.0 else 0.0)
 
         else:
             result.accepts_input = True
@@ -191,11 +172,11 @@ class View(PyWMView):
             """
             Handle client size
             """
-            wm_state = state.parent
+            self_state = state.get_view_state(self._handle)
 
-            width = round(state.w * self.wm.width / wm_state.scale *
+            width = round(self_state.w * self.wm.width / state.scale *
                           self.client_side_scale)
-            height = round(state.h * self.wm.height / wm_state.scale *
+            height = round(self_state.h * self.wm.height / state.scale *
                            self.client_side_scale)
 
             result.size = (width, height)
@@ -204,21 +185,21 @@ class View(PyWMView):
             """
             Handle box
             """
-            i = state.i
-            j = state.j
-            w = state.w
-            h = state.h
+            i = self_state.i
+            j = self_state.j
+            w = self_state.w
+            h = self_state.h
 
-            x = i - wm_state.i + wm_state.padding
-            y = j - wm_state.j + wm_state.padding / (self.wm.height / self.wm.width)
+            x = i - state.i + state.padding
+            y = j - state.j + state.padding / (self.wm.height / self.wm.width)
 
-            w -= 2*wm_state.padding
-            h -= 2*wm_state.padding / (self.wm.height / self.wm.width)
+            w -= 2*state.padding
+            h -= 2*state.padding / (self.wm.height / self.wm.width)
 
-            x *= self.wm.width / wm_state.size
-            y *= self.wm.height / wm_state.size
-            w *= self.wm.width / wm_state.size
-            h *= self.wm.height / wm_state.size
+            x *= self.wm.width / state.size
+            y *= self.wm.height / state.size
+            w *= self.wm.width / state.size
+            h *= self.wm.height / state.size
 
             if self.up_state.size[0] > 0 and self.up_state.size[1] > 0:
                 x -= self.up_state.offset[0] / self.up_state.size[0] * w
@@ -265,28 +246,25 @@ class View(PyWMView):
 
     def process(self, up_state):
         if self._animation is not None:
-            interpolation, nxt_state, s, d, then = self._animation
+            interpolation, s, d = self._animation
             perc = min((time.time() - s) / d, 1.0)
 
             if perc >= 0.99:
-                self.state = nxt_state
                 self._animation = None
-                if then is not None:
-                    then()
 
             self.damage()
             return interpolation.get(perc)
         else:
-            return self.reducer(up_state, self.state)
+            return self.reducer(up_state, self.wm.state)
 
-    def animate_to(self, new_state, then=None):
+    def animate(self, old_state, new_state, dt):
         if self._animation is not None:
             return
 
-        cur = self.reducer(self.up_state, self.state)
+        cur = self.reducer(self.up_state, old_state)
         nxt = self.reducer(self.up_state, new_state)
 
-        self._animation = (ViewDownstreamInterpolation(cur, nxt), new_state, time.time(), .3, then)
+        self._animation = (ViewDownstreamInterpolation(cur, nxt), time.time(), dt)
         self.damage()
 
 
@@ -300,5 +278,3 @@ class View(PyWMView):
                 self.wm.enter_overlay(
                     MoveFloatingOverlay(self.wm, self))
 
-    def destroy(self):
-        self.wm.reset_extent()
