@@ -1,7 +1,11 @@
+from threading import Thread
 import os
+import time
+import psutil
 
-class SysBackend:
+class SysBackend(Thread):
     def __init__(self, wm):
+        super().__init__()
         self.wm = wm
         self._backlight = (
             "/sys/class/backlight/intel_backlight/brightness",
@@ -11,6 +15,22 @@ class SysBackend:
             "/sys/class/leds/smc::kbd_backlight/brightness",
             "/sys/class/leds/smc::kbd_backlight/max_brightness"
         )
+
+        self._running = True
+        self.start()
+
+    def run(self):
+        while self._running:
+            time.sleep(1.)
+            bat = psutil.sensors_battery()
+            if bat.percent < 150 and not bat.power_plugged:
+                self.wm.panel_endpoint.broadcast({
+                    'kind': 'sys_backend',
+                    'battery': bat.percent / 100.
+                })
+
+    def stop(self):
+        self._running = False
 
     def set_backlight(self, delta_perc):
         try:

@@ -161,6 +161,8 @@ class Layout(PyWM):
             self.bottom_bar.stop()
         if self.panel_endpoint is not None:
             self.panel_endpoint.stop()
+        if self.sys_backend is not None:
+            self.sys_backend.stop()
 
     def _execute_view_main(self, view):
         view.main(self.state)

@@ -35,7 +35,7 @@ class SwipeOverlay(Overlay):
         """
         Boundaries of movement
         """
-        min_i, min_j, max_i, max_j = self.extent = self.layout.state.get_extent(strict=True)
+        min_i, min_j, max_i, max_j = self.extent = self.layout.state.get_extent()
 
         min_i += .5*self.size - self.size + 1
         min_j += .5*self.size - self.size + 1
@@ -55,7 +55,7 @@ class SwipeOverlay(Overlay):
 
         def y_bound(y):
             if y < min_j:
-                return min_i - .3 * (1 - 1/(1 + (min_j - y)))
+                return min_j - .3 * (1 - 1/(1 + (min_j - y)))
             elif y < max_j:
                 return y
             else:
@@ -110,15 +110,15 @@ class SwipeOverlay(Overlay):
                     > abs(values['delta_y'])
 
                 if self.locked_x:
-                    self.initial_x += 3 * self.size * values['delta_x']
+                    self.initial_x += 2 * self.size * values['delta_x']
                 else:
-                    self.initial_y += 3 * self.size * values['delta_y']
+                    self.initial_y += 2 * self.size * values['delta_y']
 
         if self.locked_x is not None:
             if self.locked_x:
-                self.x = self.initial_x - 3 * self.size * values['delta_x']
+                self.x = self.initial_x - 2 * self.size * values['delta_x']
             else:
-                self.y = self.initial_y - 3 * self.size * values['delta_y']
+                self.y = self.initial_y - 2 * self.size * values['delta_y']
 
         self.momentum_x = values['delta_x'] - self.last_delta_x
         self.momentum_y = values['delta_y'] - self.last_delta_y

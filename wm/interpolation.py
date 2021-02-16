@@ -22,7 +22,9 @@ class ViewDownstreamInterpolation:
             corner_radius=(self.corner_radius[0] + at * (self.corner_radius[1] - self.corner_radius[0])),
             accepts_input=self.accepts_input
         )
+
         res.size=self.size[1] if at > 0.5 else self.size[0]
+        # res.size=self.size[1] if sum(self.size[1]) > sum(self.size[0]) else self.size[0]
         return res
 
 class WidgetDownstreamInterpolation:

@@ -120,10 +120,6 @@ class LayoutState:
             new_size = self.size
 
             if reset is not None:
-                # min_i, min_j, max_i, max_j = self.get_extent()
-                # if reset[0] >= min_i and reset[1] >= min_j \
-                #         and reset[0] + reset[2] - 1 <= max_i \
-                #         and reset[1] + reset[2] - 1 <= max_j:
                 new_i=reset[0]
                 new_j=reset[1]
                 new_size=reset[2]
@@ -149,14 +145,8 @@ class LayoutState:
     def get_view_state(self, handle):
         return self._view_states[handle]
 
-    def get_extent(self, strict=False):
-        if strict:
-            min_i, min_j, max_i, max_j = 1000000, 1000000, -1000000, -1000000
-        else:
-            min_i, min_j, max_i, max_j = \
-                self.i, self.j, \
-                self.i + self.size - 1, \
-                self.j + self.size - 1
+    def get_extent(self):
+        min_i, min_j, max_i, max_j = 1000000, 1000000, -1000000, -1000000
 
         for _, s in self._view_states.items():
             if not s.is_tiled:

@@ -9,17 +9,15 @@ class OverviewOverlay(Overlay):
         self._original_state = self.layout.state
 
     def _enter_transition(self):
-        min_i, min_j, max_i, max_j = self.layout.state.get_extent(strict=True)
+        min_i, min_j, max_i, max_j = self.layout.state.get_extent()
 
         width = max_i - min_i + 3
         height = max_j - min_j + 3
-        i = min_i - 1
-        j = min_j - 1
         size = max(width, height)
+        i = min_i - (size - (max_i - min_i + 1)) / 2.
+        j = min_j - (size - (max_j - min_j + 1)) / 2.
 
         return self.layout.state.copy(
-            width=width,
-            height=height,
             i=i,
             j=j,
             size=size,

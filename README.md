@@ -2,9 +2,8 @@
 
 ## ToDo
 
-- Center windows of 1x2 or 2x1 in regular view and overview
-- Unified handling of stoppable threads spawned by layout.py
-    - Battery warning
+- 2x1 tiles and OverviewOverlay
+- Handle closing of views
 
 - PinchOverlay resize
 - PinchOVerlay move
