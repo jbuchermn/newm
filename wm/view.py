@@ -169,14 +169,19 @@ class View(PyWMView):
             if self.up_state.is_focused:
                 result.z_index += 1
 
+
+            self_state = state.get_view_state(self._handle)
+
             """
             Handle client size
             """
-            self_state = state.get_view_state(self._handle)
 
-            width = round(self_state.w * self.wm.width / state.scale *
+            w_for_size, h_for_size = self_state.scale_origin
+            if w_for_size is None:
+                w_for_size, h_for_size = self_state.w, self_state.h
+            width = round(w_for_size * self.wm.width / state.scale *
                           self.client_side_scale)
-            height = round(self_state.h * self.wm.height / state.scale *
+            height = round(h_for_size * self.wm.height / state.scale *
                            self.client_side_scale)
 
             result.size = (width, height)

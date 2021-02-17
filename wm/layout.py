@@ -282,6 +282,12 @@ class Layout(PyWM):
                                          self.modifiers & self.mod > 0,
                                          self.modifiers & PYWM_MOD_CTRL > 0)
 
+    def on_modifiers(self, modifiers):
+        if self.overlay is not None and self.overlay.ready():
+            if self.overlay.on_modifiers(modifiers):
+                return True
+        return False
+
     def on_motion(self, time_msec, delta_x, delta_y):
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_motion(time_msec, delta_x, delta_y)

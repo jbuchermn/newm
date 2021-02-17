@@ -3,11 +3,11 @@
 ## ToDo
 
 - 2x1 tiles and OverviewOverlay
-- Handle closing of views
+- Handle animations on closing of views
 
-- PinchOverlay resize
-- PinchOVerlay move
-- SwipeOverlays exit: Use momentum as basis for animation duration?
+- Resize / Move mysterious mod misses (see print-logs)
+- SwipeOverlays / MoveResizeOverlays: Improve momenteum handling / Use momentum as basis for animation duration?
+- Trigger Move without lifting finger first (works for resize)
 
 - Starter panel
 

@@ -42,6 +42,9 @@ class Overlay:
     def on_key(self, time_msec, keycode, state, keysyms):
         return True
 
+    def on_modifiers(self, modifiers):
+        return False
+
     def on_motion(self, time_msec, delta_x, delta_y):
         return False
 

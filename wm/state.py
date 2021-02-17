@@ -11,6 +11,14 @@ class ViewState:
         self.w = kwargs['w'] if 'w' in kwargs else 0
         self.h = kwargs['h'] if 'h' in kwargs else 0
 
+        """
+        MoveResizeOverlay
+        """
+        self.move_origin = kwargs['move_origin'] if 'move_origin' in kwargs \
+            else (None, None)
+        self.scale_origin = kwargs['scale_origin'] if 'scale_origin' in kwargs \
+            else (None, None)
+
     def copy(self, **kwargs):
         return ViewState(**{**self.__dict__, **kwargs})
 
@@ -153,10 +161,17 @@ class LayoutState:
                 continue
             if s.w == 0 or s.h == 0:
                 continue
-            min_i = min(min_i, math.floor(s.i))
-            min_j = min(min_j, math.floor(s.j))
-            max_i = max(max_i, math.ceil(s.i + s.w - 1))
-            max_j = max(max_j, math.ceil(s.j + s.h - 1))
+            i, j = s.move_origin
+            if i is None:
+                i, j = s.i, s.j
+
+            w, h = s.scale_origin
+            if w is None:
+                w, h = s.w, s.h
+            min_i = min(min_i, math.floor(i))
+            min_j = min(min_j, math.floor(j))
+            max_i = max(max_i, math.ceil(i + w - 1))
+            max_j = max(max_j, math.ceil(j + h - 1))
 
         if min_i == 1000000:
             return 0, 0, 0, 0
