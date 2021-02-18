@@ -5,9 +5,11 @@
 - 2x1 tiles and OverviewOverlay
 - Handle animations on closing of views
 
-- Resize / Move mysterious mod misses (see print-logs)
 - SwipeOverlays / MoveResizeOverlays: Improve momenteum handling / Use momentum as basis for animation duration?
 - Trigger Move without lifting finger first (works for resize)
+- Block tiles on move / resize
+- Adjust viewpoint during move
+- Hide cursor during move / resize
 
 - Starter panel
 

@@ -107,18 +107,16 @@ class MoveResizeOverlay(Overlay):
     def __init__(self, layout):
         super().__init__(self)
 
-        print("-----------")
-
         self.layout = layout
 
         self.view = self.layout.find_focused_view()
 
         self.overlay = None
         self._exit_transition_ret = None
-        self._ready = True
+        self._anim_block = False
 
     def on_gesture(self, gesture):
-        if not self._ready:
+        if self._anim_block:
             return True
 
         if isinstance(gesture, TwoFingerSwipePinchGesture):
@@ -147,9 +145,9 @@ class MoveResizeOverlay(Overlay):
         if not self.layout.modifiers & self.layout.mod:
             self.layout.exit_overlay()
         else:
-            self._ready = False
+            self._anim_block = True
             def ready():
-                self._ready = True
+                self._anim_block = False
             self.layout.animate_to(
                 self._exit_transition_ret, .3,
                 then=ready)
@@ -163,14 +161,16 @@ class MoveResizeOverlay(Overlay):
         return False
 
     def on_key(self, time_msec, keycode, state, keysyms):
-        print("KEY", keysyms, state)
         if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
-            if self.overlay is not None and self._exit_transition_ret is None:
-                self._exit_transition_ret = self.overlay.close()
-            self.layout.exit_overlay()
+            if self.overlay is not None:
+                # if self._exit_transition_ret is None:
+                #     self._exit_transition_ret = self.overlay.close()
+                # self.layout.exit_overlay()
+                pass
+            else:
+                self.layout.exit_overlay()
 
     def on_modifiers(self, modifiers):
-        print("MOD", modifiers, modifiers & self.layout.mod)
         return False
 
     def _exit_transition(self):
