@@ -2,14 +2,14 @@
 
 ## ToDo
 
-- 2x1 tiles and OverviewOverlay
-- Handle animations on closing of views
-
+- Random overlay hangs?
 - SwipeOverlays / MoveResizeOverlays: Improve momenteum handling / Use momentum as basis for animation duration?
-- Trigger Move without lifting finger first (works for resize)
-- Block tiles on move / resize
-- Adjust viewpoint during move
-- Hide cursor during move / resize
+- MoveResizeOverlay
+    - Trigger Move without lifting finger first (works for resize)
+    - Block already used tiles
+    - Adjust viewpoint during move
+    - Hide cursor during move / resize (alternatively move it)
+    - Start gesture even during anim_block
 
 - Starter panel
 

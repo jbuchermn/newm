@@ -123,9 +123,7 @@ class View(PyWMView):
                 ), .3)
 
     def destroy(self):
-        self.wm.update(
-            self.wm.state.without_view_state(self._handle))
-
+        self.wm.destroy_view(self)
 
     def reducer(self, up_state, state):
         result = PyWMViewDownstreamState()

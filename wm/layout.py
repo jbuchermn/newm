@@ -417,6 +417,39 @@ class Layout(PyWM):
             .3
         )
 
+    def destroy_view(self, view):
+        state = self.state.get_view_state(view._handle)
+        best_view = None
+        best_view_score = 1000
+
+        for k, s in self.state._view_states.items():
+            if not s.is_tiled:
+                continue
+
+            if k == view._handle:
+                continue
+
+            print(s)
+            sc = (s.i - state.i)**2 + (s.j - state.j**2)
+            if sc < best_view_score:
+                best_view_score = sc
+                best_view = k
+
+
+        if best_view is not None:
+            self._views[best_view].focus()
+            self.animate_to(
+                self.state
+                    .focusing_view(best_view)
+                    .without_view_state(view._handle),
+                .3)
+        else:
+            self.animate_to(
+                self.state
+                    .copy()
+                    .without_view_state(view._handle),
+                .3)
+
 
     def toggle_padding(self):
         bu = None

@@ -23,19 +23,27 @@ class Background(PyWMBackgroundWidget):
         min_i, min_j, max_i, max_j = wm_state.get_extent()
 
         """
+        Possibly extend bounds
+        """
+        min_i = min(min_i, wm_state.i)
+        min_j = min(min_j, wm_state.j)
+        max_i = max(max_i, min_i + wm_state.size - 1)
+        max_j = max(max_j, min_j + wm_state.size - 1)
+
+        """
         Box of background
         """
-        x = 0
-        y = 0
+        x = min_i - 1
+        y = min_j - 1
         w = (max_i - min_i + 3)
         h = (max_j - min_j + 3)
         w, h = max(w, h), max(w, h)
 
         """
-        Box of viewport within background
+        Box of viewport
         """
-        vp_x = wm_state.i - min_i + 1
-        vp_y = wm_state.j - min_j + 1
+        vp_x = wm_state.i
+        vp_y = wm_state.j
         vp_w = wm_state.size
         vp_h = wm_state.size
 
