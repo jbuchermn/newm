@@ -40,8 +40,8 @@ class View(PyWMView):
         return self.panel is not None
 
     def main(self, state):
-        print("[Python] New View (%s): %s, %s, %s, xwayland=%s, floating=%s" %
-              ("child" if self.parent is not None else "root",
+        print("[Python] New View (%d, %s): %s, %s, %s, xwayland=%s, floating=%s" %
+              (self._handle, "child" if self.parent is not None else "root",
                self.up_state.title, self.app_id, self.role,
                self.is_xwayland, self.up_state.is_floating))
 
@@ -69,15 +69,15 @@ class View(PyWMView):
                 if min_w == 0 or min_h == 0:
                     return
 
-                ci = self.wm.state.i + self.wm.state.size / 2.
-                cj = self.wm.state.j + self.wm.state.size / 2.
+                ci = state.i + state.size / 2.
+                cj = state.j + state.size / 2.
                 if self.parent is not None:
-                    ci = self.parent.state.i + self.parent.state.w / 2.
-                    cj = self.parent.state.j + self.parent.state.h / 2.
+                    ci = state.get_view_state(self.parent._handle).i + state.get_view_state(self.parent._handle).w / 2.
+                    cj = state.get_view_state(self.parent._handle).j + state.get_view_state(self.parent._handle).h / 2.
 
                 w, h = min_w, min_h
-                w *= self.wm.state.scale / self.wm.width / self.client_side_scale
-                h *= self.wm.state.scale / self.wm.height / self.client_side_scale
+                w *= state.scale / self.wm.width / self.client_side_scale
+                h *= state.scale / self.wm.height / self.client_side_scale
 
                 i = ci - w / 2.
                 j = cj - h / 2.
@@ -88,8 +88,8 @@ class View(PyWMView):
 
             else:
                 min_w, _, min_h, _ = self.up_state.size_constraints
-                min_w *= self.wm.state.scale / self.wm.width / self.client_side_scale
-                min_h *= self.wm.state.scale / self.wm.height / self.client_side_scale
+                min_w *= state.scale / self.wm.width / self.client_side_scale
+                min_h *= state.scale / self.wm.height / self.client_side_scale
 
                 w = max(math.ceil(min_w), 1)
                 h = max(math.ceil(min_h), 1)
@@ -108,19 +108,20 @@ class View(PyWMView):
             w = 0
             h = 0
 
-            self.wm.update(
-                state.with_view_state(
-                    self._handle, 
-                    is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h))
-
             self.focus()
 
-            self.wm.animate_to(
-                state.replacing_view_state(
+            state1 = state.with_view_state(
+                    self._handle, 
+                    is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h)
+
+
+            state2 = state1.replacing_view_state(
                     self._handle, i=i1, j=j1, w=w1, h=h1
                 ).focusing_view(
                     self._handle
-                ), .3)
+                )
+
+            return state1, state2
 
     def destroy(self):
         self.wm.destroy_view(self)
@@ -168,7 +169,12 @@ class View(PyWMView):
                 result.z_index += 1
 
 
-            self_state = state.get_view_state(self._handle)
+            self_state = None
+            try:
+                self_state = state.get_view_state(self._handle)
+            except Exception:
+                print("ERROR - view state not registered: %d" % self._handle)
+                return result
 
             """
             Handle client size

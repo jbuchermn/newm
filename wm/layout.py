@@ -81,6 +81,30 @@ def _score(i1, j1, w1, h1,
     return d_i + d_j
 
 
+class LayoutAnimation(Thread):
+    def __init__(self, layout, update_start_state, final_state, duration, then):
+        super().__init__()
+        self.layout = layout
+
+        self.update_start_state = update_start_state
+        self.final_state = final_state
+
+        # Prevent devision by zero
+        self.duration = max(.1, duration)
+        self.then = then
+
+        self.finished = False
+
+    def run(self):
+        time.sleep(self.duration)
+        self.finished = True
+
+        self.layout.state = self.final_state
+        self.layout._animate_to(None)
+
+        if self.then is not None:
+            self.then()
+
 
 class Layout(PyWM):
     def __init__(self, mod, **kwargs):
@@ -129,12 +153,7 @@ class Layout(PyWM):
 
         self.fullscreen_backup = 0, 0, 1
 
-        """
-        - next state
-        - start time
-        - duration
-        """
-        self._animation = None
+        self._animations = []
 
     def main(self):
 
@@ -165,7 +184,21 @@ class Layout(PyWM):
             self.sys_backend.stop()
 
     def _execute_view_main(self, view):
-        view.main(self.state)
+        """
+        If we are animating, use animted to state as basis
+        """
+        state = self.state
+        if len(self._animations) > 0:
+            state = self._animations[-1].final_state
+
+        try:
+            state1, state2 = view.main(state)
+            self._animate_to(LayoutAnimation(self, state1, state2, .3, None))
+        except Exception as e:
+            """
+            No need to animate on present
+            """
+            pass
 
     def damage(self):
         for _, v in self._views.items():
@@ -185,38 +218,37 @@ class Layout(PyWM):
         self.state = new_state
         self.damage()
 
-    def animate_to(self, new_state, dt, then=None):
-        if self._animation is not None:
+    def _animate_to(self, animation):
+        if len(self._animations) > 0 and self._animations[0].finished:
+            self._animations.pop(0)
+
+        if animation is not None:
+            self._animations += [animation]
+
+        if len(self._animations) != 1:
             return
 
-        if id(new_state) == id(self.state):
-            return
+        animation = self._animations[0]
+        if id(animation.update_start_state) != id(self.state):
+            self.update(animation.update_start_state)
 
-        # Prevent devision by zero
-        dt = max(dt, 0.1)
-
-        self._animation = (new_state, time.time(), dt)
         for _, v in self._views.items():
-            v.animate(self.state, new_state, dt)
+            v.animate(self.state, animation.final_state, animation.duration)
 
         if self.background is not None:
-            self.background.animate(self.state, new_state, dt)
+            self.background.animate(self.state, animation.final_state, animation.duration)
 
         if self.top_bar is not None:
-            self.top_bar.animate(self.state, new_state, dt)
+            self.top_bar.animate(self.state, animation.final_state, animation.duration)
 
         if self.bottom_bar is not None:
-            self.bottom_bar.animate(self.state, new_state, dt)
+            self.bottom_bar.animate(self.state, animation.final_state, animation.duration)
 
-        def run():
-            time.sleep(dt)
-            self.state = self._animation[0]
-            self._animation = None
-            if then is not None:
-                then()
+        animation.start()
 
-        Thread(target=run).start()
 
+    def animate_to(self, new_state, dt, then=None):
+        self._animate_to(LayoutAnimation(self, self.state, new_state, dt, then))
 
 
     """
@@ -418,7 +450,12 @@ class Layout(PyWM):
         )
 
     def destroy_view(self, view):
-        state = self.state.get_view_state(view._handle)
+        state = None
+        try:
+            state = self.state.get_view_state(view._handle)
+        except:
+            print("ERROR - view state not registered")
+            return
         best_view = None
         best_view_score = 1000
 
@@ -429,7 +466,6 @@ class Layout(PyWM):
             if k == view._handle:
                 continue
 
-            print(s)
             sc = (s.i - state.i)**2 + (s.j - state.j**2)
             if sc < best_view_score:
                 best_view_score = sc
