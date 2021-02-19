@@ -270,9 +270,6 @@ class View(PyWMView):
             return self.reducer(up_state, self.wm.state)
 
     def animate(self, old_state, new_state, dt):
-        if self._animation is not None:
-            return
-
         cur = self.reducer(self.up_state, old_state)
         nxt = self.reducer(self.up_state, new_state)
 

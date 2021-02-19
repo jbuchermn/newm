@@ -97,13 +97,14 @@ class LayoutAnimation(Thread):
 
     def run(self):
         time.sleep(self.duration)
-        self.finished = True
 
         self.layout.state = self.final_state
-        self.layout._animate_to(None)
 
         if self.then is not None:
             self.then()
+
+        self.finished = True
+        self.layout._animate_to(None)
 
 
 class Layout(PyWM):
@@ -194,7 +195,7 @@ class Layout(PyWM):
         try:
             state1, state2 = view.main(state)
             self._animate_to(LayoutAnimation(self, state1, state2, .3, None))
-        except Exception as e:
+        except Exception:
             """
             No need to animate on present
             """

@@ -68,5 +68,5 @@ class LauncherOverlay(Overlay):
         return True
 
     def _exit_transition(self):
-        return self.layout.state.copy(launcher_perc=0), 0.2
+        return self.layout.state.copy(launcher_perc=0), .2
 
