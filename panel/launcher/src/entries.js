@@ -43,7 +43,7 @@ const entries = [
     },{
         name: 'Emacs',
         icon: icon_emacs,
-        cmd: 'DISPLAY=":0" emacs'
+        cmd: 'emacs'
     }
 ];
 export default entries;

@@ -228,6 +228,7 @@ class View(PyWMView):
                 """
                 min_w, max_w, min_h, max_h = self.up_state.size_constraints
                 width, height = result.size
+
                 if width < min_w and min_w > 0:
                     width = min_w
                 if width > max_w and max_w > 0:
@@ -237,14 +238,16 @@ class View(PyWMView):
                 if height > max_h and max_h > 0:
                     width = min_w
 
-                width_factor = width / result.size[0] if result.size[0] > 0 else 1.
-                height_factor = height / result.size[1] if result.size[1] > 0 else 1.
+                old_ar = result.size[1] / result.size[0] if result.size[0] > 0 else 1.
+                new_ar = height / width if width > 0 else 1.
 
-                if height_factor > width_factor and width_factor >= 1.:
-                    w /= height_factor
-                elif width_factor > height_factor and height_factor >= 1.:
-                    h /= width_factor
-                # TODO: Other cases
+                if abs(old_ar - new_ar) > 0.001:
+                    if new_ar < old_ar:
+                        # new width is larger - would appear scaled up vertically
+                        h *= new_ar / old_ar
+                    else:
+                        # new width is smaller - would appear scaled up horizontally
+                        w *= old_ar / new_ar
 
                 result.size = (width, height)
 

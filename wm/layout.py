@@ -305,6 +305,12 @@ class Layout(PyWM):
     """
 
     def on_key(self, time_msec, keycode, state, keysyms):
+        # BEGIN DEBUG
+        if self.modifiers & self.mod > 0 and keysyms == "D":
+            self.force_close_overlay()
+            return True
+        # END DEBUG
+
         if self.overlay is not None and self.overlay.ready():
             if self.overlay.on_key(time_msec, keycode, state, keysyms):
                 return True
@@ -393,6 +399,18 @@ class Layout(PyWM):
         self.overlay = overlay
         self.overlay.init()
 
+    # BEGIN DEBUG
+    def force_close_overlay(self):
+        if self.overlay is None:
+            return
+
+        print("Force-closing %s" % self.overlay)
+        try:
+            self.overlay.destroy()
+        finally:
+            self.overlay = None
+    # END DEBUG
+
     def exit_overlay(self):
         if self.overlay is None:
             return
@@ -472,7 +490,7 @@ class Layout(PyWM):
                 best_view = k
 
 
-        if best_view is not None:
+        if best_view is not None and best_view in self._views:
             self._views[best_view].focus()
             self.animate_to(
                 self.state
