@@ -2,6 +2,7 @@
 
 ## ToDo
 
+- Alacritty startup placement
 - SwipeOverlays / MoveResizeOverlays: Improve momenteum handling / grid snapping / Use momentum as basis for animation duration?
 - MoveResizeOverlay
     - Trigger move without lifting finger first (works for resize)
