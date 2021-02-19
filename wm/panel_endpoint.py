@@ -1,3 +1,4 @@
+import os
 import json
 import asyncio
 import websockets
@@ -6,8 +7,10 @@ from threading import Thread
 SOCKET_PORT = 8641
 
 class PanelEndpoint(Thread):
-    def __init__(self):
+    def __init__(self, layout):
         super().__init__()
+        self.layout = layout
+
         self._event_loop = None
         self._server = None
 
@@ -20,8 +23,17 @@ class PanelEndpoint(Thread):
         self._clients += [client_socket]
         try:
             async for msg in client_socket:
-                print("Received msg: %s" % msg)
-                pass
+                try:
+                    msg = json.loads(msg)
+                    if msg['kind'] == 'launch_app':
+                        """
+                        Should be LauncherOverlay
+                        """
+                        self.layout.exit_overlay()
+                        os.system("%s &" % msg['app'])
+                except Exception:
+                    print("Received unparsable message")
+
         finally:
             print("Closing connection...")
             self._clients.remove(client_socket)

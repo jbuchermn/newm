@@ -32,34 +32,34 @@ class LauncherOverlay(Overlay):
 
     def _on_update(self, values):
         if self._is_opened == False:
-            perc = values['delta2_s'] * 1000 if values is not None else 1
+            perc = values['delta2_s'] * 500 if values is not None else 1
             self.layout.panel_endpoint.broadcast({
                 'kind': 'activate_launcher',
                 'value': perc
             })
 
-            self.layout.state.launcher_perc = perc
+            self.layout.state.launcher_perc = max(min(perc, 1.0), 0.0)
 
             if values is None:
                 self._is_opened = True
         else:
-            perc = 1. - (values['delta2_s'] * 1000 if values is not None else 1)
+            perc = 1. - (values['delta2_s'] * 500 if values is not None else 1)
             self.layout.panel_endpoint.broadcast({
                 'kind': 'activate_launcher',
                 'value': perc
             })
 
-            self.layout.state.launcher_perc = perc
+            self.layout.state.launcher_perc = max(min(perc, 1.0), 0.0)
 
             if values is None:
-                self._close()
+                self.layout.exit_overlay()
 
         self.layout.damage()
 
 
     def on_key(self, time_msec, keycode, state, keysyms):
         if keysyms == "Escape" and state == PYWM_RELEASED:
-            self._close()
+            self.layout.exit_overlay()
             return True
 
         """
@@ -67,9 +67,6 @@ class LauncherOverlay(Overlay):
         """
         return True
 
-    def _close(self):
-        self.layout.state.launcher_perc = 0
-        self.layout.damage()
-
-        self.layout.exit_overlay()
+    def _exit_transition(self):
+        return self.layout.state.copy(launcher_perc=0), 0.2
 

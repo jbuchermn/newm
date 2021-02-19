@@ -153,9 +153,9 @@ class View(PyWMView):
 
             result.box = (
                 self.wm.width * 0.1,
-                self.wm.height * 0.1,
+                self.wm.height * 0.1 + (1. - state.launcher_perc) * self.wm.height,
                 self.wm.width * 0.8,
-                self.wm.height * 0.8 if state.launcher_perc > 0.0 else 0.0)
+                self.wm.height * 0.8)
 
         else:
             result.accepts_input = True

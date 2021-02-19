@@ -170,7 +170,7 @@ class Layout(PyWM):
             self.create_widget(Corner, False, False)
         ]
 
-        self.panel_endpoint = PanelEndpoint()
+        self.panel_endpoint = PanelEndpoint(self)
 
     def terminate(self):
         super().terminate()
