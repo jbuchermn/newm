@@ -127,7 +127,7 @@ class Layout(PyWM):
             ("M-k", lambda: self.move(0, -1)),
             ("M-l", lambda: self.move(1, 0)),
 
-            ("M-Return", lambda: os.system("termite &")),
+            ("M-Return", lambda: os.system("alacritty &")),
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
             ("M-q", lambda: self.close_view()),  # noqa E501
 
