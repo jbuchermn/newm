@@ -173,6 +173,9 @@ class Layout(PyWM):
 
         self.panel_endpoint = PanelEndpoint(self)
 
+        # Initially display cursor
+        self.update_cursor()
+
     def terminate(self):
         super().terminate()
         if self.top_bar is not None:

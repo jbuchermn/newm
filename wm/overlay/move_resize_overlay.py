@@ -108,6 +108,7 @@ class MoveResizeOverlay(Overlay):
         super().__init__(self)
 
         self.layout = layout
+        self.layout.update_cursor(False)
 
         self.view = self.layout.find_focused_view()
 
@@ -174,4 +175,5 @@ class MoveResizeOverlay(Overlay):
         return False
 
     def _exit_transition(self):
+        self.layout.update_cursor(True)
         return self._exit_transition_ret, .3
