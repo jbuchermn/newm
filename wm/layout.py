@@ -325,6 +325,17 @@ class Layout(PyWM):
                                          self.modifiers & PYWM_MOD_CTRL > 0)
 
     def on_modifiers(self, modifiers):
+        if self.modifiers & self.mod > 0:
+            """
+            This is a special case, if a SingleFingerMoveGesture has started, then
+            Mod is pressed the MoveResizeOverlay is not triggered - we reallow a
+            gesture
+
+            If a gesture has been captured reallow_gesture is a noop
+            """
+            print("REALLOWING")
+            self.reallow_gesture()
+
         if self.overlay is not None and self.overlay.ready():
             if self.overlay.on_modifiers(modifiers):
                 return True
@@ -333,12 +344,6 @@ class Layout(PyWM):
     def on_motion(self, time_msec, delta_x, delta_y):
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_motion(time_msec, delta_x, delta_y)
-
-        if self.modifiers & self.mod:
-            ovr = MoveResizeOverlay(self)
-            ovr.on_motion(time_msec, delta_x, delta_y)
-            self.enter_overlay(ovr)
-            return True
 
         return False
 

@@ -2,16 +2,14 @@
 
 ## ToDo
 
-- MoveResizeOverlay
-    - Trigger move without lifting finger first (works for resize)
-    - Block used tiles
 - Clean up get_view_state --> possibly update_view_state_in_place(...)
 
 
 ## Backlog
 
-- NW.js bars (make it optional!)
+- MoveResizeOverlay: Block used tiles
 - SwipeOverlays / MoveResizeOverlays: Improve momenteum handling / grid snapping / Use momentum as basis for animation duration?
+- NW.js bars (make it optional!)
 
 - Titles during "far-away" view
 - htop / cmatrix or similar background / screensaver
