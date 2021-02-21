@@ -161,17 +161,14 @@ class LayoutState:
                 continue
             if s.w == 0 or s.h == 0:
                 continue
-            i, j = s.move_origin
-            if i is None:
-                i, j = s.i, s.j
 
-            w, h = s.scale_origin
-            if w is None:
-                w, h = s.w, s.h
-            min_i = min(min_i, math.floor(i))
-            min_j = min(min_j, math.floor(j))
-            max_i = max(max_i, math.ceil(i + w - 1))
-            max_j = max(max_j, math.ceil(j + h - 1))
+            i, j = s.i, s.j
+            w, h = s.w, s.h
+
+            min_i = min(min_i, i)
+            min_j = min(min_j, j)
+            max_i = max(max_i, i + w - 1)
+            max_j = max(max_j, j + h - 1)
 
         if min_i == 1000000:
             return 0, 0, 0, 0

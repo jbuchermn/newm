@@ -3,10 +3,9 @@
 ## ToDo
 
 - MoveResizeOverlay
-    - Fix background jumps
     - Trigger move without lifting finger first (works for resize)
-    - Scale up / left
     - Block used tiles
+- Clean up get_view_state --> possibly update_view_state_in_place(...)
 
 
 ## Backlog

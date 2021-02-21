@@ -68,11 +68,9 @@ class ResizeOverlay:
         self.layout.update(
             self.original_state.copy().replacing_view_state(
                 self.view._handle,
+                move_origin=(view_state.i, view_state.j),
                 scale_origin=(view_state.w, view_state.h)
             ))
-
-        self.last_dx = 0
-        self.last_dy = 0
 
         self._closed = False
 
@@ -84,22 +82,47 @@ class ResizeOverlay:
         if self._closed:
             return
 
-        self.layout.state.get_view_state(self.view._handle).w += 4*(values['delta_x'] - self.last_dx)
-        self.layout.state.get_view_state(self.view._handle).h += 4*(values['delta_y'] - self.last_dy)
-        self.last_dx = values['delta_x']
-        self.last_dy = values['delta_y']
+        try:
+            state = self.layout.state.get_view_state(self.view._handle)
+            dw = 4*values['delta_x']
+            dh = 4*values['delta_y']
+
+            if state.move_origin[0] is None:
+                return
+            if state.scale_origin[0] is None:
+                return
+
+            if state.scale_origin[0] + dw < 1:
+                d = 1 - (state.scale_origin[0] + dw)
+                state.i = state.move_origin[0] - d
+                state.w = 1 + d
+            else:
+                state.i = state.move_origin[0]
+                state.w = state.scale_origin[0] + dw
+
+            if state.scale_origin[1] + dh < 1:
+                d = 1 - (state.scale_origin[1] + dh)
+                state.j = state.move_origin[1] - d
+                state.h = 1 + d
+            else:
+                state.j = state.move_origin[1]
+                state.h = state.scale_origin[1] + dh
+
+        except Exception:
+            print("Error setting view state")
         self.layout.damage()
 
     def close(self):
         self._closed = True
 
         state = self.layout.state.get_view_state(self.view._handle)
-        w, h = state.w, state.h
+        i, j, w, h = state.i, state.j, state.w, state.h
+        fi, fj = round(i), round(j)
         fw, fh = round(w), round(h)
         fw = max(1, fw)
         fh = max(1, fh)
 
-        return state.i, state.j, state.w, state.h, state.i, state.j, fw, fh
+        return state.i, state.j, state.w, state.h, fi, fj, fw, fh
 
 
 
@@ -132,20 +155,22 @@ class MoveResizeOverlay(Overlay, Thread):
         """
         self._target_layout_pos = None
         
+        self._running = True
         self._wants_close = False
-        self.start()
 
     def _try_set_view_state(self, **kwargs):
         try:
             view_state = self.layout.state.get_view_state(self.view._handle)
             for k, v in kwargs.items():
                 view_state.__dict__[k] = v
-        except Exception as e:
+        except Exception:
             print("Cannot animate view")
 
+    def post_init(self):
+        self.start()
+
     def run(self):
-        running = True
-        while running:
+        while self._running:
             t = time.time()
 
             in_prog = False
@@ -153,7 +178,7 @@ class MoveResizeOverlay(Overlay, Thread):
                 in_prog = True
                 ii, ij, fi, fj, it, ft = self._target_view_pos
                 if t > ft:
-                    self._try_set_view_state(i=fi, j=fj, move_origin=(None, None))
+                    self._try_set_view_state(i=fi, j=fj)
                     self._target_view_pos = None
                 else:
                     perc = (t-it)/(ft-it)
@@ -165,7 +190,7 @@ class MoveResizeOverlay(Overlay, Thread):
                 in_prog = True
                 iw, ih, fw, fh, it, ft = self._target_view_size
                 if t > ft:
-                    self._try_set_view_state(w=fw, h=fh, scale_origin=(None, None))
+                    self._try_set_view_state(w=fw, h=fh)
                     self._target_view_size = None
                 else:
                     perc = (t-it)/(ft-it)
@@ -204,7 +229,6 @@ class MoveResizeOverlay(Overlay, Thread):
                     if j < fj:
                         fj = j
 
-
                     if i != self.layout.state.i or j != self.layout.state.j:
                         self._target_layout_pos = (self.layout.state.i, self.layout.state.j, fi, fj, time.time(), time.time() + .3)
 
@@ -213,12 +237,15 @@ class MoveResizeOverlay(Overlay, Thread):
 
 
             if not in_prog and self._wants_close:
-                running = False
+                self._running = False
 
             time.sleep(1. / 120.)
+
         self.layout.exit_overlay()
 
     def on_gesture(self, gesture):
+        if not self._running or self._wants_close:
+            return
 
         if isinstance(gesture, TwoFingerSwipePinchGesture):
             if self._target_view_size is not None:
@@ -248,15 +275,13 @@ class MoveResizeOverlay(Overlay, Thread):
     def finish(self):
         if self.overlay is not None:
             ii, ij, iw, ih, fi, fj, fw, fh = self.overlay.close()
+            self.overlay = None
+
             if ii != fi or ij != fj:
                 self._target_view_pos = (ii, ij, fi, fj, time.time(), time.time() + .3)
             if iw != fw or iw != fw:
                 self._target_view_size = (iw, ih, fw, fh, time.time(), time.time() + .3)
 
-
-            """
-            TODO: Layout pos adjustment
-            """
 
         if not self.layout.modifiers & self.layout.mod:
             self.close()
@@ -269,16 +294,33 @@ class MoveResizeOverlay(Overlay, Thread):
 
     def on_key(self, time_msec, keycode, state, keysyms):
         if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
-            self.close()
+            if self.overlay is None:
+                self.close()
 
     def on_modifiers(self, modifiers):
         return False
 
     def close(self):
+        if self.overlay is not None:
+            self.overlay.close()
         self._wants_close = True
+
+    def pre_destroy(self):
+        self._running = False
 
     def _exit_transition(self):
         self.layout.update_cursor(True)
-        return self.layout.state.replacing_view_state(
-            self.view._handle,
-            scale_origin=(None, None), move_origin=(None, None)), .3
+        try:
+            # Clean up any possible mishaps - should not be necessary
+            view_state = self.layout.state.get_view_state(self.view._handle)
+            i = round(view_state.i)
+            j = round(view_state.j)
+            w = round(view_state.w)
+            h = round(view_state.h)
+
+            return self.layout.state.replacing_view_state(
+                self.view._handle,
+                i=i, j=j, w=w, h=h,
+                scale_origin=(None, None), move_origin=(None, None)), .3
+        except Exception:
+            return None, 0

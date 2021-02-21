@@ -13,10 +13,14 @@ class Overlay:
         else:
             self._ready = True
 
+        self.post_init()
+
     def _enter_finished(self):
         self._ready = True
 
     def destroy(self):
+        self.pre_destroy()
+
         self._ready = False
         wm_state, dt = self._exit_transition()
         if wm_state is not None:
@@ -32,6 +36,11 @@ class Overlay:
     Virtual methods
     """
 
+    def post_init(self):
+        pass
+
+    def pre_destroy(self):
+        pass
     
     def _enter_transition(self):
         return None, 0
