@@ -2,18 +2,17 @@
 
 ## ToDo
 
-- SwipeOverlays / MoveResizeOverlays: Improve momenteum handling / grid snapping / Use momentum as basis for animation duration?
 - MoveResizeOverlay
+    - Fix background jumps
     - Trigger move without lifting finger first (works for resize)
-    - Adjust viewpoint during move
-    - Start gesture even during anim_block
-    - Block already used tiles
+    - Scale up / left
+    - Block used tiles
 
 
 ## Backlog
 
 - NW.js bars (make it optional!)
-- Many windows open (especially with e.g. Spotify - XWayland?) -> resize during animation slow
+- SwipeOverlays / MoveResizeOverlays: Improve momenteum handling / grid snapping / Use momentum as basis for animation duration?
 
 - Titles during "far-away" view
 - htop / cmatrix or similar background / screensaver
@@ -22,3 +21,4 @@
     - Starter panel (follow XDG!)
     - TODOs in PyWM
     - Key mappings
+- Performance issues on resizing Spotify / similar XWayland apps
