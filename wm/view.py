@@ -30,6 +30,9 @@ class View(PyWMView):
         """
         self._animation = None
 
+    def __str__(self):
+        print("View (%d)" % self._handle)
+
     def is_dialog(self):
         return self.panel is None and self.up_state.is_floating
 
@@ -40,8 +43,8 @@ class View(PyWMView):
         return self.panel is not None
 
     def main(self, state):
-        print("[Python] New View (%d, %s): %s, %s, %s, xwayland=%s, floating=%s" %
-              (self._handle, "child" if self.parent is not None else "root",
+        print("[Python] New View %s (%s): %s, %s, %s, xwayland=%s, floating=%s" %
+              (self, "child" if self.parent is not None else "root",
                self.up_state.title, self.app_id, self.role,
                self.is_xwayland, self.up_state.is_floating))
 
@@ -72,8 +75,11 @@ class View(PyWMView):
                 ci = state.i + state.size / 2.
                 cj = state.j + state.size / 2.
                 if self.parent is not None:
-                    ci = state.get_view_state(self.parent._handle).i + state.get_view_state(self.parent._handle).w / 2.
-                    cj = state.get_view_state(self.parent._handle).j + state.get_view_state(self.parent._handle).h / 2.
+                    try:
+                        ci = state.get_view_state(self.parent).i + state.get_view_state(self.parent).w / 2.
+                        cj = state.get_view_state(self.parent).j + state.get_view_state(self.parent).h / 2.
+                    except:
+                        print("Could not access parent state: %s" % self.parent)
 
                 w, h = min_w, min_h
                 w *= state.scale / self.wm.width / self.client_side_scale
@@ -93,7 +99,7 @@ class View(PyWMView):
 
                 w = max(math.ceil(min_w), 1)
                 h = max(math.ceil(min_h), 1)
-                i, j = self.wm.place_initial(self, w, h)
+                i, j = self.wm.place_initial(w, h)
 
                 second_state = (i, j, w, h)
 
@@ -111,14 +117,14 @@ class View(PyWMView):
             self.focus()
 
             state1 = state.with_view_state(
-                    self._handle, 
+                    self,
                     is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h)
 
 
             state2 = state1.replacing_view_state(
-                    self._handle, i=i1, j=j1, w=w1, h=h1
+                    self, i=i1, j=j1, w=w1, h=h1
                 ).focusing_view(
-                    self._handle
+                    self
                 )
 
             return state1, state2
@@ -171,9 +177,9 @@ class View(PyWMView):
 
             self_state = None
             try:
-                self_state = state.get_view_state(self._handle)
+                self_state = state.get_view_state(self)
             except Exception:
-                print("ERROR - view state not registered: %d" % self._handle)
+                print("ERROR - view state not registered for view: %s" % self)
                 return result
 
             """

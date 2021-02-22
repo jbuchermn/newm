@@ -22,6 +22,10 @@ class ViewState:
     def copy(self, **kwargs):
         return ViewState(**{**self.__dict__, **kwargs})
 
+    def update(self, **kwargs):
+        for k, v in kwargs.items():
+            self.__dict__[k] = v
+
     def __str__(self):
         return "ViewState <%s>" % str(self.__dict__)
 
@@ -50,17 +54,17 @@ class LayoutState:
     Register / Unregister
     """
 
-    def with_view_state(self, handle, **kwargs):
-        self._view_states[handle] = ViewState(**kwargs)
+    def with_view_state(self, view, **kwargs):
+        self._view_states[view._handle] = ViewState(**kwargs)
         return self
 
 
-    def without_view_state(self, handle):
-        del self._view_states[handle]
+    def without_view_state(self, view):
+        del self._view_states[view._handle]
         return self
 
     """
-    Copy
+    Copy / Update
     """
 
     def copy(self, **kwargs):
@@ -69,18 +73,29 @@ class LayoutState:
             res._view_states[h] = s.copy()
         return res
 
-    def replacing_view_state(self, handle, **kwargs):
+    def update(self, **kwargs):
+        for k, v in kwargs.items():
+            self.__dict__[k] = v
+
+    def replacing_view_state(self, view, **kwargs):
         res = LayoutState(**self.__dict__)
         for h, s in self._view_states.items():
-            res._view_states[h] = s.copy(**(kwargs if h==handle else {}))
+            res._view_states[h] = s.copy(**(kwargs if h==view._handle else {}))
         return res
+
+    def update_view_state(self, view, **kwargs):
+        try:
+            s = self.get_view_state(view)
+            s.update(**kwargs)
+        except Exception:
+            print("Unable to update view state: %s" % view)
 
     """
     Reducers
     """
 
-    def focusing_view(self, handle):
-        state = self._view_states[handle]
+    def focusing_view(self, view):
+        state = self._view_states[view._handle]
 
         i, j, w, h = state.i, state.j, state.w, state.h
         target_i, target_j, target_size = self.i, self.j, self.size
@@ -150,8 +165,8 @@ class LayoutState:
     def __str__(self):
         return "LayoutState <%s>" % str(self.__dict__)
 
-    def get_view_state(self, handle):
-        return self._view_states[handle]
+    def get_view_state(self, view):
+        return self._view_states[view._handle]
 
     def get_extent(self):
         min_i, min_j, max_i, max_j = 1000000, 1000000, -1000000, -1000000

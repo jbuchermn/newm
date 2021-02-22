@@ -24,6 +24,7 @@ wm = Layout(
     xkb_options="caps:escape",
     output_scale=OUTPUT_SCALE,
     touchpad_device_name="bcm5974",
+    wallpaper="~/wallpaper.jpg",
     encourage_csd=False)
 
 try:

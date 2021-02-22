@@ -162,8 +162,11 @@ class Layout(PyWM):
 
         self.bottom_bar = self.create_widget(BottomBar)
         self.top_bar = self.create_widget(TopBar)
-        self.background = self.create_widget(Background,
-                                             '~/wallpaper.jpg')
+
+        self.background = None
+        if 'wallpaper' in self.config:
+            self.background = self.create_widget(Background,
+                                                 self.config['wallpaper'])
         self.corners = [
             self.create_widget(Corner, True, True),
             self.create_widget(Corner, True, False),
@@ -269,12 +272,12 @@ class Layout(PyWM):
         return [v for _, v in self._views.items() if v.is_panel()]
 
     def find_focused_box(self):
-        for _, view in self._views.items():
-            if view.up_state.is_focused:
-                view_state = self.state.get_view_state(view._handle)
-                return view_state.i, view_state.j, view_state.w, view_state.h
-
-        return 0, 0, 1, 1
+        try:
+            view = self.find_focused_view()
+            view_state = self.state.get_view_state(view)
+            return view_state.i, view_state.j, view_state.w, view_state.h
+        except Exception:
+            return 0, 0, 1, 1
 
     def find_focused_view(self):
         for _, view in self._views.items():
@@ -283,7 +286,7 @@ class Layout(PyWM):
 
         return None
 
-    def place_initial(self, view, w, h):
+    def place_initial(self, w, h):
         place_i = 0
         place_j = 0
         for j, i in product(range(math.floor(self.state.j),
@@ -333,7 +336,6 @@ class Layout(PyWM):
 
             If a gesture has been captured reallow_gesture is a noop
             """
-            print("REALLOWING")
             self.reallow_gesture()
 
         if self.overlay is not None and self.overlay.ready():
@@ -471,15 +473,14 @@ class Layout(PyWM):
     def focus_view(self, view):
         view.focus()
         self.animate_to(
-            self.state.focusing_view(
-                view._handle),
+            self.state.focusing_view(view),
             .3
         )
 
     def destroy_view(self, view):
         state = None
         try:
-            state = self.state.get_view_state(view._handle)
+            state = self.state.get_view_state(view)
         except:
             print("ERROR - view state not registered")
             return
@@ -504,13 +505,13 @@ class Layout(PyWM):
             self.animate_to(
                 self.state
                     .focusing_view(best_view)
-                    .without_view_state(view._handle),
+                    .without_view_state(view),
                 .3)
         else:
             self.animate_to(
                 self.state
                     .copy()
-                    .without_view_state(view._handle),
+                    .without_view_state(view),
                 .3)
 
 
