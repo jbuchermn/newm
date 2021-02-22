@@ -1,5 +1,6 @@
 import math
 import time
+import logging
 
 from pywm import PyWMView, PyWMViewDownstreamState
 
@@ -31,7 +32,7 @@ class View(PyWMView):
         self._animation = None
 
     def __str__(self):
-        print("View (%d)" % self._handle)
+        return "View (%d)" % self._handle
 
     def is_dialog(self):
         return self.panel is None and self.up_state.is_floating
@@ -43,10 +44,11 @@ class View(PyWMView):
         return self.panel is not None
 
     def main(self, state):
-        print("[Python] New View %s (%s): %s, %s, %s, xwayland=%s, floating=%s" %
-              (self, "child" if self.parent is not None else "root",
-               self.up_state.title, self.app_id, self.role,
-               self.is_xwayland, self.up_state.is_floating))
+        logging.info(
+            "Init: %s (%s): %s, %s, %s, xwayland=%s, floating=%s",
+            self, "child" if self.parent is not None else "root",
+            self.up_state.title, self.app_id, self.role,
+            self.is_xwayland, self.up_state.is_floating)
 
         if self.is_xwayland:
             """
@@ -79,7 +81,7 @@ class View(PyWMView):
                         ci = state.get_view_state(self.parent).i + state.get_view_state(self.parent).w / 2.
                         cj = state.get_view_state(self.parent).j + state.get_view_state(self.parent).h / 2.
                     except:
-                        print("Could not access parent state: %s" % self.parent)
+                        logging.warn("Unexpected: Could not access parent %s state" % self.parent)
 
                 w, h = min_w, min_h
                 w *= state.scale / self.wm.width / self.client_side_scale
@@ -179,7 +181,7 @@ class View(PyWMView):
             try:
                 self_state = state.get_view_state(self)
             except Exception:
-                print("ERROR - view state not registered for view: %s" % self)
+                logging.warn("Unexpected: Could not access view %s state" % self)
                 return result
 
             """

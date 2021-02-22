@@ -4,13 +4,18 @@ SCRIPTPATH=$(dirname "$SCRIPT")
 
 cd $HOME
 
+cp .cache/newm_log_bu1 .cache/newm_log_bu2
+cp .cache/newm_log .cache/newm_log_bu1
+cp .cache/newm_panel_log_bu1 .cache/newm_panel_log_bu2
+cp .cache/newm_panel_log .cache/newm_panel_log_bu1
+
 echo "Making PyWM"
 $SCRIPTPATH/pywm/make.sh || exit 1;
 
-echo "Starting WM..."
-python -u $SCRIPTPATH/main.py > $HOME/.cache/newm_log_$(date --iso-8601=seconds) 2>&1 &
+echo "Starting newm..."
+python -u $SCRIPTPATH/main.py > $HOME/.cache/newm_log 2>&1 &
 
 sleep 5
-echo "Starting Panel..."
-cd $SCRIPTPATH/panel && npm run start > $HOME/.cache/newm_panel_log_$(date --iso-8601=seconds) 2>&1 &
+echo "Starting panel..."
+cd $SCRIPTPATH/panel && npm run start > $HOME/.cache/newm_panel_log 2>&1 &
 

@@ -1,4 +1,5 @@
 import math
+import logging
 
 DEFAULT_PADDING = 0.01
 
@@ -28,6 +29,9 @@ class ViewState:
 
     def __str__(self):
         return "ViewState <%s>" % str(self.__dict__)
+
+    def __repr__(self):
+        return str(self)
 
 
 
@@ -88,7 +92,7 @@ class LayoutState:
             s = self.get_view_state(view)
             s.update(**kwargs)
         except Exception:
-            print("Unable to update view state: %s" % view)
+            logging.warn("Unexpected: Unable to update view %s state", view)
 
     """
     Reducers
@@ -164,6 +168,9 @@ class LayoutState:
 
     def __str__(self):
         return "LayoutState <%s>" % str(self.__dict__)
+
+    def __repr__(self):
+        return str(self)
 
     def get_view_state(self, view):
         return self._view_states[view._handle]

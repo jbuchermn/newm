@@ -1,5 +1,6 @@
 import time
 import math
+import logging
 import os
 from itertools import product
 from threading import Thread
@@ -21,7 +22,7 @@ from pywm.touchpad import (
 from .state import LayoutState
 from .view import View
 
-from .key_processor import KeyProcessor, KeyBinding
+from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
 from .sys_backend import SysBackend
 
@@ -96,6 +97,7 @@ class LayoutAnimation(Thread):
         self.finished = False
 
     def run(self):
+        logging.debug("Running animation %s...", self)
         time.sleep(self.duration)
 
         self.layout.state = self.final_state
@@ -104,7 +106,11 @@ class LayoutAnimation(Thread):
             self.then()
 
         self.finished = True
+        logging.debug("...done with animation")
         self.layout._animate_to(None)
+
+    def __str__(self):
+        return "%s -> %s (%f%s)" % (self.update_start_state, self.final_state, self.duration, ", then" if self.then is not None else "")
 
 
 class Layout(PyWM):
@@ -157,6 +163,7 @@ class Layout(PyWM):
         self._animations = []
 
     def main(self):
+        logging.debug("Layout main...")
 
         self.state = LayoutState()
 
@@ -191,6 +198,8 @@ class Layout(PyWM):
             self.sys_backend.stop()
 
     def _execute_view_main(self, view):
+        logging.debug("View main %s...", view)
+
         """
         If we are animating, use animted to state as basis
         """
@@ -230,6 +239,7 @@ class Layout(PyWM):
             self._animations.pop(0)
 
         if animation is not None:
+            logging.debug("New animation pending %s (%d in queue)", animation, len(self._animations))
             self._animations += [animation]
 
         if len(self._animations) != 1:
@@ -312,6 +322,7 @@ class Layout(PyWM):
     """
 
     def on_key(self, time_msec, keycode, state, keysyms):
+        logging.debug("Key %s - %d...", keysyms, state)
         # BEGIN DEBUG
         if self.modifiers & self.mod > 0 and keysyms == "D":
             self.force_close_overlay()
@@ -319,6 +330,7 @@ class Layout(PyWM):
         # END DEBUG
 
         if self.overlay is not None and self.overlay.ready():
+            logging.debug("...passing to overlay %s", self.overlay)
             if self.overlay.on_key(time_msec, keycode, state, keysyms):
                 return True
 
@@ -328,6 +340,7 @@ class Layout(PyWM):
                                          self.modifiers & PYWM_MOD_CTRL > 0)
 
     def on_modifiers(self, modifiers):
+        logging.debug("Modifiers %d...", modifiers)
         if self.modifiers & self.mod > 0:
             """
             This is a special case, if a SingleFingerMoveGesture has started, then
@@ -336,9 +349,11 @@ class Layout(PyWM):
 
             If a gesture has been captured reallow_gesture is a noop
             """
+            logging.debug("Resetting gesture gesture")
             self.reallow_gesture()
 
         if self.overlay is not None and self.overlay.ready():
+            logging.debug("...passing to overlay %s", self.overlay)
             if self.overlay.on_modifiers(modifiers):
                 return True
         return False
@@ -350,7 +365,9 @@ class Layout(PyWM):
         return False
 
     def on_button(self, time_msec, button, state):
+        logging.debug("Button...")
         if self.overlay is not None and self.overlay.ready():
+            logging.debug("...passing to overlay %s", self.overlay)
             return self.overlay.on_button(time_msec, button, state)
 
         return False
@@ -363,12 +380,15 @@ class Layout(PyWM):
         return False
 
     def on_gesture(self, gesture):
+        logging.debug("Gesture %s...", gesture)
         if self.overlay is not None and self.overlay.ready():
+            logging.debug("...passing to overlay %s", self.overlay)
             return self.overlay.on_gesture(gesture)
         elif self.overlay is None:
             if self.modifiers & self.mod and \
                     (isinstance(gesture, TwoFingerSwipePinchGesture) or
                      isinstance(gesture, SingleFingerMoveGesture)):
+                logging.debug("...MoveResize")
                 ovr = MoveResizeOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
@@ -376,6 +396,7 @@ class Layout(PyWM):
 
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 3:
+                logging.debug("...Swipe")
                 ovr = SwipeOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
@@ -383,6 +404,7 @@ class Layout(PyWM):
 
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 4:
+                logging.debug("...SwipeToZoom")
                 ovr = SwipeToZoomOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
@@ -390,6 +412,7 @@ class Layout(PyWM):
 
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 5:
+                logging.debug("...Launcher")
                 ovr = LauncherOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
@@ -403,10 +426,13 @@ class Layout(PyWM):
     """
 
     def enter_overlay(self, overlay):
+        logging.debug("Going to enter %s...", overlay)
         self.key_processor.on_other_action()
         if self.overlay is not None:
+            logging.debug("...aborted")
             return
 
+        logging.debug("...init")
         self.overlay = overlay
         self.overlay.init()
 
@@ -415,7 +441,7 @@ class Layout(PyWM):
         if self.overlay is None:
             return
 
-        print("Force-closing %s" % self.overlay)
+        logging.debug("Force-closing %s", self.overlay)
         try:
             self.overlay.destroy()
         finally:
@@ -423,12 +449,16 @@ class Layout(PyWM):
     # END DEBUG
 
     def exit_overlay(self):
+        logging.debug("Going to exit overlay...")
         if self.overlay is None:
+            logging.debug("...aborted")
             return
 
+        logging.debug("...destroy")
         self.overlay.destroy()
 
     def on_overlay_destroyed(self):
+        logging.debug("Overlay destroyed")
         self.overlay = None
 
     def move(self, delta_i, delta_j):
@@ -478,11 +508,12 @@ class Layout(PyWM):
         )
 
     def destroy_view(self, view):
+        logging.info("Destroying view %s", view)
         state = None
         try:
             state = self.state.get_view_state(view)
         except:
-            print("ERROR - view state not registered")
+            logging.warn("Unexpected: View %s state not found", view)
             return
         best_view = None
         best_view_score = 1000
@@ -504,7 +535,7 @@ class Layout(PyWM):
             self._views[best_view].focus()
             self.animate_to(
                 self.state
-                    .focusing_view(best_view)
+                    .focusing_view(self._views[best_view])
                     .without_view_state(view),
                 .3)
         else:
