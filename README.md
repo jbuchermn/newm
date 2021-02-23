@@ -2,7 +2,6 @@
 
 ## Current
 
-- Logging
 - All animations --> deferred (aware that current state is not necessary start state)
 - Never reject gestures in MoveResizeOverlay
 

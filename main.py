@@ -8,7 +8,7 @@ from pywm import (
     PYWM_MOD_ALT
 )
 
-logging.basicConfig(format='[%(levelname)s] %(filename)s:%(lineno)s %(asctime)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S.%f', level=logging.DEBUG)
+logging.basicConfig(format='[%(levelname)s] %(filename)s:%(lineno)s %(asctime)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
 mod = PYWM_MOD_LOGO
 if len(sys.argv) > 1 and sys.argv[1] == "ALT":

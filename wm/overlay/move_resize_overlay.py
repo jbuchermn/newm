@@ -261,12 +261,9 @@ class MoveResizeOverlay(Overlay, Thread):
             return
 
         if isinstance(gesture, TwoFingerSwipePinchGesture):
-            # if self._target_view_size is not None:
-            #     logging.debug("MoveResizeOverlay: Rejecting TwoFingerSwipe gesture")
-            #     return
-
-            if self._target_view_size is not None:
-                self._target_view_size = None
+            logging.debug("MoveResizeOverlay: New TwoFingerSwipePinch")
+            self._target_view_pos = None
+            self._target_view_size = None
 
             self.overlay = ResizeOverlay(self.layout, self.view)
             LowpassGesture(gesture).listener(GestureListener(
@@ -276,12 +273,8 @@ class MoveResizeOverlay(Overlay, Thread):
             return True
 
         if isinstance(gesture, SingleFingerMoveGesture):
-            # if self._target_view_pos is not None:
-            #     logging.debug("MoveResizeOverlay: Rejecting SingleFingerMove gesture")
-            #     return
-
-            if self._target_view_pos is not None:
-                self._target_view_pos = None
+            logging.debug("MoveResizeOverlay: New SingleFingerMove")
+            self._target_view_pos = None
 
             self.overlay = MoveOverlay(self.layout, self.view)
             LowpassGesture(gesture).listener(GestureListener(
@@ -294,6 +287,7 @@ class MoveResizeOverlay(Overlay, Thread):
 
 
     def finish(self):
+        logging.debug("MoveResizeOverlay: Finishing gesture")
         if self.overlay is not None:
             ii, ij, iw, ih, fi, fj, fw, fh = self.overlay.close()
             self.overlay = None
