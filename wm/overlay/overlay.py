@@ -1,3 +1,5 @@
+import logging
+
 class Overlay:
     def __init__(self, layout):
         self.layout = layout
@@ -9,6 +11,7 @@ class Overlay:
     def init(self):
         wm_state, dt = self._enter_transition()
         if wm_state is not None:
+            logging.debug("Overlay: Enter animation")
             self.layout.animate_to(wm_state, dt, self._enter_finished)
         else:
             self._ready = True
@@ -16,6 +19,7 @@ class Overlay:
         self.post_init()
 
     def _enter_finished(self):
+        logging.debug("Overlay: Enter animation completed")
         self._ready = True
 
     def destroy(self):
@@ -24,11 +28,13 @@ class Overlay:
         self._ready = False
         wm_state, dt = self._exit_transition()
         if wm_state is not None:
+            logging.debug("Overlay: Exit animation")
             self.layout.animate_to(wm_state, dt, self._exit_finished)
         else:
             self.layout.on_overlay_destroyed()
 
     def _exit_finished(self):
+        logging.debug("Overlay: Exit animation completed")
         self.layout.on_overlay_destroyed()
 
 

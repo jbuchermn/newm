@@ -1,3 +1,5 @@
+import logging
+
 from .overlay import Overlay
 
 class MoveFloatingOverlay(Overlay):
@@ -12,7 +14,7 @@ class MoveFloatingOverlay(Overlay):
             self.i = state.i
             self.j = state.j
         except Exception:
-            print("Error accessing view state: %s" % view)
+            logging.warn("Unexpected: Could not access view %s state", self.view)
 
     def on_motion(self, time_msec, delta_x, delta_y):
         self.i += delta_x * self.layout.state.scale
@@ -24,5 +26,6 @@ class MoveFloatingOverlay(Overlay):
         return False
 
     def on_button(self, time_msec, button, state):
+        logging.debug("MoveFloatingOverlay: Exiting without animation")
         self.layout.exit_overlay()
         return True

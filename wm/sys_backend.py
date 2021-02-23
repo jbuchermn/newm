@@ -2,6 +2,7 @@ from threading import Thread
 import os
 import time
 import psutil
+import logging
 
 class SysBackend(Thread):
     def __init__(self, wm):
@@ -49,6 +50,7 @@ class SysBackend(Thread):
 
             return True
         except Exception:
+            logging.exception("Error setting backlight")
             return False
 
     def set_kbdlight(self, delta_perc):
@@ -69,6 +71,7 @@ class SysBackend(Thread):
             return True
 
         except Exception:
+            logging.exception("Error setting kbdlight")
             return False
 
     def set_vol(self, delta_perc, mute=False):
@@ -90,7 +93,7 @@ class SysBackend(Thread):
                     'volume': res / 100.
                 })
             except Exception as e:
-                print(e)
+                logging.exception("Error getting volume")
 
         return True
 
@@ -98,13 +101,13 @@ class SysBackend(Thread):
         self.wm.key_processor.register_bindings(
             ("XF86MonBrightnessUp", lambda: self.set_backlight(+10)),
             ("XF86MonBrightnessDown", lambda: self.set_backlight(-10)),
-            ("XF86LaunchA", lambda: print("LaunchA")),
-            ("XF86LaunchB", lambda: print("LaunchB")),
+            ("XF86LaunchA", lambda: logging.info("LaunchA")),
+            ("XF86LaunchB", lambda: logging.info("LaunchB")),
             ("XF86KbdBrightnessUp",  lambda: self.set_kbdlight(+10)),
             ("XF86KbdBrightnessDown", lambda: self.set_kbdlight(-10)),
-            ("XF86AudioPrev", lambda: print("AudioPrev")),
-            ("XF86AudioPlay", lambda: print("AudioPlay")),
-            ("XF86AudioNext", lambda: print("AudioNext")),
+            ("XF86AudioPrev", lambda: logging.info("AudioPrev")),
+            ("XF86AudioPlay", lambda: logging.info("AudioPlay")),
+            ("XF86AudioNext", lambda: logging.info("AudioNext")),
             ("XF86AudioMute", lambda: self.set_vol(0, mute=True)),
             ("XF86AudioLowerVolume", lambda: self.set_vol(-10)),
             ("XF86AudioRaiseVolume", lambda: self.set_vol(+10))

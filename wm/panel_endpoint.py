@@ -2,6 +2,7 @@ import os
 import json
 import asyncio
 import websockets
+import logging
 from threading import Thread
 
 SOCKET_PORT = 8641
@@ -19,7 +20,7 @@ class PanelEndpoint(Thread):
         self.start()
 
     async def _socket_handler(self, client_socket, path):
-        print("Opened connection: %s" % path)
+        logging.info("Opened connection: %s" % path)
         self._clients += [client_socket]
         try:
             async for msg in client_socket:
@@ -32,10 +33,10 @@ class PanelEndpoint(Thread):
                         self.layout.exit_overlay()
                         os.system("%s &" % msg['app'])
                 except Exception:
-                    print("Received unparsable message")
+                    logging.debug("Received unparsable message: %s", msg)
 
         finally:
-            print("Closing connection...")
+            logging.info("Closing connection: %s", path)
             self._clients.remove(client_socket)
 
 
@@ -53,7 +54,7 @@ class PanelEndpoint(Thread):
         self._event_loop.stop()
 
     def stop(self):
-        print("Stopping PanelEndpoint...")
+        logging.info("Stopping PanelEndpoint...")
         asyncio.run_coroutine_threadsafe(self._stop(), self._event_loop)
 
     def run(self):
@@ -62,7 +63,7 @@ class PanelEndpoint(Thread):
 
         self._server = websockets.serve(self._socket_handler, "127.0.0.1", SOCKET_PORT)
         self._event_loop.run_until_complete(self._server)
-        print("Starting PanelEndpoint...")
+        logging.info("Starting PanelEndpoint...")
         self._event_loop.run_forever()
 
 
@@ -80,4 +81,4 @@ if __name__ == '__main__':
     Thread(target=test).start()
 
 
-    p = PanelEndpoint()
+    p = PanelEndpoint(None)
