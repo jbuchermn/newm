@@ -33,6 +33,7 @@ from .widget import (
     Corner
 )
 from .overlay import (
+    Overlay,
     MoveResizeOverlay,
     SwipeOverlay,
     SwipeToZoomOverlay,
@@ -82,35 +83,122 @@ def _score(i1, j1, w1, h1,
     return d_i + d_j
 
 
-class LayoutAnimation(Thread):
-    def __init__(self, layout, update_start_state, final_state, duration, then):
+class Animation:
+    def __init__(self, layout, reducer, duration, then, overlay_safe=False):
         super().__init__()
         self.layout = layout
 
-        self.update_start_state = update_start_state
-        self.final_state = final_state
+        """
+        (current state) -> (animation initial state (possibly None), animation final state)
+        """
+        self.reducer = reducer
+
+        self._initial_state = None
+        self._final_state = None
+        self._started = None
 
         # Prevent devision by zero
         self.duration = max(.1, duration)
+
         self.then = then
+        self.overlay_safe = overlay_safe
 
-        self.finished = False
+    def check_finished(self):
+        if self._started is not None and self._final_state is None:
+            return True
 
-    def run(self):
-        logging.debug("Running animation %s...", self)
-        time.sleep(self.duration)
+        if self._started is not None and time.time() > self._started + self.duration:
+            self.layout.update(self._final_state)
+            if callable(self.then):
+                self.then()
+            return True
 
-        self.layout.state = self.final_state
+        return False
 
-        if self.then is not None:
-            self.then()
+    def start(self):
+        try:
+            self._initial_state, self._final_state = self.reducer(self.layout.state)
+        except:
+            """
+            An animation may decide it does not want to be executed anymore
+            """
+            logging.debug("Animation decided not to take place")
+            self._initial_state, self._final_state = None, None
 
-        self.finished = True
-        logging.debug("...done with animation")
-        self.layout._animate_to(None)
+        if self._initial_state is not None:
+            self.layout.update(self._initial_state)
+
+        self._started = time.time()
+        if self._final_state is not None:
+            self.layout._animate_to(self._final_state, self.duration)
 
     def __str__(self):
-        return "%s -> %s (%f%s)" % (self.update_start_state, self.final_state, self.duration, ", then" if self.then is not None else "")
+        return "%s -> %s (%f%s)" % (self._initial_state, self._final_state, self.duration, ", then" if self.then is not None else "")
+
+class LayoutThread(Thread):
+    def __init__(self, layout):
+        super().__init__()
+        self.layout = layout
+
+        """
+        Overlay or Animation
+        """
+        self._pending = []
+        self._current_ovr = None
+        self._current_anim = None
+
+        self._running = True
+        self.start()
+
+    def stop(self):
+        self._running = False
+
+    def push(self, nxt):
+        if isinstance(nxt, Overlay):
+            if self._current_ovr is not None or len([x for x in self._pending if isinstance(x, Overlay)]) > 0:
+                logging.debug("Rejecting queued overlay")
+                return
+            else:
+                logging.debug("Queuing overlay")
+                self._pending += [nxt]
+        else:
+            if nxt.overlay_safe:
+                logging.debug("Overlay-safe animation not queued")
+                self._pending = [nxt] + self._pending
+            else:
+                logging.debug("Queuing animation")
+                self._pending += [nxt]
+
+
+    def on_overlay_destroyed(self):
+        logging.debug("Thread: Finishing overlay...")
+        self._current_ovr = None
+
+    def run(self):
+        while self._running:
+            try:
+                if len(self._pending) > 0:
+                    if isinstance(self._pending[0], Overlay):
+                        if self._current_anim is None and self._current_ovr is None:
+                            logging.debug("Thread: Starting overlay...")
+                            self._current_ovr = self._pending.pop(0)
+                            self.layout.start_overlay(self._current_ovr)
+                    else:
+                        if self._current_anim is None and (self._current_ovr is None or self._pending[0].overlay_safe):
+                            logging.debug("Thread: Starting animation...")
+                            self._current_anim = self._pending.pop(0)
+                            self._current_anim.start()
+
+                if self._current_anim is not None:
+                    if self._current_anim.check_finished():
+                        logging.debug("Thread: Finishing animation...")
+                        self._current_anim = None
+
+            except Exception:
+                logging.exception("Unexpected during LayoutThread")
+
+            time.sleep(1. / 120.)
+
 
 
 class Layout(PyWM):
@@ -156,6 +244,7 @@ class Layout(PyWM):
         self.bottom_bar = None
         self.corners = []
 
+        self.thread = None
         self.panel_endpoint = None
 
         self.fullscreen_backup = 0, 0, 1
@@ -182,6 +271,7 @@ class Layout(PyWM):
         ]
 
         self.panel_endpoint = PanelEndpoint(self)
+        self.thread = LayoutThread(self)
 
         # Initially display cursor
         self.update_cursor()
@@ -196,25 +286,16 @@ class Layout(PyWM):
             self.panel_endpoint.stop()
         if self.sys_backend is not None:
             self.sys_backend.stop()
+        if self.thread is not None:
+            self.thread.stop()
 
     def _execute_view_main(self, view):
-        logging.debug("View main %s...", view)
+        self.animate_to(view.main, .3, None)
 
-        """
-        If we are animating, use animted to state as basis
-        """
-        state = self.state
-        if len(self._animations) > 0:
-            state = self._animations[-1].final_state
 
-        try:
-            state1, state2 = view.main(state)
-            self._animate_to(LayoutAnimation(self, state1, state2, .3, None))
-        except Exception:
-            """
-            No need to animate on present
-            """
-            pass
+    def animate_to(self, reducer, duration, then=None, overlay_safe=False):
+        self.thread.push(Animation(self, reducer, duration, then, overlay_safe))
+
 
     def damage(self):
         for _, v in self._views.items():
@@ -234,38 +315,19 @@ class Layout(PyWM):
         self.state = new_state
         self.damage()
 
-    def _animate_to(self, animation):
-        if len(self._animations) > 0 and self._animations[0].finished:
-            self._animations.pop(0)
-
-        if animation is not None:
-            logging.debug("New animation pending %s (%d in queue)", animation, len(self._animations))
-            self._animations += [animation]
-
-        if len(self._animations) != 1:
-            return
-
-        animation = self._animations[0]
-        if id(animation.update_start_state) != id(self.state):
-            self.update(animation.update_start_state)
-
+    def _animate_to(self, new_state, duration):
         for _, v in self._views.items():
-            v.animate(self.state, animation.final_state, animation.duration)
+            v.animate(self.state, new_state, duration)
 
         if self.background is not None:
-            self.background.animate(self.state, animation.final_state, animation.duration)
+            self.background.animate(self.state, new_state, duration)
 
         if self.top_bar is not None:
-            self.top_bar.animate(self.state, animation.final_state, animation.duration)
+            self.top_bar.animate(self.state, new_state, duration)
 
         if self.bottom_bar is not None:
-            self.bottom_bar.animate(self.state, animation.final_state, animation.duration)
+            self.bottom_bar.animate(self.state, new_state, duration)
 
-        animation.start()
-
-
-    def animate_to(self, new_state, dt, then=None):
-        self._animate_to(LayoutAnimation(self, self.state, new_state, dt, then))
 
 
     """
@@ -322,7 +384,6 @@ class Layout(PyWM):
     """
 
     def on_key(self, time_msec, keycode, state, keysyms):
-        logging.debug("Key %s - %d...", keysyms, state)
         # BEGIN DEBUG
         if self.modifiers & self.mod > 0 and keysyms == "D":
             self.force_close_overlay()
@@ -349,7 +410,7 @@ class Layout(PyWM):
 
             If a gesture has been captured reallow_gesture is a noop
             """
-            logging.debug("Resetting gesture gesture")
+            logging.debug("Resetting gesture")
             self.reallow_gesture()
 
         if self.overlay is not None and self.overlay.ready():
@@ -426,13 +487,11 @@ class Layout(PyWM):
     """
 
     def enter_overlay(self, overlay):
+        self.thread.push(overlay)
+
+    def start_overlay(self, overlay):
         logging.debug("Going to enter %s...", overlay)
         self.key_processor.on_other_action()
-        if self.overlay is not None:
-            logging.debug("...aborted")
-            return
-
-        logging.debug("...init")
         self.overlay = overlay
         self.overlay.init()
 
@@ -459,6 +518,7 @@ class Layout(PyWM):
 
     def on_overlay_destroyed(self):
         logging.debug("Overlay destroyed")
+        self.thread.on_overlay_destroyed()
         self.overlay = None
 
     def move(self, delta_i, delta_j):
@@ -501,11 +561,10 @@ class Layout(PyWM):
 
 
     def focus_view(self, view):
-        view.focus()
-        self.animate_to(
-            self.state.focusing_view(view),
-            .3
-        )
+        def reducer(state):
+            view.focus()
+            return None, state.focusing_view(view)
+        self.animate_to(reducer, .3)
 
     def destroy_view(self, view):
         logging.info("Destroying view %s", view)
@@ -532,17 +591,20 @@ class Layout(PyWM):
 
 
         if best_view is not None and best_view in self._views:
-            self._views[best_view].focus()
+            def reducer(state):
+                self._views[best_view].focus()
+                return None, state\
+                    .focusing_view(self._views[best_view])\
+                    .without_view_state(view)
+
             self.animate_to(
-                self.state
-                    .focusing_view(self._views[best_view])
-                    .without_view_state(view),
+                reducer,
                 .3)
         else:
             self.animate_to(
-                self.state
+                lambda state: (None, state
                     .copy()
-                    .without_view_state(view),
+                    .without_view_state(view)),
                 .3)
 
 
@@ -569,9 +631,8 @@ class Layout(PyWM):
 
 
         self.animate_to(
-            self.state.with_padding_toggled(
+            lambda state: (None, state.with_padding_toggled(
                 reset=bu,
                 focus_box=fb
-            ), .3)
-
-
+            )
+), .3)

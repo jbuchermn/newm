@@ -12,7 +12,7 @@ class Overlay:
         wm_state, dt = self._enter_transition()
         if wm_state is not None:
             logging.debug("Overlay: Enter animation")
-            self.layout.animate_to(wm_state, dt, self._enter_finished)
+            self.layout.animate_to(lambda _: (None, wm_state), dt, self._enter_finished, overlay_safe=True)
         else:
             self._ready = True
 
@@ -29,7 +29,7 @@ class Overlay:
         wm_state, dt = self._exit_transition()
         if wm_state is not None:
             logging.debug("Overlay: Exit animation")
-            self.layout.animate_to(wm_state, dt, self._exit_finished)
+            self.layout.animate_to(lambda _: (None, wm_state), dt, self._exit_finished, overlay_safe=True)
         else:
             self.layout.on_overlay_destroyed()
 

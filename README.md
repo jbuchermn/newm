@@ -3,8 +3,6 @@
 ## Current
 
 - All animations --> deferred (aware that current state is not necessary start state)
-- Never reject gestures in MoveResizeOverlay
-
 - Block animations during overlay / occasional bug when opening window and moving cursor meanwhile
 - New / Destroyed views during OverviewOverlay (and other overlays) 
 

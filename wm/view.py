@@ -181,7 +181,11 @@ class View(PyWMView):
             try:
                 self_state = state.get_view_state(self)
             except Exception:
-                logging.warn("Unexpected: Could not access view %s state" % self)
+                """
+                This can happen, if main has not been executed yet
+                (e.g. during an overlay) - just return a box not displayed
+                """
+                logging.debug("Could not access view %s state" % self)
                 return result
 
             """
