@@ -1,0 +1,31 @@
+#+TITLE: newm agenda
+
+* Current
+** Generalized used tiles handling [0/2]
+- [ ] MoveResizeOverlay: Block used tiles
+- [ ] layout.move() / layout.resize() functions with keybindings
+** Generalized grid handling [0/3]
+- [ ] General structure for grid with overscroll (bouncy), momentum tracking / ...
+- [ ] Predict final value (SwipeOverlays / MoveResizeOverlay) and animation duration
+- [ ] Matplotlib locking
+
+* Backlog
+** Configuration [0/5]
+- [ ] Keybindings
+- [ ] File structure (Install to .local/lib, config script in .config/newm)
+- [ ] SysBackend
+- [ ] TopBar / BottomBar
+- [ ] Launcher
+
+** Use opacity during rescale to make the change less obvious
+
+** README / Install guide and tests on other machines
+
+** NW.js bars (optional)
+** Follow XDG for starter entries
+
+** Performance issues on resizing Spotify / similar XWayland apps
+
+* Ideas
+** Titles during "far-away" view
+** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
