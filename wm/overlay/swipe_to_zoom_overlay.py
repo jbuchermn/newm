@@ -1,7 +1,10 @@
 from pywm.touchpad import GestureListener, LowpassGesture
 from .overlay import Overlay
+from ..grid import Grid
 
-_momentum_factor = 50.
+GRID_OVR = 0.3
+GRID_M = 2
+
 
 class SwipeToZoomOverlay(Overlay):
     def __init__(self, layout):
@@ -11,30 +14,14 @@ class SwipeToZoomOverlay(Overlay):
 
         self.size = self.layout.state.size
 
-        """
-        Four-finger mode
-        """
         self.initial_size = self.size
-
-        """
-        Boundaries of movement
-        """
-        
-        def size_bound(s):
-            if s < 1:
-                return 1 - .3 * (1 - 1/(1 + (1 - s)))
-            elif s < self.initial_size + 1:
-                return s
-            else:
-                return self.initial_size + 1 + .3 * (1 - 1/(1 + (s - (self.initial_size + 1))))
-
-        self.size_bound = size_bound
-
-        """
-        Current state
-        """
         self.last_delta_y = 0
-        self.momentum_y = 0
+
+        """
+        Grid
+        """
+        self.grid = Grid(1, self.initial_size + 1, self.initial_size, GRID_OVR, GRID_M)
+        
 
         self._set_state()
 
@@ -43,20 +30,12 @@ class SwipeToZoomOverlay(Overlay):
         super()._exit_finished()
 
     def _exit_transition(self):
-        size = self.size
-        size -= max(-.5, min(.5, self.momentum_y * _momentum_factor))
-
-        size = self.size_bound(size)
-
-        fsize = round(size)
-        scale = fsize
-        dt = .6 * abs(size - fsize)
-        return self.layout.state.copy(size=fsize, scale=scale), dt
+        size, t = self.grid.final()
+        scale = size
+        return self.layout.state.copy(size=size, scale=scale), t
 
     def _set_state(self):
-        self.size = self.size_bound(self.size)
-
-        self.layout.state.size = self.size
+        self.layout.state.size = self.grid.at(self.size)
         self.layout.damage()
 
     def on_gesture(self, gesture):

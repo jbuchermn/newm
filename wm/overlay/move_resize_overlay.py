@@ -11,6 +11,10 @@ from pywm.touchpad import (
     LowpassGesture
 )
 from .overlay import Overlay
+from ..grid import Grid
+
+GRID_OVR = 0.2
+GRID_M = 5
 
 class MoveOverlay:
     def __init__(self, layout, view):
@@ -33,6 +37,9 @@ class MoveOverlay:
         except Exception:
             logging.warn("Unexpected: Could not access view %s state", self.view)
 
+        self.i_grid = Grid(self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
+        self.j_grid = Grid(self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
+
         self.last_dx = 0
         self.last_dy = 0
 
@@ -50,7 +57,8 @@ class MoveOverlay:
         self.j += 4*(values['delta_y'] - self.last_dy)
         self.last_dx = values['delta_x']
         self.last_dy = values['delta_y']
-        self.layout.state.update_view_state(self.view, i=self.i, j=self.j)
+        self.layout.state.update_view_state(
+            self.view, i=self.i_grid.at(self.i), j=self.j_grid.at(self.j))
         self.layout.damage()
 
     def close(self):
@@ -58,13 +66,13 @@ class MoveOverlay:
 
         try:
             state = self.layout.state.get_view_state(self.view)
-            i, j = state.i, state.j
-            fi, fj = round(i), round(j)
+            fi, ti = self.i_grid.final(restrict_by_x_current=True)
+            fj, tj = self.j_grid.final(restrict_by_x_current=True)
 
-            return state.i, state.j, state.w, state.h, fi, fj, state.w, state.h
+            return state.i, state.j, state.w, state.h, fi, fj, state.w, state.h, max(ti, tj)
         except Exception:
             logging.warn("Unexpected: Could not access view %s state... returning default placement", self.view)
-            return self.i, self.j, 1, 1, round(self.i), round(self.j), 1, 1
+            return self.i, self.j, 1, 1, round(self.i), round(self.j), 1, 1, 1
 
 
 class ResizeOverlay:
@@ -93,6 +101,12 @@ class ResizeOverlay:
         except Exception:
             logging.warn("Unexpected: Could not access view %s state", self.view)
 
+
+        self.i_grid = Grid(self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
+        self.j_grid = Grid(self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
+        self.w_grid = Grid(1, self.w + 3, self.w, GRID_OVR, GRID_M)
+        self.h_grid = Grid(1, self.h + 3, self.h, GRID_OVR, GRID_M)
+
         self._closed = False
 
     def on_gesture(self, values):
@@ -120,7 +134,8 @@ class ResizeOverlay:
             j = self.j
             h = self.h + dh
 
-        self.layout.state.update_view_state(self.view, i=i, j=j, w=w, h=h)
+        self.layout.state.update_view_state(
+            self.view, i=self.i_grid.at(i), j=self.j_grid.at(j), w=self.w_grid.at(w), h=self.h_grid.at(h))
 
         self.layout.damage()
 
@@ -129,16 +144,15 @@ class ResizeOverlay:
 
         try:
             state = self.layout.state.get_view_state(self.view)
-            i, j, w, h = state.i, state.j, state.w, state.h
-            fi, fj = round(i), round(j)
-            fw, fh = round(w), round(h)
-            fw = max(1, fw)
-            fh = max(1, fh)
+            fi, ti = self.i_grid.final(restrict_by_x_current=True)
+            fj, tj = self.j_grid.final(restrict_by_x_current=True)
+            fw, tw = self.w_grid.final(restrict_by_x_current=True)
+            fh, th = self.h_grid.final(restrict_by_x_current=True)
 
-            return state.i, state.j, state.w, state.h, fi, fj, fw, fh
+            return state.i, state.j, state.w, state.h, fi, fj, fw, fh, max(ti, tj, tw, th)
         except Exception:
             logging.warn("Unexpected: Could not access view %s state... returning default placement", self.view)
-            return self.i, self.j, self.w, self.h, self.i, self.j, self.w, self.h
+            return self.i, self.j, self.w, self.h, self.i, self.j, self.w, self.h, 1
 
 
 
@@ -289,13 +303,13 @@ class MoveResizeOverlay(Overlay, Thread):
     def finish(self):
         logging.debug("MoveResizeOverlay: Finishing gesture")
         if self.overlay is not None:
-            ii, ij, iw, ih, fi, fj, fw, fh = self.overlay.close()
+            ii, ij, iw, ih, fi, fj, fw, fh, t = self.overlay.close()
             self.overlay = None
 
             if ii != fi or ij != fj:
-                self._target_view_pos = (ii, ij, fi, fj, time.time(), time.time() + .3)
+                self._target_view_pos = (ii, ij, fi, fj, time.time(), time.time() + t)
             if iw != fw or iw != fw:
-                self._target_view_size = (iw, ih, fw, fh, time.time(), time.time() + .3)
+                self._target_view_size = (iw, ih, fw, fh, time.time(), time.time() + t)
 
 
         if not self.layout.modifiers & self.layout.mod:

@@ -1,13 +1,15 @@
 #+TITLE: newm agenda
 
 * Current
-** Generalized used tiles handling [0/2]
+** Generalized grid handling [1/3]
+- [X] General structure for grid with overscroll (bouncy), momentum tracking / ...
+- [ ] Predict final value (SwipeOverlays / MoveResizeOverlay) and animation duration
+- [ ] Matplotlib logging
+
+** Generalized used tiles handling [0/3]
+- [ ] Stacking functionality, or
 - [ ] MoveResizeOverlay: Block used tiles
 - [ ] layout.move() / layout.resize() functions with keybindings
-** Generalized grid handling [0/3]
-- [ ] General structure for grid with overscroll (bouncy), momentum tracking / ...
-- [ ] Predict final value (SwipeOverlays / MoveResizeOverlay) and animation duration
-- [ ] Matplotlib locking
 
 * Backlog
 ** Configuration [0/5]
@@ -17,7 +19,7 @@
 - [ ] TopBar / BottomBar
 - [ ] Launcher
 
-** Use opacity during rescale to make the change less obvious
+** Use opacity during rescale to make the change less obvious / ugly
 
 ** README / Install guide and tests on other machines
 
