@@ -37,8 +37,8 @@ class MoveOverlay:
         except Exception:
             logging.warn("Unexpected: Could not access view %s state", self.view)
 
-        self.i_grid = Grid(self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
-        self.j_grid = Grid(self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
+        self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
+        self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
 
         self.last_dx = 0
         self.last_dy = 0
@@ -68,6 +68,8 @@ class MoveOverlay:
             state = self.layout.state.get_view_state(self.view)
             fi, ti = self.i_grid.final(restrict_by_x_current=True)
             fj, tj = self.j_grid.final(restrict_by_x_current=True)
+
+            logging.debug("Move - Grid finals: %f %f (%f %f)", fi, fj, ti, tj)
 
             return state.i, state.j, state.w, state.h, fi, fj, state.w, state.h, max(ti, tj)
         except Exception:
@@ -102,10 +104,10 @@ class ResizeOverlay:
             logging.warn("Unexpected: Could not access view %s state", self.view)
 
 
-        self.i_grid = Grid(self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
-        self.j_grid = Grid(self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
-        self.w_grid = Grid(1, self.w + 3, self.w, GRID_OVR, GRID_M)
-        self.h_grid = Grid(1, self.h + 3, self.h, GRID_OVR, GRID_M)
+        self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
+        self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
+        self.w_grid = Grid("w", 1, self.w + 3, self.w, GRID_OVR, GRID_M)
+        self.h_grid = Grid("h", 1, self.h + 3, self.h, GRID_OVR, GRID_M)
 
         self._closed = False
 
@@ -148,6 +150,8 @@ class ResizeOverlay:
             fj, tj = self.j_grid.final(restrict_by_x_current=True)
             fw, tw = self.w_grid.final(restrict_by_x_current=True)
             fh, th = self.h_grid.final(restrict_by_x_current=True)
+
+            logging.debug("Resize - Grid finals: %f %f %f %f (%f %f %f %f)", fi, fj, fw, fh, ti, tj, tw, th)
 
             return state.i, state.j, state.w, state.h, fi, fj, fw, fh, max(ti, tj, tw, th)
         except Exception:

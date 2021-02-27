@@ -38,8 +38,8 @@ class SwipeOverlay(Overlay):
         min_i -= self.size - 1
         min_j -= self.size - 1
 
-        self.i_grid = Grid(min_i, max_i, self.i, GRID_OVR, GRID_M)
-        self.j_grid = Grid(min_j, max_j, self.j, GRID_OVR, GRID_M)
+        self.i_grid = Grid("i", min_i, max_i, self.i, GRID_OVR, GRID_M)
+        self.j_grid = Grid("j", min_j, max_j, self.j, GRID_OVR, GRID_M)
 
         self._set_state()
 

@@ -20,7 +20,7 @@ class SwipeToZoomOverlay(Overlay):
         """
         Grid
         """
-        self.grid = Grid(1, self.initial_size + 1, self.initial_size, GRID_OVR, GRID_M)
+        self.grid = Grid("size" ,1, self.initial_size + 1, self.initial_size, GRID_OVR, GRID_M)
         
 
         self._set_state()
