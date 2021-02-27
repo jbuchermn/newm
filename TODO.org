@@ -11,6 +11,8 @@
 - [ ] MoveResizeOverlay: Block used tiles
 - [ ] layout.move() / layout.resize() functions with keybindings
 
+** README / Install guide and tests on other machines
+
 * Backlog
 ** Configuration [0/5]
 - [ ] Keybindings
@@ -19,15 +21,10 @@
 - [ ] TopBar / BottomBar
 - [ ] Launcher
 
-** Use opacity during rescale to make the change less obvious / ugly
-
-** README / Install guide and tests on other machines
-
 ** NW.js bars (optional)
 ** Follow XDG for starter entries
-
-** Performance issues on resizing Spotify / similar XWayland apps
 
 * Ideas
 ** Titles during "far-away" view
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
+** Use opacity during rescale to make the change less obvious / ugly

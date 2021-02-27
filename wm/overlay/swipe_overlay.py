@@ -2,7 +2,7 @@ from pywm.touchpad import GestureListener, LowpassGesture
 from .overlay import Overlay
 from ..grid import Grid
 
-LOCKED_DIST = 0.05
+LOCKED_DIST = 0.01
 
 GRID_OVR = 0.3
 GRID_M = 1

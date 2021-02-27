@@ -4,7 +4,7 @@ import time
 
 import logging
 
-THROW_RATIO = .2
+THROW_RATIO = .4
 TIME_SCALE = .3
 
 class Grid:
@@ -86,7 +86,9 @@ class Grid:
         # BEGIN DEBUG
         if not silent:
             logging.debug("GRID[%s]: %f, %f, %f, %f, %f",
-                          self.name, time.time(), x, xp, self.last_p, self.last_p_output)
+                          self.name, time.time(), x, xp,
+                          self.last_p if self.last_p is not None else 0,
+                          self.last_p_output if self.last_p_output is not None else 0)
         # END DEBUG
         return xp
 

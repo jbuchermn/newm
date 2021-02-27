@@ -4,7 +4,6 @@ import logging
 
 from pywm import PyWMView, PyWMViewDownstreamState
 
-from .state import ViewState
 from .interpolation import ViewDownstreamInterpolation
 from .overlay import MoveFloatingOverlay
 
@@ -54,9 +53,11 @@ class View(PyWMView):
             """
             X clients are responsible to handle HiDPI themselves
             """
-            self.client_side_scale = self.wm.config['output_scale']
+            self.client_side_scale = self.wm.config['output_scale'] if 'output_scale' in self.wm.config else 1.
+        else:
+            self.client_side_scale = 1.
 
-        if self.app_id in PANELS:
+        if isinstance(self.app_id, str) and self.app_id in PANELS:
             self.panel = PANELS[self.app_id]
 
         else:
@@ -231,8 +232,8 @@ class View(PyWMView):
                 """
                 Override: Keep floating windows scaled correctly
                 """
-                w = self.up_state.size[0] * self.client_side_scale
-                h = self.up_state.size[1] * self.client_side_scale
+                w = self.up_state.size[0] / self.client_side_scale * (state.scale / state.size)
+                h = self.up_state.size[1] / self.client_side_scale * (state.scale / state.size)
 
             else:
                 """
@@ -287,11 +288,6 @@ class View(PyWMView):
 
         self._animation = (ViewDownstreamInterpolation(cur, nxt), time.time(), dt)
         self.damage()
-
-
-
-    def on_focus_change(self):
-        pass
 
     def on_event(self, event):
         if event == "request_move":
