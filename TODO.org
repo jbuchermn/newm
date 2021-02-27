@@ -1,10 +1,10 @@
 #+TITLE: newm agenda
 
 * Current
-** Generalized grid handling [2/3]
+** Generalized grid handling [3/3]
 - [X] General structure for grid with overscroll (bouncy), momentum tracking / ...
 - [X] Matplotlib logging
-- [ ] Improve prediction of final value and animation duration
+- [X] Improve prediction of final value and animation duration
 
 ** Generalized used tiles handling [0/3]
 - [ ] Stacking functionality, or

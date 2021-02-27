@@ -4,6 +4,7 @@ import time
 
 import logging
 
+THROW_RATIO = .2
 TIME_SCALE = .3
 
 class Grid:
@@ -16,19 +17,22 @@ class Grid:
         self.d_ovr = d_ovr
         self.m_snap = m_snap
 
-        self.last_x = None
         self.last_t = None
+
+        self.last_x = None
         self.last_p = None
 
+        self.last_x_output = None
+        self.last_p_output = None
+
     def at(self, x, silent=False):
+        t = time.time()
         if not silent:
-            t = time.time()
             if self.last_x is not None and self.last_t is not None:
                 dx = x - self.last_x
                 dt = t - self.last_t
                 self.last_p = dx / dt
             self.last_x = x
-            self.last_t = t
 
         xp = x
         if x < self.x0:
@@ -71,46 +75,56 @@ class Grid:
                 else:
                     xp = self.x1 + self.d_ovr/(1. + ((1. - y)/y)**self.m_snap)
 
+        if not silent:
+            if self.last_x_output is not None and self.last_t is not None:
+                dx = xp - self.last_x_output
+                dt = t - self.last_t
+                self.last_p_output = dx / dt
+            self.last_x_output = xp
+            self.last_t = t
+
         # BEGIN DEBUG
         if not silent:
-            logging.debug("GRID[%s]: %f, %f, %f, %f",
-                          self.name, time.time(), x, xp, self.last_p)
+            logging.debug("GRID[%s]: %f, %f, %f, %f, %f",
+                          self.name, time.time(), x, xp, self.last_p, self.last_p_output)
         # END DEBUG
         return xp
 
     def final(self, restrict_by_xi=0, restrict_by_x_current=False):
-        if self.last_x is None:
+        if self.last_x_output is None:
             return self.at(self.xi), 0.
 
-        if self.last_p is None or self.last_t is None or (time.time() - self.last_t > TIME_SCALE):
-            xf = self.last_x
-            self.last_p = 0
+        p = 0
+        if self.last_p is None or self.last_p_output is None or self.last_t is None or (time.time() - self.last_t > TIME_SCALE):
+            xf = self.last_x_output
         else:
-            xf = self.last_x + self.last_p * TIME_SCALE
+            p = self.last_p if abs(self.last_p) > abs(self.last_p_output) else self.last_p_output
+            xf = self.last_x_output + THROW_RATIO * p * TIME_SCALE
 
         xf = round(xf)
 
         if restrict_by_x_current:
-            xf = min(math.ceil(self.last_x), max(math.floor(self.last_x), xf))
+            xf = min(math.ceil(self.last_x_output), max(math.floor(self.last_x_output), xf))
         elif restrict_by_xi > 0:
             xf = min(self.xi + restrict_by_xi, max(self.xi - restrict_by_xi, xf))
 
         xf = min(self.x1, max(self.x0, round(xf)))
-        dx = abs(self.last_x - xf)
+        dx = abs(self.last_x_output - xf)
 
-        dt = dx / abs(self.last_p) if self.last_p is not None and abs(self.last_p) > 0 else TIME_SCALE
+        dt = dx / abs(p) if abs(p) > 0 else TIME_SCALE
         if dt > TIME_SCALE:
             dt = TIME_SCALE
 
         # BEGIN DEBUG
-        x0 = self.at(self.last_x, silent=True)
+        x0 = self.at(self.last_x_output, silent=True)
         t0 = time.time()
-        for i in range(100):
-            logging.debug("GRID[%s]: %f, %f, %f, %f",
+        for i in range(2):
+            logging.debug("GRID[%s]: %f, %f, %f, %f, %f",
                           self.name,
-                          t0 + i/100. * dt,
+                          t0 + i * dt,
                           0,
-                          x0 + i/100. * (xf-x0),
+                          x0 + i * (xf-x0),
+                          0,
                           dx/dt if xf>x0 else -dx/dt)
         # END DEBUG
 
@@ -140,9 +154,10 @@ if __name__ == '__main__':
 
     plt.figure()
 
-    plt.plot([x[0] for x in data], [x[1] for x in data], label="Input translation")
-    plt.plot([x[0] for x in data], [x[2] for x in data], label="Output translation")
-    plt.plot([x[0] for x in data], [x[3] for x in data], label="Input momentum")
+    plt.plot([x[0] for x in data], [x[1] for x in data], 'bo-', label="Input translation")
+    plt.plot([x[0] for x in data], [x[2] for x in data], 'go-', label="Output translation")
+    plt.plot([x[0] for x in data], [x[3] for x in data], 'bo--', label="Input momentum")
+    plt.plot([x[0] for x in data], [x[4] for x in data], 'go--', label="Output momentum")
 
     plt.legend()
     plt.show()

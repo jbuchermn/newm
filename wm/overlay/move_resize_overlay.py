@@ -14,7 +14,7 @@ from .overlay import Overlay
 from ..grid import Grid
 
 GRID_OVR = 0.2
-GRID_M = 5
+GRID_M = 2
 
 class MoveOverlay:
     def __init__(self, layout, view):

@@ -48,8 +48,8 @@ class SwipeOverlay(Overlay):
         super()._exit_finished()
 
     def _exit_transition(self):
-        i, ti = self.i_grid.final(restrict_by_xi=1)
-        j, tj = self.j_grid.final(restrict_by_xi=1)
+        i, ti = self.i_grid.final(restrict_by_xi=self.size)
+        j, tj = self.j_grid.final(restrict_by_xi=self.size)
         t = None
 
         if self.locked_x:
