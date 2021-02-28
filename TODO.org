@@ -1,12 +1,11 @@
 #+TITLE: newm agenda
 
 * Current
-** Generalized grid handling [3/3]
-- [X] General structure for grid with overscroll (bouncy), momentum tracking / ...
-- [X] Matplotlib logging
-- [X] Improve prediction of final value and animation duration
+** Move / Resize
+- [X] Support floating in MoveResizeOverlay (possibly drop moving via click on bar)
 
-** Generalized used tiles handling [0/3]
+
+** Generalized used tiles handling
 - [ ] Stacking functionality, or
 - [ ] MoveResizeOverlay: Block used tiles
 - [ ] layout.move() / layout.resize() functions with keybindings
@@ -14,9 +13,10 @@
 ** README / Install guide and tests on other machines
 
 * Backlog
-** Configuration [0/5]
+** Configuration
 - [ ] Keybindings
 - [ ] File structure (Install to .local/lib, config script in .config/newm)
+- [ ] Fix setup.py not bothering with dependencies
 - [ ] SysBackend
 - [ ] TopBar / BottomBar
 - [ ] Launcher

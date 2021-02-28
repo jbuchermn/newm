@@ -161,13 +161,13 @@ class ResizeOverlay:
 
 
 class MoveResizeOverlay(Overlay, Thread):
-    def __init__(self, layout):
+    def __init__(self, layout, view):
         Overlay.__init__(self, layout)
         Thread.__init__(self)
 
         self.layout.update_cursor(False)
 
-        self.view = self.layout.find_focused_view()
+        self.view = view
 
         self.overlay = None
 

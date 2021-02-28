@@ -5,7 +5,7 @@ import logging
 from pywm import PyWMView, PyWMViewDownstreamState
 
 from .interpolation import ViewDownstreamInterpolation
-from .overlay import MoveFloatingOverlay
+from .overlay import MoveResizeFloatingOverlay
 
 PANELS = {
     "newm-panel-notifiers": "notifiers",
@@ -293,5 +293,14 @@ class View(PyWMView):
         if event == "request_move":
             if self.up_state.is_floating:
                 self.wm.enter_overlay(
-                    MoveFloatingOverlay(self.wm, self))
+                    MoveResizeFloatingOverlay(self.wm, self))
 
+    def find_min_w_h(self):
+        """
+        Let overlays know how small we are able to get in i, j, w, h coords
+        """
+        min_w, _, min_h, _ = self.up_state.size_constraints
+        min_w *= self.wm.state.scale / self.wm.width / self.client_side_scale
+        min_h *= self.wm.state.scale / self.wm.height / self.client_side_scale
+
+        return min_w, min_h

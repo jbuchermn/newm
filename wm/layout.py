@@ -35,6 +35,7 @@ from .widget import (
 from .overlay import (
     Overlay,
     MoveResizeOverlay,
+    MoveResizeFloatingOverlay,
     SwipeOverlay,
     SwipeToZoomOverlay,
     LauncherOverlay,
@@ -405,7 +406,7 @@ class Layout(PyWM):
         if self.modifiers & self.mod > 0:
             """
             This is a special case, if a SingleFingerMoveGesture has started, then
-            Mod is pressed the MoveResizeOverlay is not triggered - we reallow a
+            Mod is pressed the MoveResize(Floating)Overlay is not triggered - we reallow a
             gesture
 
             If a gesture has been captured reallow_gesture is a noop
@@ -450,10 +451,19 @@ class Layout(PyWM):
                     (isinstance(gesture, TwoFingerSwipePinchGesture) or
                      isinstance(gesture, SingleFingerMoveGesture)):
                 logging.debug("...MoveResize")
-                ovr = MoveResizeOverlay(self)
-                ovr.on_gesture(gesture)
-                self.enter_overlay(ovr)
-                return True
+                view = self.find_focused_view()
+
+                if view is not None and view.is_dialog():
+                    ovr = MoveResizeFloatingOverlay(self, view)
+                    ovr.on_gesture(gesture)
+                    self.enter_overlay(ovr)
+                    return True
+
+                elif view is not None and not view.is_window():
+                    ovr = MoveResizeOverlay(self, view)
+                    ovr.on_gesture(gesture)
+                    self.enter_overlay(ovr)
+                    return True
 
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 3:
