@@ -459,7 +459,7 @@ class Layout(PyWM):
                     self.enter_overlay(ovr)
                     return True
 
-                elif view is not None and not view.is_window():
+                elif view is not None and view.is_window():
                     ovr = MoveResizeOverlay(self, view)
                     ovr.on_gesture(gesture)
                     self.enter_overlay(ovr)

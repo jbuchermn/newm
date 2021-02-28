@@ -1,10 +1,6 @@
 #+TITLE: newm agenda
 
 * Current
-** Move / Resize
-- [X] Support floating in MoveResizeOverlay (possibly drop moving via click on bar)
-
-
 ** Generalized used tiles handling
 - [ ] Stacking functionality, or
 - [ ] MoveResizeOverlay: Block used tiles
