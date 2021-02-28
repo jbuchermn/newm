@@ -15,6 +15,8 @@ class MoveResizeFloatingOverlay(Overlay):
     def __init__(self, layout, view):
         super().__init__(layout)
 
+        self.layout.update_cursor(False)
+
         self.view = view
         self.i = 0
         self.j = 0
@@ -120,3 +122,6 @@ class MoveResizeFloatingOverlay(Overlay):
             if self._gesture_mode == False and self._motion_mode == False:
                 logging.debug("MoveResizeFlaotingOverlay: Exiting on mod release")
                 self.layout.exit_overlay()
+
+    def pre_destroy(self):
+        self.layout.update_cursor(True)

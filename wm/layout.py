@@ -222,6 +222,16 @@ class Layout(PyWM):
             ("M-k", lambda: self.move(0, -1)),
             ("M-l", lambda: self.move(1, 0)),
 
+            ("M-H", lambda: self.move_focused_view(-1, 0)),
+            ("M-J", lambda: self.move_focused_view(0, 1)),
+            ("M-K", lambda: self.move_focused_view(0, -1)),
+            ("M-L", lambda: self.move_focused_view(1, 0)),
+
+            ("M-C-h", lambda: self.resize_focused_view(-1, 0)),
+            ("M-C-j", lambda: self.resize_focused_view(0, 1)),
+            ("M-C-k", lambda: self.resize_focused_view(0, -1)),
+            ("M-C-l", lambda: self.resize_focused_view(1, 0)),
+
             ("M-Return", lambda: os.system("alacritty &")),
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
             ("M-q", lambda: self.close_view()),  # noqa E501
@@ -644,5 +654,40 @@ class Layout(PyWM):
             lambda state: (None, state.with_padding_toggled(
                 reset=bu,
                 focus_box=fb
-            )
-), .3)
+            )),
+            .3)
+
+    def move_focused_view(self, di, dj):
+        def reducer(state):
+            view = self.find_focused_view()
+            if view is not None:
+                try:
+                    s = state.get_view_state(view)
+                    return (None, state.replacing_view_state(view, i=s.i+di, j=s.j+dj).focusing_view(view))
+                except:
+                    return (None, state)
+            else:
+                return (None, state)
+        self.animate_to(reducer, .3)
+
+    def resize_focused_view(self, di, dj):
+        def reducer(state):
+            view = self.find_focused_view()
+            if view is not None:
+                try:
+                    s = state.get_view_state(view)
+                    i, j, w, h = s.i, s.j, s.w, s.h
+                    w += di
+                    h += dj
+                    if w == 0:
+                        w = 2
+                        i -= 1
+                    if h == 0:
+                        h = 2
+                        j -= 1
+                    return (None, state.replacing_view_state(view, i=i, j=j, w=w, h=h).focusing_view(view))
+                except:
+                    return (None, state)
+            else:
+                return (None, state)
+        self.animate_to(reducer, .3)

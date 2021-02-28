@@ -4,7 +4,7 @@ import time
 
 import logging
 
-THROW_RATIO = .4
+THROW_RATIO = .6
 TIME_SCALE = .3
 
 class Grid:

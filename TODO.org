@@ -2,11 +2,10 @@
 
 * Current
 ** Generalized used tiles handling
-- [ ] Stacking functionality, or
-- [ ] MoveResizeOverlay: Block used tiles
-- [ ] layout.move() / layout.resize() functions with keybindings
+- [ ] Stacking functionality
+- [X] layout.move() / layout.resize() functions with keybindings
 
-** README / Install guide and tests on other machines
+** README / Videos / Install guide and tests on other machines
 
 * Backlog
 ** Configuration
