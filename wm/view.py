@@ -49,13 +49,22 @@ class View(PyWMView):
             self.up_state.title, self.app_id, self.role,
             self.is_xwayland, self.up_state.is_floating)
 
-        if self.is_xwayland:
-            """
-            X clients are responsible to handle HiDPI themselves
-            """
-            self.client_side_scale = self.wm.config['output_scale'] if 'output_scale' in self.wm.config else 1.
-        else:
-            self.client_side_scale = 1.
+        try:
+            if self.wm.config['xwayland_handle_scale_clientside']:
+                if self.is_xwayland:
+                    """
+                    xwayland_handle_scale_clientside means clients should know and handle HiDPI-scale (e.g. --force-device-scale-factor=2)
+                    and are thereforee set to scale 1 serverside
+                    - this cannot work with multi-dpi setups and therefore is only a hack
+                    - it does not work in conjunction with xdg_output_manager, since the output_manager exposes logical pixels
+                        and XWayland does not handle that properly (result: mouse movements beyond screen_dimensions / output_scale will get truncated)
+                    - Maybe XWayland will get smarter in the future: https://github.com/swaywm/wlroots/pull/2064 and
+                        https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/432
+                    - Then again, the future should by without X11/XWayland
+                    """
+                    self.client_side_scale = self.wm.config['output_scale'] if 'output_scale' in self.wm.config else 1.
+        except:
+            pass
 
         if isinstance(self.app_id, str) and self.app_id in PANELS:
             self.panel = PANELS[self.app_id]

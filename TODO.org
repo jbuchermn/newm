@@ -1,17 +1,18 @@
 #+TITLE: newm agenda
 
 * Current
-** Generalized used tiles handling
+** General
 - [ ] Stacking functionality
 - [X] layout.move() / layout.resize() functions with keybindings
+- [ ] MoveResizeOverlay: Fix jumps if we start in an out-of-bounds state
+- [ ] MoveResizeOVerlay: Focus view on close to reduce cases where we end up in out-of-bounds state
 
 ** README / Videos / Install guide and tests on other machines
 
 * Backlog
 ** Configuration
 - [ ] Keybindings
-- [ ] File structure (Install to .local/lib, config script in .config/newm)
-- [ ] Fix setup.py not bothering with dependencies
+- [ ] File structure (Install to .local/lib, config script in .config/newm) incl. installation
 - [ ] SysBackend
 - [ ] TopBar / BottomBar
 - [ ] Launcher
