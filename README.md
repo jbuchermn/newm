@@ -1,4 +1,14 @@
 # NeWM - PyWM reference implementation
 
-Not yet stable - documentation to come
+## Installing and running
+
+```
+sudo pip3 install -v git+https://github.com/jbuchermn/pywm
+sudo pip3 install -v git+https://github.com/jbuchermn/newm
+
+# TODO: Proper configuration
+sudo vim /usr/bin/start-newm
+
+start-newm
+```
 
