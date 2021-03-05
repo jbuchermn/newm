@@ -549,7 +549,8 @@ class Layout(PyWM):
                 return None, state.copy(lock_perc=0.)
             self.animate_to(
                 reducer,
-                .3)
+                .3,
+                lambda: self.update_cursor())
 
             self._locked = False
     # END DEBUG

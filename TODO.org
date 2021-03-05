@@ -11,7 +11,7 @@
 - [ ] MoveResizeOverlay: Fix jumps if we start in an out-of-bounds state
 - [ ] MoveResizeOVerlay: Focus view on close to reduce cases where we end up in out-of-bounds state
 - [ ] Use swayidle
-- [ ] Use opacity during rescale to make the change less obvious / ugly
+- [X] Use opacity during rescale to make the change less obvious / ugly
 
 ** README / Videos / Install guide and tests on other machines
 

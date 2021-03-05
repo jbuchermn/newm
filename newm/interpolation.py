@@ -24,6 +24,7 @@ class ViewDownstreamInterpolation:
         )
 
         res.size=self.size[1] if at > 0.5 else self.size[0]
+        # res.opacity=1 if self.size[1] == self.size[0] else .5 + abs(.5 - at)
         # res.size=self.size[1] if sum(self.size[1]) > sum(self.size[0]) else self.size[0]
         return res
 
