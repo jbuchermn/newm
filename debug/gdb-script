@@ -1,2 +1,2 @@
 file python
-run main.py
+run -c "from newm import run; run()"
