@@ -236,6 +236,8 @@ class Layout(PyWM):
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
             ("M-q", lambda: self.close_view()),  # noqa E501
 
+            ("M-p", lambda: self.toggle_lock()),
+
             ("M-f", lambda: self.toggle_padding()),
 
             ("M-C", lambda: self.terminate()),
@@ -525,6 +527,9 @@ class Layout(PyWM):
             self.overlay.destroy()
         finally:
             self.overlay = None
+
+    def toggle_lock(self):
+        self._locked = not self._locked
     # END DEBUG
 
     def exit_overlay(self):
