@@ -1,6 +1,11 @@
 #+TITLE: newm agenda
 
-* Current
+* Current (aiming for v0.1.0)
+
+** Session management / Lock screen
+- [ ] Fork panels from python
+- [ ] Login panel / Lock screen via pygreetd_ipc
+
 ** General
 - [ ] Stacking functionality
 - [X] layout.move() / layout.resize() functions with keybindings
@@ -11,15 +16,15 @@
 
 ** README / Videos / Install guide and tests on other machines
 
-* Backlog
 ** Configuration
+- [ ] Read config file from .config/newm with info now in run.py and layout.py
 - [ ] Keybindings
-- [ ] File structure (Install to .local/lib, config script in .config/newm) incl. installation
 - [ ] SysBackend
 - [ ] TopBar / BottomBar
 - [ ] Launcher
 
-* Ideas
+* Backlog / Ideas
+
 ** Titles during "far-away" view
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 ** NW.js bars (optional)

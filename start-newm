@@ -4,7 +4,4 @@ mkdir -p $HOME/.cache
 
 cp .cache/newm_log_bu1 .cache/newm_log_bu2
 cp .cache/newm_log .cache/newm_log_bu1
-cp .cache/newm_panel_log_bu1 .cache/newm_panel_log_bu2
-cp .cache/newm_panel_log .cache/newm_panel_log_bu1
-
 exec python -u -c "from newm import run; run()" > $HOME/.cache/newm_log 2>&1
