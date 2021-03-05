@@ -296,7 +296,15 @@ class Layout(PyWM):
         # Initially display cursor
         self.update_cursor()
 
-    def terminate(self):
+        # Fade in
+        def fade_in():
+            time.sleep(.5)
+            def reducer(state):
+                return None, state.copy(background_opacity=1.)
+            self.animate_to(reducer, .5)
+        Thread(target=fade_in).start()
+
+    def _terminate(self):
         super().terminate()
         if self.top_bar is not None:
             self.top_bar.stop()
@@ -308,6 +316,12 @@ class Layout(PyWM):
             self.sys_backend.stop()
         if self.thread is not None:
             self.thread.stop()
+
+    def terminate(self):
+        def reducer(state):
+            return None, state.copy(background_opacity=0.)
+        self.animate_to(reducer, .5, self._terminate)
+
 
     def _execute_view_main(self, view):
         self.animate_to(view.main, .3, None)

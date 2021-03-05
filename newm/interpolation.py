@@ -7,6 +7,7 @@ class ViewDownstreamInterpolation:
         self.corner_radius = (state0.corner_radius, state1.corner_radius)
         self.accepts_input = state1.accepts_input
         self.size = (state0.size, state1.size)
+        self.opacity = (state0.opacity, state1.opacity)
 
     def get(self, at):
         at = min(1, max(0, at))
@@ -23,6 +24,7 @@ class ViewDownstreamInterpolation:
             accepts_input=self.accepts_input
         )
 
+        res.opacity = self.opacity[0] + at * (self.opacity[1] - self.opacity[0])
         res.size=self.size[1] if at > 0.5 else self.size[0]
         # res.opacity=1 if self.size[1] == self.size[0] else .5 + abs(.5 - at)
         # res.size=self.size[1] if sum(self.size[1]) > sum(self.size[0]) else self.size[0]
@@ -32,6 +34,7 @@ class WidgetDownstreamInterpolation:
     def __init__(self, state0, state1):
         self.z_index = (state0.z_index, state1.z_index)
         self.box = (state0.box, state1.box)
+        self.opacity = (state0.opacity, state1.opacity)
 
     def get(self, at):
         at = min(1, max(0, at))
@@ -45,4 +48,5 @@ class WidgetDownstreamInterpolation:
             z_index=self.z_index[1] if at > 0.5 else self.z_index[0],
             box=box,
         )
+        res.opacity = self.opacity[0] + at * (self.opacity[1] - self.opacity[0])
         return res

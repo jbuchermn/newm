@@ -46,6 +46,7 @@ class LayoutState:
         self.padding = kwargs['padding'] if 'padding' in kwargs else DEFAULT_PADDING
 
         self.background_factor = kwargs['background_factor'] if 'background_factor' in kwargs else 3
+        self.background_opacity = kwargs['background_opacity'] if 'background_opacity' in kwargs else 0.
 
         self.top_bar_dy = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
         self.bottom_bar_dy = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0

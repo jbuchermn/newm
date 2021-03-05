@@ -19,6 +19,7 @@ class Background(PyWMBackgroundWidget):
     def reducer(self, wm_state):
         result = PyWMWidgetDownstreamState()
         result.z_index = -100
+        result.opacity = wm_state.background_opacity
 
         min_i, min_j, max_i, max_j = wm_state.get_extent()
 

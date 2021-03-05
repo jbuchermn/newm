@@ -295,6 +295,7 @@ class View(PyWMView):
 
             result.box = (x, y, w, h)
 
+        result.opacity = state.background_opacity
         return result
 
     def process(self, up_state):

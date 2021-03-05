@@ -4,7 +4,7 @@
 
 ** Session management / Lock screen
 - [ ] Login panel / Lock screen via pygreetd_ipc
-- [ ] Fade in / out
+- [X] Fade in / out
 
 ** General
 - [ ] Stacking functionality
