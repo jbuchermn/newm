@@ -1,34 +1,10 @@
-#!/bin/env python
-import sys
-import logging
+#!/bin/sh
+cd $HOME
+mkdir -p $HOME/.cache
 
-from newm import Layout
+cp .cache/newm_log_bu1 .cache/newm_log_bu2
+cp .cache/newm_log .cache/newm_log_bu1
+cp .cache/newm_panel_log_bu1 .cache/newm_panel_log_bu2
+cp .cache/newm_panel_log .cache/newm_panel_log_bu1
 
-from pywm import (
-    PYWM_MOD_LOGO,
-    # PYWM_MOD_ALT
-)
-
-logging.basicConfig(format='[%(levelname)s] %(filename)s:%(lineno)s %(asctime)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
-
-wm = Layout(
-    PYWM_MOD_LOGO,
-    xkb_model="macintosh",
-    xkb_layout="de,de",
-    xkb_options="caps:escape",
-    output_scale=2.0,
-
-    # See comments in view.py
-    xwayland_handle_scale_clientside=True,
-    enable_output_manager=False,
-
-    touchpad_device_name="bcm5974",
-    wallpaper="~/wallpaper.jpg",
-    encourage_csd=False)
-
-try:
-    wm.run()
-except Exception:
-    logging.exception("Unexpected")
-finally:
-    wm.terminate()
+exec python -u -c "from newm import run; run()" > $HOME/.cache/newm_log 2>&1
