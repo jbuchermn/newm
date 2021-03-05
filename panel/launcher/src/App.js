@@ -22,10 +22,7 @@ const split = (arr) => {
 export default class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      opacity: 0.0,
-      // opacity: 1.0
-    };
+    this.state = {};
   }
   componentWillMount() {
     client.onopen = () => {
@@ -34,18 +31,13 @@ export default class App extends Component {
     };
     client.onmessage = (message) => {
       let msg = JSON.parse(message.data);
-      if (msg.kind == "activate_launcher") {
-        this.setState({
-          opacity: Math.min(1.0, msg.value),
-        });
-      }
     };
   }
 
   render() {
     return (
       <div className="App">
-        <div className="Launcher" style={{ opacity: this.state.opacity }}>
+        <div className="Launcher">
           {split(entries).map((row) => (
             <div className="Row">
               {row.map((e) => (

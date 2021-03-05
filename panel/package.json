@@ -6,12 +6,14 @@
   "scripts": {
     "build-notifiers": "cd notifiers && npm run build",
     "build-launcher": "cd launcher && npm run build",
+    "build-lock": "cd lock && npm run build",
 
     "start-notifiers": "nw notifiers/build --enable-features=UseOzonePlatform --ozone-platform=wayland",
     "start-launcher": "nw launcher/build --enable-features=UseOzonePlatform --ozone-platform=wayland",
+    "start-lock": "nw lock/build --enable-features=UseOzonePlatform --ozone-platform=wayland",
 
-    "build": "npm run build-notifiers && npm run build-launcher",
-    "start": "npm run start-notifiers & npm run start-launcher"
+    "build": "npm run build-notifiers && npm run build-launcher && npm run build-lock",
+    "start": "npm run start-notifiers & npm run start-launcher && npm run start-lock"
   },
   "keywords": [],
   "author": "",

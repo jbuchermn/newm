@@ -1,6 +1,7 @@
 import time
 import math
 import logging
+import subprocess
 import os
 from itertools import product
 from threading import Thread
@@ -286,6 +287,12 @@ class Layout(PyWM):
         self.panel_endpoint = PanelEndpoint(self)
         self.thread = LayoutThread(self)
 
+        if 'panel_dir' in self.config:
+            logging.debug("Spawning panel...")
+            subprocess.Popen(["npm", "run", "start-notifiers"], cwd=self.config['panel_dir'])
+            subprocess.Popen(["npm", "run", "start-launcher"], cwd=self.config['panel_dir'])
+            subprocess.Popen(["npm", "run", "start-lock"], cwd=self.config['panel_dir'])
+
         # Initially display cursor
         self.update_cursor()
 
@@ -529,7 +536,22 @@ class Layout(PyWM):
             self.overlay = None
 
     def toggle_lock(self):
-        self._locked = not self._locked
+        if not self._locked:
+            def reducer(state):
+                return None, state.copy(lock_perc=1.)
+            self.animate_to(
+                reducer,
+                .3)
+
+            self._locked = True
+        else:
+            def reducer(state):
+                return None, state.copy(lock_perc=0.)
+            self.animate_to(
+                reducer,
+                .3)
+
+            self._locked = False
     # END DEBUG
 
     def exit_overlay(self):

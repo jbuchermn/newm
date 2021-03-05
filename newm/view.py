@@ -9,7 +9,8 @@ from .overlay import MoveResizeFloatingOverlay
 
 PANELS = {
     "newm-panel-notifiers": "notifiers",
-    "newm-panel-launcher": "launcher"
+    "newm-panel-launcher": "launcher",
+    "newm-panel-lock": "lock"
 }
 
 CORNER_RADIUS = 12.5
@@ -68,6 +69,7 @@ class View(PyWMView):
 
         if isinstance(self.app_id, str) and self.app_id in PANELS:
             self.panel = PANELS[self.app_id]
+            logging.debug("Registered panel %s: %s", self.app_id, self.panel)
 
         else:
             second_state = None
@@ -174,6 +176,23 @@ class View(PyWMView):
                 self.wm.height * 0.1 + (1. - state.launcher_perc) * self.wm.height,
                 self.wm.width * 0.8,
                 self.wm.height * 0.8)
+
+
+        elif self.panel == "lock":
+            result.z_index = 100
+            result.accepts_input = state.lock_perc > 0.0
+            result.lock_enabled = True
+
+            result.size = (
+                int(self.wm.width * self.client_side_scale),
+                int(self.wm.height * self.client_side_scale))
+
+            result.box = (
+                0,
+                (1. - state.lock_perc) * self.wm.height,
+                self.wm.width,
+                self.wm.height)
+
 
         else:
             result.accepts_input = True

@@ -3,12 +3,11 @@
 * Current (aiming for v0.1.0)
 
 ** Session management / Lock screen
-- [ ] Fork panels from python
 - [ ] Login panel / Lock screen via pygreetd_ipc
+- [ ] Fade in / out
 
 ** General
 - [ ] Stacking functionality
-- [X] layout.move() / layout.resize() functions with keybindings
 - [ ] MoveResizeOverlay: Fix jumps if we start in an out-of-bounds state
 - [ ] MoveResizeOVerlay: Focus view on close to reduce cases where we end up in out-of-bounds state
 - [ ] Use swayidle

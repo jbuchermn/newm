@@ -51,6 +51,7 @@ class LayoutState:
         self.bottom_bar_dy = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0
 
         self.launcher_perc = kwargs['launcher_perc'] if 'launcher_perc' in kwargs else 0
+        self.lock_perc = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
 
         self._view_states = {}
 

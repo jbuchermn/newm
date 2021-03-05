@@ -1,0 +1,63 @@
+.App {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+
+  background-color: #00000000;
+
+  overflow: hidden;
+
+  font-family: "Source Code Pro for Powerline";
+  font-weight: bold;
+}
+
+.Inner {
+  position: absolute;
+  top: 10vw;
+  left: 15vw;
+  right: 15vw;
+  bottom: 10vw;
+
+  border-radius: 5vw;
+
+  background-color: #282c34;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  padding: 5vw 5vw;
+}
+
+.Row {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: start;
+}
+
+.title {
+  width: 10vw;
+  color: white;
+  text-align: right;
+  font-size: 2vw;
+  margin: 1vw;
+}
+
+.textfield {
+  width: 40vw;
+  color: white;
+  text-align: center;
+  font-size: 2vw;
+  background-color: #282c3eaa;
+  margin: 1vw;
+  text-decoration: none;
+
+  font-family: "Source Code Pro for Powerline";
+  font-weight: bold;
+}
+
+

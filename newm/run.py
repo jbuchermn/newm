@@ -23,8 +23,10 @@ def run():
         enable_output_manager=False,
 
         touchpad_device_name="bcm5974",
-        wallpaper="~/wallpaper.jpg",
-        encourage_csd=False)
+        wallpaper="/home/jonas/wallpaper.jpg",
+        encourage_csd=False,
+        panel_dir="/home/jonas/newm/panel"
+    )
 
     try:
         wm.run()

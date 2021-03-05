@@ -35,23 +35,13 @@ class LauncherOverlay(Overlay):
 
     def _on_update(self, values):
         if self._is_opened == False:
-            perc = values['delta2_s'] * 500 if values is not None else 1
-            self.layout.panel_endpoint.broadcast({
-                'kind': 'activate_launcher',
-                'value': perc
-            })
-
+            perc = values['delta2_s'] * 300 if values is not None else 1
             self.layout.state.launcher_perc = max(min(perc, 1.0), 0.0)
 
             if values is None:
                 self._is_opened = True
         else:
-            perc = 1. - (values['delta2_s'] * 500 if values is not None else 1)
-            self.layout.panel_endpoint.broadcast({
-                'kind': 'activate_launcher',
-                'value': perc
-            })
-
+            perc = 1. - (values['delta2_s'] * 300 if values is not None else 1)
             self.layout.state.launcher_perc = max(min(perc, 1.0), 0.0)
 
             if values is None:
