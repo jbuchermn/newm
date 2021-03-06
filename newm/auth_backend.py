@@ -1,6 +1,9 @@
 import os
 import logging
 import pam
+import sys
+import socket
+import json
 
 class _PAMBackend:
     def __init__(self, auth):
@@ -19,22 +22,56 @@ class _PAMBackend:
             self.init_auth(self._user)
 
     def start_session(self):
-        pass
+        logging.warn("Unsupported operation")
 
 class _GreetdBackend:
     def __init__(self, auth):
         self.auth = auth
         self._user = None
+        self._socket = None
+
+    def _open_socket(self):
+        if "GREETD_SOCK" not in os.environ:
+            logging.error("Not in a greetd session")
+            return
+
+        greetd_sock = os.environ["GREETD_SOCK"]
+        self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self._socket.connect(greetd_sock)
+
+        logging.debug("Connected to greetd")
+
+    def _send(self, msg):
+        if self._socket is None:
+            self._open_socket()
+        msg_str = json.dumps(msg).encode('utf-8')
+        msg_str = len(msg_str).to_bytes(4, sys.byteorder) + msg_str
+        self._socket.send(msg_str)
+
+        resp_len = int.from_bytes(self._socket.recv(4), sys.byteorder)
+        resp = self._socket.recv(resp_len).decode("utf-8")
+        return json.loads(resp)
 
     def init_auth(self, user):
         self._user = user
-        self.auth._request_cred("Password?", user)
+
+        result = self._send({"type":"cancel_session"})
+        result = self._send({"type":"create_session", "username": user})
+
+        if result["type"] == "auth_message":
+            self.auth._request_cred(result["auth_message"], self._user)
+
+
 
     def enter_cred(self, cred):
-        self.auth._auth_result(True)
+        result = self._send({"type":"post_auth_message_response", "response": cred})
+        if result["type"] == "auth_message":
+            self.auth._request_cred(result["auth_message"], self._user)
+        else:
+            self.auth._auth_result(result["type"] == "success")
 
     def start_session(self):
-        pass
+        self._send({"type": "start_session", "cmd": ["start-newm"]})
 
 
 class AuthBackend:
@@ -84,7 +121,7 @@ class AuthBackend:
 
     def lock(self):
         current_user = [u for u in self._users if u[1] == os.getuid()]
-        if len(current_user) > 0:
+        if len(current_user) > 0 and not current_user[0][3]:
             self._backend.init_auth(current_user[0][0])
 
     """

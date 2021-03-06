@@ -20,7 +20,7 @@ export default class App extends Component {
       initial: true,
       checking: false,
       state: "choose_user",
-      users: [],
+      users: ["jonas", "root"],
       user: null,
       credMessage: "",
       cred: "",
@@ -51,7 +51,9 @@ export default class App extends Component {
           credMessage: msg.message,
           cred: ""
         });
-        this.inputFocus.setFocus();
+
+        /* Must be larger than animation duration */
+        setTimeout(() => this.inputFocus.setFocus(), 1000);
       }
     };
   }
@@ -80,7 +82,8 @@ export default class App extends Component {
   render() {
     return (
       <div className="App">
-        <div className={"Inner "+(this.state.state==="choose_user"?"":"left")+" "+(this.state.initial?"initial":"")}>
+        <div className={"Inner "+(this.state.state==="choose_user"?"":"left")+" "+
+            (this.state.initial?"initial":"")}>
           <div className="Title">Welcome!</div>
           <div className="Users">
             {this.state.users.map(u => (
@@ -92,7 +95,8 @@ export default class App extends Component {
 
         </div>
 
-        <div className={"Inner "+(this.state.state==="enter_cred"?"":"right")+" "+(this.state.initial?"initial":"")}>
+        <div className={"Inner "+(this.state.state==="enter_cred"?"":"right")+
+                " "+(this.state.initial?"initial":"")}>
           <div className="Title">{this.state.credMessage}</div>
           <input type="password" name="password" ref={this.inputFocus.ref} disabled={this.state.checking} className={"Textfield "+(this.state.checking?"checking":"")}
                  value={this.state.cred}

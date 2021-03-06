@@ -1,6 +1,6 @@
 {
   "name": "newm-panel",
-  "version": "1.0.0",
+  "version": "0.0.9",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,12 +8,9 @@
     "build-launcher": "cd launcher && npm run build",
     "build-lock": "cd lock && npm run build",
 
-    "start-notifiers": "nw notifiers/build --enable-features=UseOzonePlatform --ozone-platform=wayland",
-    "start-launcher": "nw launcher/build --enable-features=UseOzonePlatform --ozone-platform=wayland",
-    "start-lock": "nw lock/build --enable-features=UseOzonePlatform --ozone-platform=wayland",
-
-    "build": "npm run build-notifiers && npm run build-launcher && npm run build-lock",
-    "start": "npm run start-notifiers & npm run start-launcher && npm run start-lock"
+    "start-notifiers": "./start.sh notifiers",
+    "start-launcher": "./start.sh launcher",
+    "start-lock": "./start.sh lock"
   },
   "keywords": [],
   "author": "",

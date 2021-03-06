@@ -17,15 +17,17 @@ def run():
         xkb_layout="de,de",
         xkb_options="caps:escape",
         output_scale=2.0,
+        encourage_csd=False,
 
         # See comments in view.py
         xwayland_handle_scale_clientside=True,
         enable_output_manager=False,
 
         touchpad_device_name="bcm5974",
-        wallpaper="/home/jonas/wallpaper.jpg",
-        encourage_csd=False,
-        panel_dir="/home/jonas/newm/panel"
+
+        # TODO: Find these
+        wallpaper="/etc/wallpaper.jpg",
+        panel_dir="/usr/lib/node_modules/newm-panel"
     )
 
     try:

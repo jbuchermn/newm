@@ -1,7 +1,23 @@
 #!/bin/sh
-cd $HOME
-mkdir -p $HOME/.cache
 
-cp .cache/newm_log_bu1 .cache/newm_log_bu2
-cp .cache/newm_log .cache/newm_log_bu1
-exec python -u -c "from newm import run; run()" > $HOME/.cache/newm_log 2>&1
+DIR=$HOME
+if [ "$DIR" = "/" ]; then 
+    echo "Switching to tmp" 
+    DIR="/tmp"
+else
+    DIR="$DIR/.cache"
+fi;
+
+echo "Directory is: $DIR"
+
+mkdir -p $DIR
+cd $DIR
+if [ -e newm_log_bu1 ]
+    then cp newm_log_bu1 newm_log_bu2
+fi
+if [ -e newm_log ]
+    then cp newm_log newm_log_bu1
+fi
+cd $HOME
+
+exec python -u -c "from newm import run; run()" > $DIR/newm_log 2>&1

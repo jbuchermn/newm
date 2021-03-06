@@ -299,10 +299,6 @@ class Layout(PyWM):
             subprocess.Popen(["npm", "run", "start-launcher"], cwd=self.config['panel_dir'])
             subprocess.Popen(["npm", "run", "start-lock"], cwd=self.config['panel_dir'])
 
-        if self.auth_backend.is_greeter():
-            self.ensure_locked()
-            self.auth_backend.init_session()
-
         # Initially display cursor
         self.update_cursor()
 
@@ -313,6 +309,18 @@ class Layout(PyWM):
                 return None, state.copy(background_opacity=1.)
             self.animate_to(reducer, .5)
         Thread(target=fade_in).start()
+
+        # Greeter
+        if self.auth_backend.is_greeter():
+            # Just to be sure
+            self._locked = True
+
+            def greet():
+                time.sleep(2.)
+                self.ensure_locked()
+                self.auth_backend.init_session()
+            Thread(target=greet).start()
+
 
     def _terminate(self):
         super().terminate()
@@ -561,21 +569,20 @@ class Layout(PyWM):
     # END DEBUG
 
     def ensure_locked(self):
-        if not self._locked:
-            self.auth_backend.lock()
-            lock_screen = [v for v in self.panels() if v.panel == "lock"]
-            if len(lock_screen) > 0:
-                lock_screen[0].focus()
-            else:
-                logging.warn("Locking without lock panel - not a good idea")
-            def reducer(state):
-                return None, state.copy(lock_perc=1.)
+        self.auth_backend.lock()
+        lock_screen = [v for v in self.panels() if v.panel == "lock"]
+        if len(lock_screen) > 0:
+            lock_screen[0].focus()
+        else:
+            logging.warn("Locking without lock panel - not a good idea")
+        def reducer(state):
+            return None, state.copy(lock_perc=1.)
 
-            self.animate_to(
-                reducer,
-                .3)
+        self.animate_to(
+            reducer,
+            .3)
 
-            self._locked = True
+        self._locked = True
 
     def _trusted_unlock(self):
         if self._locked:

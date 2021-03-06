@@ -1,4 +1,5 @@
 .App {
+  display: block;
   position: absolute;
   left: 0;
   right: 0;
@@ -14,6 +15,7 @@
 }
 
 .Inner {
+  display: block;
   position: absolute;
   top: 10vw;
   left: 15vw;

@@ -4,7 +4,7 @@
 
 ** Session management / Lock screen
 - [X] Lock screen: Unlock via python-pam
-- [ ] Lock screen: Start session via pygreetd_ipc
+- [X] Lock screen: Start session via pygreetd_ipc
 - [ ] Automatically lock on hibernate / after some time / dim light (see swayidle)
 
 ** General
@@ -12,6 +12,7 @@
 - [ ] MoveResizeOverlay: Fix jumps if we start in an out-of-bounds state
 - [ ] MoveResizeOverlay: Focus view on close to reduce cases where we end up in out-of-bounds state
 - [ ] MoveResizeOverlay: Only allow scrolling beyond extent if "we are at the last window" (situation window 1: 2x2 window 2: 1x2)
+- [ ] Triggering OverviewOVerlay during new view animation causes this view to disappear
 
 ** README / Videos / Install guide and tests on other machines
 
@@ -22,10 +23,11 @@
 - [ ] TopBar / BottomBar
 
 * Backlog
-- [ ] Clean-up panel handling
+- [ ] Clean-up panel handling / installation
 - [ ] Configurable launcher (XDG)
 
 * Ideas
 ** Titles during "far-away" view
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
-** NW.js bars (optional)
+** bars as panels
+** Move panels away from NW.js
