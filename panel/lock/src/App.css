@@ -30,34 +30,79 @@
   align-items: center;
 
   padding: 5vw 5vw;
+
+  transition: transform 1s;
 }
 
-.Row {
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
-  align-items: start;
+.Inner.initial {
+  transition: none !important;
 }
 
-.title {
-  width: 10vw;
+.Inner.left {
+  transform: translateX(-100vw) !important;
+}
+.Inner.right {
+  transform: translateX(100vw) !important;
+}
+
+
+.Title {
   color: white;
   text-align: right;
   font-size: 2vw;
   margin: 1vw;
 }
 
-.textfield {
+.Users {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: start;
+}
+
+.User {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 10vw;
+  height: 10vw;
+  margin: 1vw;
+
+  border-radius: 2vw;
+  border: solid 2px transparent;
+}
+.User:hover {
+  border-color: white;
+}
+.User .Text {
+  color: white;
+  font-size: 1.5vw;
+  text-align: center;
+  /* margin-bottom: 1vw; */
+}
+
+.Textfield {
   width: 40vw;
   color: white;
   text-align: center;
   font-size: 2vw;
-  background-color: #282c3eaa;
+  background-color: transparent;
   margin: 1vw;
   text-decoration: none;
+  border: solid 2px #FFFFFF55;
+  border-radius: 4px;
 
   font-family: "Source Code Pro for Powerline";
   font-weight: bold;
 }
 
+.Textfield.checking {
+  background-color: black;
+}
 
+.Textfield:focus {
+  outline-width: 0;
+  border: solid 2px white;
+}

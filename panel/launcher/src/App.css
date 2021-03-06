@@ -40,6 +40,7 @@
 }
 
 .Entry {
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   justify-content: start;

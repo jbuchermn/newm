@@ -165,7 +165,7 @@ class View(PyWMView):
 
         elif self.panel == "launcher":
             result.z_index = 5
-            result.accepts_input = state.launcher_perc > 0.0
+            result.accepts_input = True
 
             result.size = (
                 int(self.wm.width * 0.8 * self.client_side_scale),
@@ -180,7 +180,7 @@ class View(PyWMView):
 
         elif self.panel == "lock":
             result.z_index = 100
-            result.accepts_input = state.lock_perc > 0.0
+            result.accepts_input = True
             result.lock_enabled = True
 
             result.size = (

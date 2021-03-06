@@ -12,4 +12,5 @@ setup(name='newm',
           'pycairo',
           'psutil',
           'websockets',
+          'python-pam'
       ])

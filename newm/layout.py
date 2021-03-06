@@ -26,6 +26,7 @@ from .view import View
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
 from .sys_backend import SysBackend
+from .auth_backend import AuthBackend
 
 from .widget import (
     TopBar,
@@ -237,7 +238,10 @@ class Layout(PyWM):
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
             ("M-q", lambda: self.close_view()),  # noqa E501
 
-            ("M-p", lambda: self.toggle_lock()),
+            ("M-p", lambda: self.ensure_locked()),
+            # BEGIN DEBUG
+            ("M-P", lambda: self._trusted_unlock()),
+            # END DEBUG
 
             ("M-f", lambda: self.toggle_padding()),
 
@@ -248,6 +252,8 @@ class Layout(PyWM):
 
         self.sys_backend = SysBackend(self)
         self.sys_backend.register_xf86_keybindings()
+
+        self.auth_backend = AuthBackend(self)
 
         self.state = None
 
@@ -292,6 +298,10 @@ class Layout(PyWM):
             subprocess.Popen(["npm", "run", "start-notifiers"], cwd=self.config['panel_dir'])
             subprocess.Popen(["npm", "run", "start-launcher"], cwd=self.config['panel_dir'])
             subprocess.Popen(["npm", "run", "start-lock"], cwd=self.config['panel_dir'])
+
+        if self.auth_backend.is_greeter():
+            self.ensure_locked()
+            self.auth_backend.init_session()
 
         # Initially display cursor
         self.update_cursor()
@@ -548,17 +558,27 @@ class Layout(PyWM):
             self.overlay.destroy()
         finally:
             self.overlay = None
+    # END DEBUG
 
-    def toggle_lock(self):
+    def ensure_locked(self):
         if not self._locked:
+            self.auth_backend.lock()
+            lock_screen = [v for v in self.panels() if v.panel == "lock"]
+            if len(lock_screen) > 0:
+                lock_screen[0].focus()
+            else:
+                logging.warn("Locking without lock panel - not a good idea")
             def reducer(state):
                 return None, state.copy(lock_perc=1.)
+
             self.animate_to(
                 reducer,
                 .3)
 
             self._locked = True
-        else:
+
+    def _trusted_unlock(self):
+        if self._locked:
             def reducer(state):
                 return None, state.copy(lock_perc=0.)
             self.animate_to(
@@ -567,7 +587,6 @@ class Layout(PyWM):
                 lambda: self.update_cursor())
 
             self._locked = False
-    # END DEBUG
 
     def exit_overlay(self):
         logging.debug("Going to exit overlay...")

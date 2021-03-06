@@ -32,6 +32,9 @@ class PanelEndpoint(Thread):
                         """
                         self.layout.exit_overlay()
                         os.system("%s &" % msg['app'])
+
+                    elif msg['kind'].startswith('auth_'):
+                        self.layout.auth_backend.on_message(msg)
                 except Exception:
                     logging.debug("Received unparsable message: %s", msg)
 

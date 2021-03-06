@@ -3,15 +3,15 @@
 * Current (aiming for v0.1.0)
 
 ** Session management / Lock screen
-- [ ] Login panel / Lock screen via pygreetd_ipc
-- [X] Fade in / out
+- [X] Lock screen: Unlock via python-pam
+- [ ] Lock screen: Start session via pygreetd_ipc
+- [ ] Automatically lock on hibernate / after some time / dim light (see swayidle)
 
 ** General
 - [ ] Stacking functionality
 - [ ] MoveResizeOverlay: Fix jumps if we start in an out-of-bounds state
-- [ ] MoveResizeOVerlay: Focus view on close to reduce cases where we end up in out-of-bounds state
-- [ ] Use swayidle
-- [X] Use opacity during rescale to make the change less obvious / ugly
+- [ ] MoveResizeOverlay: Focus view on close to reduce cases where we end up in out-of-bounds state
+- [ ] MoveResizeOverlay: Only allow scrolling beyond extent if "we are at the last window" (situation window 1: 2x2 window 2: 1x2)
 
 ** README / Videos / Install guide and tests on other machines
 
@@ -20,11 +20,12 @@
 - [ ] Keybindings
 - [ ] SysBackend
 - [ ] TopBar / BottomBar
-- [ ] Launcher
 
-* Backlog / Ideas
+* Backlog
+- [ ] Clean-up panel handling
+- [ ] Configurable launcher (XDG)
 
+* Ideas
 ** Titles during "far-away" view
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 ** NW.js bars (optional)
-** Follow XDG for starter entries
