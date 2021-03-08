@@ -5,14 +5,25 @@
 ** Session management / Lock screen
 - [X] Lock screen: Unlock via python-pam
 - [X] Lock screen: Start session via pygreetd_ipc
-- [ ] Automatically lock on hibernate / after some time / dim light (see swayidle)
+- [ ] Automatically lock on hibernate
+- [ ] Idle management: dim screen / lock after some time (see swayidle)
 
-** General
+** Improve panels
+- [X] Embed font to make it available in greeter-mode
+- [ ] Clean-up panel installation / launch-script
+- [ ] Improve visually
+- [ ] Lock: Default user / tabs to switch users, buttons to restart / shutdown / ...
+
+** Usability
 - [ ] Stacking functionality
-- [ ] MoveResizeOverlay: Fix jumps if we start in an out-of-bounds state
-- [ ] MoveResizeOverlay: Focus view on close to reduce cases where we end up in out-of-bounds state
-- [ ] MoveResizeOverlay: Only allow scrolling beyond extent if "we are at the last window" (situation window 1: 2x2 window 2: 1x2)
-- [ ] Triggering OverviewOVerlay during new view animation causes this view to disappear
+- [ ] New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
+- [ ] MoveResizeOverlay
+  + [ ] Fix jumps if we start in an out-of-bounds state
+  + [ ] Focus view on close to reduce cases where we end up in out-of-bounds state
+  + [ ] Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
+  + [ ] Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
+  + [ ] Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
+- [ ] Triggering OverviewOverlay during new view animation causes this view to disappear
 
 ** README / Videos / Install guide and tests on other machines
 
@@ -22,12 +33,11 @@
 - [ ] SysBackend
 - [ ] TopBar / BottomBar
 
-* Backlog
-- [ ] Clean-up panel handling / installation
-- [ ] Configurable launcher (XDG)
-
-* Ideas
+* Backlog / Ideas
 ** Titles during "far-away" view
+** Improve panel handling (Monitor forked processes / identify based on pid / ...)
+** Configurable launcher (XDG)
+** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
-** bars as panels
+** Bars as panels not as widgets
 ** Move panels away from NW.js

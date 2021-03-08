@@ -152,6 +152,7 @@ class View(PyWMView):
         if self.panel == "notifiers":
             result.z_index = 6
             result.accepts_input = False
+            result.lock_enabled = not state.final
 
             result.size = (
                 int(self.wm.width * 0.2 * self.client_side_scale),
@@ -181,7 +182,7 @@ class View(PyWMView):
         elif self.panel == "lock":
             result.z_index = 100
             result.accepts_input = True
-            result.lock_enabled = True
+            result.lock_enabled = not state.final
 
             result.size = (
                 int(self.wm.width * self.client_side_scale),
@@ -295,7 +296,7 @@ class View(PyWMView):
 
             result.box = (x, y, w, h)
 
-        result.opacity = state.background_opacity
+        result.opacity = 1.0 if result.lock_enabled else state.background_opacity
         return result
 
     def process(self, up_state):

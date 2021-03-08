@@ -239,9 +239,6 @@ class Layout(PyWM):
             ("M-q", lambda: self.close_view()),  # noqa E501
 
             ("M-p", lambda: self.ensure_locked()),
-            # BEGIN DEBUG
-            ("M-P", lambda: self._trusted_unlock()),
-            # END DEBUG
 
             ("M-f", lambda: self.toggle_padding()),
 
@@ -316,7 +313,8 @@ class Layout(PyWM):
             self._locked = True
 
             def greet():
-                time.sleep(2.)
+                while len([p for p in self.panels() if p.panel == "lock"]) < 1:
+                    time.sleep(.5)
                 self.ensure_locked()
                 self.auth_backend.init_session()
             Thread(target=greet).start()
@@ -337,7 +335,7 @@ class Layout(PyWM):
 
     def terminate(self):
         def reducer(state):
-            return None, state.copy(background_opacity=0.)
+            return state.copy(final=True), state.copy(final=True, background_opacity=0.)
         self.animate_to(reducer, .5, self._terminate)
 
 
@@ -436,6 +434,9 @@ class Layout(PyWM):
     """
 
     def on_key(self, time_msec, keycode, state, keysyms):
+        if self._locked:
+            return False
+
         # BEGIN DEBUG
         if self.modifiers & self.mod > 0 and keysyms == "D":
             self.force_close_overlay()
@@ -453,6 +454,9 @@ class Layout(PyWM):
                                          self.modifiers & PYWM_MOD_CTRL > 0)
 
     def on_modifiers(self, modifiers):
+        if self._locked:
+            return False
+
         logging.debug("Modifiers %d...", modifiers)
         if self.modifiers & self.mod > 0:
             """
@@ -472,12 +476,18 @@ class Layout(PyWM):
         return False
 
     def on_motion(self, time_msec, delta_x, delta_y):
+        if self._locked:
+            return False
+
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_motion(time_msec, delta_x, delta_y)
 
         return False
 
     def on_button(self, time_msec, button, state):
+        if self._locked:
+            return False
+
         logging.debug("Button...")
         if self.overlay is not None and self.overlay.ready():
             logging.debug("...passing to overlay %s", self.overlay)
@@ -486,6 +496,9 @@ class Layout(PyWM):
         return False
 
     def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
+        if self._locked:
+            return False
+        
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_axis(time_msec, source, orientation,
                                         delta, delta_discrete)
@@ -493,6 +506,9 @@ class Layout(PyWM):
         return False
 
     def on_gesture(self, gesture):
+        if self._locked:
+            return False
+
         logging.debug("Gesture %s...", gesture)
         if self.overlay is not None and self.overlay.ready():
             logging.debug("...passing to overlay %s", self.overlay)
@@ -576,7 +592,7 @@ class Layout(PyWM):
         else:
             logging.warn("Locking without lock panel - not a good idea")
         def reducer(state):
-            return None, state.copy(lock_perc=1.)
+            return None, state.copy(lock_perc=1., background_opacity=.5)
 
         self.animate_to(
             reducer,
@@ -587,7 +603,7 @@ class Layout(PyWM):
     def _trusted_unlock(self):
         if self._locked:
             def reducer(state):
-                return None, state.copy(lock_perc=0.)
+                return None, state.copy(lock_perc=0., background_opacity=1.)
             self.animate_to(
                 reducer,
                 .3,
@@ -608,6 +624,9 @@ class Layout(PyWM):
         logging.debug("Overlay destroyed")
         self.thread.on_overlay_destroyed()
         self.overlay = None
+
+        logging.debug("Resetting gesture")
+        self.reallow_gesture()
 
     def move(self, delta_i, delta_j):
         i, j, w, h = self.find_focused_box()

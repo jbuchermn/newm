@@ -53,6 +53,7 @@ class LayoutState:
 
         self.launcher_perc = kwargs['launcher_perc'] if 'launcher_perc' in kwargs else 0
         self.lock_perc = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
+        self.final = kwargs['final'] if 'final' in kwargs else False
 
         self._view_states = {}
 

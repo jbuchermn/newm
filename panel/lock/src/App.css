@@ -10,8 +10,7 @@
 
   overflow: hidden;
 
-  font-family: "Source Code Pro for Powerline";
-  font-weight: bold;
+  font-family: 'SourceCodePro-Bold';
 }
 
 .Inner {
@@ -96,8 +95,7 @@
   border: solid 2px #FFFFFF55;
   border-radius: 4px;
 
-  font-family: "Source Code Pro for Powerline";
-  font-weight: bold;
+  font-family: 'SourceCodePro-Bold';
 }
 
 .Textfield.checking {
