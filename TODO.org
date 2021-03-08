@@ -1,6 +1,8 @@
 #+TITLE: newm agenda
 
 * Current (aiming for v0.1.0)
+** Fixes
+- [X] Triggering OverviewOverlay during new view animation causes this view to disappear
 
 ** Session management / Lock screen
 - [X] Lock screen: Unlock via python-pam
@@ -23,7 +25,6 @@
   + [ ] Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
   + [ ] Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
   + [ ] Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
-- [ ] Triggering OverviewOverlay during new view animation causes this view to disappear
 
 ** README / Videos / Install guide and tests on other machines
 

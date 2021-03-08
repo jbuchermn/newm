@@ -6,9 +6,11 @@ from .overlay import Overlay
 class OverviewOverlay(Overlay):
     def __init__(self, layout):
         super().__init__(layout)
-        self._original_state = self.layout.state
+        self._original_state = None
 
     def _enter_transition(self):
+        self._original_state = self.layout.state
+
         min_i, min_j, max_i, max_j = self.layout.state.get_extent()
 
         width = max_i - min_i + 3
