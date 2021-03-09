@@ -8,6 +8,7 @@ from threading import Thread
 
 from pywm import (
     PyWM,
+    PyWMDownstreamState,
     PYWM_MOD_CTRL,
     PYWM_PRESSED,
     PYWM_MOD_ALT,
@@ -21,6 +22,7 @@ from pywm.touchpad import (
 )
 
 from .state import LayoutState
+from .interpolation import LayoutDownstreamInterpolation
 from .view import View
 
 from .key_processor import KeyProcessor
@@ -253,6 +255,7 @@ class Layout(PyWM):
         self.auth_backend = AuthBackend(self)
 
         self.state = None
+        self._animation = None
 
         self.overlay = None
 
@@ -267,6 +270,30 @@ class Layout(PyWM):
         self.fullscreen_backup = 0, 0, 1
 
         self._animations = []
+
+    def reducer(self, state):
+        return PyWMDownstreamState(state.lock_perc)
+
+    def process(self):
+        if self._animation is not None:
+            interpolation, s, d = self._animation
+            perc = min((time.time() - s) / d, 1.0)
+
+            if perc >= 0.99:
+                self._animation = None
+
+            self.damage()
+            return interpolation.get(perc)
+        else:
+            return self.reducer(self.state)
+
+    def animate(self, old_state, new_state, dt):
+        cur = self.reducer(old_state)
+        nxt = self.reducer(new_state)
+
+        self._animation = (LayoutDownstreamInterpolation(cur, nxt), time.time(), dt)
+        self.damage()
+
 
     def main(self):
         logging.debug("Layout main...")
@@ -309,9 +336,6 @@ class Layout(PyWM):
 
         # Greeter
         if self.auth_backend.is_greeter():
-            # Just to be sure
-            self._locked = True
-
             def greet():
                 while len([p for p in self.panels() if p.panel == "lock"]) < 1:
                     time.sleep(.5)
@@ -348,6 +372,8 @@ class Layout(PyWM):
 
 
     def damage(self):
+        super().damage()
+
         for _, v in self._views.items():
             v.damage()
 
@@ -366,6 +392,8 @@ class Layout(PyWM):
         self.damage()
 
     def _animate_to(self, new_state, duration):
+        self.animate(self.state, new_state, duration)
+
         for _, v in self._views.items():
             v.animate(self.state, new_state, duration)
 
@@ -434,7 +462,7 @@ class Layout(PyWM):
     """
 
     def on_key(self, time_msec, keycode, state, keysyms):
-        if self._locked:
+        if self.is_locked():
             return False
 
         # BEGIN DEBUG
@@ -454,7 +482,7 @@ class Layout(PyWM):
                                          self.modifiers & PYWM_MOD_CTRL > 0)
 
     def on_modifiers(self, modifiers):
-        if self._locked:
+        if self.is_locked():
             return False
 
         logging.debug("Modifiers %d...", modifiers)
@@ -476,7 +504,7 @@ class Layout(PyWM):
         return False
 
     def on_motion(self, time_msec, delta_x, delta_y):
-        if self._locked:
+        if self.is_locked():
             return False
 
         if self.overlay is not None and self.overlay.ready():
@@ -485,7 +513,7 @@ class Layout(PyWM):
         return False
 
     def on_button(self, time_msec, button, state):
-        if self._locked:
+        if self.is_locked():
             return False
 
         logging.debug("Button...")
@@ -496,7 +524,7 @@ class Layout(PyWM):
         return False
 
     def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
-        if self._locked:
+        if self.is_locked():
             return False
         
         if self.overlay is not None and self.overlay.ready():
@@ -506,7 +534,7 @@ class Layout(PyWM):
         return False
 
     def on_gesture(self, gesture):
-        if self._locked:
+        if self.is_locked():
             return False
 
         logging.debug("Gesture %s...", gesture)
@@ -601,15 +629,13 @@ class Layout(PyWM):
         self._locked = True
 
     def _trusted_unlock(self):
-        if self._locked:
+        if self.is_locked():
             def reducer(state):
                 return None, state.copy(lock_perc=0., background_opacity=1.)
             self.animate_to(
                 reducer,
                 .3,
                 lambda: self.update_cursor())
-
-            self._locked = False
 
     def exit_overlay(self):
         logging.debug("Going to exit overlay...")

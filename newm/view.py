@@ -301,8 +301,13 @@ class View(PyWMView):
 
     def process(self, up_state):
         if self._animation is not None:
-            interpolation, s, d = self._animation
-            perc = min((time.time() - s) / d, 1.0)
+            interpolation, s, d, last_ts = self._animation
+            ts = time.time()
+            if ts - last_ts > 1. / 50.:
+                print("WARNING (View %d)! Slow animation frame (%.2ffps)" % (self._handle, 1. / (ts-last_ts)))
+            self._animation = (interpolation, s, d, ts)
+
+            perc = min((ts - s) / d, 1.0)
 
             if perc >= 0.99:
                 self._animation = None
@@ -316,7 +321,7 @@ class View(PyWMView):
         cur = self.reducer(self.up_state, old_state)
         nxt = self.reducer(self.up_state, new_state)
 
-        self._animation = (ViewDownstreamInterpolation(cur, nxt), time.time(), dt)
+        self._animation = (ViewDownstreamInterpolation(cur, nxt), time.time(), dt, time.time())
         self.damage()
 
     def on_event(self, event):

@@ -1,4 +1,15 @@
-from pywm import PyWMViewDownstreamState, PyWMWidgetDownstreamState
+from pywm import PyWMViewDownstreamState, PyWMWidgetDownstreamState, PyWMDownstreamState
+
+class LayoutDownstreamInterpolation:
+    def __init__(self, state0, state1):
+        self.lock_perc = (state0.lock_perc, state1.lock_perc)
+
+    def get(self, at):
+        at = min(1, max(0, at))
+        lock_perc=self.lock_perc[0] + at * (self.lock_perc[1] - self.lock_perc[0])
+        if lock_perc < 0.0001:
+            lock_perc = 0.0
+        return PyWMDownstreamState(lock_perc)
 
 class ViewDownstreamInterpolation:
     def __init__(self, state0, state1):

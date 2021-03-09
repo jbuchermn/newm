@@ -1,14 +1,15 @@
 #+TITLE: newm agenda
 
 * Current (aiming for v0.1.0)
-** Fixes
+** Fixes / Technical debt
 - [X] Triggering OverviewOverlay during new view animation causes this view to disappear
+- [ ] Generalize _animation / update / animate_to in view / widget / layout
 
 ** Session management / Lock screen
 - [X] Lock screen: Unlock via python-pam
 - [X] Lock screen: Start session via pygreetd_ipc
 - [ ] Automatically lock on hibernate
-- [ ] Idle management: dim screen / lock after some time (see swayidle)
+- [ ] Idle management: dim screen / lock after some time (see swayidle) / dim on lock
 
 ** Improve panels
 - [X] Embed font to make it available in greeter-mode
