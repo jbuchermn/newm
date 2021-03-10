@@ -23,6 +23,7 @@ from pywm.touchpad import (
 
 from .state import LayoutState
 from .interpolation import LayoutDownstreamInterpolation
+from .animate import Animate
 from .view import View
 
 from .key_processor import KeyProcessor
@@ -206,9 +207,10 @@ class LayoutThread(Thread):
 
 
 
-class Layout(PyWM):
+class Layout(PyWM, Animate):
     def __init__(self, mod, **kwargs):
-        super().__init__(View, **kwargs)
+        PyWM.__init__(self, View, **kwargs)
+        Animate.__init__(self)
 
         self.mod = mod
         self.mod_sym = None
@@ -255,7 +257,6 @@ class Layout(PyWM):
         self.auth_backend = AuthBackend(self)
 
         self.state = None
-        self._animation = None
 
         self.overlay = None
 
@@ -274,26 +275,14 @@ class Layout(PyWM):
     def reducer(self, state):
         return PyWMDownstreamState(state.lock_perc)
 
-    def process(self):
-        if self._animation is not None:
-            interpolation, s, d = self._animation
-            perc = min((time.time() - s) / d, 1.0)
-
-            if perc >= 0.99:
-                self._animation = None
-
-            self.damage()
-            return interpolation.get(perc)
-        else:
-            return self.reducer(self.state)
-
     def animate(self, old_state, new_state, dt):
         cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
-        self._animation = (LayoutDownstreamInterpolation(cur, nxt), time.time(), dt)
-        self.damage()
+        self._animate(LayoutDownstreamInterpolation(cur, nxt), dt)
 
+    def process(self):
+        return self._process(self.reducer(self.state))
 
     def main(self):
         logging.debug("Layout main...")

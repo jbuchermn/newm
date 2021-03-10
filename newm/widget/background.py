@@ -3,18 +3,13 @@ import time
 from pywm import PyWMBackgroundWidget, PyWMWidgetDownstreamState
 
 from ..interpolation import WidgetDownstreamInterpolation
+from ..animate import Animate
 
 
-class Background(PyWMBackgroundWidget):
+class Background(PyWMBackgroundWidget, Animate):
     def __init__(self, wm, path):
-        super().__init__(wm, path)
-
-        """
-        - interpolation
-        - start
-        - duration
-        """
-        self._animation = None
+        PyWMBackgroundWidget.__init__(self, wm, path)
+        Animate.__init__(self)
 
     def reducer(self, wm_state):
         result = PyWMWidgetDownstreamState()
@@ -96,22 +91,11 @@ class Background(PyWMBackgroundWidget):
         result.box = (x, y, w, h)
         return result
 
-    def process(self):
-        if self._animation is not None:
-            interpolation, s, d = self._animation
-            perc = min((time.time() - s) / d, 1.0)
-
-            if perc >= 0.99:
-                self._animation = None
-
-            self.damage()
-            return interpolation.get(perc)
-        else:
-            return self.reducer(self.wm.state)
-
     def animate(self, old_state, new_state, dt):
         cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
-        self._animation = (WidgetDownstreamInterpolation(cur, nxt), time.time(), dt)
-        self.damage()
+        self._animate(WidgetDownstreamInterpolation(cur, nxt), dt)
+
+    def process(self):
+        return self._process(self.reducer(self.wm.state))

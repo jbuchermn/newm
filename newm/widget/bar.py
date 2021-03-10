@@ -8,23 +8,18 @@ import psutil
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
 
 from ..interpolation import WidgetDownstreamInterpolation
+from ..animate import Animate
 
 BAR_HEIGHT = 20
 
 
-class Bar(PyWMCairoWidget):
+class Bar(PyWMCairoWidget, Animate):
     def __init__(self, wm):
-        super().__init__(wm, int(wm.config['output_scale'] * wm.width), int(wm.config['output_scale'] * BAR_HEIGHT))
+        PyWMCairoWidget.__init__(self, wm, int(wm.config['output_scale'] * wm.width), int(wm.config['output_scale'] * BAR_HEIGHT))
+        Animate.__init__(self)
 
         self.texts = ["Leftp", "Middlep", "Rightp"]
         self.font_size = wm.config['output_scale'] * 12
-
-        """
-        - interpolation
-        - start
-        - duration
-        """
-        self._animation = None
 
     def set_texts(self, texts):
         self.texts = texts
@@ -60,25 +55,14 @@ class Bar(PyWMCairoWidget):
     def reducer(self, wm_state):
         pass
 
-    def process(self):
-        if self._animation is not None:
-            interpolation, s, d = self._animation
-            perc = min((time.time() - s) / d, 1.0)
-
-            if perc >= 0.99:
-                self._animation = None
-
-            self.damage()
-            return interpolation.get(perc)
-        else:
-            return self.reducer(self.wm.state)
-
     def animate(self, old_state, new_state, dt):
         cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
-        self._animation = (WidgetDownstreamInterpolation(cur, nxt), time.time(), dt)
-        self.damage()
+        self._animate(WidgetDownstreamInterpolation(cur, nxt), dt)
+
+    def process(self):
+        return self._process(self.reducer(self.wm.state))
 
 
 class TopBar(Bar, Thread):

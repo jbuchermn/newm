@@ -5,6 +5,7 @@ import logging
 from pywm import PyWMView, PyWMViewDownstreamState
 
 from .interpolation import ViewDownstreamInterpolation
+from .animate import Animate
 from .overlay import MoveResizeFloatingOverlay
 
 PANELS = {
@@ -16,20 +17,14 @@ PANELS = {
 CORNER_RADIUS = 12.5
 
 
-class View(PyWMView):
+class View(PyWMView, Animate):
     def __init__(self, wm, handle):
-        super().__init__(wm, handle)
+        PyWMView.__init__(self, wm, handle)
+        Animate.__init__(self)
 
         self.client_side_scale = 1.
 
         self.panel = None
-
-        """
-        - interpolation
-        - start time
-        - duration
-        """
-        self._animation = None
 
     def __str__(self):
         return "View (%d)" % self._handle
@@ -299,30 +294,15 @@ class View(PyWMView):
         result.opacity = 1.0 if result.lock_enabled else state.background_opacity
         return result
 
-    def process(self, up_state):
-        if self._animation is not None:
-            interpolation, s, d, last_ts = self._animation
-            ts = time.time()
-            if ts - last_ts > 1. / 50.:
-                print("WARNING (View %d)! Slow animation frame (%.2ffps)" % (self._handle, 1. / (ts-last_ts)))
-            self._animation = (interpolation, s, d, ts)
-
-            perc = min((ts - s) / d, 1.0)
-
-            if perc >= 0.99:
-                self._animation = None
-
-            self.damage()
-            return interpolation.get(perc)
-        else:
-            return self.reducer(up_state, self.wm.state)
 
     def animate(self, old_state, new_state, dt):
         cur = self.reducer(self.up_state, old_state)
         nxt = self.reducer(self.up_state, new_state)
 
-        self._animation = (ViewDownstreamInterpolation(cur, nxt), time.time(), dt, time.time())
-        self.damage()
+        self._animate(ViewDownstreamInterpolation(cur, nxt), dt)
+
+    def process(self, up_state):
+        return self._process(self.reducer(up_state, self.wm.state))
 
     def on_event(self, event):
         if event == "request_move":
