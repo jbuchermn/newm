@@ -6,13 +6,11 @@
 *** DONE Generalize _animation / update / animate_to in view / widget / layout
 *** DONE Focus lock panel on ensure_locked
 *** TODO Fix logging of auth info
-SCHEDULED: <2021-03-10 Wed>
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
 *** DONE Lock screen: Start session via pygreetd_ipc
-*** TODO Automatically lock on hibernate (e.g. via small websocket-based client sending one command to panel_endpoint - comparable to swaymsg)
-SCHEDULED: <2021-03-10 Wed>
+*** DONE Automatically lock on hibernate (e.g. via small websocket-based client sending one command to panel_endpoint - comparable to swaymsg)
 *** TODO Idle management: dim screen / lock after some time (see swayidle) / dim on lock
 
 ** Improve panels

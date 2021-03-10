@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec python -u -c "import sys; from newm import msg; msg(sys.argv[1])" "$@"

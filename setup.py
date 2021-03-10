@@ -7,7 +7,7 @@ setup(name='newm',
       author='Jonas Bucher',
       author_email='j.bucher.mn@gmail.com',
       packages=['newm', 'newm.overlay', 'newm.widget'],
-      scripts=['start-newm'],
+      scripts=['start-newm', 'newm-cmd'],
       install_requires=[
           'pycairo',
           'psutil',

@@ -27,11 +27,10 @@ class PanelEndpoint(Thread):
                 try:
                     msg = json.loads(msg)
                     if msg['kind'] == 'launch_app':
-                        """
-                        Should be LauncherOverlay
-                        """
-                        self.layout.exit_overlay()
-                        os.system("%s &" % msg['app'])
+                        self.layout.launch_app(msg['app'])
+
+                    elif msg['kind'] == 'cmd':
+                        self.layout.command(msg['cmd'])
 
                     elif msg['kind'].startswith('auth_'):
                         self.layout.auth_backend.on_message(msg)
@@ -70,7 +69,18 @@ class PanelEndpoint(Thread):
         self._event_loop.run_forever()
 
 
+def msg(message):
+    async def _send():
+        uri = "ws://127.0.0.1:%d" % SOCKET_PORT
+        async with websockets.connect(uri) as websocket:
+            await websocket.send(json.dumps({ 'kind': 'cmd', 'cmd': message }))
+
+    asyncio.get_event_loop().run_until_complete(_send())
+
+
 if __name__ == '__main__':
+    # msg("lock")
+
     from threading import Thread
     import time
 

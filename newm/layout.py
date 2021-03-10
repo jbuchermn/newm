@@ -601,7 +601,7 @@ class Layout(PyWM, Animate):
             self.overlay = None
     # END DEBUG
 
-    def ensure_locked(self):
+    def ensure_locked(self, anim=True):
         def focus_lock():
             lock_screen = [v for v in self.panels() if v.panel == "lock"]
             if len(lock_screen) > 0:
@@ -609,10 +609,10 @@ class Layout(PyWM, Animate):
             else:
                 logging.warn("Locking without lock panel - not a good idea")
 
-        def reducer(state):
-            return None, state.copy(lock_perc=1., background_opacity=.5)
-
         self.auth_backend.lock()
+
+        def reducer(state):
+            return None if anim else state.copy(lock_perc=1., background_opacity=.5), state.copy(lock_perc=1., background_opacity=.5)
         self.animate_to(
             reducer,
             .3, focus_lock)
@@ -793,3 +793,16 @@ class Layout(PyWM, Animate):
             else:
                 return (None, state)
         self.animate_to(reducer, .3)
+
+    def command(self, cmd):
+        if cmd == "anim-lock":
+            self.ensure_locked()
+        elif cmd == "lock":
+            self.ensure_locked(anim=False)
+
+    def launch_app(self, cmd):
+        """
+        Should be LauncherOverlay
+        """
+        self.exit_overlay()
+        os.system("%s &" % cmd)
