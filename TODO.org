@@ -5,7 +5,8 @@
 *** DONE Triggering OverviewOverlay during new view animation causes this view to disappear
 *** TODO Generalize _animation / update / animate_to in view / widget / layout
 SCHEDULED: <2021-03-10 Wed>
-*** TODO Focus lock panel on ensure_locked
+*** DONE Focus lock panel on ensure_locked
+*** TODO Fix logging of auth info
 SCHEDULED: <2021-03-10 Wed>
 
 ** Session management / Lock screen

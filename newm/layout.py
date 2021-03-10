@@ -613,20 +613,20 @@ class Layout(PyWM):
     # END DEBUG
 
     def ensure_locked(self):
-        self.auth_backend.lock()
-        lock_screen = [v for v in self.panels() if v.panel == "lock"]
-        if len(lock_screen) > 0:
-            lock_screen[0].focus()
-        else:
-            logging.warn("Locking without lock panel - not a good idea")
+        def focus_lock():
+            lock_screen = [v for v in self.panels() if v.panel == "lock"]
+            if len(lock_screen) > 0:
+                lock_screen[0].focus()
+            else:
+                logging.warn("Locking without lock panel - not a good idea")
+
         def reducer(state):
             return None, state.copy(lock_perc=1., background_opacity=.5)
 
+        self.auth_backend.lock()
         self.animate_to(
             reducer,
-            .3)
-
-        self._locked = True
+            .3, focus_lock)
 
     def _trusted_unlock(self):
         if self.is_locked():
