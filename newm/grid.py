@@ -113,9 +113,10 @@ class Grid:
         xf = min(self.x1, max(self.x0, round(xf)))
         dx = abs(self.last_x_output - xf)
 
-        dt = dx / abs(p) if abs(p) > 0 else TIME_SCALE
-        if dt > TIME_SCALE:
-            dt = TIME_SCALE
+        # dt = dx / abs(p) if abs(p) > 0 else TIME_SCALE
+        # if dt > TIME_SCALE:
+        #     dt = TIME_SCALE
+        dt = dx * TIME_SCALE
 
         # BEGIN DEBUG
         x0 = self.at(self.last_x_output, silent=True)
@@ -127,7 +128,7 @@ class Grid:
                           0,
                           x0 + i * (xf-x0),
                           0,
-                          dx/dt if xf>x0 else -dx/dt)
+                          0 if dt == 0. else dx/dt if xf>x0 else -dx/dt)
         # END DEBUG
 
         return xf, dt

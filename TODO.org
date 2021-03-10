@@ -3,8 +3,7 @@
 * Current (aiming for v0.1.0)
 ** Fixes / Technical debt
 *** DONE Triggering OverviewOverlay during new view animation causes this view to disappear
-*** TODO Generalize _animation / update / animate_to in view / widget / layout
-SCHEDULED: <2021-03-10 Wed>
+*** DONE Generalize _animation / update / animate_to in view / widget / layout
 *** DONE Focus lock panel on ensure_locked
 *** TODO Fix logging of auth info
 SCHEDULED: <2021-03-10 Wed>
@@ -28,7 +27,7 @@ SCHEDULED: <2021-03-10 Wed>
 *** MoveResizeOverlay
 **** TODO Fix jumps if we start in an out-of-bounds state
 **** TODO Focus view on close to reduce cases where we end up in out-of-bounds state
-**** TODO Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
+**** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
 **** TODO Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
 **** TODO Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
 
