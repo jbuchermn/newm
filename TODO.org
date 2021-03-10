@@ -2,38 +2,45 @@
 
 * Current (aiming for v0.1.0)
 ** Fixes / Technical debt
-- [X] Triggering OverviewOverlay during new view animation causes this view to disappear
-- [ ] Generalize _animation / update / animate_to in view / widget / layout
+*** DONE Triggering OverviewOverlay during new view animation causes this view to disappear
+*** TODO Generalize _animation / update / animate_to in view / widget / layout
+SCHEDULED: <2021-03-10 Wed>
+*** TODO Focus lock panel on ensure_locked
+SCHEDULED: <2021-03-10 Wed>
 
 ** Session management / Lock screen
-- [X] Lock screen: Unlock via python-pam
-- [X] Lock screen: Start session via pygreetd_ipc
-- [ ] Automatically lock on hibernate
-- [ ] Idle management: dim screen / lock after some time (see swayidle) / dim on lock
+*** DONE Lock screen: Unlock via python-pam
+*** DONE Lock screen: Start session via pygreetd_ipc
+*** TODO Automatically lock on hibernate (e.g. via small websocket-based client sending one command to panel_endpoint - comparable to swaymsg)
+SCHEDULED: <2021-03-10 Wed>
+*** TODO Idle management: dim screen / lock after some time (see swayidle) / dim on lock
 
 ** Improve panels
-- [X] Embed font to make it available in greeter-mode
-- [ ] Clean-up panel installation / launch-script
-- [ ] Improve visually
-- [ ] Lock: Default user / tabs to switch users, buttons to restart / shutdown / ...
+*** DONE Embed font to make it available in greeter-mode
+*** TODO Clean-up panel installation / launch-script
+*** TODO Improve visually
+*** TODO Lock: Default user / tabs to switch users, buttons to restart / shutdown / ...
 
 ** Usability
-- [ ] Stacking functionality
-- [ ] New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
-- [ ] MoveResizeOverlay
-  + [ ] Fix jumps if we start in an out-of-bounds state
-  + [ ] Focus view on close to reduce cases where we end up in out-of-bounds state
-  + [ ] Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
-  + [ ] Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
-  + [ ] Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
+*** TODO Stacking functionality
+*** TODO New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
+*** MoveResizeOverlay
+**** TODO Fix jumps if we start in an out-of-bounds state
+**** TODO Focus view on close to reduce cases where we end up in out-of-bounds state
+**** TODO Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
+**** TODO Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
+**** TODO Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
 
-** README / Videos / Install guide and tests on other machines
+** Documentation
+*** TODO README / Install guide
+*** TODO Video
+*** TODO Tests on other machines
 
 ** Configuration
-- [ ] Read config file from .config/newm with info now in run.py and layout.py
-- [ ] Keybindings
-- [ ] SysBackend
-- [ ] TopBar / BottomBar
+*** TODO Read config file from .config/newm with info now in run.py and layout.py
+*** TODO Keybindings
+*** TODO SysBackend
+*** TODO TopBar / BottomBar
 
 * Backlog / Ideas
 ** Titles during "far-away" view
