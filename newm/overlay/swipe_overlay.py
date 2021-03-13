@@ -3,6 +3,7 @@ from .overlay import Overlay
 from ..grid import Grid
 
 LOCKED_DIST = 0.01
+SPEED = 4
 
 GRID_OVR = 0.3
 GRID_M = 1
@@ -42,6 +43,7 @@ class SwipeOverlay(Overlay):
         self.j_grid = Grid("j", min_j, max_j, self.j, GRID_OVR, GRID_M)
 
         self._set_state()
+        self._has_gesture = False
 
     def _exit_finished(self):
         self.layout.update_cursor()
@@ -68,10 +70,12 @@ class SwipeOverlay(Overlay):
 
 
     def on_gesture(self, gesture):
-        LowpassGesture(gesture).listener(GestureListener(
-            self._on_update,
-            lambda: self.layout.exit_overlay()
-        ))
+        if not self._has_gesture:
+            LowpassGesture(gesture).listener(GestureListener(
+                self._on_update,
+                lambda: self.layout.exit_overlay()
+            ))
+            self._has_gesture = True
 
     def _on_update(self, values):
         if self.locked_x is None:
@@ -80,15 +84,15 @@ class SwipeOverlay(Overlay):
                     > abs(values['delta_y'])
 
                 if self.locked_x:
-                    self.initial_x += 2 * self.size * values['delta_x']
+                    self.initial_x += SPEED * self.size * values['delta_x']
                 else:
-                    self.initial_y += 2 * self.size * values['delta_y']
+                    self.initial_y += SPEED * self.size * values['delta_y']
 
         if self.locked_x is not None:
             if self.locked_x:
-                self.i = self.initial_x - 2 * self.size * values['delta_x']
+                self.i = self.initial_x - SPEED * self.size * values['delta_x']
             else:
-                self.j = self.initial_y - 2 * self.size * values['delta_y']
+                self.j = self.initial_y - SPEED * self.size * values['delta_y']
 
         self.last_delta_x = values['delta_x']
         self.last_delta_y = values['delta_y']

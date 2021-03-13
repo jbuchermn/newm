@@ -1,4 +1,3 @@
-import sys
 import logging
 
 from .layout import Layout
@@ -22,8 +21,6 @@ def run():
         # See comments in view.py
         xwayland_handle_scale_clientside=True,
         enable_output_manager=False,
-
-        touchpad_device_name="bcm5974",
 
         # TODO: Find these
         wallpaper="/etc/wallpaper.jpg",

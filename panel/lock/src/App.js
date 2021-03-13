@@ -49,7 +49,6 @@ export default class App extends Component {
           state: "enter_cred",
           user: msg.user,
           credMessage: msg.message,
-          cred: ""
         });
 
         /* Must be larger than animation duration */
@@ -65,7 +64,8 @@ export default class App extends Component {
     }));
     this.setState({
       initial: false,
-      checking: true
+      checking: true,
+      cred: ""
     });
   }
 

@@ -20,10 +20,12 @@ class SwipeToZoomOverlay(Overlay):
         """
         Grid
         """
-        self.grid = Grid("size" ,1, self.initial_size + 1, self.initial_size, GRID_OVR, GRID_M)
+        self.grid = Grid("size", 1, self.initial_size + 1, self.initial_size, GRID_OVR, GRID_M)
         
 
         self._set_state()
+
+        self._has_gesture = False
 
     def _exit_finished(self):
         self.layout.update_cursor()
@@ -39,10 +41,12 @@ class SwipeToZoomOverlay(Overlay):
         self.layout.damage()
 
     def on_gesture(self, gesture):
-        LowpassGesture(gesture).listener(GestureListener(
-            self._on_update,
-            lambda: self.layout.exit_overlay()
-        ))
+        if not self._has_gesture:
+            LowpassGesture(gesture).listener(GestureListener(
+                self._on_update,
+                lambda: self.layout.exit_overlay()
+            ))
+            self._has_gesture = True
 
     def _on_update(self, values):
         self.size = self.initial_size - 4*values['delta_y']
