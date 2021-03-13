@@ -1,12 +1,13 @@
 import math
-import time
 import logging
 
 from pywm import PyWMView, PyWMViewDownstreamState
 
+from . import layout
 from .interpolation import ViewDownstreamInterpolation
 from .animate import Animate
 from .overlay import MoveResizeFloatingOverlay
+
 
 PANELS = {
     "newm-panel-notifiers": "notifiers",
@@ -18,9 +19,12 @@ CORNER_RADIUS = 12.5
 
 
 class View(PyWMView, Animate):
-    def __init__(self, wm, handle):
+    def __init__(self, wm: layout.Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
+
+        # For type-checking purposes
+        self.wm = wm
 
         self.client_side_scale = 1.
 
@@ -327,3 +331,4 @@ class View(PyWMView, Animate):
         min_h *= self.wm.state.scale / self.wm.height / self.client_side_scale
 
         return min_w, min_h
+

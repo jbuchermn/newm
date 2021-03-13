@@ -5,6 +5,7 @@ import subprocess
 import os
 from itertools import product
 from threading import Thread
+from typing import Optional
 
 from pywm import (
     PyWM,
@@ -24,7 +25,6 @@ from pywm.touchpad import (
 from .state import LayoutState
 from .interpolation import LayoutDownstreamInterpolation
 from .animate import Animate
-from .view import View
 
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
@@ -260,9 +260,9 @@ class Layout(PyWM, Animate):
 
         self.overlay = None
 
-        self.background = None
-        self.top_bar = None
-        self.bottom_bar = None
+        self.background: Optional[Background] = None
+        self.top_bar: Optional[TopBar] = None
+        self.bottom_bar: Optional[BottomBar] = None
         self.corners = []
 
         self.thread = None
@@ -292,10 +292,10 @@ class Layout(PyWM, Animate):
         self.bottom_bar = self.create_widget(BottomBar)
         self.top_bar = self.create_widget(TopBar)
 
-        self.background = None
+        self.background: Optional[Background] = None
         if 'wallpaper' in self.config:
-            self.background = self.create_widget(Background,
-                                                 self.config['wallpaper'])
+            self.background = self.create_widget(Background, self.config['wallpaper'])
+
         self.corners = [
             self.create_widget(Corner, True, True),
             self.create_widget(Corner, True, False),
@@ -806,3 +806,7 @@ class Layout(PyWM, Animate):
         """
         self.exit_overlay()
         os.system("%s &" % cmd)
+
+
+# Python imports are really great
+from .view import View
