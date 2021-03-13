@@ -22,6 +22,7 @@ class OverviewOverlay(Overlay):
         return self.layout.state.copy(
             i=i,
             j=j,
+            scale=float(self._original_state.size)/size,
             size=size,
             background_factor=1.,
             top_bar_dy=1.,

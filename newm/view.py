@@ -91,8 +91,8 @@ class View(PyWMView, Animate):
                         logging.warn("Unexpected: Could not access parent %s state" % self.parent)
 
                 w, h = min_w, min_h
-                w *= state.scale / self.wm.width / self.client_side_scale
-                h *= state.scale / self.wm.height / self.client_side_scale
+                w *= state.size / self.wm.width / self.client_side_scale
+                h *= state.size / self.wm.height / self.client_side_scale
 
                 i = ci - w / 2.
                 j = cj - h / 2.
@@ -103,8 +103,8 @@ class View(PyWMView, Animate):
 
             else:
                 min_w, _, min_h, _ = self.up_state.size_constraints
-                min_w *= state.scale / self.wm.width / self.client_side_scale
-                min_h *= state.scale / self.wm.height / self.client_side_scale
+                min_w *= state.size / self.wm.width / self.client_side_scale
+                min_h *= state.size / self.wm.height / self.client_side_scale
 
                 w = max(math.ceil(min_w), 1)
                 h = max(math.ceil(min_h), 1)
@@ -216,20 +216,6 @@ class View(PyWMView, Animate):
                 logging.exception("Could not access view %s state" % self)
                 return result
 
-            """
-            Handle client size
-            """
-
-            w_for_size, h_for_size = self_state.scale_origin
-            if w_for_size is None:
-                w_for_size, h_for_size = self_state.w, self_state.h
-            width = round(w_for_size * self.wm.width / state.scale *
-                          self.client_side_scale)
-            height = round(h_for_size * self.wm.height / state.scale *
-                           self.client_side_scale)
-
-            result.size = (width, height)
-
 
             """
             Handle box
@@ -260,13 +246,31 @@ class View(PyWMView, Animate):
                 x -= self.up_state.offset[0] / self.up_state.size[0] * w
                 y -= self.up_state.offset[1] / self.up_state.size[1] * h
 
+            x = int(x)
+            y = int(y)
+            w = int(w)
+            h = int(h)
+
+            """
+            Handle client size
+            """
+            w_for_size, h_for_size = self_state.scale_origin
+            if w_for_size is None:
+                w_for_size, h_for_size = w, h
+            else:
+                w_for_size *= self.wm.width / state.size
+                h_for_size *= self.wm.height / state.size
+            width = round(w_for_size * self.client_side_scale / state.scale)
+            height = round(h_for_size * self.client_side_scale / state.scale)
+
+            result.size = (width, height)
 
             if up_state.is_floating:
                 """
                 Override: Keep floating windows scaled correctly
                 """
-                w = self.up_state.size[0] / self.client_side_scale * (state.scale / state.size)
-                h = self.up_state.size[1] / self.client_side_scale * (state.scale / state.size)
+                w = self.up_state.size[0] / self.client_side_scale / state.scale
+                h = self.up_state.size[1] / self.client_side_scale / state.scale
 
             else:
                 """
@@ -324,7 +328,7 @@ class View(PyWMView, Animate):
         Let overlays know how small we are able to get in i, j, w, h coords
         """
         min_w, _, min_h, _ = self.up_state.size_constraints
-        min_w *= self.wm.state.scale / self.wm.width / self.client_side_scale
-        min_h *= self.wm.state.scale / self.wm.height / self.client_side_scale
+        min_w *= self.wm.state.size / self.wm.width / self.client_side_scale
+        min_h *= self.wm.state.size / self.wm.height / self.client_side_scale
 
         return min_w, min_h

@@ -41,7 +41,7 @@ class LayoutState:
         self.i = kwargs['i'] if 'i' in kwargs else 0
         self.j = kwargs['j'] if 'j' in kwargs else 0
         self.size = kwargs['size'] if 'size' in kwargs else 2
-        self.scale = kwargs['scale'] if 'scale' in kwargs else 2
+        self.scale = kwargs['scale'] if 'scale' in kwargs else 1
 
         self.padding = kwargs['padding'] if 'padding' in kwargs else DEFAULT_PADDING
 
@@ -113,7 +113,6 @@ class LayoutState:
         target_i = max(target_i, i + w - target_size)
         target_j = max(target_j, j + h - target_size)
 
-        target_scale = target_size
         target_padding = self.padding
 
         if target_i != self.i or target_j != self.j or target_size != self.size:
@@ -124,7 +123,6 @@ class LayoutState:
             i=target_i,
             j=target_j,
             size=target_size,
-            scale=target_scale,
             padding=target_padding
         )
 
@@ -135,14 +133,12 @@ class LayoutState:
             new_i = focus_box[0]
             new_j = focus_box[1]
             new_size = max(focus_box[2:])
-            new_scale = int(new_size / self.size * self.scale)
 
             return self.copy(
                 padding=padding,
                 i=new_i,
                 j=new_j,
-                size=new_size,
-                scale=new_scale)
+                size=new_size)
 
         else:
             new_i = self.i
@@ -154,14 +150,11 @@ class LayoutState:
                 new_j=reset[1]
                 new_size=reset[2]
 
-            new_scale = int(new_size / self.size * self.scale)
-
             return self.copy(
                 padding=padding,
                 i=new_i,
                 j=new_j,
                 size=new_size,
-                scale=new_scale
             )
 
 

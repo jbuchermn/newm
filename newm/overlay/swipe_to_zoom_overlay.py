@@ -14,6 +14,7 @@ class SwipeToZoomOverlay(Overlay):
 
         self.size = self.layout.state.size
 
+        self.initial_scale = self.layout.state.scale
         self.initial_size = self.size
         self.last_delta_y = 0
 
@@ -33,11 +34,11 @@ class SwipeToZoomOverlay(Overlay):
 
     def _exit_transition(self):
         size, t = self.grid.final()
-        scale = size
-        return self.layout.state.copy(size=size, scale=scale), t
+        return self.layout.state.copy(size=size, scale=self.initial_scale), t
 
     def _set_state(self):
         self.layout.state.size = self.grid.at(self.size)
+        self.layout.state.scale = float(self.initial_size) / self.layout.state.size
         self.layout.damage()
 
     def on_gesture(self, gesture):

@@ -39,15 +39,15 @@ class MoveResizeFloatingOverlay(Overlay):
         self._gesture_last_dy = 0
 
     def move(self, dx, dy):
-        self.i += dx * self.layout.state.scale
-        self.j += dy * self.layout.state.scale
+        self.i += dx * self.layout.state.size
+        self.j += dy * self.layout.state.size
 
         self.layout.state.update_view_state(self.view, i=self.i, j=self.j)
         self.layout.damage()
 
     def resize(self, dx, dy):
-        self.w += dx * self.layout.state.scale
-        self.h += dy * self.layout.state.scale
+        self.w += dx * self.layout.state.size
+        self.h += dy * self.layout.state.size
 
         self.w = max(self.min_w, self.w)
         self.h = max(self.min_h, self.h)
