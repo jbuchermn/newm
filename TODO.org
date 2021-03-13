@@ -5,7 +5,8 @@
 *** DONE Triggering OverviewOverlay during new view animation causes this view to disappear
 *** DONE Generalize _animation / update / animate_to in view / widget / layout
 *** DONE Focus lock panel on ensure_locked
-*** TODO Fix logging of auth info
+*** STRT Fix logging of auth info
+*** DONE VLC fullscreen -> control bar disappears -> wrong view is focused?!
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam

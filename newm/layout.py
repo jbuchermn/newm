@@ -699,6 +699,7 @@ class Layout(PyWM, Animate):
         best_view = None
         best_view_score = 1000
 
+        logging.debug("Finding view to focus since %s (%d) closes...", view.app_id, view._handle)
         for k, s in self.state._view_states.items():
             if not s.is_tiled:
                 continue
@@ -706,10 +707,12 @@ class Layout(PyWM, Animate):
             if k == view._handle:
                 continue
 
-            sc = (s.i - state.i)**2 + (s.j - state.j**2)
+            sc = (s.i - state.i + s.w / 2. - state.w / 2.)**2 + (s.j - state.j + s.h / 2. - state.h / 2.)**2
+            logging.debug("View (%d) has score %f", k, sc)
             if sc < best_view_score:
                 best_view_score = sc
                 best_view = k
+
 
 
         if best_view is not None and best_view in self._views:

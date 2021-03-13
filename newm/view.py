@@ -112,6 +112,8 @@ class View(PyWMView, Animate):
 
                 second_state = (i, j, w, h)
 
+                self.focus()
+
             """
             Present
             """
@@ -123,7 +125,6 @@ class View(PyWMView, Animate):
             w = 0
             h = 0
 
-            self.focus()
 
             state1 = state.with_view_state(
                     self,
