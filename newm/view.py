@@ -203,14 +203,16 @@ class View(PyWMView, Animate):
 
 
             self_state = None
+            stack_idx, stack_len = 0, 1
             try:
                 self_state = state.get_view_state(self)
+                stack_idx, stack_len = state.get_view_stack_index(self)
             except Exception:
                 """
                 This can happen, if main has not been executed yet
                 (e.g. during an overlay) - just return a box not displayed
                 """
-                logging.debug("Could not access view %s state" % self)
+                logging.exception("Could not access view %s state" % self)
                 return result
 
             """
@@ -235,6 +237,12 @@ class View(PyWMView, Animate):
             j = self_state.j
             w = self_state.w
             h = self_state.h
+
+            if stack_len > 1:
+                i += 0.05 * stack_idx / (stack_len - 1)
+                j += 0.05 * self.wm.width / self.wm.height * stack_idx / (stack_len - 1)
+                w -= 0.05
+                h -= 0.05 * self.wm.width / self.wm.height
 
             x = i - state.i + state.padding
             y = j - state.j + state.padding / (self.wm.height / self.wm.width)

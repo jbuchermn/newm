@@ -178,6 +178,21 @@ class LayoutState:
     def get_view_state(self, view):
         return self._view_states[view._handle]
 
+    def get_view_stack_index(self, view):
+        vs = self.get_view_state(view)
+        relevant = [h for h, s in self._view_states.items() if (
+            s.is_tiled and
+            ((s.i <= vs.i < s.i + s.w - .2) or (vs.i <= s.i < vs.i + vs.w - .2)) and
+            ((s.j <= vs.j < s.j + s.h - .2) or (vs.j <= s.j < vs.j + vs.h - .2))
+        )]
+
+        if view._handle not in relevant:
+            # In case of w or h == 0 this may happen
+            return 0, 1
+
+        relevant = sorted(relevant)
+        return relevant.index(view._handle), len(relevant)
+
     def get_extent(self):
         min_i, min_j, max_i, max_j = 1000000, 1000000, -1000000, -1000000
 
