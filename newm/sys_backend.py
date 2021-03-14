@@ -118,7 +118,9 @@ class SysBackend(Thread):
     def register_xf86_keybindings(self):
         self.wm.key_processor.register_bindings(
             ("XF86MonBrightnessUp", lambda: self.adjust('backlight', lambda v: v + 0.1)),
-            ("XF86MonBrightnessDown", lambda: self.adjust('backlight', lambda v: 0 if abs(v - 0.01) < 0.0001 else v - 0.1 if v - 0.1 > 0 else 0.01)),
+            ("XF86MonBrightnessDown", lambda: self.adjust(
+                'backlight',
+                lambda v: 0 if abs(v - 0.01) < 0.01 else max(0.01, v - 0.1))),
             ("XF86LaunchA", lambda: logging.info("LaunchA")),
             ("XF86LaunchB", lambda: logging.info("LaunchB")),
             ("XF86KbdBrightnessUp", lambda: self.adjust('kbdlight', lambda v: v + 0.1)),
