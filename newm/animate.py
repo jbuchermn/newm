@@ -1,5 +1,9 @@
+import logging
+
 from abc import abstractmethod
 import time
+
+logger = logging.getLogger(__name__)
 
 class Animate:
     def __init__(self):
@@ -9,8 +13,8 @@ class Animate:
         if self._animation is not None:
             interpolation, s, d, last_ts = self._animation
             ts = time.time()
-            if ts - last_ts > 1. / 50.:
-                print("WARNING! Slow animation frame (%.2ffps)" % (1. / (ts-last_ts)))
+            if ts - last_ts > 1. / 30.:
+                logger.debug("Slow animation frame: %.2ffps", (1. / (ts-last_ts)))
             self._animation = (interpolation, s, d, ts)
 
             perc = min((ts - s) / d, 1.0)

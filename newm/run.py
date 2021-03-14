@@ -10,16 +10,13 @@ from pywm import (
 logger = logging.getLogger(__name__)
 
 def run():
-    loggers = [l for l in logging.root.manager.loggerDict.keys() if l.startswith("newm") or l.startswith("pywm")]
-    print("Enabling loggers: %s" % loggers)
-
     handler = logging.StreamHandler()
     formatter = logging.Formatter('[%(levelname)s] %(filename)s:%(lineno)s %(asctime)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(formatter)
 
-    for l in loggers:
+    for l in ["newm", "pywm"]:
         log = logging.getLogger(l)
         log.setLevel(logging.DEBUG)
         log.addHandler(handler)
