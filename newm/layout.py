@@ -47,6 +47,8 @@ from .overlay import (
     OverviewOverlay
 )
 
+logger = logging.getLogger(__name__)
+
 
 def _score(i1, j1, w1, h1,
            im, jm,
@@ -128,7 +130,7 @@ class Animation:
             """
             An animation may decide it does not want to be executed anymore
             """
-            logging.debug("Animation decided not to take place")
+            logger.debug("Animation decided not to take place")
             self._initial_state, self._final_state = None, None
 
         if self._initial_state is not None:
@@ -162,22 +164,22 @@ class LayoutThread(Thread):
     def push(self, nxt):
         if isinstance(nxt, Overlay):
             if self._current_ovr is not None or len([x for x in self._pending if isinstance(x, Overlay)]) > 0:
-                logging.debug("Rejecting queued overlay")
+                logger.debug("Rejecting queued overlay")
                 return
             else:
-                logging.debug("Queuing overlay")
+                logger.debug("Queuing overlay")
                 self._pending += [nxt]
         else:
             if nxt.overlay_safe:
-                logging.debug("Overlay-safe animation not queued")
+                logger.debug("Overlay-safe animation not queued")
                 self._pending = [nxt] + self._pending
             else:
-                logging.debug("Queuing animation")
+                logger.debug("Queuing animation")
                 self._pending += [nxt]
 
 
     def on_overlay_destroyed(self):
-        logging.debug("Thread: Finishing overlay...")
+        logger.debug("Thread: Finishing overlay...")
         self._current_ovr = None
 
     def run(self):
@@ -186,22 +188,22 @@ class LayoutThread(Thread):
                 if len(self._pending) > 0:
                     if isinstance(self._pending[0], Overlay):
                         if self._current_anim is None and self._current_ovr is None:
-                            logging.debug("Thread: Starting overlay...")
+                            logger.debug("Thread: Starting overlay...")
                             self._current_ovr = self._pending.pop(0)
                             self.layout.start_overlay(self._current_ovr)
                     else:
                         if self._current_anim is None and (self._current_ovr is None or self._pending[0].overlay_safe):
-                            logging.debug("Thread: Starting animation...")
+                            logger.debug("Thread: Starting animation...")
                             self._current_anim = self._pending.pop(0)
                             self._current_anim.start()
 
                 if self._current_anim is not None:
                     if self._current_anim.check_finished():
-                        logging.debug("Thread: Finishing animation...")
+                        logger.debug("Thread: Finishing animation...")
                         self._current_anim = None
 
             except Exception:
-                logging.exception("Unexpected during LayoutThread")
+                logger.exception("Unexpected during LayoutThread")
 
             time.sleep(1. / 120.)
 
@@ -296,7 +298,7 @@ class Layout(PyWM, Animate):
         return self._process(self.reducer(self.state))
 
     def main(self):
-        logging.debug("Layout main...")
+        logger.debug("Layout main...")
 
         self.state = LayoutState()
 
@@ -318,7 +320,7 @@ class Layout(PyWM, Animate):
         self.thread = LayoutThread(self)
 
         if 'panel_dir' in self.config:
-            logging.debug("Spawning panel...")
+            logger.debug("Spawning panel...")
             subprocess.Popen(["npm", "run", "start-notifiers"], cwd=self.config['panel_dir'])
             subprocess.Popen(["npm", "run", "start-launcher"], cwd=self.config['panel_dir'])
             subprocess.Popen(["npm", "run", "start-lock"], cwd=self.config['panel_dir'])
@@ -472,7 +474,7 @@ class Layout(PyWM, Animate):
         # END DEBUG
 
         if self.overlay is not None and self.overlay.ready():
-            logging.debug("...passing to overlay %s", self.overlay)
+            logger.debug("...passing to overlay %s", self.overlay)
             if self.overlay.on_key(time_msec, keycode, state, keysyms):
                 return True
 
@@ -485,7 +487,7 @@ class Layout(PyWM, Animate):
         if self.is_locked():
             return False
 
-        logging.debug("Modifiers %d...", modifiers)
+        logger.debug("Modifiers %d...", modifiers)
         if self.modifiers & self.mod > 0:
             """
             This is a special case, if a SingleFingerMoveGesture has started, then
@@ -494,11 +496,11 @@ class Layout(PyWM, Animate):
 
             If a gesture has been captured reallow_gesture is a noop
             """
-            logging.debug("Resetting gesture")
+            logger.debug("Resetting gesture")
             self.reallow_gesture()
 
         if self.overlay is not None and self.overlay.ready():
-            logging.debug("...passing to overlay %s", self.overlay)
+            logger.debug("...passing to overlay %s", self.overlay)
             if self.overlay.on_modifiers(modifiers):
                 return True
         return False
@@ -516,9 +518,9 @@ class Layout(PyWM, Animate):
         if self.is_locked():
             return False
 
-        logging.debug("Button...")
+        logger.debug("Button...")
         if self.overlay is not None and self.overlay.ready():
-            logging.debug("...passing to overlay %s", self.overlay)
+            logger.debug("...passing to overlay %s", self.overlay)
             return self.overlay.on_button(time_msec, button, state)
 
         return False
@@ -537,15 +539,15 @@ class Layout(PyWM, Animate):
         if self.is_locked():
             return False
 
-        logging.debug("Gesture %s...", gesture)
+        logger.debug("Gesture %s...", gesture)
         if self.overlay is not None and self.overlay.ready():
-            logging.debug("...passing to overlay %s", self.overlay)
+            logger.debug("...passing to overlay %s", self.overlay)
             return self.overlay.on_gesture(gesture)
         elif self.overlay is None:
             if self.modifiers & self.mod and \
                     (isinstance(gesture, TwoFingerSwipePinchGesture) or
                      isinstance(gesture, SingleFingerMoveGesture)):
-                logging.debug("...MoveResize")
+                logger.debug("...MoveResize")
                 view = self.find_focused_view()
 
                 if view is not None and view.is_dialog():
@@ -562,7 +564,7 @@ class Layout(PyWM, Animate):
 
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 3:
-                logging.debug("...Swipe")
+                logger.debug("...Swipe")
                 ovr = SwipeOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
@@ -570,7 +572,7 @@ class Layout(PyWM, Animate):
 
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 4:
-                logging.debug("...SwipeToZoom")
+                logger.debug("...SwipeToZoom")
                 ovr = SwipeToZoomOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
@@ -578,7 +580,7 @@ class Layout(PyWM, Animate):
 
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 5:
-                logging.debug("...Launcher")
+                logger.debug("...Launcher")
                 ovr = LauncherOverlay(self)
                 ovr.on_gesture(gesture)
                 self.enter_overlay(ovr)
@@ -595,7 +597,7 @@ class Layout(PyWM, Animate):
         self.thread.push(overlay)
 
     def start_overlay(self, overlay):
-        logging.debug("Going to enter %s...", overlay)
+        logger.debug("Going to enter %s...", overlay)
         self.key_processor.on_other_action()
         self.overlay = overlay
         self.overlay.init()
@@ -605,7 +607,7 @@ class Layout(PyWM, Animate):
         if self.overlay is None:
             return
 
-        logging.debug("Force-closing %s", self.overlay)
+        logger.debug("Force-closing %s", self.overlay)
         try:
             self.overlay.destroy()
         finally:
@@ -618,7 +620,7 @@ class Layout(PyWM, Animate):
             if len(lock_screen) > 0:
                 lock_screen[0].focus()
             else:
-                logging.warn("Locking without lock panel - not a good idea")
+                logger.warn("Locking without lock panel - not a good idea")
 
         self.auth_backend.lock()
 
@@ -641,20 +643,20 @@ class Layout(PyWM, Animate):
                 lambda: self.update_cursor())
 
     def exit_overlay(self):
-        logging.debug("Going to exit overlay...")
+        logger.debug("Going to exit overlay...")
         if self.overlay is None:
-            logging.debug("...aborted")
+            logger.debug("...aborted")
             return
 
-        logging.debug("...destroy")
+        logger.debug("...destroy")
         self.overlay.destroy()
 
     def on_overlay_destroyed(self):
-        logging.debug("Overlay destroyed")
+        logger.debug("Overlay destroyed")
         self.thread.on_overlay_destroyed()
         self.overlay = None
 
-        logging.debug("Resetting gesture")
+        logger.debug("Resetting gesture")
         self.reallow_gesture()
 
     def move(self, delta_i, delta_j):
@@ -703,17 +705,17 @@ class Layout(PyWM, Animate):
         self.animate_to(reducer, .3)
 
     def destroy_view(self, view):
-        logging.info("Destroying view %s", view)
+        logger.info("Destroying view %s", view)
         state = None
         try:
             state = self.state.get_view_state(view)
         except:
-            logging.warn("Unexpected: View %s state not found", view)
+            logger.warn("Unexpected: View %s state not found", view)
             return
         best_view = None
         best_view_score = 1000
 
-        logging.debug("Finding view to focus since %s (%d) closes...", view.app_id, view._handle)
+        logger.debug("Finding view to focus since %s (%d) closes...", view.app_id, view._handle)
         for k, s in self.state._view_states.items():
             if not s.is_tiled:
                 continue
@@ -722,7 +724,7 @@ class Layout(PyWM, Animate):
                 continue
 
             sc = (s.i - state.i + s.w / 2. - state.w / 2.)**2 + (s.j - state.j + s.h / 2. - state.h / 2.)**2
-            logging.debug("View (%d) has score %f", k, sc)
+            logger.debug("View (%d) has score %f", k, sc)
             if sc < best_view_score:
                 best_view_score = sc
                 best_view = k

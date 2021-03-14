@@ -11,6 +11,8 @@ from pywm.touchpad import (
 
 from .overlay import Overlay
 
+logger = logging.getLogger(__name__)
+
 class MoveResizeFloatingOverlay(Overlay):
     def __init__(self, layout, view):
         super().__init__(layout)
@@ -31,7 +33,7 @@ class MoveResizeFloatingOverlay(Overlay):
             self.w = state.w
             self.h = state.h
         except Exception:
-            logging.warn("Unexpected: Could not access view %s state", self.view)
+            logger.warn("Unexpected: Could not access view %s state", self.view)
 
         self._motion_mode = True
         self._gesture_mode = False
@@ -77,7 +79,7 @@ class MoveResizeFloatingOverlay(Overlay):
         self._gesture_last_dy = 0
 
         if not self.layout.modifiers & self.layout.mod:
-            logging.debug("MoveResizeFloatingOverlay: Exiting on gesture end")
+            logger.debug("MoveResizeFloatingOverlay: Exiting on gesture end")
             self.layout.exit_overlay()
 
 
@@ -88,14 +90,14 @@ class MoveResizeFloatingOverlay(Overlay):
 
     def on_button(self, time_msec, button, state):
         if self._motion_mode:
-            logging.debug("MoveFloatingOverlay: Exiting on mouse release")
+            logger.debug("MoveFloatingOverlay: Exiting on mouse release")
             self.layout.exit_overlay()
             return True
         return False
 
     def on_gesture(self, gesture):
         if isinstance(gesture, TwoFingerSwipePinchGesture):
-            logging.debug("MoveResizeFloatingOverlay: New TwoFingerSwipePinch")
+            logger.debug("MoveResizeFloatingOverlay: New TwoFingerSwipePinch")
 
             self._motion_mode = False
             self._gesture_mode = True
@@ -106,7 +108,7 @@ class MoveResizeFloatingOverlay(Overlay):
             return True
 
         if isinstance(gesture, SingleFingerMoveGesture):
-            logging.debug("MoveResizeFloatingOverlay: New SingleFingerMove")
+            logger.debug("MoveResizeFloatingOverlay: New SingleFingerMove")
 
             self._motion_mode = False
             self._gesture_mode = True
@@ -120,7 +122,7 @@ class MoveResizeFloatingOverlay(Overlay):
     def on_key(self, time_msec, keycode, state, keysyms):
         if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
             if self._gesture_mode == False and self._motion_mode == False:
-                logging.debug("MoveResizeFlaotingOverlay: Exiting on mod release")
+                logger.debug("MoveResizeFlaotingOverlay: Exiting on mod release")
                 self.layout.exit_overlay()
 
     def pre_destroy(self):

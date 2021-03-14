@@ -5,6 +5,8 @@ import sys
 import socket
 import json
 
+logger = logging.getLogger(__name__)
+
 class _PAMBackend:
     def __init__(self, auth):
         self.auth = auth
@@ -22,7 +24,7 @@ class _PAMBackend:
             self.init_auth(self._user)
 
     def start_session(self):
-        logging.warn("Unsupported operation")
+        logger.warn("Unsupported operation")
 
 class _GreetdBackend:
     def __init__(self, auth):
@@ -32,14 +34,14 @@ class _GreetdBackend:
 
     def _open_socket(self):
         if "GREETD_SOCK" not in os.environ:
-            logging.error("Not in a greetd session")
+            logger.error("Not in a greetd session")
             return
 
         greetd_sock = os.environ["GREETD_SOCK"]
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._socket.connect(greetd_sock)
 
-        logging.debug("Connected to greetd")
+        logger.debug("Connected to greetd")
 
     def _send(self, msg):
         if self._socket is None:
@@ -86,9 +88,9 @@ class AuthBackend:
                     self._users += [(u[0], int(u[2]), u[6], u[0] == greeter_user)] # name, uid, login shell, is_greeter
 
         if len([g for g in self._users if g[3]]) == 0:
-            logging.warn("Could not find greeter: %s", greeter_user)
+            logger.warn("Could not find greeter: %s", greeter_user)
         if len([g for g in self._users if g[1] == os.getuid()]) == 0:
-            logging.error("Fatal! Could not find current user: %s", greeter_user)
+            logger.error("Fatal! Could not find current user: %s", greeter_user)
 
         """
         initial
@@ -106,7 +108,7 @@ class AuthBackend:
     def is_greeter(self):
         user = [u for u in self._users if u[1] == os.getuid()]
         if len(user) == 0:
-            logging.warn("Could not find current user: %d", os.getuid())
+            logger.warn("Could not find current user: %d", os.getuid())
             return False
         return user[0][3]
 
@@ -131,7 +133,7 @@ class AuthBackend:
         if msg['kind'] == "auth_register" and self._state == "wait_user":
             self.init_session()
         elif msg['kind'] == "auth_register" and self._state == "wait_cred":
-            logging.warn("Unexpected")
+            logger.warn("Unexpected")
         elif msg['kind'] == "auth_choose_user":
             self._backend.init_auth(msg['user'])
         elif msg['kind'] == "auth_enter_cred":
@@ -154,16 +156,16 @@ class AuthBackend:
             """
             Backend should retry on its own
             """
-            logging.debug("Verification failed")
+            logger.debug("Verification failed")
             return
 
         self._state = "initial"
 
         if self.is_greeter():
-            logging.debug("starting session after successful verification")
+            logger.debug("starting session after successful verification")
             self._backend.start_session()
             self.layout.terminate()
         else:
-            logging.debug("unlocking after successful verification")
+            logger.debug("unlocking after successful verification")
             self.layout._trusted_unlock()
 

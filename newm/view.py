@@ -1,5 +1,4 @@
 import math
-import time
 import logging
 
 from pywm import PyWMView, PyWMViewDownstreamState
@@ -15,6 +14,8 @@ PANELS = {
 }
 
 CORNER_RADIUS = 12.5
+
+logger = logging.getLogger(__name__)
 
 
 class View(PyWMView, Animate):
@@ -39,7 +40,7 @@ class View(PyWMView, Animate):
         return self.panel is not None
 
     def main(self, state):
-        logging.info(
+        logger.info(
             "Init: %s (%s): %s, %s, %s, xwayland=%s, floating=%s",
             self, "child" if self.parent is not None else "root",
             self.up_state.title, self.app_id, self.role,
@@ -64,7 +65,7 @@ class View(PyWMView, Animate):
 
         if isinstance(self.app_id, str) and self.app_id in PANELS:
             self.panel = PANELS[self.app_id]
-            logging.debug("Registered panel %s: %s", self.app_id, self.panel)
+            logger.debug("Registered panel %s: %s", self.app_id, self.panel)
 
         else:
             second_state = None
@@ -88,7 +89,7 @@ class View(PyWMView, Animate):
                         ci = state.get_view_state(self.parent).i + state.get_view_state(self.parent).w / 2.
                         cj = state.get_view_state(self.parent).j + state.get_view_state(self.parent).h / 2.
                     except:
-                        logging.warn("Unexpected: Could not access parent %s state" % self.parent)
+                        logger.warn("Unexpected: Could not access parent %s state" % self.parent)
 
                 w, h = min_w, min_h
                 w *= state.size / self.wm.width / self.client_side_scale
@@ -213,7 +214,7 @@ class View(PyWMView, Animate):
                 This can happen, if main has not been executed yet
                 (e.g. during an overlay) - just return a box not displayed
                 """
-                logging.exception("Could not access view %s state" % self)
+                logger.exception("Could not access view %s state" % self)
                 return result
 
 
@@ -300,7 +301,7 @@ class View(PyWMView, Animate):
             result.box = (x, y, w, h)
 
         if result.size != self.up_state.size:
-            logging.debug("Size update (View %d %s) %s -> %s", self._handle, self.app_id, self.up_state.size, result.size)
+            logger.debug("Size update (View %d %s) %s -> %s", self._handle, self.app_id, self.up_state.size, result.size)
         result.opacity = 1.0 if result.lock_enabled else state.background_opacity
         return result
 

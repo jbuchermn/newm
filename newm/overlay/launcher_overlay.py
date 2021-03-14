@@ -4,6 +4,8 @@ from pywm import PYWM_RELEASED
 from pywm.touchpad import GestureListener, LowpassGesture, HigherSwipeGesture
 from .overlay import Overlay
 
+logger = logging.getLogger(__name__)
+
 class LauncherOverlay(Overlay):
     def __init__(self, layout):
         super().__init__(layout)
@@ -11,7 +13,7 @@ class LauncherOverlay(Overlay):
         self._is_opened = False
 
     def on_gesture(self, gesture):
-        logging.debug("LauncherOverlay: new gesture")
+        logger.debug("LauncherOverlay: new gesture")
         if self._is_opened:
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 5:
@@ -61,6 +63,6 @@ class LauncherOverlay(Overlay):
         return True
 
     def _exit_transition(self):
-        logging.debug("Exiting LauncherOverlay with animation...")
+        logger.debug("Exiting LauncherOverlay with animation...")
         return self.layout.state.copy(launcher_perc=0), .2
 

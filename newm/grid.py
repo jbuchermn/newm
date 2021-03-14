@@ -7,6 +7,8 @@ import logging
 THROW_RATIO = .6
 TIME_SCALE = .3
 
+logger = logging.getLogger(__name__)
+
 class Grid:
     def __init__(self, name, x0, x1, xi, d_ovr=0, m_snap=1):
         self.name = "%s-%d" % (name, time.time() % 1000)
@@ -85,10 +87,10 @@ class Grid:
 
         # BEGIN DEBUG
         if not silent:
-            logging.debug("GRID[%s]: %f, %f, %f, %f, %f",
-                          self.name, time.time(), x, xp,
-                          self.last_p if self.last_p is not None else 0,
-                          self.last_p_output if self.last_p_output is not None else 0)
+            logger.debug("GRID[%s]: %f, %f, %f, %f, %f",
+                         self.name, time.time(), x, xp,
+                         self.last_p if self.last_p is not None else 0,
+                         self.last_p_output if self.last_p_output is not None else 0)
         # END DEBUG
         return xp
 
@@ -122,13 +124,13 @@ class Grid:
         x0 = self.at(self.last_x_output, silent=True)
         t0 = time.time()
         for i in range(2):
-            logging.debug("GRID[%s]: %f, %f, %f, %f, %f",
-                          self.name,
-                          t0 + i * dt,
-                          0,
-                          x0 + i * (xf-x0),
-                          0,
-                          0 if dt == 0. else dx/dt if xf>x0 else -dx/dt)
+            logger.debug("GRID[%s]: %f, %f, %f, %f, %f",
+                         self.name,
+                         t0 + i * dt,
+                         0,
+                         x0 + i * (xf-x0),
+                         0,
+                         0 if dt == 0. else dx/dt if xf>x0 else -dx/dt)
         # END DEBUG
 
         return xf, dt

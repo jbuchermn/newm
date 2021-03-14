@@ -4,6 +4,8 @@ import time
 import psutil
 import logging
 
+logger = logging.getLogger(__name__)
+
 class SysBackendEndpoint:
     def __init__(self, name, setter, getter):
         self.name = name
@@ -75,20 +77,21 @@ class SysBackend(Thread):
         try:
             e = self._endpoints[name]
             val = e.get()
-            val = action(val)
-            e.set(val)
-            val = e.get()
+            new_val = action(val)
+            e.set(new_val)
+            new_val = e.get()
+            logger.debug("SysBackend: set %s %f -> %f", name, val, new_val);
 
             if broadcast:
                 self.wm.panel_endpoint.broadcast({
                     'kind': 'sys_backend',
-                    name: val
+                    name: new_val
                 })
 
         except KeyError:
-            logging.debug("Skipping %s", name)
+            logger.debug("Skipping %s", name)
         except:
-            logging.exception("Adjust")
+            logger.exception("Adjust")
 
     def idle_state(self, level):
         """
@@ -121,13 +124,13 @@ class SysBackend(Thread):
             ("XF86MonBrightnessDown", lambda: self.adjust(
                 'backlight',
                 lambda v: 0 if abs(v - 0.01) < 0.01 else max(0.01, v - 0.1))),
-            ("XF86LaunchA", lambda: logging.info("LaunchA")),
-            ("XF86LaunchB", lambda: logging.info("LaunchB")),
+            ("XF86LaunchA", lambda: logger.info("LaunchA")),
+            ("XF86LaunchB", lambda: logger.info("LaunchB")),
             ("XF86KbdBrightnessUp", lambda: self.adjust('kbdlight', lambda v: v + 0.1)),
             ("XF86KbdBrightnessDown", lambda: self.adjust('kbdlight', lambda v: v - 0.1)),
-            ("XF86AudioPrev", lambda: logging.info("AudioPrev")),
-            ("XF86AudioPlay", lambda: logging.info("AudioPlay")),
-            ("XF86AudioNext", lambda: logging.info("AudioNext")),
+            ("XF86AudioPrev", lambda: logger.info("AudioPrev")),
+            ("XF86AudioPlay", lambda: logger.info("AudioPlay")),
+            ("XF86AudioNext", lambda: logger.info("AudioNext")),
             ("XF86AudioMute", lambda: self.adjust('volume', lambda _: 0)),
             ("XF86AudioLowerVolume", lambda: self.adjust("volume", lambda v: v - 0.1)),
             ("XF86AudioRaiseVolume", lambda: self.adjust("volume", lambda v: v + 0.1))

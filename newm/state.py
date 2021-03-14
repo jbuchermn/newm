@@ -1,6 +1,8 @@
 import math
 import logging
 
+logger = logging.getLogger(__name__)
+
 DEFAULT_PADDING = 0.01
 
 class ViewState:
@@ -95,7 +97,7 @@ class LayoutState:
             s = self.get_view_state(view)
             s.update(**kwargs)
         except Exception:
-            logging.warn("Unexpected: Unable to update view %s state", view)
+            logger.warn("Unexpected: Unable to update view %s state", view)
 
     """
     Reducers

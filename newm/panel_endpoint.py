@@ -7,6 +7,8 @@ from threading import Thread
 
 SOCKET_PORT = 8641
 
+logger = logging.getLogger(__name__)
+
 class PanelEndpoint(Thread):
     def __init__(self, layout):
         super().__init__()
@@ -20,7 +22,7 @@ class PanelEndpoint(Thread):
         self.start()
 
     async def _socket_handler(self, client_socket, path):
-        logging.info("Opened connection: %s" % path)
+        logger.info("Opened connection: %s" % path)
         self._clients += [client_socket]
         try:
             async for msg in client_socket:
@@ -35,10 +37,10 @@ class PanelEndpoint(Thread):
                     elif msg['kind'].startswith('auth_'):
                         self.layout.auth_backend.on_message(msg)
                 except Exception:
-                    logging.debug("Received unparsable message: %s", msg)
+                    logger.debug("Received unparsable message: %s", msg)
 
         finally:
-            logging.info("Closing connection: %s", path)
+            logger.info("Closing connection: %s", path)
             self._clients.remove(client_socket)
 
 
@@ -56,7 +58,7 @@ class PanelEndpoint(Thread):
         self._event_loop.stop()
 
     def stop(self):
-        logging.info("Stopping PanelEndpoint...")
+        logger.info("Stopping PanelEndpoint...")
         asyncio.run_coroutine_threadsafe(self._stop(), self._event_loop)
 
     def run(self):
@@ -65,7 +67,7 @@ class PanelEndpoint(Thread):
 
         self._server = websockets.serve(self._socket_handler, "127.0.0.1", SOCKET_PORT)
         self._event_loop.run_until_complete(self._server)
-        logging.info("Starting PanelEndpoint...")
+        logger.info("Starting PanelEndpoint...")
         self._event_loop.run_forever()
 
 

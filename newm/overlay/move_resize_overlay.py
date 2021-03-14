@@ -16,6 +16,8 @@ from ..grid import Grid
 GRID_OVR = 0.2
 GRID_M = 2
 
+logger = logging.getLogger(__name__)
+
 class MoveOverlay:
     def __init__(self, layout, view):
         self.layout = layout
@@ -35,7 +37,7 @@ class MoveOverlay:
                     move_origin=(self.i, self.j)
                 ))
         except Exception:
-            logging.warn("Unexpected: Could not access view %s state", self.view)
+            logger.warn("Unexpected: Could not access view %s state", self.view)
 
         self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
         self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
@@ -69,11 +71,11 @@ class MoveOverlay:
             fi, ti = self.i_grid.final(restrict_by_x_current=True)
             fj, tj = self.j_grid.final(restrict_by_x_current=True)
 
-            logging.debug("Move - Grid finals: %f %f (%f %f)", fi, fj, ti, tj)
+            logger.debug("Move - Grid finals: %f %f (%f %f)", fi, fj, ti, tj)
 
             return state.i, state.j, state.w, state.h, fi, fj, state.w, state.h, max(ti, tj)
         except Exception:
-            logging.warn("Unexpected: Could not access view %s state... returning default placement", self.view)
+            logger.warn("Unexpected: Could not access view %s state... returning default placement", self.view)
             return self.i, self.j, 1, 1, round(self.i), round(self.j), 1, 1, 1
 
 
@@ -101,7 +103,7 @@ class ResizeOverlay:
                     scale_origin=(view_state.w, view_state.h)
                 ))
         except Exception:
-            logging.warn("Unexpected: Could not access view %s state", self.view)
+            logger.warn("Unexpected: Could not access view %s state", self.view)
 
 
         self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
@@ -151,11 +153,11 @@ class ResizeOverlay:
             fw, tw = self.w_grid.final(restrict_by_x_current=True)
             fh, th = self.h_grid.final(restrict_by_x_current=True)
 
-            logging.debug("Resize - Grid finals: %f %f %f %f (%f %f %f %f)", fi, fj, fw, fh, ti, tj, tw, th)
+            logger.debug("Resize - Grid finals: %f %f %f %f (%f %f %f %f)", fi, fj, fw, fh, ti, tj, tw, th)
 
             return state.i, state.j, state.w, state.h, fi, fj, fw, fh, max(ti, tj, tw, th)
         except Exception:
-            logging.warn("Unexpected: Could not access view %s state... returning default placement", self.view)
+            logger.warn("Unexpected: Could not access view %s state... returning default placement", self.view)
             return self.i, self.j, self.w, self.h, self.i, self.j, self.w, self.h, 1
 
 
@@ -193,7 +195,7 @@ class MoveResizeOverlay(Overlay, Thread):
         self._wants_close = False
 
     def post_init(self):
-        logging.debug("MoveResizeOverlay: Starting thread...")
+        logger.debug("MoveResizeOverlay: Starting thread...")
         self.start()
 
     def run(self):
@@ -258,11 +260,11 @@ class MoveResizeOverlay(Overlay, Thread):
                         fj = j
 
                     if i != self.layout.state.i or j != self.layout.state.j:
-                        logging.debug("MoveResizeOverlay: Adjusting viewpoint")
+                        logger.debug("MoveResizeOverlay: Adjusting viewpoint")
                         self._target_layout_pos = (self.layout.state.i, self.layout.state.j, fi, fj, time.time(), time.time() + .3)
 
                 except Exception:
-                    logging.warn("Unexpected: Could not access view %s state", self.view)
+                    logger.warn("Unexpected: Could not access view %s state", self.view)
 
 
             if not in_prog and self._wants_close:
@@ -270,16 +272,16 @@ class MoveResizeOverlay(Overlay, Thread):
 
             time.sleep(1. / 120.)
 
-        logging.debug("MoveResizeOverlay: Thread finished")
+        logger.debug("MoveResizeOverlay: Thread finished")
         self.layout.exit_overlay()
 
     def on_gesture(self, gesture):
         if not self._running or self._wants_close:
-            logging.debug("MoveResizeOverlay: Rejecting gesture")
+            logger.debug("MoveResizeOverlay: Rejecting gesture")
             return
 
         if isinstance(gesture, TwoFingerSwipePinchGesture):
-            logging.debug("MoveResizeOverlay: New TwoFingerSwipePinch")
+            logger.debug("MoveResizeOverlay: New TwoFingerSwipePinch")
             self._target_view_pos = None
             self._target_view_size = None
 
@@ -291,7 +293,7 @@ class MoveResizeOverlay(Overlay, Thread):
             return True
 
         if isinstance(gesture, SingleFingerMoveGesture):
-            logging.debug("MoveResizeOverlay: New SingleFingerMove")
+            logger.debug("MoveResizeOverlay: New SingleFingerMove")
             self._target_view_pos = None
 
             self.overlay = MoveOverlay(self.layout, self.view)
@@ -305,7 +307,7 @@ class MoveResizeOverlay(Overlay, Thread):
 
 
     def finish(self):
-        logging.debug("MoveResizeOverlay: Finishing gesture")
+        logger.debug("MoveResizeOverlay: Finishing gesture")
         if self.overlay is not None:
             ii, ij, iw, ih, fi, fj, fw, fh, t = self.overlay.close()
             self.overlay = None
@@ -317,7 +319,7 @@ class MoveResizeOverlay(Overlay, Thread):
 
 
         if not self.layout.modifiers & self.layout.mod:
-            logging.debug("MoveResizeOverlay: Requesting close after gesture finish")
+            logger.debug("MoveResizeOverlay: Requesting close after gesture finish")
             self.close()
 
     def on_motion(self, time_msec, delta_x, delta_y):
@@ -329,7 +331,7 @@ class MoveResizeOverlay(Overlay, Thread):
     def on_key(self, time_msec, keycode, state, keysyms):
         if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
             if self.overlay is None:
-                logging.debug("MoveResizeOverlay: Requesting close after Mod release")
+                logger.debug("MoveResizeOverlay: Requesting close after Mod release")
                 self.close()
 
     def on_modifiers(self, modifiers):
@@ -353,7 +355,7 @@ class MoveResizeOverlay(Overlay, Thread):
             w = round(view_state.w)
             h = round(view_state.h)
 
-            logging.debug("MoveResizeOverlay: Exiting with animation %d, %d, %d, %d -> %d, %d, %d, %d",
+            logger.debug("MoveResizeOverlay: Exiting with animation %d, %d, %d, %d -> %d, %d, %d, %d",
                           view_state.i, view_state.j, view_state.w, view_state.h, i, j, w, h)
 
             return self.layout.state.replacing_view_state(
@@ -361,5 +363,5 @@ class MoveResizeOverlay(Overlay, Thread):
                 i=i, j=j, w=w, h=h,
                 scale_origin=(None, None), move_origin=(None, None)), .3
         except Exception:
-            logging.warn("Unexpected: Error accessing view %s state", self.view)
+            logger.warn("Unexpected: Error accessing view %s state", self.view)
             return None, 0
