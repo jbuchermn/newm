@@ -7,6 +7,7 @@
 *** DONE Focus lock panel on ensure_locked
 *** STRT Fix logging of auth info
 *** DONE VLC fullscreen -> control bar disappears -> wrong view is focused?!
+*** DONE Fix SwipToZoomOverlay jitter
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -25,6 +26,7 @@
 *** TODO New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** MoveResizeOverlay
 **** TODO Fix jumps if we start in an out-of-bounds state
+**** TODO Allow slowly swiping past multiple screens
 **** TODO Focus view on close to reduce cases where we end up in out-of-bounds state
 **** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
 **** TODO Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further

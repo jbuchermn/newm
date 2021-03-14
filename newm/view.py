@@ -246,11 +246,6 @@ class View(PyWMView, Animate):
                 x -= self.up_state.offset[0] / self.up_state.size[0] * w
                 y -= self.up_state.offset[1] / self.up_state.size[1] * h
 
-            x = int(x)
-            y = int(y)
-            w = int(w)
-            h = int(h)
-
             """
             Handle client size
             """
@@ -304,6 +299,8 @@ class View(PyWMView, Animate):
 
             result.box = (x, y, w, h)
 
+        if result.size != self.up_state.size:
+            logging.debug("Size update (View %d %s) %s -> %s", self._handle, self.app_id, self.up_state.size, result.size)
         result.opacity = 1.0 if result.lock_enabled else state.background_opacity
         return result
 

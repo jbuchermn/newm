@@ -812,7 +812,6 @@ class Layout(PyWM, Animate):
         self.animate_to(reducer, .3)
 
     def command(self, cmd):
-        print("DEBUG", cmd)
         if cmd == "anim-lock":
             self.ensure_locked()
         elif cmd == "lock":
