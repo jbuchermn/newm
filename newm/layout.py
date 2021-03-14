@@ -28,7 +28,7 @@ from .view import View
 
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
-from .sys_backend import SysBackend
+from .sys_backend import SysBackend, SysBackendEndpoint_alsa, SysBackendEndpoint_sysfs
 from .auth_backend import AuthBackend
 
 from .widget import (
@@ -242,7 +242,7 @@ class Layout(PyWM, Animate):
             ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
             ("M-q", lambda: self.close_view()),  # noqa E501
 
-            ("M-p", lambda: self.ensure_locked()),
+            ("M-p", lambda: self.ensure_locked(dim=True)),
 
             ("M-f", lambda: self.toggle_padding()),
 
@@ -251,7 +251,18 @@ class Layout(PyWM, Animate):
 
         )
 
-        self.sys_backend = SysBackend(self)
+        self.sys_backend = SysBackend(self, [
+            SysBackendEndpoint_sysfs(
+                "backlight",
+                "/sys/class/backlight/intel_backlight/brightness",
+                "/sys/class/backlight/intel_backlight/max_brightness"),
+            SysBackendEndpoint_sysfs(
+                "kbdlight",
+                "/sys/class/leds/smc::kbd_backlight/brightness",
+                "/sys/class/leds/smc::kbd_backlight/max_brightness"),
+            SysBackendEndpoint_alsa(
+                "volume")
+        ])
         self.sys_backend.register_xf86_keybindings()
 
         self.auth_backend = AuthBackend(self)
@@ -601,7 +612,7 @@ class Layout(PyWM, Animate):
             self.overlay = None
     # END DEBUG
 
-    def ensure_locked(self, anim=True):
+    def ensure_locked(self, anim=True, dim=False):
         def focus_lock():
             lock_screen = [v for v in self.panels() if v.panel == "lock"]
             if len(lock_screen) > 0:
@@ -616,6 +627,9 @@ class Layout(PyWM, Animate):
         self.animate_to(
             reducer,
             .3, focus_lock)
+
+        if dim:
+            self.sys_backend.idle_state(1)
 
     def _trusted_unlock(self):
         if self.is_locked():
@@ -798,9 +812,15 @@ class Layout(PyWM, Animate):
         self.animate_to(reducer, .3)
 
     def command(self, cmd):
+        print("DEBUG", cmd)
         if cmd == "anim-lock":
             self.ensure_locked()
         elif cmd == "lock":
+            self.ensure_locked()
+        elif cmd == "lock-pre":
+            self.ensure_locked(anim=False)
+        elif cmd == "lock-post":
+            self._update_idle(True)
             self.ensure_locked(anim=False)
 
     def launch_app(self, cmd):
@@ -809,3 +829,18 @@ class Layout(PyWM, Animate):
         """
         self.exit_overlay()
         os.system("%s &" % cmd)
+
+    def on_idle(self, elapsed, idle_inhibited):
+        if idle_inhibited and elapsed > 0:
+            return
+
+        if elapsed == 0:
+            self.sys_backend.idle_state(0)
+        # elif elapsed > 600:
+        # TODO - this command (no matter from where it's executed does not work at the moment)
+        #     os.system("systemctl suspend")
+        elif elapsed > 300:
+            self.sys_backend.idle_state(2)
+            self.ensure_locked()
+        elif elapsed > 120:
+            self.sys_backend.idle_state(1)

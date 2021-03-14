@@ -12,7 +12,7 @@
 *** DONE Lock screen: Unlock via python-pam
 *** DONE Lock screen: Start session via pygreetd_ipc
 *** DONE Automatically lock on hibernate (e.g. via small websocket-based client sending one command to panel_endpoint - comparable to swaymsg)
-*** TODO Idle management: dim screen / lock after some time (see swayidle) / dim on lock
+*** DONE Idle management: dim screen / lock after some time (see swayidle) / dim on lock
 
 ** Improve panels
 *** DONE Embed font to make it available in greeter-mode
@@ -29,6 +29,7 @@
 **** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
 **** TODO Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
 **** TODO Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
+*** TODO (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size during gesture
 
 ** Documentation
 *** TODO README / Install guide

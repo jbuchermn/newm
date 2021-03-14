@@ -4,18 +4,56 @@ import time
 import psutil
 import logging
 
+class SysBackendEndpoint:
+    def __init__(self, name, setter, getter):
+        self.name = name
+        self._setter = setter
+        self._getter = getter
+
+    def set(self, value):
+        self._setter(value)
+
+    def get(self):
+        return self._getter()
+
+class SysBackendEndpoint_sysfs(SysBackendEndpoint):
+    def __init__(self, name, path, max_path):
+        self._path = path
+        self._max_path = max_path
+
+        super().__init__(name, self._set, self._get)
+
+    def _set(self, value):
+        max_val = int(open(self._max_path, 'r').read()[:-1])
+        val = value * max_val
+        val = max(min(max_val, val), 0)
+
+        open(self._path, 'w').write("%d" % val)
+
+    def _get(self):
+        val = int(open(self._path, 'r').read()[:-1])
+        max_val = int(open(self._max_path, 'r').read()[:-1])
+        return float(val) / max_val
+
+class SysBackendEndpoint_alsa(SysBackendEndpoint):
+    def __init__(self, name):
+        super().__init__(name, self._set, self._get)
+
+    def _set(self, value):
+        os.system("amixer sset Master %d%%" % int(value * 100))
+
+    def _get(self):
+        val = int(os.popen("amixer sget Master | grep 'Mono:'").read().split('[')[1].split('%]')[0])
+        return val / 100.
+
+
 class SysBackend(Thread):
-    def __init__(self, wm):
+    def __init__(self, wm, endpoints):
         super().__init__()
         self.wm = wm
-        self._backlight = (
-            "/sys/class/backlight/intel_backlight/brightness",
-            "/sys/class/backlight/intel_backlight/max_brightness"
-        )
-        self._kbdlight = (
-            "/sys/class/leds/smc::kbd_backlight/brightness",
-            "/sys/class/leds/smc::kbd_backlight/max_brightness"
-        )
+        self._endpoints = {e.name: e for e in endpoints}
+        self._idle_backup = None
+        self._idle_backup_for = 0
 
         self._running = True
         self.start()
@@ -33,84 +71,64 @@ class SysBackend(Thread):
     def stop(self):
         self._running = False
 
-    def set_backlight(self, delta_perc):
+    def adjust(self, name, action, broadcast=True):
         try:
-            cur = int(open(self._backlight[0], 'r').read()[:-1])
-            cur_max = int(open(self._backlight[1], 'r').read()[:-1])
+            e = self._endpoints[name]
+            val = e.get()
+            val = action(val)
+            e.set(val)
+            val = e.get()
 
-            cur += int(cur_max * delta_perc / 100.0)
-            cur = max(min(cur_max, cur), 0)
-
-            open(self._backlight[0], 'w').write("%d" % cur)
-
-            self.wm.panel_endpoint.broadcast({
-                'kind': 'sys_backend',
-                'backlight': 1. * cur / cur_max
-            })
-
-            return True
-        except Exception:
-            logging.exception("Error setting backlight")
-            return False
-
-    def set_kbdlight(self, delta_perc):
-        try:
-            cur = int(open(self._kbdlight[0], 'r').read()[:-1])
-            cur_max = int(open(self._kbdlight[1], 'r').read()[:-1])
-
-            cur += int(cur_max * delta_perc / 100.0)
-            cur = max(min(cur_max, cur), 0)
-
-            open(self._kbdlight[0], 'w').write("%d" % cur)
-
-            self.wm.panel_endpoint.broadcast({
-                'kind': 'sys_backend',
-                'kbdlight': 1. * cur / cur_max
-            })
-
-            return True
-
-        except Exception:
-            logging.exception("Error setting kbdlight")
-            return False
-
-    def set_vol(self, delta_perc, mute=False):
-        if mute:
-            os.system("amixer sset Master 0%")
-
-            self.wm.panel_endpoint.broadcast({
-                'kind': 'sys_backend',
-                'volume': 0
-            })
-        else:
-            os.system("amixer sset Master %d%%%s" % (abs(delta_perc), "+" if delta_perc > 0 else "-"))
-
-            try:
-                res = int(os.popen("amixer sget Master | grep 'Mono:'").read().split('[')[1].split('%]')[0])
-                
+            if broadcast:
                 self.wm.panel_endpoint.broadcast({
                     'kind': 'sys_backend',
-                    'volume': res / 100.
+                    name: val
                 })
-            except Exception as e:
-                logging.exception("Error getting volume")
 
-        return True
+        except KeyError:
+            logging.debug("Skipping %s", name)
+        except:
+            logging.exception("Adjust")
+
+    def idle_state(self, level):
+        """
+        level == 0 (active), 1 (idle), 2 (turn monitor off)
+        """
+        if level == 0:
+            if self._idle_backup is not None:
+                for k, v in self._idle_backup.items():
+                    self.adjust(k, lambda _: v, broadcast=k=="backlight")
+                self._idle_backup = None
+                self._idle_backup_for = 0
+        elif level == 1:
+            if self._idle_backup_for != 1:
+                self._idle_backup = {k:v.get() for k,v in self._endpoints.items() if k in ["backlight", "kbdlight"]}
+                self._idle_backup_for = 1
+                self.adjust("kbdlight", lambda v: v*0.5, broadcast=False)
+                self.adjust("backlight", lambda v: v*0.5)
+        elif level == 2:
+            if self._idle_backup_for != 2:
+                if self._idle_backup_for != 1:
+                    self._idle_backup = {k:v.get() for k,v in self._endpoints.items() if k in ["backlight", "kbdlight"]}
+                self._idle_backup_for = 2
+                self.adjust("kbdlight", lambda _: 0, broadcast=False)
+                self.adjust("backlight", lambda _: 0)
+
 
     def register_xf86_keybindings(self):
         self.wm.key_processor.register_bindings(
-            ("XF86MonBrightnessUp", lambda: self.set_backlight(+10)),
-            ("XF86MonBrightnessDown", lambda: self.set_backlight(-10)),
+            ("XF86MonBrightnessUp", lambda: self.adjust('backlight', lambda v: v + 0.1)),
+            ("XF86MonBrightnessDown", lambda: self.adjust('backlight', lambda v: 0 if abs(v - 0.01) < 0.0001 else v - 0.1 if v - 0.1 > 0 else 0.01)),
             ("XF86LaunchA", lambda: logging.info("LaunchA")),
             ("XF86LaunchB", lambda: logging.info("LaunchB")),
-            ("XF86KbdBrightnessUp",  lambda: self.set_kbdlight(+10)),
-            ("XF86KbdBrightnessDown", lambda: self.set_kbdlight(-10)),
+            ("XF86KbdBrightnessUp", lambda: self.adjust('kbdlight', lambda v: v + 0.1)),
+            ("XF86KbdBrightnessDown", lambda: self.adjust('kbdlight', lambda v: v - 0.1)),
             ("XF86AudioPrev", lambda: logging.info("AudioPrev")),
             ("XF86AudioPlay", lambda: logging.info("AudioPlay")),
             ("XF86AudioNext", lambda: logging.info("AudioNext")),
-            ("XF86AudioMute", lambda: self.set_vol(0, mute=True)),
-            ("XF86AudioLowerVolume", lambda: self.set_vol(-10)),
-            ("XF86AudioRaiseVolume", lambda: self.set_vol(+10))
+            ("XF86AudioMute", lambda: self.adjust('volume', lambda _: 0)),
+            ("XF86AudioLowerVolume", lambda: self.adjust("volume", lambda v: v - 0.1)),
+            ("XF86AudioRaiseVolume", lambda: self.adjust("volume", lambda v: v + 0.1))
         )
 
 

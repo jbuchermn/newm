@@ -51,5 +51,5 @@ Place in `/lib/systemd/system-sleep/00-lock.sh`
 
 ```
 #!/bin/sh
-newm-cmd lock 
+newm-cmd lock-$1 
 ```
