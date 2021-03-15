@@ -8,7 +8,7 @@
 *** DONE Fix logging of auth info
 *** DONE VLC fullscreen -> control bar disappears -> wrong view is focused?!
 *** DONE Fix SwipToZoomOverlay jitter
-*** TODO Fix occasional weird resizing issues (Window shortly uses 2x1 then goes to 1x1 / sometimes sizes are set negative in reducer)
+*** DONE Fix occasional weird resizing issues (Window shortly uses 2x1 then goes to 1x1 / sometimes sizes are set negative in reducer)
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -32,7 +32,7 @@
 **** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
 **** TODO Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
 **** TODO Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
-*** TODO (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size during gesture
+*** TODO (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size (=scale_origin) during gesture
 
 ** Documentation
 *** TODO README / Install guide

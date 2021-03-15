@@ -177,6 +177,8 @@ class LayoutState:
         vs = self.get_view_state(view)
         relevant = [h for h, s in self._view_states.items() if (
             s.is_tiled and
+            s.scale_origin == (None, None) and
+            s.move_origin == (None, None) and
             ((s.i <= vs.i < s.i + s.w - .2) or (vs.i <= s.i < vs.i + vs.w - .2)) and
             ((s.j <= vs.j < s.j + s.h - .2) or (vs.j <= s.j < vs.j + vs.h - .2))
         )]

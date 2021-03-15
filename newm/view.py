@@ -129,14 +129,13 @@ class View(PyWMView, Animate):
 
             state1 = state.with_view_state(
                     self,
-                    is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h)
+                    is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h, scale_origin=(w1, h1))
 
 
             state2 = state1.replacing_view_state(
-                    self, i=i1, j=j1, w=w1, h=h1
-                ).focusing_view(
-                    self
-                )
+                    self,
+                    i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None)
+                ).focusing_view(self)
 
             return state1, state2
 
@@ -251,11 +250,14 @@ class View(PyWMView, Animate):
             Handle client size
             """
             w_for_size, h_for_size = self_state.scale_origin
-            if w_for_size is None:
-                w_for_size, h_for_size = w, h
-            else:
+            if w_for_size is not None:
+                w_for_size -= 2*state.padding
+                h_for_size -= 2*state.padding / (self.wm.height / self.wm.width)
                 w_for_size *= self.wm.width / state.size
                 h_for_size *= self.wm.height / state.size
+            else:
+                w_for_size, h_for_size = w, h
+
             width = round(w_for_size * self.client_side_scale / state.scale)
             height = round(h_for_size * self.client_side_scale / state.scale)
 
@@ -300,8 +302,6 @@ class View(PyWMView, Animate):
 
             result.box = (x, y, w, h)
 
-        if result.size != self.up_state.size:
-            logger.debug("Size update (View %d %s) %s -> %s", self._handle, self.app_id, self.up_state.size, result.size)
         result.opacity = 1.0 if result.lock_enabled else state.background_opacity
         return result
 
