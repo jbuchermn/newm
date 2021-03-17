@@ -25,6 +25,7 @@ from .state import LayoutState
 from .interpolation import LayoutDownstreamInterpolation
 from .animate import Animate
 from .view import View
+from .config import configured_value, load_config
 
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
@@ -49,6 +50,11 @@ from .overlay import (
 
 logger = logging.getLogger(__name__)
 
+conf_wallpaper = configured_value('wallpaper')
+conf_panel_dir = configured_value('panel_dir')
+conf_mod = configured_value('mod', PYWM_MOD_LOGO)
+conf_output_scale = configured_value('output_scale', 1.0)
+conf_pywm = configured_value('pywm', {})
 
 def _score(i1, j1, w1, h1,
            im, jm,
@@ -210,15 +216,15 @@ class LayoutThread(Thread):
 
 
 class Layout(PyWM, Animate):
-    def __init__(self, mod, **kwargs):
-        PyWM.__init__(self, View, **kwargs)
+    def __init__(self):
+        PyWM.__init__(self, View, output_scale=conf_output_scale(), **conf_pywm())
         Animate.__init__(self)
 
-        self.mod = mod
+        self.mod = conf_mod()
         self.mod_sym = None
-        if mod == PYWM_MOD_ALT:
+        if self.mod == PYWM_MOD_ALT:
             self.mod_sym = "Alt"
-        elif mod == PYWM_MOD_LOGO:
+        elif self.mod == PYWM_MOD_LOGO:
             self.mod_sym = "Super"
         else:
             raise Exception("Unknown mod")
@@ -245,10 +251,11 @@ class Layout(PyWM, Animate):
             ("M-q", lambda: self.close_view()),  # noqa E501
 
             ("M-p", lambda: self.ensure_locked(dim=True)),
+            ("M-P", lambda: self.terminate()),
+            ("M-C", lambda: load_config()),
 
             ("M-f", lambda: self.toggle_padding()),
 
-            ("M-C", lambda: self.terminate()),
             ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self))),  # noqa E501
 
         )
@@ -285,6 +292,8 @@ class Layout(PyWM, Animate):
 
         self._animations = []
 
+        self.output_scale = conf_output_scale()
+
     def reducer(self, state):
         return PyWMDownstreamState(state.lock_perc)
 
@@ -306,9 +315,9 @@ class Layout(PyWM, Animate):
         self.top_bar = self.create_widget(TopBar)
 
         self.background = None
-        if 'wallpaper' in self.config:
-            self.background = self.create_widget(Background,
-                                                 self.config['wallpaper'])
+        if conf_wallpaper() is not None:
+            self.background = self.create_widget(
+                Background, conf_wallpaper())
         self.corners = [
             self.create_widget(Corner, True, True),
             self.create_widget(Corner, True, False),
@@ -319,11 +328,11 @@ class Layout(PyWM, Animate):
         self.panel_endpoint = PanelEndpoint(self)
         self.thread = LayoutThread(self)
 
-        if 'panel_dir' in self.config:
+        if conf_panel_dir() is not None:
             logger.debug("Spawning panel...")
-            subprocess.Popen(["npm", "run", "start-notifiers"], cwd=self.config['panel_dir'])
-            subprocess.Popen(["npm", "run", "start-launcher"], cwd=self.config['panel_dir'])
-            subprocess.Popen(["npm", "run", "start-lock"], cwd=self.config['panel_dir'])
+            subprocess.Popen(["npm", "run", "start-notifiers"], cwd=conf_panel_dir())
+            subprocess.Popen(["npm", "run", "start-launcher"], cwd=conf_panel_dir())
+            subprocess.Popen(["npm", "run", "start-lock"], cwd=conf_panel_dir())
 
         # Initially display cursor
         self.update_cursor()

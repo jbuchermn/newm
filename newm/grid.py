@@ -4,8 +4,10 @@ import time
 
 import logging
 
-THROW_RATIO = .6
-TIME_SCALE = .3
+from .config import configured_value
+
+conf_throw_ratio = configured_value('grid.throw_ratio', .6)
+conf_time_scale = configured_value('grid.time_scale', .3)
 
 logger = logging.getLogger(__name__)
 
@@ -99,11 +101,11 @@ class Grid:
             return self.at(self.xi), 0.
 
         p = 0
-        if self.last_p is None or self.last_p_output is None or self.last_t is None or (time.time() - self.last_t > TIME_SCALE):
+        if self.last_p is None or self.last_p_output is None or self.last_t is None or (time.time() - self.last_t > conf_time_scale()):
             xf = self.last_x_output
         else:
             p = self.last_p if abs(self.last_p) > abs(self.last_p_output) else self.last_p_output
-            xf = self.last_x_output + THROW_RATIO * p * TIME_SCALE
+            xf = self.last_x_output + conf_throw_ratio() * p * conf_time_scale()
 
         xf = round(xf)
 
@@ -115,10 +117,10 @@ class Grid:
         xf = min(self.x1, max(self.x0, round(xf)))
         dx = abs(self.last_x_output - xf)
 
-        # dt = dx / abs(p) if abs(p) > 0 else TIME_SCALE
-        # if dt > TIME_SCALE:
-        #     dt = TIME_SCALE
-        dt = dx * TIME_SCALE
+        # dt = dx / abs(p) if abs(p) > 0 else conf_time_scale
+        # if dt > conf_time_scale():
+        #     dt = conf_time_scale()
+        dt = dx * conf_time_scale()
 
         # BEGIN DEBUG
         x0 = self.at(self.last_x_output, silent=True)

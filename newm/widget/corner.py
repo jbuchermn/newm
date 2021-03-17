@@ -1,15 +1,16 @@
 import cairo
 import math
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
+from ..config import configured_value
 
 
-# CORNER_RADIUS = 12.5
-CORNER_RADIUS = 17.5
+conf_corner_radius = configured_value('corner_radius', 17.5)
 
 
 class Corner(PyWMCairoWidget):
     def __init__(self, wm, left, top):
-        self.radius = int(wm.config['output_scale'] * CORNER_RADIUS)
+        self.r = conf_corner_radius()
+        self.radius = int(wm.output_scale * self.r)
 
         super().__init__(wm, self.radius, self.radius)
 
@@ -21,9 +22,9 @@ class Corner(PyWMCairoWidget):
     def process(self):
         result = PyWMWidgetDownstreamState()
         result.z_index = 100
-        result.box = (0 if self.left else self.wm.width - CORNER_RADIUS,
-                      0 if self.top else self.wm.height - CORNER_RADIUS,
-                      CORNER_RADIUS, CORNER_RADIUS)
+        result.box = (0 if self.left else self.wm.width - self.r,
+                      0 if self.top else self.wm.height - self.r,
+                      self.r, self.r)
         return result
 
     def _render(self, surface):

@@ -1,9 +1,12 @@
 import math
 import logging
 
+from .config import configured_value
+
 logger = logging.getLogger(__name__)
 
-DEFAULT_PADDING = 0.01
+
+conf_default_padding = configured_value('default_padding', 0.01)
 
 class ViewState:
     def __init__(self, **kwargs):
@@ -45,7 +48,7 @@ class LayoutState:
         self.size = kwargs['size'] if 'size' in kwargs else 2
         self.scale = kwargs['scale'] if 'scale' in kwargs else 1
 
-        self.padding = kwargs['padding'] if 'padding' in kwargs else DEFAULT_PADDING
+        self.padding = kwargs['padding'] if 'padding' in kwargs else conf_default_padding()
 
         self.background_factor = kwargs['background_factor'] if 'background_factor' in kwargs else 3
         self.background_opacity = kwargs['background_opacity'] if 'background_opacity' in kwargs else 0.
@@ -119,7 +122,7 @@ class LayoutState:
 
         if target_i != self.i or target_j != self.j or target_size != self.size:
             if target_padding == 0:
-                target_padding = DEFAULT_PADDING
+                target_padding = conf_default_padding()
 
         return self.copy(
             i=target_i,
@@ -129,7 +132,7 @@ class LayoutState:
         )
 
     def with_padding_toggled(self, focus_box=(0, 0, 1, 1), reset=None):
-        padding = DEFAULT_PADDING if self.padding == 0 else 0
+        padding = conf_default_padding() if self.padding == 0 else 0
 
         if padding == 0:
             new_i = focus_box[0]

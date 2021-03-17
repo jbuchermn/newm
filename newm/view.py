@@ -6,6 +6,7 @@ from pywm import PyWMView, PyWMViewDownstreamState
 from .interpolation import ViewDownstreamInterpolation
 from .animate import Animate
 from .overlay import MoveResizeFloatingOverlay
+from .config import configured_value
 
 PANELS = {
     "newm-panel-notifiers": "notifiers",
@@ -13,10 +14,10 @@ PANELS = {
     "newm-panel-lock": "lock"
 }
 
-CORNER_RADIUS = 12.5
-
 logger = logging.getLogger(__name__)
 
+conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', False)
+conf_corner_radius = configured_value('view.corner_radius', 12.5)
 
 class View(PyWMView, Animate):
     def __init__(self, wm, handle):
@@ -47,7 +48,7 @@ class View(PyWMView, Animate):
             self.is_xwayland, self.up_state.is_floating)
 
         try:
-            if self.wm.config['xwayland_handle_scale_clientside']:
+            if conf_xwayland_css():
                 if self.is_xwayland:
                     """
                     xwayland_handle_scale_clientside means clients should know and handle HiDPI-scale (e.g. --force-device-scale-factor=2)
@@ -59,7 +60,7 @@ class View(PyWMView, Animate):
                         https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/432
                     - Then again, the future should by without X11/XWayland
                     """
-                    self.client_side_scale = self.wm.config['output_scale'] if 'output_scale' in self.wm.config else 1.
+                    self.client_side_scale = self.wm.output_scale
         except:
             pass
 
@@ -193,7 +194,7 @@ class View(PyWMView, Animate):
 
         else:
             result.accepts_input = True
-            result.corner_radius = CORNER_RADIUS if self.parent is None else 0
+            result.corner_radius = conf_corner_radius() if self.parent is None else 0
 
             """
             Keep focused view on top

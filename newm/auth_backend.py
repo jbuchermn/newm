@@ -7,6 +7,10 @@ import json
 
 logger = logging.getLogger(__name__)
 
+from .config import configured_value
+
+conf_greeter_user = configured_value('greeter_user', 'greeter')
+
 class _PAMBackend:
     def __init__(self, auth):
         self.auth = auth
@@ -80,7 +84,7 @@ class AuthBackend:
     def __init__(self, layout):
         self.layout = layout
         self._users = []
-        greeter_user = self.layout.config['greeter_user'] if 'greeter_user' in self.layout.config else 'greeter'
+        greeter_user = conf_greeter_user()
         with open('/etc/passwd', 'r') as pwd:
             for u in pwd:
                 u = u.split(":")

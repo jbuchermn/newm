@@ -9,17 +9,22 @@ from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
 
 from ..interpolation import WidgetDownstreamInterpolation
 from ..animate import Animate
+from ..config import configured_value
 
-BAR_HEIGHT = 20
+conf_bar_height = configured_value('bar.height', 20)
+conf_font_size = configured_value('bar.font-size', 12)
 
 
 class Bar(PyWMCairoWidget, Animate):
     def __init__(self, wm):
-        PyWMCairoWidget.__init__(self, wm, int(wm.config['output_scale'] * wm.width), int(wm.config['output_scale'] * BAR_HEIGHT))
+        PyWMCairoWidget.__init__(
+            self, wm,
+            int(wm.output_scale * wm.width),
+            int(wm.output_scale * conf_bar_height()))
         Animate.__init__(self)
 
         self.texts = ["Leftp", "Middlep", "Rightp"]
-        self.font_size = wm.config['output_scale'] * 12
+        self.font_size = wm.output_scale * conf_font_size()
 
     def set_texts(self, texts):
         self.texts = texts
@@ -80,8 +85,8 @@ class TopBar(Bar, Thread):
         result = PyWMWidgetDownstreamState()
         result.z_index = 5
 
-        dy = wm_state.top_bar_dy * BAR_HEIGHT
-        result.box = (0, dy - BAR_HEIGHT, self.wm.width, BAR_HEIGHT)
+        dy = wm_state.top_bar_dy * conf_bar_height()
+        result.box = (0, dy - conf_bar_height(), self.wm.width, conf_bar_height())
 
         return result
 
@@ -113,9 +118,9 @@ class BottomBar(Bar, Thread):
         result = PyWMWidgetDownstreamState()
         result.z_index = 5
 
-        dy = wm_state.bottom_bar_dy * BAR_HEIGHT
+        dy = wm_state.bottom_bar_dy * conf_bar_height()
         result.box = (0, self.wm.height - dy, self.wm.width,
-                      BAR_HEIGHT)
+                      conf_bar_height())
 
         return result
 

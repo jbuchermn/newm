@@ -40,7 +40,9 @@
 *** TODO Tests on other machines
 
 ** Configuration
-*** TODO Read config file from .config/newm with info now in run.py and layout.py
+*** DONE Read config file from .config/newm with info now in run.py and layout.py
+*** TODO newm-cmd to show config (keys as well as current values)
+*** TODO Fail gracefully if config.py is faulty / Print out errors for unknown keys / ...
 *** TODO Keybindings
 *** TODO SysBackend
 *** TODO TopBar / BottomBar
