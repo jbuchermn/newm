@@ -178,13 +178,30 @@ class LayoutState:
 
     def get_view_stack_index(self, view):
         vs = self.get_view_state(view)
-        relevant = [h for h, s in self._view_states.items() if (
-            s.is_tiled and
-            s.scale_origin == (None, None) and
-            s.move_origin == (None, None) and
-            ((s.i <= vs.i < s.i + s.w - .2) or (vs.i <= s.i < vs.i + vs.w - .2)) and
-            ((s.j <= vs.j < s.j + s.h - .2) or (vs.j <= s.j < vs.j + vs.h - .2))
-        )]
+        relevant = []
+
+        i, j, w, h = vs.i, vs.j, vs.w, vs.h
+        if vs.scale_origin[0] is not None:
+            w, h = vs.scale_origin
+        if vs.move_origin[0] is not None:
+            i, j = vs.move_origin
+
+        for handle, s in self._view_states.items():
+            if not s.is_tiled:
+                continue
+
+            i_, j_, w_, h_ = s.i, s.j, s.w, s.h
+            if s.scale_origin[0] is not None:
+                w_, h_ = s.scale_origin
+            if s.move_origin[0] is not None:
+                i_, j_ = s.move_origin
+
+            if not ((i_ <= i < i_ + w_ - .2) or (i <= i_ < i + w - .2)):
+                continue
+            if not ((j_ <= j < j_ + h_ - .2) or (j <= j_ < j + h - .2)):
+                continue
+
+            relevant += [handle]
 
         if view._handle not in relevant:
             # In case of w or h == 0 this may happen

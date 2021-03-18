@@ -24,6 +24,7 @@
 
 ** Usability
 *** DONE Stacking functionality
+*** DONE Stacking and _origin
 *** TODO New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** MoveResizeOverlay
 **** TODO Fix jumps if we start in an out-of-bounds state
@@ -46,6 +47,7 @@
 *** TODO Keybindings
 *** TODO SysBackend
 *** TODO TopBar / BottomBar
+*** TODO Check that it works together with greeter
 
 * Backlog / Ideas
 ** Titles during "far-away" view
