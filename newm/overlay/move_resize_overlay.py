@@ -361,7 +361,8 @@ class MoveResizeOverlay(Overlay, Thread):
             return self.layout.state.replacing_view_state(
                 self.view,
                 i=i, j=j, w=w, h=h,
-                scale_origin=(None, None), move_origin=(None, None)), .3
+                scale_origin=(None, None), move_origin=(None, None)
+            ).focusing_view(self.view), .3
         except Exception:
             logger.warn("Unexpected: Error accessing view %s state", self.view)
             return None, 0

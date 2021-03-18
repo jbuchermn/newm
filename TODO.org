@@ -29,7 +29,7 @@
 *** MoveResizeOverlay
 **** DONE Fix jumps if we start in an out-of-bounds state
 **** TODO Allow slowly swiping past multiple screens
-**** TODO Focus view on close to reduce cases where we end up in out-of-bounds state
+**** DONE Focus view on close to reduce cases where we end up in out-of-bounds state
 **** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
 **** TODO Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
 **** TODO Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
