@@ -18,6 +18,9 @@ class Grid:
         self.x1 = int(x1)
         self.xi = int(xi)
 
+        # Initially allow to handle xi out of bounds
+        self.allow_out_of_bounds = True
+
         self.d_ovr = d_ovr
         self.m_snap = m_snap
 
@@ -29,7 +32,21 @@ class Grid:
         self.last_x_output = None
         self.last_p_output = None
 
+    def _get_bounds(self, x):
+        if self.x0 <= x <= self.x1:
+            self.allow_out_of_bounds = False
+
+        x0, x1 = self.x0, self.x1
+        if self.allow_out_of_bounds and x < x0:
+            x0 = math.floor(x)
+        if self.allow_out_of_bounds and x > x1:
+            x1 = math.ceil(x)
+
+        return x0, x1
+
     def at(self, x, silent=False):
+        x0, x1 = self._get_bounds(x)
+
         t = time.time()
         if not silent:
             if self.last_x is not None and self.last_t is not None:
@@ -39,23 +56,23 @@ class Grid:
             self.last_x = x
 
         xp = x
-        if x < self.x0:
+        if x < x0:
             if self.m_snap == 1:
                 if self.d_ovr > 0:
-                    y = x - self.x0
+                    y = x - x0
                     y = self.d_ovr*(1 / (1 - y/self.d_ovr) - 1)
-                    xp = self.x0 + y
+                    xp = x0 + y
                 else:
-                    xp = self.x0
+                    xp = x0
             else:
-                y = max(0, x - self.x0 + 1)
+                y = max(0, x - x0 + 1)
 
                 if y == 0:
-                    xp = self.x0 - self.d_ovr
+                    xp = x0 - self.d_ovr
                 else:
-                    xp = self.x0 - self.d_ovr + self.d_ovr/(1. + ((1. - y)/y)**self.m_snap)
+                    xp = x0 - self.d_ovr + self.d_ovr/(1. + ((1. - y)/y)**self.m_snap)
 
-        elif x < self.x1:
+        elif x < x1:
             y = x - math.floor(x)
 
             if y == 0:
@@ -66,18 +83,18 @@ class Grid:
         else:
             if self.m_snap == 1:
                 if self.d_ovr > 0:
-                    y = x - self.x1
+                    y = x - x1
                     y = self.d_ovr*(1 / (1 + y/self.d_ovr) - 1)
-                    xp = self.x1 - y
+                    xp = x1 - y
                 else:
-                    xp = self.x1
+                    xp = x1
             else:
-                y = min(1, max(0, x - self.x1))
+                y = min(1, max(0, x - x1))
 
                 if y == 0:
-                    xp = self.x1
+                    xp = x1
                 else:
-                    xp = self.x1 + self.d_ovr/(1. + ((1. - y)/y)**self.m_snap)
+                    xp = x1 + self.d_ovr/(1. + ((1. - y)/y)**self.m_snap)
 
         if not silent:
             if self.last_x_output is not None and self.last_t is not None:
@@ -100,6 +117,8 @@ class Grid:
         if self.last_x_output is None:
             return self.at(self.xi), 0.
 
+        x0, x1 = self._get_bounds(self.last_x_output)
+
         p = 0
         if self.last_p is None or self.last_p_output is None or self.last_t is None or (time.time() - self.last_t > conf_time_scale()):
             xf = self.last_x_output
@@ -114,7 +133,7 @@ class Grid:
         elif restrict_by_xi > 0:
             xf = min(self.xi + restrict_by_xi, max(self.xi - restrict_by_xi, xf))
 
-        xf = min(self.x1, max(self.x0, round(xf)))
+        xf = min(x1, max(x0, round(xf)))
         dx = abs(self.last_x_output - xf)
 
         # dt = dx / abs(p) if abs(p) > 0 else conf_time_scale
