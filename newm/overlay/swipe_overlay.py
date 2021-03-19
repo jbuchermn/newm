@@ -36,14 +36,22 @@ class SwipeOverlay(Overlay):
         """
         min_i, min_j, max_i, max_j = self.extent = self.layout.state.get_extent()
 
-        min_i -= self.size - 1
-        min_j -= self.size - 1
+        max_i -= self.size - 1
+        max_j -= self.size - 1
+
+        self._invalid = [False, False]
+        if max_i < min_i:
+            self._invalid[0] = True
+
+        if max_j < min_j:
+            self._invalid[1] = True
 
         self.i_grid = Grid("i", min_i, max_i, self.i, GRID_OVR, GRID_M)
         self.j_grid = Grid("j", min_j, max_j, self.j, GRID_OVR, GRID_M)
 
-        self._set_state()
         self._has_gesture = False
+
+        self._set_state()
 
     def _exit_finished(self):
         self.layout.update_cursor()
@@ -64,8 +72,10 @@ class SwipeOverlay(Overlay):
         return self.layout.state.copy(i=i, j=j), t
 
     def _set_state(self):
-        self.layout.state.i = self.i_grid.at(self.i)
-        self.layout.state.j = self.j_grid.at(self.j)
+        if not self._invalid[0]:
+            self.layout.state.i = self.i_grid.at(self.i)
+        if not self._invalid[1]:
+            self.layout.state.j = self.j_grid.at(self.j)
         self.layout.damage()
 
 

@@ -144,6 +144,9 @@ class Animation:
 
         self._started = time.time()
         if self._final_state is not None:
+            # Enforce constraints on final state
+            self._final_state.constrain()
+
             self.layout._animate_to(self._final_state, self.duration)
 
     def __str__(self):
@@ -450,10 +453,14 @@ class Layout(PyWM, Animate):
     def place_initial(self, w, h):
         place_i = 0
         place_j = 0
-        for j, i in product(range(math.floor(self.state.j),
-                                  math.ceil(self.state.j + self.state.size)),
-                            range(math.floor(self.state.i),
-                                  math.ceil(self.state.i + self.state.size))):
+
+        i, j = self.state.i, self.state.j
+        # Special case of centered window if extent < size
+        i, j = math.ceil(i), math.ceil(j)
+        for j, i in product(range(math.floor(j),
+                                  math.ceil(j + self.state.size)),
+                            range(math.floor(i),
+                                  math.ceil(i + self.state.size))):
             for jp, ip in product(range(j, j + h), range(i, i + w)):
                 if not self.state.is_tile_free(ip, jp):
                     break
@@ -461,10 +468,12 @@ class Layout(PyWM, Animate):
                 place_i, place_j = i, j
                 break
         else:
-            place_i, place_j = self.state.i, self.state.j
+            i, j, w, h = self.find_focused_box()
+            place_i, place_j = i + w, j
             while not self.state.is_tile_free(place_i, place_j):
                 place_i += 1
 
+        logger.debug("Found initial placement at %d, %d (state = %f, %f, %f)", place_i, place_j, self.state.i, self.state.j, self.state.size)
         return place_i, place_j
 
 

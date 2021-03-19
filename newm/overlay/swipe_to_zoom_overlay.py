@@ -11,7 +11,14 @@ class SwipeToZoomOverlay(Overlay):
         super().__init__(self)
 
         self.layout = layout
+        self._focused = self.layout.find_focused_view()
+        self._focused_br = None
+        if self._focused is not None:
+            state = self.layout.state.get_view_state(self._focused)
+            self._focused_br = state.i + state.w, state.j + state.h
 
+        self.i = self.layout.state.i
+        self.j = self.layout.state.j
         self.size = self.layout.state.size
 
         self.initial_scale = self.layout.state.scale
@@ -34,11 +41,23 @@ class SwipeToZoomOverlay(Overlay):
 
     def _exit_transition(self):
         size, t = self.grid.final()
-        return self.layout.state.copy(size=size, scale=self.initial_scale), t
+        if self._focused is None:
+            return self.layout.state.copy(size=size, scale=self.initial_scale), t
+        else:
+            return self.layout.state.copy(size=size, scale=self.initial_scale).focusing_view(self._focused), t
 
     def _set_state(self):
         self.layout.state.size = self.grid.at(self.size)
         self.layout.state.scale = float(self.initial_size) / self.layout.state.size
+
+        # Enforce constraints real-time
+        if self._focused_br is not None:
+            # Move bottom right corner into view
+            i, j = self._focused_br
+            self.layout.state.i = max(self.i, i - self.layout.state.size)
+            self.layout.state.j = max(self.j, j - self.layout.state.size)
+        self.layout.state.constrain()
+
         self.layout.damage()
 
     def on_gesture(self, gesture):

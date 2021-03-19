@@ -102,6 +102,27 @@ class LayoutState:
         except Exception:
             logger.warn("Unexpected: Unable to update view %s state", view)
 
+    def constrain(self):
+        min_i, min_j, max_i, max_j = self.get_extent()
+        i_size = max_i - min_i + 1
+        j_size = max_j - min_j + 1
+
+        if self.size > i_size:
+            self.i = min_i + .5*i_size - .5*self.size
+        else:
+            if self.i < min_i:
+                self.i = min_i
+            if self.i + self.size - 1 > max_i:
+                self.i = max_i - self.size + 1
+        if self.size > j_size:
+            self.j = min_j + .5*j_size - .5*self.size
+        else:
+            if self.j < min_j:
+                self.j = min_j
+            if self.j + self.size - 1 > max_j:
+                self.j = max_j - self.size + 1
+
+
     """
     Reducers
     """
@@ -237,8 +258,8 @@ class LayoutState:
             if not s.is_tiled:
                 continue
 
-            if math.floor(s.i) <= i and math.ceil(s.i + s.w - 1) >= i \
-                    and math.floor(s.j) <= j and math.ceil(s.j + s.h - 1) >= j:
+            if math.floor(s.i) <= i <= math.ceil(s.i + s.w - 1) \
+                    and math.floor(s.j) <= j <= math.ceil(s.j + s.h - 1):
                 return False
 
         return True
