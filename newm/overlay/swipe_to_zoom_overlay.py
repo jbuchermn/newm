@@ -1,9 +1,12 @@
 from pywm.touchpad import GestureListener, LowpassGesture
 from .overlay import Overlay
 from ..grid import Grid
+from ..hysteresis import Hysteresis
+from ..config import configured_value
 
-GRID_OVR = 0.3
-GRID_M = 2
+conf_grid_ovr = configured_value("swipe_zoom.ovr", 0.3)
+conf_grid_m = configured_value("swipe_zoom.m", 1)
+conf_hyst = configured_value("swipe_zoom.hyst", 0.2)
 
 
 class SwipeToZoomOverlay(Overlay):
@@ -20,15 +23,16 @@ class SwipeToZoomOverlay(Overlay):
         self.i = self.layout.state.i
         self.j = self.layout.state.j
         self.size = self.layout.state.size
+        self.initial_size = self.size
 
         self.initial_scale = self.layout.state.scale
-        self.initial_size = self.size
         self.last_delta_y = 0
 
         """
         Grid
         """
-        self.grid = Grid("size", 1, self.initial_size + 1, self.initial_size, GRID_OVR, GRID_M)
+        self.grid = Grid("size", 1, self.initial_size + 1, self.initial_size, conf_grid_ovr(), conf_grid_m())
+        self.hyst = Hysteresis(conf_hyst(), self.size)
         
 
         self._set_state()
@@ -48,7 +52,7 @@ class SwipeToZoomOverlay(Overlay):
 
     def _set_state(self):
         self.layout.state.size = self.grid.at(self.size)
-        self.layout.state.scale = float(self.initial_size) / self.layout.state.size
+        self.layout.state.scale = float(self.hyst(self.layout.state.size)) / self.layout.state.size
 
         # Enforce constraints real-time
         if self._focused_br is not None:

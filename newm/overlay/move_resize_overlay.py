@@ -12,11 +12,16 @@ from pywm.touchpad import (
 )
 from .overlay import Overlay
 from ..grid import Grid
-
-GRID_OVR = 0.2
-GRID_M = 2
+from ..hysteresis import Hysteresis
+from ..config import configured_value
 
 logger = logging.getLogger(__name__)
+
+conf_move_grid_ovr = configured_value("move.grid_ovr", 0.2)
+conf_move_grid_m = configured_value("move.grid_m", 2)
+conf_resize_grid_ovr = configured_value("resize.grid_ovr", 0.1)
+conf_resize_grid_m = configured_value("resize.grid_m", 3)
+conf_hyst = configured_value("resize.hyst", 0.2)
 
 class MoveOverlay:
     def __init__(self, layout, view):
@@ -39,8 +44,8 @@ class MoveOverlay:
         except Exception:
             logger.warn("Unexpected: Could not access view %s state", self.view)
 
-        self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
-        self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
+        self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, conf_move_grid_ovr(), conf_move_grid_m())
+        self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, conf_move_grid_ovr(), conf_move_grid_m())
 
         self.last_dx = 0
         self.last_dy = 0
@@ -89,6 +94,9 @@ class ResizeOverlay:
         self.w = 1
         self.h = 1
 
+        self.hyst_w = lambda v: v
+        self.hyst_h = lambda v: v
+
         try:
             view_state = self.layout.state.get_view_state(self.view)
             self.i = view_state.i
@@ -96,20 +104,23 @@ class ResizeOverlay:
             self.w = view_state.w
             self.h = view_state.h
 
+            self.hyst_w = Hysteresis(conf_hyst(), self.w)
+            self.hyst_h = Hysteresis(conf_hyst(), self.h)
+
             self.layout.update(
                 self.layout.state.replacing_view_state(
                     self.view,
-                    move_origin=(view_state.i, view_state.j),
-                    scale_origin=(view_state.w, view_state.h)
+                    move_origin=(self.i, self.j),
+                    scale_origin=(self.w, self.h)
                 ))
         except Exception:
             logger.warn("Unexpected: Could not access view %s state", self.view)
 
 
-        self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, GRID_OVR, GRID_M)
-        self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, GRID_OVR, GRID_M)
-        self.w_grid = Grid("w", 1, self.w + 3, self.w, GRID_OVR, GRID_M)
-        self.h_grid = Grid("h", 1, self.h + 3, self.h, GRID_OVR, GRID_M)
+        self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, conf_move_grid_ovr(), conf_move_grid_m())
+        self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, conf_move_grid_ovr(), conf_move_grid_m())
+        self.w_grid = Grid("w", 1, self.w + 3, self.w, conf_resize_grid_ovr(), conf_resize_grid_m())
+        self.h_grid = Grid("h", 1, self.h + 3, self.h, conf_resize_grid_ovr(), conf_resize_grid_m())
 
         self._closed = False
 
@@ -138,8 +149,13 @@ class ResizeOverlay:
             j = self.j
             h = self.h + dh
 
+        w_ = self.w_grid.at(w)
+        h_ = self.h_grid.at(h)
         self.layout.state.update_view_state(
-            self.view, i=self.i_grid.at(i), j=self.j_grid.at(j), w=self.w_grid.at(w), h=self.h_grid.at(h))
+            self.view, i=self.i_grid.at(i), j=self.j_grid.at(j),
+            w=w_, h=h_,
+            scale_origin=(self.hyst_w(w_),self.hyst_h(h_))
+        )
 
         self.layout.damage()
 

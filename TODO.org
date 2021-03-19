@@ -25,15 +25,16 @@
 ** Usability
 *** DONE Stacking functionality
 *** DONE Stacking and _origin
-*** TODO New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** MoveResizeOverlay
 **** DONE Fix jumps if we start in an out-of-bounds state
-**** TODO Allow slowly swiping past multiple screens
 **** DONE Focus view on close to reduce cases where we end up in out-of-bounds state
 **** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
 **** DONE Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
+*** Grid
 **** TODO Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
-*** TODO (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size (=scale_origin) during gesture
+**** TODO Allow slowly swiping past multiple screens
+*** DONE (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size (=scale_origin) during gesture
+*** TODO New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** TODO Remove possibility of wholes in between
 
 ** Documentation
@@ -49,6 +50,7 @@
 *** TODO SysBackend
 *** TODO TopBar / BottomBar
 *** TODO Check that it works together with greeter
+*** TODO Constants: Animation time / ...
 
 * Backlog / Ideas
 ** Titles during "far-away" view
