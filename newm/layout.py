@@ -257,7 +257,7 @@ class Layout(PyWM, Animate):
             ("M-P", lambda: self.terminate()),
             ("M-C", lambda: load_config()),
 
-            ("M-f", lambda: self.toggle_padding()),
+            ("M-f", lambda: self.toggle_fullscreen()),
 
             ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self))),  # noqa E501
 
@@ -290,8 +290,6 @@ class Layout(PyWM, Animate):
 
         self.thread = None
         self.panel_endpoint = None
-
-        self.fullscreen_backup = 0, 0, 1
 
         self._animations = []
 
@@ -638,7 +636,7 @@ class Layout(PyWM, Animate):
             if len(lock_screen) > 0:
                 lock_screen[0].focus()
             else:
-                logger.warn("Locking without lock panel - not a good idea")
+                logger.exception("Locking without lock panel - not a good idea")
 
         self.auth_backend.lock()
 
@@ -767,34 +765,21 @@ class Layout(PyWM, Animate):
                 .3)
 
 
-    def toggle_padding(self):
-        bu = None
-        fb = None
+    def toggle_fullscreen(self):
+        def reducer(state):
+            view = self.find_focused_view()
+            fs = state.is_fullscreen()
 
-        if self.state.padding > 0:
-            for _, v in self._views.items():
-                if v.is_window():
-                    v.set_fullscreen(True)
+            for v in self.windows():
+                v.set_fullscreen(not fs)
 
-            self.fullscreen_backup = self.state.i, self.state.j, \
-                self.state.size
-            fb = self.find_focused_box()
-        else:
-            for _, v in self._views.items():
-                if v.is_window():
-                    v.set_fullscreen(False)
-
-            if self.fullscreen_backup:
-                bu = self.fullscreen_backup
-                self.fullscreen_backup = None
-
-
-        self.animate_to(
-            lambda state: (None, state.with_padding_toggled(
-                reset=bu,
-                focus_box=fb
-            )),
-            .3)
+            if fs:
+                return None, state.without_fullscreen()
+            elif view is not None:
+                return None, state.with_fullscreen(view)
+            else:
+                return None, None
+        self.animate_to(reducer, .3)
 
     def move_focused_view(self, di, dj):
         def reducer(state):

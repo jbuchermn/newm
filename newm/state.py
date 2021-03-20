@@ -6,7 +6,6 @@ from .config import configured_value
 logger = logging.getLogger(__name__)
 
 
-conf_default_padding = configured_value('default_padding', 0.01)
 
 class ViewState:
     def __init__(self, **kwargs):
@@ -48,14 +47,16 @@ class LayoutState:
         self.size = kwargs['size'] if 'size' in kwargs else 2
         self.scale = kwargs['scale'] if 'scale' in kwargs else 1
 
-        self.padding = kwargs['padding'] if 'padding' in kwargs else conf_default_padding()
-
         self.background_factor = kwargs['background_factor'] if 'background_factor' in kwargs else 3
         self.background_opacity = kwargs['background_opacity'] if 'background_opacity' in kwargs else 0.
 
+        self.intermediate_rows = kwargs['intermediate_rows'] if 'intermediate_rows' in kwargs else []
+        self.intermediate_cols = kwargs['intermediate_cols'] if 'intermediate_cols' in kwargs else []
+        # Non-None indicates fullscreen, in that case i, j, size
+        self.state_before_fullscreen = kwargs['state_before_fullscreen'] if 'state_before_fullscreen' in kwargs else None
+
         self.top_bar_dy = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
         self.bottom_bar_dy = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0
-
         self.launcher_perc = kwargs['launcher_perc'] if 'launcher_perc' in kwargs else 0
         self.lock_perc = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
         self.final = kwargs['final'] if 'final' in kwargs else False
@@ -123,6 +124,39 @@ class LayoutState:
                 self.j = max_j - self.size + 1
 
 
+    def _insert_intermediate_col(self, i):
+        for _, s in self._view_states.items():
+            if s.i >= i:
+                s.i += 1
+            elif s.i + s.w - 1 >= i:
+                s.w += 1
+        self.intermediate_cols += [i]
+
+
+    def _insert_intermediate_row(self, j):
+        for _, s in self._view_states.items():
+            if s.j >= j:
+                s.j += 1
+            elif s.j + s.h - 1 >= j:
+                s.h += 1
+        self.intermediate_rows += [j]
+
+    def _clear_intermediate(self):
+        for j in reversed(sorted(self.intermediate_rows)):
+            for _, s in self._view_states.items():
+                if s.j >= j:
+                    s.j -= 1
+                elif s.j + s.h - 1 >= j:
+                    s.h = max(1, s.h - 1)
+        for i in reversed(sorted(self.intermediate_cols)):
+            for _, s in self._view_states.items():
+                if s.i >= i:
+                    s.i -= 1
+                elif s.i + s.w - 1 >= i:
+                    s.w = max(1, s.w - 1)
+        self.intermediate_rows = []
+        self.intermediate_cols = []
+
     """
     Reducers
     """
@@ -139,49 +173,49 @@ class LayoutState:
         target_i = max(target_i, i + w - target_size)
         target_j = max(target_j, j + h - target_size)
 
-        target_padding = self.padding
-
-        if target_i != self.i or target_j != self.j or target_size != self.size:
-            if target_padding == 0:
-                target_padding = conf_default_padding()
-
         return self.copy(
             i=target_i,
             j=target_j,
             size=target_size,
-            padding=target_padding
         )
 
-    def with_padding_toggled(self, focus_box=(0, 0, 1, 1), reset=None):
-        padding = conf_default_padding() if self.padding == 0 else 0
+    def with_fullscreen(self, view):
+        state = self.get_view_state(view)
+        i, j, w, h = state.i, state.j, state.w, state.h
+        size = max(w, h)
 
-        if padding == 0:
-            new_i = focus_box[0]
-            new_j = focus_box[1]
-            new_size = max(focus_box[2:])
+        state_before_fullscreen = self.i, self.j, self.size
 
-            return self.copy(
-                padding=padding,
-                i=new_i,
-                j=new_j,
-                size=new_size)
+        result = self.copy(state_before_fullscreen=state_before_fullscreen, i=i, j=j, size=size)
 
+        for ii in range(w, size):
+            result._insert_intermediate_col(i + ii)
+
+        for jj in range(h, size):
+            result._insert_intermediate_col(j + jj)
+
+        result.update_view_state(view, w=size, h=size)
+
+        return result
+
+    def without_fullscreen(self, drop=False):
+        if self.state_before_fullscreen is None:
+            return self.copy()
+
+        if drop:
+            i, j, size = self.i, self.j, self.size
         else:
-            new_i = self.i
-            new_j = self.j
-            new_size = self.size
+            i, j, size = self.state_before_fullscreen
 
-            if reset is not None:
-                new_i=reset[0]
-                new_j=reset[1]
-                new_size=reset[2]
+            # Possibly invalidate state_before_fullscreen
+            if self.i < i or self.i > i + size - 1:
+                i, j = self.i, self.j
+            if self.j < j or self.j > j + size - 1:
+                i, j = self.i, self.j
 
-            return self.copy(
-                padding=padding,
-                i=new_i,
-                j=new_j,
-                size=new_size,
-            )
+        result = self.copy(state_before_fullscreen=None, i=i, j=j, size=size)
+        result._clear_intermediate()
+        return result
 
 
     """
@@ -264,3 +298,5 @@ class LayoutState:
 
         return True
 
+    def is_fullscreen(self):
+        return self.state_before_fullscreen is not None

@@ -45,10 +45,14 @@ class SwipeToZoomOverlay(Overlay):
 
     def _exit_transition(self):
         size, t = self.grid.final()
-        if self._focused is None:
-            return self.layout.state.copy(size=size, scale=self.initial_scale), t
-        else:
-            return self.layout.state.copy(size=size, scale=self.initial_scale).focusing_view(self._focused), t
+        state = self.layout.state.copy(size=size, scale=self.initial_scale)
+        if self._focused is not None:
+            state = state.focusing_view(self._focused)
+
+        if size != self.initial_size:
+            state = state.without_fullscreen(drop=True)
+
+        return state, t
 
     def _set_state(self):
         self.layout.state.size = self.grid.at(self.size)

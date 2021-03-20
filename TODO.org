@@ -34,8 +34,9 @@
 **** TODO Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
 **** TODO Allow slowly swiping past multiple screens
 *** DONE (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size (=scale_origin) during gesture
-*** TODO New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
+*** DONE New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** TODO Remove possibility of wholes in between
+*** TODO Limit SwipeToZoom by size of focused (if possibly)
 
 ** Documentation
 *** TODO README / Install guide

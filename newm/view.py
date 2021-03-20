@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', False)
 conf_corner_radius = configured_value('view.corner_radius', 12.5)
+conf_padding = configured_value('view.padding', 0.01)
 
 class View(PyWMView, Animate):
     def __init__(self, wm, handle):
@@ -196,6 +197,9 @@ class View(PyWMView, Animate):
             result.accepts_input = True
             result.corner_radius = conf_corner_radius() if self.parent is None else 0
 
+            if state.is_fullscreen():
+                result.corner_radius = 0
+
             """
             Keep focused view on top
             """
@@ -232,11 +236,12 @@ class View(PyWMView, Animate):
                 w -= 0.05
                 h -= 0.05 * self.wm.width / self.wm.height
 
-            x = i - state.i + state.padding
-            y = j - state.j + state.padding / (self.wm.height / self.wm.width)
+            padding = 0 if state.is_fullscreen() else conf_padding()
+            x = i - state.i + padding
+            y = j - state.j + padding / (self.wm.height / self.wm.width)
 
-            w -= 2*state.padding
-            h -= 2*state.padding / (self.wm.height / self.wm.width)
+            w -= 2*padding
+            h -= 2*padding / (self.wm.height / self.wm.width)
 
             x *= self.wm.width / state.size
             y *= self.wm.height / state.size
@@ -252,8 +257,8 @@ class View(PyWMView, Animate):
             """
             w_for_size, h_for_size = self_state.scale_origin
             if w_for_size is not None:
-                w_for_size -= 2*state.padding
-                h_for_size -= 2*state.padding / (self.wm.height / self.wm.width)
+                w_for_size -= 2*padding
+                h_for_size -= 2*padding / (self.wm.height / self.wm.width)
                 w_for_size *= self.wm.width / state.size
                 h_for_size *= self.wm.height / state.size
             else:
