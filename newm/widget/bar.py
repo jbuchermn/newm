@@ -1,10 +1,7 @@
 from abc import abstractmethod
 from threading import Thread
-import os
-import pwd
 import time
 import cairo
-import psutil
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
 
 from ..interpolation import WidgetDownstreamInterpolation
@@ -13,6 +10,9 @@ from ..config import configured_value
 
 conf_bar_height = configured_value('bar.height', 20)
 conf_font_size = configured_value('bar.font-size', 12)
+
+conf_top_bar_text = configured_value('bar.top_texts', lambda: ["1", "2", "3"])
+conf_bottom_bar_text = configured_value('bar.bottom_texts', lambda: ["4", "5", "6"])
 
 
 class Bar(PyWMCairoWidget, Animate):
@@ -96,12 +96,7 @@ class TopBar(Bar, Thread):
             time.sleep(1.)
 
     def set(self):
-        bat = psutil.sensors_battery()
-        uname = pwd.getpwuid(os.getuid())[0]
-        self.set_texts(
-            [uname,
-             time.strftime("%c"),
-             "%d%% %s" % (bat.percent, "↑" if bat.power_plugged else "↓")])
+        self.set_texts(conf_top_bar_text()())
 
 class BottomBar(Bar, Thread):
     def __init__(self, wm):
@@ -130,16 +125,4 @@ class BottomBar(Bar, Thread):
             time.sleep(1.)
 
     def set(self):
-        cpu_perc = psutil.cpu_percent(interval=1)
-        ifdevice = "wlan0"
-        ip = ""
-        try:
-            ip = psutil.net_if_addrs()[ifdevice][0].address
-        except Exception:
-            ip = "-/-"
-        mem_perc = psutil.virtual_memory().percent
-        self.set_texts(
-            ["CPU: %d%%" % cpu_perc,
-             "%s: %s" % (ifdevice, ip),
-             "RAM: %d%%" % mem_perc])
-
+        self.set_texts(conf_bottom_bar_text()())

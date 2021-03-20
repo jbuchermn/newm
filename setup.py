@@ -10,7 +10,6 @@ setup(name='newm',
       scripts=['start-newm', 'newm-cmd'],
       install_requires=[
           'pycairo',
-          'psutil',
           'websockets',
           'python-pam'
       ])

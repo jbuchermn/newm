@@ -49,8 +49,8 @@
 *** DONE Fail gracefully if config.py is faulty / Print out errors for unknown keys / ...
 *** DONE Keybindings
 *** DONE SysBackend
-*** TODO TopBar / BottomBar
-*** TODO Check that it works together with greeter
+*** DONE TopBar / BottomBar
+*** STRT Check that it works together with greeter
 *** STRT Constants: Animation time / ...
 
 * Backlog / Ideas

@@ -1,4 +1,6 @@
 import os
+import pwd
+import time
 
 from newm import (
     SysBackendEndpoint_alsa,
@@ -32,7 +34,6 @@ def key_bindings(layout):
         ("M-C-l", lambda: layout.resize_focused_view(1, 0)),
 
         ("M-Return", lambda: os.system("alacritty &")),
-        ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),
         ("M-q", lambda: layout.close_view()),
 
         ("M-p", lambda: layout.ensure_locked(dim=True)),
@@ -56,3 +57,14 @@ sys_backend_endpoints = [
     SysBackendEndpoint_alsa(
         "volume")
 ]
+
+bar = {
+    'top_texts': lambda: [
+        pwd.getpwuid(os.getuid())[0],
+        time.strftime("%c"),
+    ],
+    'bottom_texts': lambda: [
+        "CPU: %d%%" % psutil.cpu_percent(interval=1),
+        "RAM: %d%%" % psutil.virtual_memory().percent
+    ]
+}
