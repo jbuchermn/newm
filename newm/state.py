@@ -1,8 +1,6 @@
 import math
 import logging
 
-from .config import configured_value
-
 logger = logging.getLogger(__name__)
 
 
@@ -122,6 +120,49 @@ class LayoutState:
                 self.j = min_j
             if self.j + self.size - 1 > max_j:
                 self.j = max_j - self.size + 1
+
+        used_rows = set()
+        used_cols = set()
+        for _, s in self._view_states.items():
+            if not s.is_tiled:
+                continue
+
+            i_, j_, w_, h_ = s.i, s.j, s.w, s.h
+            if s.scale_origin[0] is not None:
+                w_, h_ = s.scale_origin
+            if s.move_origin[0] is not None:
+                i_, j_ = s.move_origin
+
+            for i in range(i_, i_ + w_):
+                used_cols.add(i)
+            for j in range(j_, j_ + h_):
+                used_rows.add(j)
+
+        used_cols = list(sorted(used_cols))
+        used_rows = list(sorted(used_rows))
+        remove_cols = []
+        remove_rows = []
+        for i in range(len(used_cols) - 1):
+            for x in range(used_cols[i] + 1, used_cols[i+1]):
+                remove_cols += [x]
+        for i in range(len(used_rows) - 1):
+            for x in range(used_rows[i] + 1, used_rows[i+1]):
+                remove_rows += [x]
+
+        for j in reversed(remove_rows):
+            for _, s in self._view_states.items():
+                if s.j >= j:
+                    s.j -= 1
+                elif s.j + s.h - 1 >= j:
+                    s.h = max(1, s.h - 1)
+        for i in reversed(remove_cols):
+            for _, s in self._view_states.items():
+                if s.i >= i:
+                    s.i -= 1
+                elif s.i + s.w - 1 >= i:
+                    s.w = max(1, s.w - 1)
+
+
 
 
     def _insert_intermediate_col(self, i):
