@@ -32,7 +32,8 @@ class PanelEndpoint(Thread):
                         self.layout.launch_app(msg['app'])
 
                     elif msg['kind'] == 'cmd':
-                        self.layout.command(msg['cmd'])
+                        result = self.layout.command(msg['cmd'])
+                        await client_socket.send(json.dumps({ 'msg': str(result) }))
 
                     elif msg['kind'].startswith('auth_'):
                         self.layout.auth_backend.on_message(msg)
@@ -76,6 +77,9 @@ def msg(message):
         uri = "ws://127.0.0.1:%d" % SOCKET_PORT
         async with websockets.connect(uri) as websocket:
             await websocket.send(json.dumps({ 'kind': 'cmd', 'cmd': message }))
+            response = json.loads(await websocket.recv())
+            if 'msg' in response:
+                print(response['msg'])
 
     asyncio.get_event_loop().run_until_complete(_send())
 

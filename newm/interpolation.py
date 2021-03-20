@@ -1,5 +1,9 @@
 from pywm import PyWMViewDownstreamState, PyWMWidgetDownstreamState, PyWMDownstreamState
 
+from .config import configured_value
+
+conf_size_adjustment = configured_value("interpolation.size_adjustment", .5)
+
 class LayoutDownstreamInterpolation:
     def __init__(self, state0, state1):
         self.lock_perc = (state0.lock_perc, state1.lock_perc)
@@ -37,10 +41,8 @@ class ViewDownstreamInterpolation:
         )
 
         res.opacity = self.opacity[0] + at * (self.opacity[1] - self.opacity[0])
-        res.size=self.size[1] if at > 0.5 else self.size[0]
+        res.size=self.size[1] if at > conf_size_adjustment() else self.size[0]
         res.lock_enabled=self.lock_enabled
-        # res.opacity=1 if self.size[1] == self.size[0] else .5 + abs(.5 - at)
-        # res.size=self.size[1] if sum(self.size[1]) > sum(self.size[0]) else self.size[0]
         return res
 
 class WidgetDownstreamInterpolation:

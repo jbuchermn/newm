@@ -1,12 +1,12 @@
 from pywm.touchpad import GestureListener, LowpassGesture
 from .overlay import Overlay
 from ..grid import Grid
+from ..config import configured_value
 
-LOCKED_DIST = 0.01
-SPEED = 4
-
-GRID_OVR = 0.3
-GRID_M = 1
+conf_lock_dist = configured_value('swipe.lock_dist', 0.01)
+conf_gesture_factor = configured_value('swipe.gesture_factor', 4)
+conf_grid_ovr = configured_value('swipe.grid_ovr', 0.2)
+conf_grid_m = configured_value('swipe.grid_m', 1)
 
 
 class SwipeOverlay(Overlay):
@@ -46,8 +46,8 @@ class SwipeOverlay(Overlay):
         if max_j < min_j:
             self._invalid[1] = True
 
-        self.i_grid = Grid("i", min_i, max_i, self.i, GRID_OVR, GRID_M)
-        self.j_grid = Grid("j", min_j, max_j, self.j, GRID_OVR, GRID_M)
+        self.i_grid = Grid("i", min_i, max_i, self.i, conf_grid_ovr(), conf_grid_m())
+        self.j_grid = Grid("j", min_j, max_j, self.j, conf_grid_ovr(), conf_grid_m())
 
         self._has_gesture = False
 
@@ -89,20 +89,20 @@ class SwipeOverlay(Overlay):
 
     def _on_update(self, values):
         if self.locked_x is None:
-            if values['delta_x']**2 + values['delta_y']**2 > LOCKED_DIST**2:
+            if values['delta_x']**2 + values['delta_y']**2 > conf_lock_dist()**2:
                 self.locked_x = abs(values['delta_x']) \
                     > abs(values['delta_y'])
 
                 if self.locked_x:
-                    self.initial_x += SPEED * self.size * values['delta_x']
+                    self.initial_x += conf_gesture_factor() * self.size * values['delta_x']
                 else:
-                    self.initial_y += SPEED * self.size * values['delta_y']
+                    self.initial_y += conf_gesture_factor() * self.size * values['delta_y']
 
         if self.locked_x is not None:
             if self.locked_x:
-                self.i = self.initial_x - SPEED * self.size * values['delta_x']
+                self.i = self.initial_x - conf_gesture_factor() * self.size * values['delta_x']
             else:
-                self.j = self.initial_y - SPEED * self.size * values['delta_y']
+                self.j = self.initial_y - conf_gesture_factor() * self.size * values['delta_y']
 
         self.last_delta_x = values['delta_x']
         self.last_delta_y = values['delta_y']

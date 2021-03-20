@@ -3,8 +3,11 @@ import logging
 from pywm import PYWM_RELEASED
 from pywm.touchpad import GestureListener, LowpassGesture, HigherSwipeGesture
 from .overlay import Overlay
+from ..config import configured_value
 
 logger = logging.getLogger(__name__)
+
+conf_gesture_factor = configured_value("launcher.gesture_factor", 200)
 
 class LauncherOverlay(Overlay):
     def __init__(self, layout):
@@ -37,13 +40,13 @@ class LauncherOverlay(Overlay):
 
     def _on_update(self, values):
         if self._is_opened == False:
-            perc = values['delta2_s'] * 300 if values is not None else 1
+            perc = values['delta2_s'] * conf_gesture_factor() if values is not None else 1
             self.layout.state.launcher_perc = max(min(perc, 1.0), 0.0)
 
             if values is None:
                 self._is_opened = True
         else:
-            perc = 1. - (values['delta2_s'] * 300 if values is not None else 1)
+            perc = 1. - (values['delta2_s'] * conf_gesture_factor() if values is not None else 1)
             self.layout.state.launcher_perc = max(min(perc, 1.0), 0.0)
 
             if values is None:
@@ -64,5 +67,4 @@ class LauncherOverlay(Overlay):
 
     def _exit_transition(self):
         logger.debug("Exiting LauncherOverlay with animation...")
-        return self.layout.state.copy(launcher_perc=0), .2
-
+        return self.layout.state.copy(launcher_perc=0), .3

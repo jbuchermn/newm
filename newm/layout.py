@@ -25,7 +25,7 @@ from .state import LayoutState
 from .interpolation import LayoutDownstreamInterpolation
 from .animate import Animate
 from .view import View
-from .config import configured_value, load_config
+from .config import configured_value, load_config, print_config
 
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
@@ -827,6 +827,8 @@ class Layout(PyWM, Animate):
         elif cmd == "lock-post":
             self._update_idle(True)
             self.ensure_locked(anim=False)
+        elif cmd == "config":
+            return print_config()
 
     def launch_app(self, cmd):
         """

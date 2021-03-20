@@ -22,6 +22,7 @@ conf_move_grid_m = configured_value("move.grid_m", 2)
 conf_resize_grid_ovr = configured_value("resize.grid_ovr", 0.1)
 conf_resize_grid_m = configured_value("resize.grid_m", 3)
 conf_hyst = configured_value("resize.hyst", 0.2)
+conf_gesture_factor = configured_value("move_resize.gesture_factor", 4)
 
 class MoveOverlay:
     def __init__(self, layout, view):
@@ -60,8 +61,8 @@ class MoveOverlay:
         if self._closed:
             return
         
-        self.i += 4*(values['delta_x'] - self.last_dx)
-        self.j += 4*(values['delta_y'] - self.last_dy)
+        self.i += conf_gesture_factor*(values['delta_x'] - self.last_dx)
+        self.j += conf_gesture_factor*(values['delta_y'] - self.last_dy)
         self.last_dx = values['delta_x']
         self.last_dy = values['delta_y']
         self.layout.state.update_view_state(
@@ -128,8 +129,8 @@ class ResizeOverlay:
         if self._closed:
             return
 
-        dw = 4*values['delta_x']
-        dh = 4*values['delta_y']
+        dw = conf_gesture_factor()*values['delta_x']
+        dh = conf_gesture_factor()*values['delta_y']
 
         i, j, w, h = self.i, self.j, self.w, self.h
 

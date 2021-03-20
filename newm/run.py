@@ -2,11 +2,6 @@ import logging
 
 from .layout import Layout
 
-from pywm import (
-    PYWM_MOD_LOGO,
-    # PYWM_MOD_ALT
-)
-
 logger = logging.getLogger(__name__)
 
 def run():

@@ -4,9 +4,10 @@ from ..grid import Grid
 from ..hysteresis import Hysteresis
 from ..config import configured_value
 
-conf_grid_ovr = configured_value("swipe_zoom.ovr", 0.3)
-conf_grid_m = configured_value("swipe_zoom.m", 1)
+conf_grid_ovr = configured_value("swipe_zoom.grid_ovr", 0.2)
+conf_grid_m = configured_value("swipe_zoom.grid_m", 1)
 conf_hyst = configured_value("swipe_zoom.hyst", 0.2)
+conf_gesture_factor = configured_value("swipe_zoom.gesture_factor", 4)
 
 
 class SwipeToZoomOverlay(Overlay):
@@ -80,7 +81,7 @@ class SwipeToZoomOverlay(Overlay):
             self._has_gesture = True
 
     def _on_update(self, values):
-        self.size = self.initial_size - 4*values['delta_y']
+        self.size = self.initial_size - conf_gesture_factor()*values['delta_y']
 
         self.momentum_y = values['delta_y'] - self.last_delta_y
         self.last_delta_y = values['delta_y']

@@ -24,6 +24,9 @@ class _ConfiguredValue:
     def __call__(self):
         return self._value
 
+    def __str__(self):
+        return "%-60s %-40s %s" % (self._name, self._value, ("(default: %s)" % self._default) if self._default != self._value else "")
+
 def _update_config(at_c, at_p):
     if isinstance(at_c, _ConfiguredValue):
         at_c.update(at_p)
@@ -31,6 +34,18 @@ def _update_config(at_c, at_p):
         if isinstance(at_c, dict):
             for k in at_c.keys():
                 _update_config(at_c[k], at_p[k] if (at_p is not None and k in at_p) else None)
+        else:
+            logger.warn("Config: Unexpected")
+
+def print_config(at_c=None):
+    if at_c is None:
+        at_c = _consumer
+
+    if isinstance(at_c, _ConfiguredValue):
+        return str(at_c)
+    else:
+        if isinstance(at_c, dict):
+            return "\n".join([print_config(at_c[k]) for k in at_c.keys()])
         else:
             logger.warn("Config: Unexpected")
 
