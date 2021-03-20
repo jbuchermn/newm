@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class _ConfiguredValue:
-    def __init__(self, value, default):
+    def __init__(self, name, value, default):
+        self._name = name
         self._value = None
         self._default = default
 
@@ -29,7 +30,9 @@ def _update_config(at_c, at_p):
     else:
         if isinstance(at_c, dict):
             for k in at_c.keys():
-                _update_config(at_c[k], at_p[k] if at_p is not None and k in at_p else None)
+                _update_config(at_c[k], at_p[k] if (at_p is not None and k in at_p) else None)
+        else:
+            logger.warn("Config: Unexpected")
 
 def load_config():
     global _provider
@@ -87,12 +90,13 @@ def configured_value(path, default=None):
             c = c[k]
         except KeyError:
             c[k] = {}
+            c = c[k]
 
     k = path.split(".")[-1]
     if k in c and isinstance(c[k], _ConfiguredValue):
         return c[k]
 
-    result = _ConfiguredValue(result, default)
+    result = _ConfiguredValue(path, result, default)
     c[k] = result
     return result
 

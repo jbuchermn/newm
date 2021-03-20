@@ -36,7 +36,7 @@
 *** DONE (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size (=scale_origin) during gesture
 *** DONE New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** DONE Remove possibility of wholes in between
-*** TODO Limit SwipeToZoom by size of focused (if possibly)
+*** DONE Limit SwipeToZoom by size of focused (if possibly)
 
 ** Documentation
 *** TODO README / Install guide

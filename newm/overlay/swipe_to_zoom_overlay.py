@@ -14,11 +14,6 @@ class SwipeToZoomOverlay(Overlay):
         super().__init__(self)
 
         self.layout = layout
-        self._focused = self.layout.find_focused_view()
-        self._focused_br = None
-        if self._focused is not None:
-            state = self.layout.state.get_view_state(self._focused)
-            self._focused_br = state.i + state.w, state.j + state.h
 
         self.i = self.layout.state.i
         self.j = self.layout.state.j
@@ -28,10 +23,18 @@ class SwipeToZoomOverlay(Overlay):
         self.initial_scale = self.layout.state.scale
         self.last_delta_y = 0
 
+        self._focused = self.layout.find_focused_view()
+        self._focused_br = None
+        min_size = 1
+        if self._focused is not None:
+            state = self.layout.state.get_view_state(self._focused)
+            self._focused_br = state.i + state.w, state.j + state.h
+            min_size = min(self.initial_size, max(state.w, state.h))
+
         """
         Grid
         """
-        self.grid = Grid("size", 1, self.initial_size + 1, self.initial_size, conf_grid_ovr(), conf_grid_m())
+        self.grid = Grid("size", min_size, self.initial_size + 1, self.initial_size, conf_grid_ovr(), conf_grid_m())
         self.hyst = Hysteresis(conf_hyst(), self.size)
         
 
