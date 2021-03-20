@@ -233,6 +233,58 @@ class Layout(PyWM, Animate):
             raise Exception("Unknown mod")
 
         self.key_processor = KeyProcessor(self.mod_sym)
+
+        self.sys_backend = SysBackend(self)
+
+        self.auth_backend = AuthBackend(self)
+
+        self.state = None
+
+        self.overlay = None
+
+        self.background = None
+        self.top_bar = None
+        self.bottom_bar = None
+        self.corners = []
+
+        self.thread = None
+        self.panel_endpoint = None
+
+        self._animations = []
+
+        self.output_scale = conf_output_scale()
+
+    def _setup(self):
+        if self.bottom_bar is not None:
+            self.bottom_bar.stop()
+            self.bottom_bar.destroy()
+            self.bottom_bar = None
+
+        if self.top_bar is not None:
+            self.top_bar.stop()
+            self.top_bar.destroy()
+            self.top_bar = None
+
+        if self.background is not None:
+            self.background.destroy()
+            self.background = None
+
+        for c in self.corners:
+            c.destroy()
+        self.corners = []
+
+        self.bottom_bar = self.create_widget(BottomBar)
+        self.top_bar = self.create_widget(TopBar)
+        if conf_wallpaper() is not None:
+            self.background = self.create_widget(Background, conf_wallpaper())
+        self.corners = [
+            self.create_widget(Corner, True, True),
+            self.create_widget(Corner, True, False),
+            self.create_widget(Corner, False, True),
+            self.create_widget(Corner, False, False)
+        ]
+
+        self.key_processor.clear()
         self.key_processor.register_bindings(
             ("M-h", lambda: self.move(-1, 0)),
             ("M-j", lambda: self.move(0, 1)),
@@ -255,15 +307,13 @@ class Layout(PyWM, Animate):
 
             ("M-p", lambda: self.ensure_locked(dim=True)),
             ("M-P", lambda: self.terminate()),
-            ("M-C", lambda: load_config()),
+            ("M-C", lambda: self.update_config()),
 
             ("M-f", lambda: self.toggle_fullscreen()),
 
             ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self))),  # noqa E501
-
         )
-
-        self.sys_backend = SysBackend(self, [
+        self.sys_backend.set_endpoints(
             SysBackendEndpoint_sysfs(
                 "backlight",
                 "/sys/class/backlight/intel_backlight/brightness",
@@ -274,26 +324,8 @@ class Layout(PyWM, Animate):
                 "/sys/class/leds/smc::kbd_backlight/max_brightness"),
             SysBackendEndpoint_alsa(
                 "volume")
-        ])
+        )
         self.sys_backend.register_xf86_keybindings()
-
-        self.auth_backend = AuthBackend(self)
-
-        self.state = None
-
-        self.overlay = None
-
-        self.background = None
-        self.top_bar = None
-        self.bottom_bar = None
-        self.corners = []
-
-        self.thread = None
-        self.panel_endpoint = None
-
-        self._animations = []
-
-        self.output_scale = conf_output_scale()
 
     def reducer(self, state):
         return PyWMDownstreamState(state.lock_perc)
@@ -312,19 +344,7 @@ class Layout(PyWM, Animate):
 
         self.state = LayoutState()
 
-        self.bottom_bar = self.create_widget(BottomBar)
-        self.top_bar = self.create_widget(TopBar)
-
-        self.background = None
-        if conf_wallpaper() is not None:
-            self.background = self.create_widget(
-                Background, conf_wallpaper())
-        self.corners = [
-            self.create_widget(Corner, True, True),
-            self.create_widget(Corner, True, False),
-            self.create_widget(Corner, False, True),
-            self.create_widget(Corner, False, False)
-        ]
+        self._setup()
 
         self.panel_endpoint = PanelEndpoint(self)
         self.thread = LayoutThread(self)
@@ -815,6 +835,11 @@ class Layout(PyWM, Animate):
             else:
                 return (None, state)
         self.animate_to(reducer, .3)
+
+    def update_config(self):
+        load_config()
+        self._setup()
+        self.damage()
 
     def command(self, cmd):
         logger.debug("Received command %s", cmd)

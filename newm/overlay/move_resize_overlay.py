@@ -61,8 +61,8 @@ class MoveOverlay:
         if self._closed:
             return
         
-        self.i += conf_gesture_factor*(values['delta_x'] - self.last_dx)
-        self.j += conf_gesture_factor*(values['delta_y'] - self.last_dy)
+        self.i += conf_gesture_factor()*(values['delta_x'] - self.last_dx)
+        self.j += conf_gesture_factor()*(values['delta_y'] - self.last_dy)
         self.last_dx = values['delta_x']
         self.last_dy = values['delta_y']
         self.layout.state.update_view_state(

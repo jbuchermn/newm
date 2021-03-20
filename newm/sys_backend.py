@@ -50,15 +50,18 @@ class SysBackendEndpoint_alsa(SysBackendEndpoint):
 
 
 class SysBackend(Thread):
-    def __init__(self, wm, endpoints):
+    def __init__(self, wm):
         super().__init__()
         self.wm = wm
-        self._endpoints = {e.name: e for e in endpoints}
+        self._endpoints = {}
         self._idle_backup = None
         self._idle_backup_for = 0
 
         self._running = True
         self.start()
+
+    def set_endpoints(self, *endpoints):
+        self._endpoints = {e.name: e for e in endpoints}
 
     def run(self):
         while self._running:

@@ -67,6 +67,9 @@ class KeyProcessor:
         self.mod_sym = mod_sym
         self.bindings = []
 
+    def clear(self):
+        self.bindings = []
+
     def register_bindings(self, *bindings):
         for keys, action in bindings:
             self.bindings += [keybinding_factory(self, keys, action)]
