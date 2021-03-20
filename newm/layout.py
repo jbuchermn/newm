@@ -56,6 +56,9 @@ conf_mod = configured_value('mod', PYWM_MOD_LOGO)
 conf_output_scale = configured_value('output_scale', 1.0)
 conf_pywm = configured_value('pywm', {})
 
+conf_key_bindings = configured_value('key_bindings', lambda layout: [])
+conf_sys_backend_endpoints = configured_value('sys_backend_endpoints', [])
+
 def _score(i1, j1, w1, h1,
            im, jm,
            i2, j2, w2, h2):
@@ -220,17 +223,14 @@ class LayoutThread(Thread):
 
 class Layout(PyWM, Animate):
     def __init__(self):
+        load_config()
+
         PyWM.__init__(self, View, output_scale=conf_output_scale(), **conf_pywm())
         Animate.__init__(self)
 
         self.mod = conf_mod()
         self.mod_sym = None
-        if self.mod == PYWM_MOD_ALT:
-            self.mod_sym = "Alt"
-        elif self.mod == PYWM_MOD_LOGO:
-            self.mod_sym = "Super"
-        else:
-            raise Exception("Unknown mod")
+        self._set_mod_sym()
 
         self.key_processor = KeyProcessor(self.mod_sym)
 
@@ -254,7 +254,21 @@ class Layout(PyWM, Animate):
 
         self.output_scale = conf_output_scale()
 
+    def _set_mod_sym(self):
+        self.mod_sym = None
+        if self.mod == PYWM_MOD_ALT:
+            self.mod_sym = "Alt"
+        elif self.mod == PYWM_MOD_LOGO:
+            self.mod_sym = "Super"
+        else:
+            raise Exception("Unknown mod")
+
     def _setup(self):
+        load_config()
+
+        self.mod = conf_mod()
+        self._set_mod_sym()
+
         if self.bottom_bar is not None:
             self.bottom_bar.stop()
             self.bottom_bar.destroy()
@@ -286,44 +300,10 @@ class Layout(PyWM, Animate):
 
         self.key_processor.clear()
         self.key_processor.register_bindings(
-            ("M-h", lambda: self.move(-1, 0)),
-            ("M-j", lambda: self.move(0, 1)),
-            ("M-k", lambda: self.move(0, -1)),
-            ("M-l", lambda: self.move(1, 0)),
-
-            ("M-H", lambda: self.move_focused_view(-1, 0)),
-            ("M-J", lambda: self.move_focused_view(0, 1)),
-            ("M-K", lambda: self.move_focused_view(0, -1)),
-            ("M-L", lambda: self.move_focused_view(1, 0)),
-
-            ("M-C-h", lambda: self.resize_focused_view(-1, 0)),
-            ("M-C-j", lambda: self.resize_focused_view(0, 1)),
-            ("M-C-k", lambda: self.resize_focused_view(0, -1)),
-            ("M-C-l", lambda: self.resize_focused_view(1, 0)),
-
-            ("M-Return", lambda: os.system("alacritty &")),
-            ("M-c", lambda: os.system("chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &")),  # noqa E501
-            ("M-q", lambda: self.close_view()),  # noqa E501
-
-            ("M-p", lambda: self.ensure_locked(dim=True)),
-            ("M-P", lambda: self.terminate()),
-            ("M-C", lambda: self.update_config()),
-
-            ("M-f", lambda: self.toggle_fullscreen()),
-
-            ("ModPress", lambda: self.enter_overlay(OverviewOverlay(self))),  # noqa E501
+            *conf_key_bindings()(self)
         )
         self.sys_backend.set_endpoints(
-            SysBackendEndpoint_sysfs(
-                "backlight",
-                "/sys/class/backlight/intel_backlight/brightness",
-                "/sys/class/backlight/intel_backlight/max_brightness"),
-            SysBackendEndpoint_sysfs(
-                "kbdlight",
-                "/sys/class/leds/smc::kbd_backlight/brightness",
-                "/sys/class/leds/smc::kbd_backlight/max_brightness"),
-            SysBackendEndpoint_alsa(
-                "volume")
+            *conf_sys_backend_endpoints()
         )
         self.sys_backend.register_xf86_keybindings()
 
@@ -837,9 +817,11 @@ class Layout(PyWM, Animate):
         self.animate_to(reducer, .3)
 
     def update_config(self):
-        load_config()
         self._setup()
         self.damage()
+
+    def enter_overview_overlay(self):
+        self.enter_overlay(OverviewOverlay(self))
 
     def command(self, cmd):
         logger.debug("Received command %s", cmd)

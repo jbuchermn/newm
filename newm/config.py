@@ -4,7 +4,7 @@ import logging
 import sys
 import os
 
-_provider = None
+_provider = {}
 _consumer = {}
 
 logger = logging.getLogger(__name__)
@@ -54,40 +54,42 @@ def load_config():
 
     home = os.environ['HOME'] if 'HOME' in os.environ else '/'
     path = pathlib.Path(home) / '.config' / 'newm' / 'config.py'
+    path_default = pathlib.Path(__file__).parent.absolute() / 'default_config.py'
 
     if not path.is_file():
         path = pathlib.Path('/etc') / 'newm' / 'config.py'
 
     if not path.is_file():
-        path = pathlib.Path(__file__).parent.absolute() / 'default_config.py'
-
-    if not path.is_file():
-        raise Exception("Unexpected")
+        path = path_default
 
     logger.info("Loading config at %s", path)
 
-    module = path.stem
+    def load(path):
+        module = path.stem
+
+        try:
+            del sys.modules[module]
+        except KeyError:
+            pass
+
+        sys.path.insert(0, str(path.parent))
+        return importlib.import_module(module).__dict__
 
     try:
-        del sys.modules[module]
-    except KeyError:
-        pass
-
-    sys.path.insert(0, str(path.parent))
-    try:
-        _provider = importlib.import_module(module).__dict__
+        _provider = load(path)
     except:
-        logger.exception("Could not load config")
-        _provider = {}
+        logger.exception("Error loading config - falling back to default")
+        try:
+            _provider = load(path_default)
+        except:
+            logger.exception("Error loading default config")
+            _provider = {}
 
     _update_config(_consumer, _provider)
 
 
 def configured_value(path, default=None):
     global _consumer
-
-    if _provider is None:
-        load_config()
 
     result = None
     try:

@@ -46,9 +46,9 @@
 ** Configuration
 *** DONE Read config file from .config/newm with info now in run.py and layout.py
 *** DONE newm-cmd to show config (keys as well as current values)
-*** TODO Fail gracefully if config.py is faulty / Print out errors for unknown keys / ...
-*** STRT Keybindings
-*** STRT SysBackend
+*** DONE Fail gracefully if config.py is faulty / Print out errors for unknown keys / ...
+*** DONE Keybindings
+*** DONE SysBackend
 *** TODO TopBar / BottomBar
 *** TODO Check that it works together with greeter
 *** STRT Constants: Animation time / ...
