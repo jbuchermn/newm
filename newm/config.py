@@ -34,7 +34,8 @@ def _update_config(at_c, at_p):
 def load_config():
     global _provider
 
-    path = pathlib.Path(os.environ['HOME']) / '.config' / 'newm' / 'config.py'
+    home = os.environ['HOME'] if 'HOME' in os.environ else '/'
+    path = pathlib.Path(home) / '.config' / 'newm' / 'config.py'
 
     if not path.is_file():
         path = pathlib.Path('/etc') / 'newm' / 'config.py'
