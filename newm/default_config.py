@@ -64,7 +64,7 @@ bar = {
         time.strftime("%c"),
     ],
     'bottom_texts': lambda: [
-        "CPU: %d%%" % psutil.cpu_percent(interval=1),
-        "RAM: %d%%" % psutil.virtual_memory().percent
+        "newm",
+        "powered by pywm"
     ]
 }
