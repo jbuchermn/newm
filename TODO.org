@@ -9,6 +9,7 @@
 *** DONE VLC fullscreen -> control bar disappears -> wrong view is focused?!
 *** DONE Fix SwipToZoomOverlay jitter
 *** DONE Fix occasional weird resizing issues (Window shortly uses 2x1 then goes to 1x1 / sometimes sizes are set negative in reducer)
+*** STRT Fix typing
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam

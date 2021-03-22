@@ -233,7 +233,7 @@ class LayoutState:
             result._insert_intermediate_col(i + ii)
 
         for jj in range(h, size):
-            result._insert_intermediate_col(j + jj)
+            result._insert_intermediate_row(j + jj)
 
         result.update_view_state(view, w=size, h=size)
 
