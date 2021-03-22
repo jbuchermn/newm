@@ -29,7 +29,7 @@ from .config import configured_value, load_config, print_config
 
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
-from .sys_backend import SysBackend, SysBackendEndpoint_alsa, SysBackendEndpoint_sysfs
+from .sys_backend import SysBackend
 from .auth_backend import AuthBackend
 
 from .widget import (
@@ -58,6 +58,12 @@ conf_pywm = configured_value('pywm', {})
 
 conf_key_bindings = configured_value('key_bindings', lambda layout: [])
 conf_sys_backend_endpoints = configured_value('sys_backend_endpoints', [])
+
+conf_lp_freq = configured_value('gestures.lp_freq', 60.)
+conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
+conf_two_finger_min_dist = configured_value('gestures.two_finger_min_dist', .1)
+conf_validate_threshold = configured_value('gestures.validate_threshold', .02)
+
 
 def _score(i1, j1, w1, h1,
            im, jm,
@@ -268,6 +274,12 @@ class Layout(PyWM, Animate):
 
         self.mod = conf_mod()
         self._set_mod_sym()
+
+        self.configure_gestures(
+            conf_two_finger_min_dist(),
+            conf_lp_freq(),
+            conf_lp_inertia(),
+            conf_validate_threshold())
 
         if self.bottom_bar is not None:
             self.bottom_bar.stop()
