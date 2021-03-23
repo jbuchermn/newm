@@ -9,7 +9,8 @@
 *** DONE VLC fullscreen -> control bar disappears -> wrong view is focused?!
 *** DONE Fix SwipToZoomOverlay jitter
 *** DONE Fix occasional weird resizing issues (Window shortly uses 2x1 then goes to 1x1 / sometimes sizes are set negative in reducer)
-*** STRT Fix typing
+*** TODO Fix typing
+*** DONE Setup 1x1 1x2 / bottom left empty -> temporary stacking on new window
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -19,9 +20,14 @@
 
 ** Improve panels
 *** DONE Embed font to make it available in greeter-mode
-*** TODO Clean-up panel installation / launch-script
-*** TODO Improve visually
+*** KILL Clean-up panel installation / launch-script
+*** KILL Improve visually
 *** TODO Lock: Default user / tabs to switch users, buttons to restart / shutdown / ...
+*** TODO flutter panels (transparency possible? )
+- [ ] Handle positioning of all panels server-side
+- [ ] Move actual panel implementation to configuration (with checks: no locking without configured locker panel e.g.)
+- [ ] Move newm-panel to own repo newm-panel-nwjs
+- [ ] Create newm-panel-flutter based on new contract
 
 ** Usability
 *** DONE Stacking functionality
@@ -51,14 +57,14 @@
 *** DONE Keybindings
 *** DONE SysBackend
 *** DONE TopBar / BottomBar
-*** STRT Check that it works together with greeter
-*** STRT Constants: Animation time / ...
+*** TODO Check that it works together with greeter
+*** TODO Constants: Animation time / ...
+*** TODO Don't fall back to default_config if an error occurs during hot-reload
 
 * Backlog / Ideas
-** Titles during "far-away" view
+** Titles during OverviewOverlay
 ** Improve panel handling (Monitor forked processes / identify based on pid / ...)
 ** Configurable launcher (XDG)
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 ** Bars as panels not as widgets
-** Move panels away from NW.js

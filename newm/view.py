@@ -131,7 +131,8 @@ class View(PyWMView, Animate):
 
             state1 = state.with_view_state(
                     self,
-                    is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h, scale_origin=(w1, h1))
+                    is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h,
+                    scale_origin=(w1, h1), move_origin=(i1, j1))
 
 
             state2 = state1.replacing_view_state(
