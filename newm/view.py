@@ -8,12 +8,6 @@ from .animate import Animate
 from .overlay import MoveResizeFloatingOverlay
 from .config import configured_value
 
-PANELS = {
-    "newm-panel-notifiers": "notifiers",
-    "newm-panel-launcher": "launcher",
-    "newm-panel-lock": "lock"
-}
-
 logger = logging.getLogger(__name__)
 
 conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', False)
@@ -43,9 +37,9 @@ class View(PyWMView, Animate):
 
     def main(self, state):
         logger.info(
-            "Init: %s (%s): %s, %s, %s, xwayland=%s, floating=%s",
+            "Init: %s (%s): %s, %s, %s, %d, xwayland=%s, floating=%s",
             self, "child" if self.parent is not None else "root",
-            self.up_state.title, self.app_id, self.role,
+            self.up_state.title, self.app_id, self.role, self.pid,
             self.is_xwayland, self.up_state.is_floating)
 
         try:
@@ -65,8 +59,8 @@ class View(PyWMView, Animate):
         except:
             pass
 
-        if isinstance(self.app_id, str) and self.app_id in PANELS:
-            self.panel = PANELS[self.app_id]
+        self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
+        if self.panel is not None:
             logger.debug("Registered panel %s: %s", self.app_id, self.panel)
 
         else:
@@ -181,6 +175,7 @@ class View(PyWMView, Animate):
         elif self.panel == "lock":
             result.z_index = 100
             result.accepts_input = True
+            result.corner_radius = conf_corner_radius() if self.parent is None else 0
             result.lock_enabled = not state.final
 
             result.size = (

@@ -4,5 +4,6 @@ from .sys_backend import (
     SysBackendEndpoint_sysfs
 )
 
-from .run import run  # noqa F401
+from .run import run
 from .panel_endpoint import msg
+from .basic_lock_panel import basic_lock_panel

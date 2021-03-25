@@ -7,7 +7,7 @@ setup(name='newm',
       author='Jonas Bucher',
       author_email='j.bucher.mn@gmail.com',
       packages=['newm', 'newm.overlay', 'newm.widget'],
-      scripts=['start-newm', 'newm-cmd'],
+      scripts=['start-newm', 'newm-cmd', 'newm-basic-lock-panel'],
       install_requires=[
           'pycairo',
           'websockets',

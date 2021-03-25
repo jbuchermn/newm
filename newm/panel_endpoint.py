@@ -19,8 +19,6 @@ class PanelEndpoint(Thread):
 
         self._clients = []
 
-        self.start()
-
     async def _socket_handler(self, client_socket, path):
         logger.info("Opened connection: %s" % path)
         self._clients += [client_socket]

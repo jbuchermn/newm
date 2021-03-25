@@ -4,10 +4,13 @@ import time
 
 import logging
 
-from .config import configured_value
+try:
+    from .config import configured_value
 
-conf_throw_ratio = configured_value('grid.throw_ratio', .6)
-conf_time_scale = configured_value('grid.time_scale', .3)
+    conf_throw_ratio = configured_value('grid.throw_ratio', .6)
+    conf_time_scale = configured_value('grid.time_scale', .3)
+except:
+    pass
 
 logger = logging.getLogger(__name__)
 

@@ -29,6 +29,7 @@ from .config import configured_value, load_config, print_config
 
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
+from .panel_launcher import PanelsLauncher
 from .sys_backend import SysBackend
 from .auth_backend import AuthBackend
 
@@ -239,10 +240,10 @@ class Layout(PyWM, Animate):
         self._set_mod_sym()
 
         self.key_processor = KeyProcessor(self.mod_sym)
-
         self.sys_backend = SysBackend(self)
-
         self.auth_backend = AuthBackend(self)
+        self.panel_launcher = PanelsLauncher()
+        self.panel_endpoint = PanelEndpoint(self)
 
         self.state = None
 
@@ -254,7 +255,6 @@ class Layout(PyWM, Animate):
         self.corners = []
 
         self.thread = None
-        self.panel_endpoint = None
 
         self._animations = []
 
@@ -338,14 +338,9 @@ class Layout(PyWM, Animate):
 
         self._setup()
 
-        self.panel_endpoint = PanelEndpoint(self)
         self.thread = LayoutThread(self)
-
-        if conf_panel_dir() is not None:
-            logger.debug("Spawning panel...")
-            subprocess.Popen(["npm", "run", "start-notifiers"], cwd=conf_panel_dir())
-            subprocess.Popen(["npm", "run", "start-launcher"], cwd=conf_panel_dir())
-            subprocess.Popen(["npm", "run", "start-lock"], cwd=conf_panel_dir())
+        self.panel_endpoint.start()
+        self.panel_launcher.start()
 
         # Initially display cursor
         self.update_cursor()
@@ -370,12 +365,13 @@ class Layout(PyWM, Animate):
 
     def _terminate(self):
         super().terminate()
+        self.panel_endpoint.stop()
+        self.panel_launcher.stop()
+
         if self.top_bar is not None:
             self.top_bar.stop()
         if self.bottom_bar is not None:
             self.bottom_bar.stop()
-        if self.panel_endpoint is not None:
-            self.panel_endpoint.stop()
         if self.sys_backend is not None:
             self.sys_backend.stop()
         if self.thread is not None:
