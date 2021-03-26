@@ -63,6 +63,7 @@ class View(PyWMView, Animate):
         if self.panel is not None:
             logger.debug("Registered panel %s: %s", self.app_id, self.panel)
 
+            self.damage()
         else:
             second_state = None
 
@@ -128,7 +129,6 @@ class View(PyWMView, Animate):
                     is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h,
                     scale_origin=(w1, h1), move_origin=(i1, j1))
 
-
             state2 = state1.replacing_view_state(
                     self,
                     i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None)
@@ -187,7 +187,6 @@ class View(PyWMView, Animate):
                 (1. - state.lock_perc) * self.wm.height,
                 self.wm.width,
                 self.wm.height)
-
 
         else:
             result.accepts_input = True

@@ -102,6 +102,7 @@ class AuthBackend:
             -> wait_cred
         """
         self._state = "initial"
+        self._waiting_cred = {}
 
         self._backend = None
         if self.is_greeter():
@@ -137,7 +138,7 @@ class AuthBackend:
         if msg['kind'] == "auth_register" and self._state == "wait_user":
             self.init_session()
         elif msg['kind'] == "auth_register" and self._state == "wait_cred":
-            logger.warn("Unexpected")
+            self._request_cred()
         elif msg['kind'] == "auth_choose_user":
             self._backend.init_auth(msg['user'])
         elif msg['kind'] == "auth_enter_cred":
@@ -146,12 +147,15 @@ class AuthBackend:
     """
     Backends endpoint
     """
-    def _request_cred(self, message, for_user):
-        self.layout.panel_endpoint.broadcast({
-            'kind': 'auth_request_cred',
-            'user': for_user,
-            'message': message
-        })
+    def _request_cred(self, message=None, for_user=None):
+        if message is not None and for_user is not None:
+            self._waiting_cred = {
+                'kind': 'auth_request_cred',
+                'user': for_user,
+                'message': message
+            }
+
+        self.layout.panel_endpoint.broadcast(self._waiting_cred)
         self._state = "wait_cred"
 
     def _auth_result(self, successful):

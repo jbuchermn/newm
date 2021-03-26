@@ -6,7 +6,12 @@ from .config import configured_value
 
 logger = logging.getLogger(__name__)
 
-conf_cmds = {k:configured_value("panels_cmd.%s" % k, None) for k in ["lock", "launcher", "notifiers"]}
+conf_cmds = {
+    'lock': configured_value("panels_cmd.lock", "alacritty -e newm-basic-lock-panel"),
+    'launcher': configured_value("panels_cmd.launcher", None),
+    'notifiers': configured_value("panels_cmd.notifiers", None)
+}
+
 conf_cwds = {k:configured_value("panels_cwd.%s" % k, None) for k in ["lock", "launcher", "notifiers"]}
 
 class PanelLauncher:
@@ -39,6 +44,7 @@ class PanelLauncher:
             if self._proc.poll() is not None:
                 raise Exception()
         except Exception:
+            logger.info("Subprocess for panel %s died", self.panel)
             self._start()
 
     def stop(self):
@@ -83,7 +89,7 @@ class PanelsLauncher(Thread):
     def run(self):
         i = 0
         while self._running:
-            if i%100 == 0:
+            if i%50 == 0:
                 for p in self._panels:
                     p.check()
             i += 1
