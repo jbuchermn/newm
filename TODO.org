@@ -12,6 +12,7 @@
 *** TODO Fix typing
 *** DONE Setup 1x1 1x2 / bottom left empty -> temporary stacking on new window
 *** STRT Debug current window layout via newm-cmd
+*** STRT Only focus other view on close if closed view was focused
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -22,14 +23,15 @@
 ** Improve panels
 *** DONE Embed font to make it available in greeter-mode
 *** KILL Clean-up panel installation / launch-script
-*** KILL Improve visually
-*** TODO Lock: Default user / tabs to switch users, buttons to restart / shutdown / ...
-*** TODO general panels (transparency possible? )
-- [ ] Handle positioning of all panels server-side (so that clients do not need to support transparency)
-- [ ] Move actual panel implementation to configuration (with checks: no locking without configured locker panel e.g.)
-- [ ] Move newm-panel to own repo newm-panel-nwjs
-- [ ] Create newm-panel-flutter based on new contract
-- [X] Create newm-panel-alacritty based on new contract
+*** newm-panel-nwjs
+**** TODO Move to separate repo
+**** TODO Improve visually
+**** TODO Lock: Default user / tabs to switch users, buttons to restart / shutdown / ...
+*** General panels
+**** TODO Configurable padding and similar for panels
+**** TODO Useful newm-basic-lock-panel (separate directory within newm repo)
+**** TODO newm-basic-launcher-panel with fzy / dmenu or similar
+**** TODO Create newm-panel-flutter
 
 ** Usability
 *** DONE Stacking functionality
@@ -61,7 +63,7 @@
 *** DONE TopBar / BottomBar
 *** TODO Check that it works together with greeter
 *** TODO Constants: Animation time / ...
-*** TODO Don't fall back to default_config if an error occurs during hot-reload
+*** STRT Don't fall back to default_config if an error occurs during hot-reload
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay

@@ -232,6 +232,10 @@ class View(PyWMView, Animate):
                 h -= 0.05 * self.wm.width / self.wm.height
 
             padding = 0 if state.is_fullscreen() else conf_padding()
+
+            if w == 0 or h == 0:
+                padding = 0
+
             x = i - state.i + padding
             y = j - state.j + padding / (self.wm.height / self.wm.width)
 
@@ -301,7 +305,7 @@ class View(PyWMView, Animate):
                 result.size = (width, height)
 
 
-            result.box = (x, y, w, h)
+            result.box = (x, y, round(w), round(h))
 
         result.opacity = 1.0 if result.lock_enabled else state.background_opacity
         return result

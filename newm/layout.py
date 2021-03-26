@@ -511,7 +511,6 @@ class Layout(PyWM, Animate):
         if self.is_locked():
             return False
 
-        logger.debug("Modifiers %d...", modifiers)
         if self.modifiers & self.mod > 0:
             """
             This is a special case, if a SingleFingerMoveGesture has started, then
@@ -524,7 +523,6 @@ class Layout(PyWM, Animate):
             self.reallow_gesture()
 
         if self.overlay is not None and self.overlay.ready():
-            logger.debug("...passing to overlay %s", self.overlay)
             if self.overlay.on_modifiers(modifiers):
                 return True
         return False
@@ -542,9 +540,7 @@ class Layout(PyWM, Animate):
         if self.is_locked():
             return False
 
-        logger.debug("Button...")
         if self.overlay is not None and self.overlay.ready():
-            logger.debug("...passing to overlay %s", self.overlay)
             return self.overlay.on_button(time_msec, button, state)
 
         return False
