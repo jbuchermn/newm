@@ -7,8 +7,9 @@ import logging
 try:
     from .config import configured_value
 
-    conf_throw_ratio = configured_value('grid.throw_ratio', .6)
     conf_time_scale = configured_value('grid.time_scale', .3)
+    conf_throw_ps = configured_value('grid.throw_ps', [1, 5, 15])
+    conf_min_dist = configured_value('grid.min_dist', .05)
 except:
     pass
 
@@ -116,33 +117,58 @@ class Grid:
         # END DEBUG
         return xp
 
-    def final(self, restrict_by_xi=0, restrict_by_x_current=False):
+    def final(self, throw_dist_max=None):
+        if throw_dist_max is None:
+            throw_dist_max = 1. - conf_min_dist()
+
         if self.last_x_output is None:
             return self.at(self.xi), 0.
 
         x0, x1 = self._get_bounds(self.last_x_output)
 
+        # Find final x
+        x_base = self.last_x_output
         p = 0
-        if self.last_p is None or self.last_p_output is None or self.last_t is None or (time.time() - self.last_t > conf_time_scale()):
-            xf = self.last_x_output
-        else:
-            p = self.last_p if abs(self.last_p) > abs(self.last_p_output) else self.last_p_output
-            xf = self.last_x_output + conf_throw_ratio() * p * conf_time_scale()
+        if self.last_p is not None:
+            p = self.last_p
 
-        xf = round(xf)
+        x_finals = [round(x_base)]
+        harder = False
+        if p > 0:
+            if x_finals[0] > x_base:
+                harder = True
 
-        if restrict_by_x_current:
-            xf = min(math.ceil(self.last_x_output), max(math.floor(self.last_x_output), xf))
-        elif restrict_by_xi > 0:
-            xf = min(self.xi + restrict_by_xi, max(self.xi - restrict_by_xi, xf))
+            x = x_finals[0] + 1
+            while x < x_base + throw_dist_max:
+                x_finals += [x]
+                x += 1
+
+        elif p < 0:
+            if x_finals[0] < x_base:
+                harder = True
+
+            x = x_finals[0] - 1
+            while x > x_base - throw_dist_max:
+                x_finals = x_finals + [x]
+                x -= 1
+
+        ifinal = 0
+        while ifinal < len(conf_throw_ps()):
+            if abs(p) < conf_throw_ps()[ifinal]:
+                break
+            ifinal += 1
+        if harder and ifinal > 0:
+            ifinal -= 1
+        xf = round(x_finals[min(ifinal, len(x_finals) - 1)])
 
         xf = min(x1, max(x0, round(xf)))
         dx = abs(self.last_x_output - xf)
-
-        # dt = dx / abs(p) if abs(p) > 0 else conf_time_scale
-        # if dt > conf_time_scale():
-        #     dt = conf_time_scale()
         dt = dx * conf_time_scale()
+
+        # Speed up animation if a high momentum is involved
+        compare_t = abs(x_base - xf) / max(abs(p), 0.01)
+        if compare_t < dt:
+            dt = compare_t
 
         # BEGIN DEBUG
         x0 = self.at(self.last_x_output, silent=True)

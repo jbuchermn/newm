@@ -8,6 +8,8 @@ conf_gesture_factor = configured_value('swipe.gesture_factor', 4)
 conf_grid_ovr = configured_value('swipe.grid_ovr', 0.2)
 conf_grid_m = configured_value('swipe.grid_m', 1)
 
+conf_grid_min_dist = configured_value('grid.min_dist', .05)
+
 
 class SwipeOverlay(Overlay):
     def __init__(self, layout):
@@ -58,8 +60,8 @@ class SwipeOverlay(Overlay):
         super()._exit_finished()
 
     def _exit_transition(self):
-        i, ti = self.i_grid.final(restrict_by_xi=self.size)
-        j, tj = self.j_grid.final(restrict_by_xi=self.size)
+        i, ti = self.i_grid.final(throw_dist_max=self.size - conf_grid_min_dist())
+        j, tj = self.j_grid.final(throw_dist_max=self.size - conf_grid_min_dist())
         t = None
 
         if self.locked_x:

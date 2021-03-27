@@ -40,8 +40,8 @@
 **** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
 **** DONE Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
 *** Grid
-**** STRT Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
-**** STRT Allow slowly swiping past multiple screens
+**** DONE Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
+**** DONE Allow slowly swiping past multiple screens
 *** DONE (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size (=scale_origin) during gesture
 *** DONE New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** DONE Remove possibility of wholes in between

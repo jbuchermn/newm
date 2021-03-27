@@ -75,8 +75,8 @@ class MoveOverlay:
 
         try:
             state = self.layout.state.get_view_state(self.view)
-            fi, ti = self.i_grid.final(restrict_by_x_current=True)
-            fj, tj = self.j_grid.final(restrict_by_x_current=True)
+            fi, ti = self.i_grid.final()
+            fj, tj = self.j_grid.final()
 
             logger.debug("Move - Grid finals: %f %f (%f %f)", fi, fj, ti, tj)
 
@@ -166,10 +166,10 @@ class ResizeOverlay:
 
         try:
             state = self.layout.state.get_view_state(self.view)
-            fi, ti = self.i_grid.final(restrict_by_x_current=True)
-            fj, tj = self.j_grid.final(restrict_by_x_current=True)
-            fw, tw = self.w_grid.final(restrict_by_x_current=True)
-            fh, th = self.h_grid.final(restrict_by_x_current=True)
+            fi, ti = self.i_grid.final()
+            fj, tj = self.j_grid.final()
+            fw, tw = self.w_grid.final()
+            fh, th = self.h_grid.final()
 
             logger.debug("Resize - Grid finals: %f %f %f %f (%f %f %f %f)", fi, fj, fw, fh, ti, tj, tw, th)
 
