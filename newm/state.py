@@ -50,7 +50,7 @@ class LayoutState:
 
         self.intermediate_rows = kwargs['intermediate_rows'] if 'intermediate_rows' in kwargs else []
         self.intermediate_cols = kwargs['intermediate_cols'] if 'intermediate_cols' in kwargs else []
-        # Non-None indicates fullscreen, in that case i, j, size
+        # Non-None indicates fullscreen, in that case i, j, size, i in fullscreen, j in fullscreen, size in fullscreen
         self.state_before_fullscreen = kwargs['state_before_fullscreen'] if 'state_before_fullscreen' in kwargs else None
 
         self.top_bar_dy = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
@@ -100,6 +100,14 @@ class LayoutState:
             s.update(**kwargs)
         except Exception:
             logger.warn("Unexpected: Unable to update view %s state", view)
+
+
+    def validate_fullscreen(self):
+        if self.state_before_fullscreen is not None:
+            _1, _2, _3, i, j, size = self.state_before_fullscreen
+            if abs(self.i - i) + abs(self.j - j) + abs(self.size - size) > .01:
+                self.state_before_fullscreen = None
+
 
     def constrain(self):
         min_i, min_j, max_i, max_j = self.get_extent()
@@ -225,7 +233,7 @@ class LayoutState:
         i, j, w, h = state.i, state.j, state.w, state.h
         size = max(w, h)
 
-        state_before_fullscreen = self.i, self.j, self.size
+        state_before_fullscreen = self.i, self.j, self.size, i, j, size
 
         result = self.copy(state_before_fullscreen=state_before_fullscreen, i=i, j=j, size=size)
 
@@ -246,7 +254,7 @@ class LayoutState:
         if drop:
             i, j, size = self.i, self.j, self.size
         else:
-            i, j, size = self.state_before_fullscreen
+            i, j, size, _1, _2, _3 = self.state_before_fullscreen
 
             # Possibly invalidate state_before_fullscreen
             if self.i < i or self.i > i + size - 1:
@@ -340,4 +348,5 @@ class LayoutState:
         return True
 
     def is_fullscreen(self):
+
         return self.state_before_fullscreen is not None

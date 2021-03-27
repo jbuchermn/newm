@@ -161,6 +161,7 @@ class Animation:
         if self._final_state is not None:
             # Enforce constraints on final state
             self._final_state.constrain()
+            self._final_state.validate_fullscreen()
 
             self.layout._animate_to(self._final_state, self.duration)
 

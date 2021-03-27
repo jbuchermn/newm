@@ -14,6 +14,7 @@
 *** TODO Occasional bugs removing rows / cols (possibly related to rounding)
 *** DONE Only focus other view on close if closed view was focused
 *** STRT SwipeToZoom on too big view or when focused view is not visible jumps
+*** DONE Unset fullscreen on move / zoom out
 *** STRT Debug current window layout via newm-cmd
 *** DONE Make fullscreen behaviour configurable (i.e. padding yes/no, set windows to fullscreen yes/no)
 
