@@ -57,6 +57,8 @@ conf_mod = configured_value('mod', PYWM_MOD_LOGO)
 conf_output_scale = configured_value('output_scale', 1.0)
 conf_pywm = configured_value('pywm', {})
 
+conf_send_fullscreen_to_views = configured_value('view.send_fullscreen', True)
+
 conf_key_bindings = configured_value('key_bindings', lambda layout: [])
 conf_sys_backend_endpoints = configured_value('sys_backend_endpoints', [])
 
@@ -780,8 +782,9 @@ class Layout(PyWM, Animate):
             view = self.find_focused_view()
             fs = state.is_fullscreen()
 
-            for v in self.windows():
-                v.set_fullscreen(not fs)
+            if conf_send_fullscreen_to_views():
+                for v in self.windows():
+                    v.set_fullscreen(not fs)
 
             if fs:
                 return None, state.without_fullscreen()

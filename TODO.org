@@ -12,9 +12,10 @@
 *** TODO Fix typing
 *** DONE Setup 1x1 1x2 / bottom left empty -> temporary stacking on new window
 *** TODO Occasional bugs removing rows / cols (possibly related to rounding)
-*** STRT Debug current window layout via newm-cmd
 *** DONE Only focus other view on close if closed view was focused
-*** TODO SwipeToZoom on too big view or when focused view is not visible jumps
+*** STRT SwipeToZoom on too big view or when focused view is not visible jumps
+*** STRT Debug current window layout via newm-cmd
+*** DONE Make fullscreen behaviour configurable (i.e. padding yes/no, set windows to fullscreen yes/no)
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -38,8 +39,8 @@
 **** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
 **** DONE Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
 *** Grid
-**** TODO Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
-**** TODO Allow slowly swiping past multiple screens
+**** STRT Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
+**** STRT Allow slowly swiping past multiple screens
 *** DONE (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size (=scale_origin) during gesture
 *** DONE New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** DONE Remove possibility of wholes in between
