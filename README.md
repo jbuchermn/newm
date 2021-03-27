@@ -21,19 +21,10 @@ sudo pip3 install -v .
 start-newm
 ```
 
-### newm-panel
+### Panel
 
-Sudo installation is only necessary in case greetd should run newm / otherwise `npm run build-...` together with proper config (see above) is sufficient.
+See [newm-panel-nwjs](https://github.com/jbuchermn/newm-panel-nwjs)
 
-```
-cd newm/panel
-
-sudo npm install -g nw --unsafe-perm
-# TODO: Proper installation
-sudo ./install_unsafe.sh
-
-start-newm
-```
 
 ### greetd
 
@@ -43,7 +34,7 @@ Set
 command = "start-newm"
 ```
 
-in `/etc/greetd/config.toml`
+in `/etc/greetd/config.toml` and ensure configuration is set in `/etc/newm/config.py`
 
 ### Lock on hibernate
 
