@@ -133,10 +133,9 @@ class Grid:
             p = self.last_p
 
         x_finals = [round(x_base)]
-        harder = False
         if p > 0:
             if x_finals[0] > x_base:
-                harder = True
+                x_finals += [round(x_base)]
 
             x = x_finals[0] + 1
             while x < x_base + throw_dist_max:
@@ -145,7 +144,7 @@ class Grid:
 
         elif p < 0:
             if x_finals[0] < x_base:
-                harder = True
+                x_finals += [round(x_base)]
 
             x = x_finals[0] - 1
             while x > x_base - throw_dist_max:
@@ -157,8 +156,6 @@ class Grid:
             if abs(p) < conf_throw_ps()[ifinal]:
                 break
             ifinal += 1
-        if harder and ifinal > 0:
-            ifinal -= 1
         xf = round(x_finals[min(ifinal, len(x_finals) - 1)])
 
         xf = min(x1, max(x0, round(xf)))
