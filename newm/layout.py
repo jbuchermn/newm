@@ -829,6 +829,9 @@ class Layout(PyWM, Animate):
     def enter_overview_overlay(self):
         self.enter_overlay(OverviewOverlay(self))
 
+    def enter_launcher_overlay(self):
+        self.enter_overlay(LauncherOverlay(self))
+
     def command(self, cmd):
         logger.debug("Received command %s", cmd)
         if cmd == "anim-lock":

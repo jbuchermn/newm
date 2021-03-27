@@ -16,6 +16,7 @@ class LauncherOverlay(Overlay):
         super().__init__(layout)
 
         self._is_opened = False
+        self._has_gesture = False
 
     def on_gesture(self, gesture):
         logger.debug("LauncherOverlay: new gesture")
@@ -38,6 +39,7 @@ class LauncherOverlay(Overlay):
                 self._on_update,
                 lambda: self._on_update(None)
             ))
+        self._has_gesture = True
 
 
     def _on_update(self, values):
@@ -66,6 +68,13 @@ class LauncherOverlay(Overlay):
         For now capture all keys
         """
         return True
+
+    def _enter_transition(self):
+        if self._has_gesture:
+            return None, None
+
+        logger.debug("Entering LauncherOverlay with animation...")
+        return self.layout.state.copy(launcher_perc=1), conf_anim_t()
 
     def _exit_transition(self):
         logger.debug("Exiting LauncherOverlay with animation...")
