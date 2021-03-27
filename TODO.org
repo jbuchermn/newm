@@ -24,15 +24,10 @@
 ** Improve panels
 *** DONE Embed font to make it available in greeter-mode
 *** KILL Clean-up panel installation / launch-script
-*** newm-panel-nwjs
-**** TODO Move to separate repo
-**** TODO Improve visually
-**** TODO Lock: Default user / tabs to switch users, buttons to restart / shutdown / ...
-*** General panels
-**** TODO Configurable padding and similar for panels
-**** TODO Useful newm-basic-lock-panel (separate directory within newm repo)
-**** TODO newm-basic-launcher-panel with fzy / dmenu or similar
-**** TODO Create newm-panel-flutter
+*** TODO Configurable padding and similar for panels
+*** TODO Useful newm-basic-lock-panel (separate directory within newm repo)
+*** TODO newm-basic-launcher-panel with fzy / dmenu or similar
+*** TODO Create newm-panel-flutter
 
 ** Usability
 *** DONE Stacking functionality

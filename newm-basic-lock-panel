@@ -1,3 +1,0 @@
-#!/bin/sh
-
-exec python -u -c "from newm import basic_lock_panel; basic_lock_panel()"

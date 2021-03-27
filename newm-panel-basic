@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec python -u -c "import sys; from newm_panel_basic import panel; panel(sys.argv[1])" "$@"

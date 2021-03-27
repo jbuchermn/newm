@@ -5,5 +5,4 @@ from .sys_backend import (
 )
 
 from .run import run
-from .panel_endpoint import msg
-from .basic_lock_panel import basic_lock_panel
+from .panel_endpoint import msg, SOCKET_PORT

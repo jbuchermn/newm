@@ -3,9 +3,9 @@ import json
 import getpass
 import asyncio
 
-from .panel_endpoint import SOCKET_PORT
+from newm import SOCKET_PORT
 
-def basic_lock_panel():
+def lock():
     async def _send():
         uri = "ws://127.0.0.1:%d" % SOCKET_PORT
         async with websockets.connect(uri) as websocket:
