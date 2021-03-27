@@ -7,12 +7,12 @@ from .config import configured_value
 logger = logging.getLogger(__name__)
 
 conf_cmds = {
-    'lock': configured_value("panels_cmd.lock", "alacritty -e newm-basic-lock-panel"),
-    'launcher': configured_value("panels_cmd.launcher", None),
-    'notifiers': configured_value("panels_cmd.notifiers", None)
+    'lock': configured_value("panels.lock.cmd", "alacritty -e newm-panel-basic lock"),
+    'launcher': configured_value("panels.launcher.cmd", None),
+    'notifiers': configured_value("panels.notifiers.cmd", None)
 }
 
-conf_cwds = {k:configured_value("panels_cwd.%s" % k, None) for k in ["lock", "launcher", "notifiers"]}
+conf_cwds = {k:configured_value("panels.%s.cwd" % k, None) for k in ["lock", "launcher", "notifiers"]}
 
 class PanelLauncher:
     def __init__(self, panel):

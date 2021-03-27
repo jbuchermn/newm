@@ -23,6 +23,7 @@ conf_resize_grid_ovr = configured_value("resize.grid_ovr", 0.1)
 conf_resize_grid_m = configured_value("resize.grid_m", 3)
 conf_hyst = configured_value("resize.hyst", 0.2)
 conf_gesture_factor = configured_value("move_resize.gesture_factor", 4)
+conf_anim_t = configured_value("anim_time", .3)
 
 class MoveOverlay:
     def __init__(self, layout, view):
@@ -278,7 +279,7 @@ class MoveResizeOverlay(Overlay, Thread):
 
                     if i != self.layout.state.i or j != self.layout.state.j:
                         logger.debug("MoveResizeOverlay: Adjusting viewpoint")
-                        self._target_layout_pos = (self.layout.state.i, self.layout.state.j, fi, fj, time.time(), time.time() + .3)
+                        self._target_layout_pos = (self.layout.state.i, self.layout.state.j, fi, fj, time.time(), time.time() + conf_anim_t())
 
                 except Exception:
                     logger.warn("Unexpected: Could not access view %s state", self.view)
@@ -379,7 +380,7 @@ class MoveResizeOverlay(Overlay, Thread):
                 self.view,
                 i=i, j=j, w=w, h=h,
                 scale_origin=(None, None), move_origin=(None, None)
-            ).focusing_view(self.view), .3
+            ).focusing_view(self.view), conf_anim_t()
         except Exception:
             logger.warn("Unexpected: Error accessing view %s state", self.view)
             return None, 0

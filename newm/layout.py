@@ -65,6 +65,9 @@ conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 conf_two_finger_min_dist = configured_value('gestures.two_finger_min_dist', .1)
 conf_validate_threshold = configured_value('gestures.validate_threshold', .02)
 
+conf_anim_t = configured_value('anim_time', .3)
+conf_blend_t = configured_value('blend_time', 1.)
+
 
 def _score(i1, j1, w1, h1,
            im, jm,
@@ -350,7 +353,7 @@ class Layout(PyWM, Animate):
             time.sleep(.5)
             def reducer(state):
                 return None, state.copy(background_opacity=1.)
-            self.animate_to(reducer, .5)
+            self.animate_to(reducer, conf_blend_t())
         Thread(target=fade_in).start()
 
         # Greeter
@@ -380,11 +383,11 @@ class Layout(PyWM, Animate):
     def terminate(self):
         def reducer(state):
             return state.copy(final=True), state.copy(final=True, background_opacity=0.)
-        self.animate_to(reducer, .5, self._terminate)
+        self.animate_to(reducer, conf_blend_t(), self._terminate)
 
 
     def _execute_view_main(self, view):
-        self.animate_to(view.main, .3, None)
+        self.animate_to(view.main, conf_anim_t(), None)
 
 
     def animate_to(self, reducer, duration, then=None, overlay_safe=False):
@@ -648,7 +651,7 @@ class Layout(PyWM, Animate):
             return None if anim else state.copy(lock_perc=1., background_opacity=.5), state.copy(lock_perc=1., background_opacity=.5)
         self.animate_to(
             reducer,
-            .3, focus_lock)
+            conf_anim_t(), focus_lock)
 
         if dim:
             self.sys_backend.idle_state(1)
@@ -659,7 +662,7 @@ class Layout(PyWM, Animate):
                 return None, state.copy(lock_perc=0., background_opacity=1.)
             self.animate_to(
                 reducer,
-                .3,
+                conf_anim_t(),
                 lambda: self.update_cursor())
 
     def exit_overlay(self):
@@ -722,7 +725,7 @@ class Layout(PyWM, Animate):
         def reducer(state):
             view.focus()
             return None, state.focusing_view(view)
-        self.animate_to(reducer, .3)
+        self.animate_to(reducer, conf_anim_t())
 
     def destroy_view(self, view):
         logger.info("Destroying view %s", view)
@@ -732,24 +735,23 @@ class Layout(PyWM, Animate):
         except:
             logger.warn("Unexpected: View %s state not found", view)
             return
+
         best_view = None
         best_view_score = 1000
+        if view.up_state.is_focused:
+            logger.debug("Finding view to focus since %s (%d) closes...", view.app_id, view._handle)
+            for k, s in self.state._view_states.items():
+                if not s.is_tiled:
+                    continue
 
-        logger.debug("Finding view to focus since %s (%d) closes...", view.app_id, view._handle)
-        for k, s in self.state._view_states.items():
-            if not s.is_tiled:
-                continue
+                if k == view._handle:
+                    continue
 
-            if k == view._handle:
-                continue
-
-            sc = (s.i - state.i + s.w / 2. - state.w / 2.)**2 + (s.j - state.j + s.h / 2. - state.h / 2.)**2
-            logger.debug("View (%d) has score %f", k, sc)
-            if sc < best_view_score:
-                best_view_score = sc
-                best_view = k
-
-
+                sc = (s.i - state.i + s.w / 2. - state.w / 2.)**2 + (s.j - state.j + s.h / 2. - state.h / 2.)**2
+                logger.debug("View (%d) has score %f", k, sc)
+                if sc < best_view_score:
+                    best_view_score = sc
+                    best_view = k
 
         if best_view is not None and best_view in self._views:
             def reducer(state):
@@ -760,13 +762,13 @@ class Layout(PyWM, Animate):
 
             self.animate_to(
                 reducer,
-                .3)
+                conf_anim_t())
         else:
             self.animate_to(
                 lambda state: (None, state
                     .copy()
                     .without_view_state(view)),
-                .3)
+                conf_anim_t())
 
 
     def toggle_fullscreen(self):
@@ -783,7 +785,7 @@ class Layout(PyWM, Animate):
                 return None, state.with_fullscreen(view)
             else:
                 return None, None
-        self.animate_to(reducer, .3)
+        self.animate_to(reducer, conf_anim_t())
 
     def move_focused_view(self, di, dj):
         def reducer(state):
@@ -796,7 +798,7 @@ class Layout(PyWM, Animate):
                     return (None, state)
             else:
                 return (None, state)
-        self.animate_to(reducer, .3)
+        self.animate_to(reducer, conf_anim_t())
 
     def resize_focused_view(self, di, dj):
         def reducer(state):
@@ -818,7 +820,7 @@ class Layout(PyWM, Animate):
                     return (None, state)
             else:
                 return (None, state)
-        self.animate_to(reducer, .3)
+        self.animate_to(reducer, conf_anim_t())
 
     def update_config(self):
         self._setup()

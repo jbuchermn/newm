@@ -13,7 +13,7 @@
 *** DONE Setup 1x1 1x2 / bottom left empty -> temporary stacking on new window
 *** TODO Occasional bugs removing rows / cols (possibly related to rounding)
 *** STRT Debug current window layout via newm-cmd
-*** STRT Only focus other view on close if closed view was focused
+*** DONE Only focus other view on close if closed view was focused
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -24,10 +24,9 @@
 ** Improve panels
 *** DONE Embed font to make it available in greeter-mode
 *** KILL Clean-up panel installation / launch-script
-*** TODO Configurable padding and similar for panels
+*** DONE Configurable padding and similar for panels
 *** TODO Useful newm-basic-lock-panel (separate directory within newm repo)
 *** TODO newm-basic-launcher-panel with fzy / dmenu or similar
-*** TODO Create newm-panel-flutter
 
 ** Usability
 *** DONE Stacking functionality
@@ -57,14 +56,13 @@
 *** DONE Keybindings
 *** DONE SysBackend
 *** DONE TopBar / BottomBar
-*** TODO Check that it works together with greeter
-*** TODO Constants: Animation time / ...
+*** STRT Check that it works together with greeter
+*** DONE Constants: Animation time / ...
 *** STRT Don't fall back to default_config if an error occurs during hot-reload
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
-** Improve panel handling (Monitor forked processes / identify based on pid / ...)
-** Configurable launcher (XDG)
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 ** Bars as panels not as widgets
+** Create newm-panel-flutter

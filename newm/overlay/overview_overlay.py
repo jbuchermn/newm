@@ -1,6 +1,9 @@
 from pywm import PYWM_PRESSED
 
 from .overlay import Overlay
+from ..config import configured_value
+
+conf_anim_t = configured_value("anim_time", .3)
 
 
 class OverviewOverlay(Overlay):
@@ -27,7 +30,7 @@ class OverviewOverlay(Overlay):
             background_factor=1.,
             top_bar_dy=1.,
             bottom_bar_dy=1.
-        ), .3
+        ), conf_anim_t()
 
     def _exit_transition(self):
         i, j = self._original_state.i, self._original_state.j
@@ -42,7 +45,7 @@ class OverviewOverlay(Overlay):
         while fj >= j + self._original_state.size:
             j += 1
 
-        return self._original_state.copy(i=i, j=j), .3
+        return self._original_state.copy(i=i, j=j), conf_anim_t()
 
     def on_key(self, time_msec, keycode, state, keysyms):
         if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:

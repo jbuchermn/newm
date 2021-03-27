@@ -19,7 +19,7 @@ class Animate:
 
             perc = min((ts - s) / d, 1.0)
 
-            if perc >= 0.99:
+            if perc >= 0.99999:
                 self._animation = None
 
             self.damage()

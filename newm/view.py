@@ -14,6 +14,13 @@ conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', Fa
 conf_corner_radius = configured_value('view.corner_radius', 12.5)
 conf_padding = configured_value('view.padding', 0.01)
 
+conf_panel_lock_h = configured_value('panels.lock.h', 0.5)
+conf_panel_lock_w = configured_value('panels.lock.w', 0.5)
+conf_panel_lock_corner_radius = configured_value('panels.lock.corner_radius', 50)
+conf_panel_launcher_h = configured_value('panels.launcher.h', 0.8)
+conf_panel_launcher_w = configured_value('panels.launcher.w', 0.8)
+conf_panel_launcher_corner_radius = configured_value('panels.launcher.corner_radius', 0)
+
 class View(PyWMView, Animate):
     def __init__(self, wm, handle):
         PyWMView.__init__(self, wm, handle)
@@ -160,33 +167,35 @@ class View(PyWMView, Animate):
         elif self.panel == "launcher":
             result.z_index = 5
             result.accepts_input = True
+            result.corner_radius = conf_panel_launcher_corner_radius()
 
             result.size = (
-                int(self.wm.width * 0.8 * self.client_side_scale),
-                int(self.wm.height * 0.8 * self.client_side_scale))
+                round(self.wm.width * conf_panel_launcher_w() * self.client_side_scale),
+                round(self.wm.height * conf_panel_launcher_h() * self.client_side_scale))
 
             result.box = (
-                self.wm.width * 0.1,
-                self.wm.height * 0.1 + (1. - state.launcher_perc) * self.wm.height,
-                self.wm.width * 0.8,
-                self.wm.height * 0.8)
+                (self.wm.width - result.size[0] / self.client_side_scale) / 2.,
+                (self.wm.height - result.size[1] / self.client_side_scale) / 2. + (1. - state.launcher_perc) * self.wm.height,
+                result.size[0] / self.client_side_scale,
+                result.size[1] / self.client_side_scale)
+
 
 
         elif self.panel == "lock":
             result.z_index = 100
             result.accepts_input = True
-            result.corner_radius = conf_corner_radius() if self.parent is None else 0
+            result.corner_radius = conf_panel_lock_corner_radius()
             result.lock_enabled = not state.final
 
             result.size = (
-                int(self.wm.width * self.client_side_scale),
-                int(self.wm.height * self.client_side_scale))
+                round(self.wm.width * conf_panel_lock_w() * self.client_side_scale),
+                round(self.wm.height * conf_panel_lock_h() * self.client_side_scale))
 
             result.box = (
-                0,
-                (1. - state.lock_perc) * self.wm.height,
-                self.wm.width,
-                self.wm.height)
+                (self.wm.width - result.size[0] / self.client_side_scale) / 2.,
+                (self.wm.height - result.size[1] / self.client_side_scale) / 2. + (1. - state.lock_perc) * self.wm.height,
+                result.size[0] / self.client_side_scale,
+                result.size[1] / self.client_side_scale)
 
         else:
             result.accepts_input = True
