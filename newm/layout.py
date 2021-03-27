@@ -238,6 +238,8 @@ class Layout(PyWM, Animate):
         PyWM.__init__(self, View, output_scale=conf_output_scale(), **conf_pywm())
         Animate.__init__(self)
 
+        self.output_scale = conf_output_scale()
+
         self.mod = conf_mod()
         self.mod_sym = None
         self._set_mod_sym()
@@ -261,7 +263,6 @@ class Layout(PyWM, Animate):
 
         self._animations = []
 
-        self.output_scale = conf_output_scale()
 
     def _set_mod_sym(self):
         self.mod_sym = None
@@ -489,6 +490,9 @@ class Layout(PyWM, Animate):
     """
     Callbacks
     """
+
+    def on_layout_change(self):
+        self._setup()
 
     def on_key(self, time_msec, keycode, state, keysyms):
         if self.is_locked():

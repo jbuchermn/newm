@@ -14,6 +14,7 @@
 *** TODO Occasional bugs removing rows / cols (possibly related to rounding)
 *** STRT Debug current window layout via newm-cmd
 *** DONE Only focus other view on close if closed view was focused
+*** TODO SwipeToZoom on too big view or when focused view is not visible jumps
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam

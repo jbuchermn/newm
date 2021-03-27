@@ -13,6 +13,7 @@ conf_font_size = configured_value('bar.font-size', 12)
 
 conf_top_bar_text = configured_value('bar.top_texts', lambda: ["1", "2", "3"])
 conf_bottom_bar_text = configured_value('bar.bottom_texts', lambda: ["4", "5", "6"])
+conf_font = configured_value('bar.font', 'Source Code Pro for Powerline')
 
 
 class Bar(PyWMCairoWidget, Animate):
@@ -37,7 +38,7 @@ class Bar(PyWMCairoWidget, Animate):
         ctx.rectangle(0, 0, self.width, self.height)
         ctx.fill()
 
-        ctx.select_font_face('Source Code Pro for Powerline')
+        ctx.select_font_face(conf_font())
         ctx.set_font_size(self.font_size)
 
         _, y_bearing, c_width, c_height, _, _ = ctx.text_extents("pA")
