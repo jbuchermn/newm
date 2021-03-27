@@ -272,8 +272,8 @@ class Layout(PyWM, Animate):
         else:
             raise Exception("Unknown mod")
 
-    def _setup(self):
-        load_config()
+    def _setup(self, fallback=True):
+        load_config(fallback=fallback)
 
         self.mod = conf_mod()
         self._set_mod_sym()
@@ -823,7 +823,7 @@ class Layout(PyWM, Animate):
         self.animate_to(reducer, conf_anim_t())
 
     def update_config(self):
-        self._setup()
+        self._setup(fallback=False)
         self.damage()
 
     def enter_overview_overlay(self):

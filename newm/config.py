@@ -49,7 +49,7 @@ def print_config(at_c=None):
         else:
             logger.warn("Config: Unexpected")
 
-def load_config():
+def load_config(fallback=True):
     global _provider
 
     home = os.environ['HOME'] if 'HOME' in os.environ else '/'
@@ -78,12 +78,15 @@ def load_config():
     try:
         _provider = load(path)
     except:
-        logger.exception("Error loading config - falling back to default")
-        try:
-            _provider = load(path_default)
-        except:
-            logger.exception("Error loading default config")
-            _provider = {}
+        if fallback:
+            logger.exception("Error loading config - falling back to default")
+            try:
+                _provider = load(path_default)
+            except:
+                logger.exception("Error loading default config")
+                _provider = {}
+        else:
+            logger.exception("Error loading config")
 
     _update_config(_consumer, _provider)
 

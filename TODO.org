@@ -25,8 +25,8 @@
 *** DONE Embed font to make it available in greeter-mode
 *** KILL Clean-up panel installation / launch-script
 *** DONE Configurable padding and similar for panels
-*** TODO Useful newm-basic-lock-panel (separate directory within newm repo)
-*** TODO newm-basic-launcher-panel with fzy / dmenu or similar
+*** TODO newm-basic-panel lock with nice TUI
+*** TODO newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
 
 ** Usability
 *** DONE Stacking functionality
@@ -56,9 +56,9 @@
 *** DONE Keybindings
 *** DONE SysBackend
 *** DONE TopBar / BottomBar
-*** STRT Check that it works together with greeter
+*** DONE Check that it works together with greeter
 *** DONE Constants: Animation time / ...
-*** STRT Don't fall back to default_config if an error occurs during hot-reload
+*** DONE Don't fall back to default_config if an error occurs during hot-reload
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay

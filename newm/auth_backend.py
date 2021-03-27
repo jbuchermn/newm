@@ -67,8 +67,6 @@ class _GreetdBackend:
         if result["type"] == "auth_message":
             self.auth._request_cred(result["auth_message"], self._user)
 
-
-
     def enter_cred(self, cred):
         result = self._send({"type":"post_auth_message_response", "response": cred})
         if result["type"] == "auth_message":
@@ -136,12 +134,16 @@ class AuthBackend:
     """
     def on_message(self, msg):
         if msg['kind'] == "auth_register" and self._state == "wait_user":
+            logger.debug("New auth client")
             self.init_session()
         elif msg['kind'] == "auth_register" and self._state == "wait_cred":
+            logger.debug("New auth client")
             self._request_cred()
         elif msg['kind'] == "auth_choose_user":
+            logger.debug("Choosing user %s" % msg['user'])
             self._backend.init_auth(msg['user'])
         elif msg['kind'] == "auth_enter_cred":
+            logger.debug("Received credentials")
             self._backend.enter_cred(msg['cred'])
 
     """
