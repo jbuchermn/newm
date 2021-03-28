@@ -314,8 +314,11 @@ class View(PyWMView, Animate):
 
                 result.size = (width, height)
 
-
-            result.box = (x, y, round(w), round(h))
+            x_ = math.floor(x * self.wm.output_scale) / self.wm.output_scale
+            y_ = math.floor(y * self.wm.output_scale) / self.wm.output_scale
+            w_ = math.ceil((x+w) * self.wm.output_scale) /self.wm.output_scale - x_
+            h_ = math.ceil((y+h) * self.wm.output_scale) /self.wm.output_scale - y_
+            result.box = (x_, y_, w_, h_)
 
         result.opacity = 1.0 if result.lock_enabled else state.background_opacity
         return result

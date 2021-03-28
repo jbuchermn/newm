@@ -10,7 +10,7 @@ conf_corner_radius = configured_value('corner_radius', 17.5)
 class Corner(PyWMCairoWidget):
     def __init__(self, wm, left, top):
         self.r = conf_corner_radius()
-        self.radius = int(wm.output_scale * self.r)
+        self.radius = round(wm.output_scale * self.r)
 
         super().__init__(wm, self.radius, self.radius)
 
