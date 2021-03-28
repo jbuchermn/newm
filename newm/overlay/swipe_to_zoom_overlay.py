@@ -29,8 +29,9 @@ class SwipeToZoomOverlay(Overlay):
         min_size = 1
         if self._focused is not None:
             state = self.layout.state.get_view_state(self._focused)
-            self._focused_br = state.i + state.w, state.j + state.h
             min_size = min(self.initial_size, max(state.w, state.h))
+            if self.i + self.size > state.i + state.w - 0.1 and self.j + self.size > state.j + state.h - 0.1:
+                self._focused_br = state.i + state.w, state.j + state.h
 
         """
         Grid

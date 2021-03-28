@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', False)
 conf_corner_radius = configured_value('view.corner_radius', 12.5)
 conf_padding = configured_value('view.padding', 0.01)
-conf_padding_zero_on_fullscreen = configured_value('view.padding_zero_on_fullscreen', False)
+conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0.)
 
 conf_panel_lock_h = configured_value('panels.lock.h', 0.5)
 conf_panel_lock_w = configured_value('panels.lock.w', 0.5)
@@ -202,7 +202,7 @@ class View(PyWMView, Animate):
             result.accepts_input = True
             result.corner_radius = conf_corner_radius() if self.parent is None else 0
 
-            if state.is_fullscreen() and conf_padding_zero_on_fullscreen():
+            if state.is_fullscreen() and conf_fullscreen_padding() == 0.:
                 result.corner_radius = 0
 
             """
@@ -241,7 +241,7 @@ class View(PyWMView, Animate):
                 w -= 0.05
                 h -= 0.05 * self.wm.width / self.wm.height
 
-            padding = 0 if state.is_fullscreen() and conf_padding_zero_on_fullscreen() else conf_padding()
+            padding = conf_fullscreen_padding() if state.is_fullscreen() else conf_padding()
 
             if w == 0 or h == 0:
                 padding = 0
