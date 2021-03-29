@@ -36,7 +36,7 @@ class PanelEndpoint(Thread):
                     elif msg['kind'].startswith('auth_'):
                         self.layout.auth_backend.on_message(msg)
                 except Exception:
-                    logger.debug("Received unparsable message: %s", msg)
+                    logger.exception("Received unparsable message: %s", msg)
 
         finally:
             logger.info("Closing connection: %s", path)

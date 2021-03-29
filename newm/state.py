@@ -30,7 +30,7 @@ class ViewState:
             self.__dict__[k] = v
 
     def __str__(self):
-        return "ViewState <%s>" % str(self.__dict__)
+        return "<ViewState %s>" % str(self.__dict__)
 
     def __repr__(self):
         return str(self)
@@ -272,7 +272,7 @@ class LayoutState:
     """
 
     def __str__(self):
-        return "LayoutState <%s>" % str(self.__dict__)
+        return "<LayoutState %s>" % str({k:v for k, v in self.__dict__.items() if k != "_view_states"})
 
     def __repr__(self):
         return str(self)

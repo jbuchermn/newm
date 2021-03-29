@@ -33,7 +33,10 @@ class View(PyWMView, Animate):
         self.panel = None
 
     def __str__(self):
-        return "View (%d)" % self._handle
+        return "<View %d (%s): %s, %s, %s, %d, xwayland=%s, floating=%s>" % (
+            self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
+             self.up_state.title, self.app_id, self.role, self.pid,
+             self.is_xwayland, self.up_state.is_floating)
 
     def is_dialog(self):
         return self.panel is None and self.up_state.is_floating
@@ -45,11 +48,7 @@ class View(PyWMView, Animate):
         return self.panel is not None
 
     def main(self, state):
-        logger.info(
-            "Init: %s (%s): %s, %s, %s, %d, xwayland=%s, floating=%s",
-            self, "child" if self.parent is not None else "root",
-            self.up_state.title, self.app_id, self.role, self.pid,
-            self.is_xwayland, self.up_state.is_floating)
+        logger.info("Init: %s", self)
 
         try:
             if conf_xwayland_css():
@@ -140,7 +139,7 @@ class View(PyWMView, Animate):
 
             state2 = state1.replacing_view_state(
                     self,
-                    i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None)
+                    i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None), move_origin=(None, None)
                 ).focusing_view(self)
 
             return state1, state2
@@ -252,13 +251,11 @@ class View(PyWMView, Animate):
 
             padding = conf_fullscreen_padding() if state.is_fullscreen() else conf_padding()
 
-            if w == 0 or h == 0:
-                padding = 0
-
-            x += padding
-            y += padding
-            w -= 2*padding
-            h -= 2*padding
+            if w != 0 and h != 0:
+                x += padding
+                y += padding
+                w -= 2*padding
+                h -= 2*padding
 
             if self.up_state.size[0] > 0 and self.up_state.size[1] > 0:
                 x -= self.up_state.offset[0] / self.up_state.size[0] * w

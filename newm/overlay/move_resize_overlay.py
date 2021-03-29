@@ -278,7 +278,8 @@ class MoveResizeOverlay(Overlay, Thread):
                         fj = j
 
                     if i != self.layout.state.i or j != self.layout.state.j:
-                        logger.debug("MoveResizeOverlay: Adjusting viewpoint")
+                        logger.debug("MoveResizeOverlay: Adjusting viewpoint (%f %f) -> (%f %f)",
+                                     self.layout.state.i, self.layout.state.j, i, j)
                         self._target_layout_pos = (self.layout.state.i, self.layout.state.j, fi, fj, time.time(), time.time() + conf_anim_t())
 
                 except Exception:
@@ -332,7 +333,7 @@ class MoveResizeOverlay(Overlay, Thread):
 
             if ii != fi or ij != fj:
                 self._target_view_pos = (ii, ij, fi, fj, time.time(), time.time() + t)
-            if iw != fw or iw != fw:
+            if iw != fw or ih != fh:
                 self._target_view_size = (iw, ih, fw, fh, time.time(), time.time() + t)
 
 

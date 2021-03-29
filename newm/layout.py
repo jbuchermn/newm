@@ -439,6 +439,20 @@ class Layout(PyWM, Animate):
     Utilities
     """
 
+    def __str__(self):
+        return "<Layout %dx%d %s>" % (self.width, self.height, self.config)
+
+    def debug_str(self):
+        res = "%s\n  %s\n\n" % (self, str(self.state))
+        for i, v in self._views.items():
+            s = None
+            try:
+                s = self.state.get_view_state(v)
+            except:
+                pass
+            res += "%2d: %s\n      %s\n" % (i, v, s)
+        return res
+
     def windows(self):
         return [v for _, v in self._views.items() if v.is_window()]
 
@@ -853,6 +867,8 @@ class Layout(PyWM, Animate):
             self.ensure_locked(anim=False)
         elif cmd == "config":
             return print_config()
+        elif cmd == "debug":
+            return self.debug_str()
 
     def launch_app(self, cmd):
         """
