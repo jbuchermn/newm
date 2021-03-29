@@ -27,6 +27,7 @@ class OverviewOverlay(Overlay):
             j=j,
             scale=float(self._original_state.size)/size,
             size=size,
+            size_origin=self.layout.state.size,
             background_factor=1.,
             top_bar_dy=1.,
             bottom_bar_dy=1.

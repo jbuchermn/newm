@@ -43,7 +43,7 @@ class LayoutState:
         self.i = kwargs['i'] if 'i' in kwargs else 0
         self.j = kwargs['j'] if 'j' in kwargs else 0
         self.size = kwargs['size'] if 'size' in kwargs else 2
-        self.scale = kwargs['scale'] if 'scale' in kwargs else 1
+        self.size_origin = kwargs['size_origin'] if 'size_origin' in kwargs else None
 
         self.background_factor = kwargs['background_factor'] if 'background_factor' in kwargs else 3
         self.background_opacity = kwargs['background_opacity'] if 'background_opacity' in kwargs else 0.

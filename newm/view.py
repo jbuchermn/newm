@@ -12,8 +12,9 @@ logger = logging.getLogger(__name__)
 
 conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', False)
 conf_corner_radius = configured_value('view.corner_radius', 12.5)
-conf_padding = configured_value('view.padding', 0.01)
-conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0.)
+conf_padding = configured_value('view.padding', 8)
+conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0)
+conf_place_by_logical_pixels = configured_value('view.place_by_logical_pixels', True)
 
 conf_panel_lock_h = configured_value('panels.lock.h', 0.5)
 conf_panel_lock_w = configured_value('panels.lock.w', 0.5)
@@ -202,7 +203,7 @@ class View(PyWMView, Animate):
             result.accepts_input = True
             result.corner_radius = conf_corner_radius() if self.parent is None else 0
 
-            if state.is_fullscreen() and conf_fullscreen_padding() == 0.:
+            if state.is_fullscreen() and conf_fullscreen_padding() == 0:
                 result.corner_radius = 0
 
             """
@@ -241,40 +242,52 @@ class View(PyWMView, Animate):
                 w -= 0.05
                 h -= 0.05 * self.wm.width / self.wm.height
 
-            padding = conf_fullscreen_padding() if state.is_fullscreen() else conf_padding()
-
-            if w == 0 or h == 0:
-                padding = 0
-
-            x = i - state.i + padding
-            y = j - state.j + padding / (self.wm.height / self.wm.width)
-
-            w -= 2*padding
-            h -= 2*padding / (self.wm.height / self.wm.width)
+            x = i - state.i
+            y = j - state.j
 
             x *= self.wm.width / state.size
             y *= self.wm.height / state.size
             w *= self.wm.width / state.size
             h *= self.wm.height / state.size
 
+            padding = conf_fullscreen_padding() if state.is_fullscreen() else conf_padding()
+
+            if w == 0 or h == 0:
+                padding = 0
+
+            x += padding
+            y += padding
+            w -= 2*padding
+            h -= 2*padding
+
             if self.up_state.size[0] > 0 and self.up_state.size[1] > 0:
                 x -= self.up_state.offset[0] / self.up_state.size[0] * w
                 y -= self.up_state.offset[1] / self.up_state.size[1] * h
+
+            scale = 1 if conf_place_by_logical_pixels() else self.wm.output_scale
+            x, y, w, h = (
+                round(x * scale) / scale,
+                round(y * scale) / scale,
+                round((x+w) * scale) / scale - round(x * scale) / scale,
+                round((y+h) * scale) / scale - round(y * scale) / scale)
+
 
             """
             Handle client size
             """
             w_for_size, h_for_size = self_state.scale_origin
-            if w_for_size is not None:
-                w_for_size -= 2*padding
-                h_for_size -= 2*padding / (self.wm.height / self.wm.width)
-                w_for_size *= self.wm.width / state.size
-                h_for_size *= self.wm.height / state.size
-            else:
-                w_for_size, h_for_size = w, h
+            if w_for_size is None:
+                w_for_size, h_for_size = self_state.w, self_state.h
 
-            width = round(w_for_size * self.client_side_scale / state.scale)
-            height = round(h_for_size * self.client_side_scale / state.scale)
+            size = state.size_origin if state.size_origin is not None else state.size
+
+            w_for_size *= self.wm.width / size
+            h_for_size *= self.wm.height / size
+            w_for_size -= 2*padding
+            h_for_size -= 2*padding
+
+            width = math.ceil(w_for_size * self.client_side_scale)
+            height = math.ceil(h_for_size * self.client_side_scale)
 
             result.size = (width, height)
 
@@ -282,8 +295,8 @@ class View(PyWMView, Animate):
                 """
                 Override: Keep floating windows scaled correctly
                 """
-                w = self.up_state.size[0] / self.client_side_scale / state.scale
-                h = self.up_state.size[1] / self.client_side_scale / state.scale
+                w = self.up_state.size[0] / self.client_side_scale * size / state.size
+                h = self.up_state.size[1] / self.client_side_scale * size / state.size
 
             else:
                 """
@@ -314,11 +327,15 @@ class View(PyWMView, Animate):
 
                 result.size = (width, height)
 
-            x_ = math.floor(x * self.wm.output_scale) / self.wm.output_scale
-            y_ = math.floor(y * self.wm.output_scale) / self.wm.output_scale
-            w_ = math.ceil((x+w) * self.wm.output_scale) /self.wm.output_scale - x_
-            h_ = math.ceil((y+h) * self.wm.output_scale) /self.wm.output_scale - y_
-            result.box = (x_, y_, w_, h_)
+            result.box = (x, y, w, h)
+
+            if 0.99 < result.box[2] / result.size[0] < 1.01:
+                if result.box[2] != result.size[0]:
+                    logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
+            if 0.99 < result.box[3] / result.size[1] < 1.01:
+                if result.box[3] != result.size[1]:
+                    logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
+
 
         result.opacity = 1.0 if result.lock_enabled else state.background_opacity
         return result
