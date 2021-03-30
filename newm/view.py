@@ -14,7 +14,6 @@ conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', Fa
 conf_corner_radius = configured_value('view.corner_radius', 12.5)
 conf_padding = configured_value('view.padding', 8)
 conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0)
-conf_place_by_logical_pixels = configured_value('view.place_by_logical_pixels', True)
 
 conf_panel_lock_h = configured_value('panels.lock.h', 0.5)
 conf_panel_lock_w = configured_value('panels.lock.w', 0.5)
@@ -261,13 +260,7 @@ class View(PyWMView, Animate):
                 x -= self.up_state.offset[0] / self.up_state.size[0] * w
                 y -= self.up_state.offset[1] / self.up_state.size[1] * h
 
-            scale = 1 if conf_place_by_logical_pixels() else self.wm.output_scale
-            x, y, w, h = (
-                round(x * scale) / scale,
-                round(y * scale) / scale,
-                round((x+w) * scale) / scale - round(x * scale) / scale,
-                round((y+h) * scale) / scale - round(y * scale) / scale)
-
+            x, y, w, h = (x, y, w, h)
 
             """
             Handle client size

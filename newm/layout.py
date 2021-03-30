@@ -54,8 +54,9 @@ logger = logging.getLogger(__name__)
 conf_wallpaper = configured_value('wallpaper')
 conf_panel_dir = configured_value('panel_dir')
 conf_mod = configured_value('mod', PYWM_MOD_LOGO)
-conf_output_scale = configured_value('output_scale', 1.0)
 conf_pywm = configured_value('pywm', {})
+conf_output_scale = configured_value('output_scale', 1.0)
+conf_round_scale = configured_value('round_scale', 1.0)
 
 conf_send_fullscreen_to_views = configured_value('view.send_fullscreen', True)
 
@@ -238,10 +239,8 @@ class Layout(PyWM, Animate):
     def __init__(self):
         load_config()
 
-        PyWM.__init__(self, View, output_scale=conf_output_scale(), **conf_pywm())
+        PyWM.__init__(self, View, output_scale=conf_output_scale(), round_scale=conf_round_scale(), **conf_pywm())
         Animate.__init__(self)
-
-        self.output_scale = conf_output_scale()
 
         self.mod = conf_mod()
         self.mod_sym = None
@@ -279,6 +278,7 @@ class Layout(PyWM, Animate):
     def _setup(self, fallback=True):
         load_config(fallback=fallback)
 
+        self.round_scale = conf_round_scale()
         self.mod = conf_mod()
         self._set_mod_sym()
 
