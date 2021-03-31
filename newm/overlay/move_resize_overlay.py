@@ -277,14 +277,13 @@ class MoveResizeOverlay(Overlay, Thread):
                     if j < fj:
                         fj = j
 
-                    if i != self.layout.state.i or j != self.layout.state.j:
+                    if fi != self.layout.state.i or fj != self.layout.state.j:
                         logger.debug("MoveResizeOverlay: Adjusting viewpoint (%f %f) -> (%f %f)",
-                                     self.layout.state.i, self.layout.state.j, i, j)
-                        self._target_layout_pos = (self.layout.state.i, self.layout.state.j, fi, fj, time.time(), time.time() + conf_anim_t())
+                                     self.layout.state.i, self.layout.state.j, fi, fj)
+                        self._target_layout_pos = (self.layout.state.i, self.layout.state.j, fi, fj, t, t + conf_anim_t())
 
                 except Exception:
                     logger.warn("Unexpected: Could not access view %s state", self.view)
-
 
             if not in_prog and self._wants_close:
                 self._running = False
