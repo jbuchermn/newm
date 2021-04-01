@@ -1,15 +1,21 @@
-import logging
+from __future__ import annotations
+from typing import TypeVar, Generic, Optional
 
 from abc import abstractmethod
+import logging
 import time
+
+from .interpolation import Interpolation
 
 logger = logging.getLogger(__name__)
 
-class Animate:
-    def __init__(self):
-        self._animation = None
+StateT = TypeVar('StateT')
 
-    def _process(self, default_state):
+class Animate(Generic[StateT]):
+    def __init__(self) -> None:
+        self._animation: Optional[tuple[Interpolation[StateT], float, float, float]] = None
+
+    def _process(self, default_state: StateT) -> StateT:
         if self._animation is not None:
             interpolation, s, d, last_ts = self._animation
             ts = time.time()
@@ -27,10 +33,10 @@ class Animate:
         else:
             return default_state
 
-    def _animate(self, interp, dt):
+    def _animate(self, interp: Interpolation[StateT], dt: float) -> None:
         self._animation = (interp, time.time(), dt, time.time())
         self.damage()
 
     @abstractmethod
-    def damage(self):
+    def damage(self) -> None:
         pass

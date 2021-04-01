@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import Optional, Callable, TYPE_CHECKING, TypeVar, Union, Any, cast
+
 import time
 import math
 import logging
@@ -20,6 +23,7 @@ from pywm.touchpad import (
     HigherSwipeGesture,
     SingleFingerMoveGesture
 )
+from pywm.touchpad.gestures import Gesture
 
 from .state import LayoutState
 from .interpolation import LayoutDownstreamInterpolation
@@ -30,7 +34,7 @@ from .config import configured_value, load_config, print_config
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
 from .panel_launcher import PanelsLauncher
-from .sys_backend import SysBackend
+from .sys_backend import SysBackend, SysBackendEndpoint
 from .auth_backend import AuthBackend
 
 from .widget import (
@@ -51,17 +55,22 @@ from .overlay import (
 
 logger = logging.getLogger(__name__)
 
-conf_wallpaper = configured_value('wallpaper')
-conf_panel_dir = configured_value('panel_dir')
+conf_wallpaper = configured_value('wallpaper', cast(Optional[str], None))
+conf_panel_dir = configured_value('panel_dir', cast(Optional[str], None))
 conf_mod = configured_value('mod', PYWM_MOD_LOGO)
-conf_pywm = configured_value('pywm', {})
+conf_pywm = configured_value('pywm', cast(dict[str, Any], {}))
 conf_output_scale = configured_value('output_scale', 1.0)
 conf_round_scale = configured_value('round_scale', 1.0)
 
 conf_send_fullscreen_to_views = configured_value('view.send_fullscreen', True)
 
-conf_key_bindings = configured_value('key_bindings', lambda layout: [])
-conf_sys_backend_endpoints = configured_value('sys_backend_endpoints', [])
+if TYPE_CHECKING:
+    TKeyBindings = Callable[[Layout], list[tuple[str, Callable[[], None]]]]
+else:
+    TKeyBindings = TypeVar('TKeyBindings')
+
+conf_key_bindings = configured_value('key_bindings', cast(TKeyBindings, lambda layout: []))
+conf_sys_backend_endpoints = configured_value('sys_backend_endpoints', cast(list[SysBackendEndpoint], []))
 
 conf_lp_freq = configured_value('gestures.lp_freq', 60.)
 conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
@@ -72,9 +81,9 @@ conf_anim_t = configured_value('anim_time', .3)
 conf_blend_t = configured_value('blend_time', 1.)
 
 
-def _score(i1, j1, w1, h1,
-           im, jm,
-           i2, j2, w2, h2):
+def _score(i1: float, j1: float, w1: float, h1: float,
+           im: int, jm: int,
+           i2: float, j2: float, w2: float, h2: float) -> float:
 
     if (i1, j1, w1, h1) == (i2, j2, w2, h2):
         return 1000
@@ -104,7 +113,7 @@ def _score(i1, j1, w1, h1,
     if d_i < 0:
         return 1000
 
-    d_j = 0
+    d_j = 0.
     if j2 > j1 + h1:
         d_j = j2 - (j1 + h1)
     elif j1 > j2 + h2:
@@ -114,7 +123,10 @@ def _score(i1, j1, w1, h1,
 
 
 class Animation:
-    def __init__(self, layout, reducer, duration, then, overlay_safe=False):
+    def __init__(self,
+                 layout: Layout,
+                 reducer: Callable[[LayoutState], tuple[Optional[LayoutState], Optional[LayoutState]]],
+                 duration: float, then: Optional[Callable[..., None]], overlay_safe: bool=False) -> None:
         super().__init__()
         self.layout = layout
 
@@ -123,9 +135,9 @@ class Animation:
         """
         self.reducer = reducer
 
-        self._initial_state = None
-        self._final_state = None
-        self._started = None
+        self._initial_state: Optional[LayoutState] = None
+        self._final_state: Optional[LayoutState] = None
+        self._started: Optional[float] = None
 
         # Prevent devision by zero
         self.duration = max(.1, duration)
@@ -133,19 +145,20 @@ class Animation:
         self.then = then
         self.overlay_safe = overlay_safe
 
-    def check_finished(self):
+    def check_finished(self) -> bool:
         if self._started is not None and self._final_state is None:
             return True
 
         if self._started is not None and time.time() > self._started + self.duration:
-            self.layout.update(self._final_state)
+            if self._final_state is not None:
+                self.layout.update(self._final_state)
             if callable(self.then):
                 self.then()
             return True
 
         return False
 
-    def start(self):
+    def start(self) -> None:
         try:
             self._initial_state, self._final_state = self.reducer(self.layout.state)
         except:
@@ -166,28 +179,27 @@ class Animation:
 
             self.layout._animate_to(self._final_state, self.duration)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%s -> %s (%f%s)" % (self._initial_state, self._final_state, self.duration, ", then" if self.then is not None else "")
 
 class LayoutThread(Thread):
-    def __init__(self, layout):
+    def __init__(self, layout: Layout) -> None:
         super().__init__()
         self.layout = layout
 
         """
         Overlay or Animation
         """
-        self._pending = []
-        self._current_ovr = None
-        self._current_anim = None
+        self._pending: list[Any] = []
+        self._current_ovr: Optional[Overlay] = None
+        self._current_anim: Optional[Animation] = None
 
         self._running = True
-        self.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self._running = False
 
-    def push(self, nxt):
+    def push(self, nxt: Union[Overlay, Animation]) -> None:
         if isinstance(nxt, Overlay):
             if self._current_ovr is not None or len([x for x in self._pending if isinstance(x, Overlay)]) > 0:
                 logger.debug("Rejecting queued overlay")
@@ -204,11 +216,11 @@ class LayoutThread(Thread):
                 self._pending += [nxt]
 
 
-    def on_overlay_destroyed(self):
+    def on_overlay_destroyed(self) -> None:
         logger.debug("Thread: Finishing overlay...")
         self._current_ovr = None
 
-    def run(self):
+    def run(self) -> None:
         while self._running:
             try:
                 if len(self._pending) > 0:
@@ -235,15 +247,15 @@ class LayoutThread(Thread):
 
 
 
-class Layout(PyWM, Animate):
-    def __init__(self):
+class Layout(PyWM[View], Animate[PyWMDownstreamState]):
+    def __init__(self) -> None:
         load_config()
 
         PyWM.__init__(self, View, output_scale=conf_output_scale(), round_scale=conf_round_scale(), **conf_pywm())
         Animate.__init__(self)
 
         self.mod = conf_mod()
-        self.mod_sym = None
+        self.mod_sym = ""
         self._set_mod_sym()
 
         self.key_processor = KeyProcessor(self.mod_sym)
@@ -252,22 +264,22 @@ class Layout(PyWM, Animate):
         self.panel_launcher = PanelsLauncher()
         self.panel_endpoint = PanelEndpoint(self)
 
-        self.state = None
+        self.state = LayoutState()
 
-        self.overlay = None
+        self.overlay: Optional[Overlay] = None
 
-        self.background = None
-        self.top_bar = None
-        self.bottom_bar = None
-        self.corners = []
+        self.background: Optional[Background] = None
+        self.top_bar: Optional[TopBar] = None
+        self.bottom_bar: Optional[BottomBar] = None
+        self.corners: list[Corner] = []
 
-        self.thread = None
+        self.thread = LayoutThread(self)
 
-        self._animations = []
+        self._animations: list[Animation] = []
 
 
-    def _set_mod_sym(self):
-        self.mod_sym = None
+    def _set_mod_sym(self) -> None:
+        self.mod_sym = ""
         if self.mod == PYWM_MOD_ALT:
             self.mod_sym = "Alt"
         elif self.mod == PYWM_MOD_LOGO:
@@ -275,7 +287,7 @@ class Layout(PyWM, Animate):
         else:
             raise Exception("Unknown mod")
 
-    def _setup(self, fallback=True):
+    def _setup(self, fallback: bool=True) -> None:
         load_config(fallback=fallback)
 
         self.round_scale = conf_round_scale()
@@ -308,8 +320,8 @@ class Layout(PyWM, Animate):
 
         self.bottom_bar = self.create_widget(BottomBar)
         self.top_bar = self.create_widget(TopBar)
-        if conf_wallpaper() is not None:
-            self.background = self.create_widget(Background, conf_wallpaper())
+        if (wp := conf_wallpaper()) is not None:
+            self.background = self.create_widget(Background, wp)
         self.corners = [
             self.create_widget(Corner, True, True),
             self.create_widget(Corner, True, False),
@@ -318,34 +330,33 @@ class Layout(PyWM, Animate):
         ]
 
         self.key_processor.clear()
-        self.key_processor.register_bindings(
-            *conf_key_bindings()(self)
-        )
+        if (kb := conf_key_bindings()) is not None:
+            self.key_processor.register_bindings(
+                *kb(self)
+            )
         self.sys_backend.set_endpoints(
             *conf_sys_backend_endpoints()
         )
         self.sys_backend.register_xf86_keybindings()
 
-    def reducer(self, state):
+    def reducer(self, state: LayoutState) -> PyWMDownstreamState:
         return PyWMDownstreamState(state.lock_perc)
 
-    def animate(self, old_state, new_state, dt):
+    def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
         cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
         self._animate(LayoutDownstreamInterpolation(cur, nxt), dt)
 
-    def process(self):
+    def process(self) -> PyWMDownstreamState:
         return self._process(self.reducer(self.state))
 
-    def main(self):
+    def main(self) -> None:
         logger.debug("Layout main...")
-
-        self.state = LayoutState()
 
         self._setup()
 
-        self.thread = LayoutThread(self)
+        self.thread.start()
         self.panel_endpoint.start()
         self.panel_launcher.start()
 
@@ -353,16 +364,16 @@ class Layout(PyWM, Animate):
         self.update_cursor()
 
         # Fade in
-        def fade_in():
+        def fade_in() -> None:
             time.sleep(.5)
-            def reducer(state):
+            def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
                 return None, state.copy(background_opacity=1.)
             self.animate_to(reducer, conf_blend_t())
         Thread(target=fade_in).start()
 
         # Greeter
         if self.auth_backend.is_greeter():
-            def greet():
+            def greet() -> None:
                 while len([p for p in self.panels() if p.panel == "lock"]) < 1:
                     time.sleep(.5)
                 self.ensure_locked()
@@ -370,7 +381,7 @@ class Layout(PyWM, Animate):
             Thread(target=greet).start()
 
 
-    def _terminate(self):
+    def _terminate(self) -> None:
         super().terminate()
         self.panel_endpoint.stop()
         self.panel_launcher.stop()
@@ -384,21 +395,25 @@ class Layout(PyWM, Animate):
         if self.thread is not None:
             self.thread.stop()
 
-    def terminate(self):
-        def reducer(state):
+    def terminate(self) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
             return state.copy(final=True), state.copy(final=True, background_opacity=0.)
         self.animate_to(reducer, conf_blend_t(), self._terminate)
 
 
-    def _execute_view_main(self, view):
+    def _execute_view_main(self, view: View) -> None:
         self.animate_to(view.main, conf_anim_t(), None)
 
 
-    def animate_to(self, reducer, duration, then=None, overlay_safe=False):
+    def animate_to(self,
+                   reducer: Callable[[LayoutState], tuple[Optional[LayoutState], Optional[LayoutState]]],
+                   duration: float,
+                   then: Optional[Callable[..., None]]=None,
+                   overlay_safe: bool=False) -> None:
         self.thread.push(Animation(self, reducer, duration, then, overlay_safe))
 
 
-    def damage(self):
+    def damage(self) -> None:
         super().damage()
 
         for _, v in self._views.items():
@@ -414,11 +429,11 @@ class Layout(PyWM, Animate):
             self.bottom_bar.damage()
 
 
-    def update(self, new_state):
+    def update(self, new_state: LayoutState) -> None:
         self.state = new_state
         self.damage()
 
-    def _animate_to(self, new_state, duration):
+    def _animate_to(self, new_state: LayoutState, duration: float) -> None:
         self.animate(self.state, new_state, duration)
 
         for _, v in self._views.items():
@@ -439,10 +454,10 @@ class Layout(PyWM, Animate):
     Utilities
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<Layout %dx%d %s>" % (self.width, self.height, self.config)
 
-    def debug_str(self):
+    def debug_str(self) -> str:
         res = "%s\n  %s\n\n" % (self, str(self.state))
         for i, v in self._views.items():
             s = None
@@ -453,31 +468,32 @@ class Layout(PyWM, Animate):
             res += "%2d: %s\n      %s\n" % (i, v, s)
         return res
 
-    def windows(self):
+    def windows(self) -> list[View]:
         return [v for _, v in self._views.items() if v.is_window()]
 
-    def dialogs(self): 
+    def dialogs(self) -> list[View]:
         return [v for _, v in self._views.items() if v.is_dialog()]
 
-    def panels(self):
+    def panels(self) -> list[View]:
         return [v for _, v in self._views.items() if v.is_panel()]
 
-    def find_focused_box(self):
+    def find_focused_box(self) -> tuple[float, float, float, float]:
         try:
             view = self.find_focused_view()
-            view_state = self.state.get_view_state(view)
+            if view is not None:
+                view_state = self.state.get_view_state(view)
             return view_state.i, view_state.j, view_state.w, view_state.h
         except Exception:
             return 0, 0, 1, 1
 
-    def find_focused_view(self):
+    def find_focused_view(self) -> Optional[View]:
         for _, view in self._views.items():
-            if view.up_state.is_focused:
+            if view.is_focused():
                 return view
 
         return None
 
-    def place_initial(self, w, h):
+    def place_initial(self, w: int, h: int) -> tuple[int, int]:
         place_i = 0
         place_j = 0
 
@@ -495,8 +511,8 @@ class Layout(PyWM, Animate):
                 place_i, place_j = i, j
                 break
         else:
-            i, j, w, h = self.find_focused_box()
-            place_i, place_j = i + w, j
+            i_, j_, w_, h_ = self.find_focused_box()
+            place_i, place_j = round(i_ + w_), round(i_)
             while not self.state.is_tile_free(place_i, place_j):
                 place_i += 1
 
@@ -508,10 +524,10 @@ class Layout(PyWM, Animate):
     Callbacks
     """
 
-    def on_layout_change(self):
+    def on_layout_change(self) -> None:
         self._setup()
 
-    def on_key(self, time_msec, keycode, state, keysyms):
+    def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
         if self.is_locked():
             return False
 
@@ -531,7 +547,7 @@ class Layout(PyWM, Animate):
                                          self.modifiers & self.mod > 0,
                                          self.modifiers & PYWM_MOD_CTRL > 0)
 
-    def on_modifiers(self, modifiers):
+    def on_modifiers(self, modifiers: int) -> bool:
         if self.is_locked():
             return False
 
@@ -551,7 +567,7 @@ class Layout(PyWM, Animate):
                 return True
         return False
 
-    def on_motion(self, time_msec, delta_x, delta_y):
+    def on_motion(self, time_msec: int, delta_x: float, delta_y: float) -> bool:
         if self.is_locked():
             return False
 
@@ -560,7 +576,7 @@ class Layout(PyWM, Animate):
 
         return False
 
-    def on_button(self, time_msec, button, state):
+    def on_button(self, time_msec: int, button: int, state: int) -> bool:
         if self.is_locked():
             return False
 
@@ -569,7 +585,7 @@ class Layout(PyWM, Animate):
 
         return False
 
-    def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
+    def on_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> bool:
         if self.is_locked():
             return False
         
@@ -579,7 +595,7 @@ class Layout(PyWM, Animate):
 
         return False
 
-    def on_gesture(self, gesture):
+    def on_gesture(self, gesture: Gesture) -> bool:
         if self.is_locked():
             return False
 
@@ -594,6 +610,7 @@ class Layout(PyWM, Animate):
                 logger.debug("...MoveResize")
                 view = self.find_focused_view()
 
+                ovr: Optional[Overlay] = None
                 if view is not None and view.is_dialog():
                     ovr = MoveResizeFloatingOverlay(self, view)
                     ovr.on_gesture(gesture)
@@ -630,24 +647,24 @@ class Layout(PyWM, Animate):
                 self.enter_overlay(ovr)
                 return True
 
-            return False
+        return False
 
 
     """
     Actions
     """
 
-    def enter_overlay(self, overlay):
+    def enter_overlay(self, overlay: Overlay) -> None:
         self.thread.push(overlay)
 
-    def start_overlay(self, overlay):
+    def start_overlay(self, overlay: Overlay) -> None:
         logger.debug("Going to enter %s...", overlay)
         self.key_processor.on_other_action()
         self.overlay = overlay
         self.overlay.init()
 
     # BEGIN DEBUG
-    def force_close_overlay(self):
+    def force_close_overlay(self) -> None:
         if self.overlay is None:
             return
 
@@ -658,8 +675,8 @@ class Layout(PyWM, Animate):
             self.overlay = None
     # END DEBUG
 
-    def ensure_locked(self, anim=True, dim=False):
-        def focus_lock():
+    def ensure_locked(self, anim: bool=True, dim: bool=False) -> None:
+        def focus_lock() -> None:
             lock_screen = [v for v in self.panels() if v.panel == "lock"]
             if len(lock_screen) > 0:
                 lock_screen[0].focus()
@@ -668,7 +685,7 @@ class Layout(PyWM, Animate):
 
         self.auth_backend.lock()
 
-        def reducer(state):
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
             return None if anim else state.copy(lock_perc=1., background_opacity=.5), state.copy(lock_perc=1., background_opacity=.5)
         self.animate_to(
             reducer,
@@ -677,16 +694,16 @@ class Layout(PyWM, Animate):
         if dim:
             self.sys_backend.idle_state(1)
 
-    def _trusted_unlock(self):
+    def _trusted_unlock(self) -> None:
         if self.is_locked():
-            def reducer(state):
+            def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
                 return None, state.copy(lock_perc=0., background_opacity=1.)
             self.animate_to(
                 reducer,
                 conf_anim_t(),
                 lambda: self.update_cursor())
 
-    def exit_overlay(self):
+    def exit_overlay(self) -> None:
         logger.debug("Going to exit overlay...")
         if self.overlay is None:
             logger.debug("...aborted")
@@ -695,7 +712,7 @@ class Layout(PyWM, Animate):
         logger.debug("...destroy")
         self.overlay.destroy()
 
-    def on_overlay_destroyed(self):
+    def on_overlay_destroyed(self) -> None:
         logger.debug("Overlay destroyed")
         self.thread.on_overlay_destroyed()
         self.overlay = None
@@ -703,7 +720,7 @@ class Layout(PyWM, Animate):
         logger.debug("Resetting gesture")
         self.reallow_gesture()
 
-    def move(self, delta_i, delta_j):
+    def move(self, delta_i: int, delta_j: int) -> None:
         i, j, w, h = self.find_focused_box()
 
         if ((i + w > self.state.i + self.state.size and delta_i > 0) or
@@ -718,7 +735,7 @@ class Layout(PyWM, Animate):
 
 
         best_view = None
-        best_view_score = 1000
+        best_view_score = 1000.
 
         for k, s in self.state._view_states.items():
             if not s.is_tiled:
@@ -733,22 +750,21 @@ class Layout(PyWM, Animate):
             self.focus_view(self._views[best_view])
 
 
-    def close_view(self):
-        view = [v for _, v in self._views.items() if v.up_state.is_focused]
+    def close_view(self) -> None:
+        view = [v for _, v in self._views.items() if v.is_focused()]
         if len(view) == 0:
             return
 
-        view = view[0]
-        view.close()
+        view[0].close()
 
 
-    def focus_view(self, view):
-        def reducer(state):
+    def focus_view(self, view: View) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
             view.focus()
             return None, state.focusing_view(view)
         self.animate_to(reducer, conf_anim_t())
 
-    def destroy_view(self, view):
+    def destroy_view(self, view: View) -> None:
         logger.info("Destroying view %s", view)
         state = None
         try:
@@ -757,9 +773,9 @@ class Layout(PyWM, Animate):
             logger.warn("Unexpected: View %s state not found", view)
             return
 
-        best_view = None
-        best_view_score = 1000
-        if view.up_state.is_focused:
+        best_view: Optional[int] = None
+        best_view_score = 1000.
+        if view.is_focused():
             logger.debug("Finding view to focus since %s (%d) closes...", view.app_id, view._handle)
             for k, s in self.state._view_states.items():
                 if not s.is_tiled:
@@ -775,10 +791,11 @@ class Layout(PyWM, Animate):
                     best_view = k
 
         if best_view is not None and best_view in self._views:
-            def reducer(state):
-                self._views[best_view].focus()
+            bv: int = best_view
+            def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+                self._views[bv].focus()
                 return None, state\
-                    .focusing_view(self._views[best_view])\
+                    .focusing_view(self._views[bv])\
                     .without_view_state(view)
 
             self.animate_to(
@@ -792,8 +809,8 @@ class Layout(PyWM, Animate):
                 conf_anim_t())
 
 
-    def toggle_fullscreen(self):
-        def reducer(state):
+    def toggle_fullscreen(self) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
             view = self.find_focused_view()
             fs = state.is_fullscreen()
 
@@ -809,8 +826,8 @@ class Layout(PyWM, Animate):
                 return None, None
         self.animate_to(reducer, conf_anim_t())
 
-    def move_focused_view(self, di, dj):
-        def reducer(state):
+    def move_focused_view(self, di: int, dj: int) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
             view = self.find_focused_view()
             if view is not None:
                 try:
@@ -822,8 +839,8 @@ class Layout(PyWM, Animate):
                 return (None, state)
         self.animate_to(reducer, conf_anim_t())
 
-    def resize_focused_view(self, di, dj):
-        def reducer(state):
+    def resize_focused_view(self, di: int, dj: int) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
             view = self.find_focused_view()
             if view is not None:
                 try:
@@ -844,17 +861,17 @@ class Layout(PyWM, Animate):
                 return (None, state)
         self.animate_to(reducer, conf_anim_t())
 
-    def update_config(self):
+    def update_config(self) -> None:
         self._setup(fallback=False)
         self.damage()
 
-    def enter_overview_overlay(self):
+    def enter_overview_overlay(self) -> None:
         self.enter_overlay(OverviewOverlay(self))
 
-    def enter_launcher_overlay(self):
+    def enter_launcher_overlay(self) -> None:
         self.enter_overlay(LauncherOverlay(self))
 
-    def command(self, cmd):
+    def command(self, cmd: str) -> Optional[str]:
         logger.debug("Received command %s", cmd)
         if cmd == "anim-lock":
             self.ensure_locked()
@@ -870,14 +887,16 @@ class Layout(PyWM, Animate):
         elif cmd == "debug":
             return self.debug_str()
 
-    def launch_app(self, cmd):
+        return None
+
+    def launch_app(self, cmd: str) -> None:
         """
         Should be LauncherOverlay
         """
         self.exit_overlay()
         os.system("%s &" % cmd)
 
-    def on_idle(self, elapsed, idle_inhibited):
+    def on_idle(self, elapsed: float, idle_inhibited: bool) -> None:
         if idle_inhibited and elapsed > 0:
             return
 

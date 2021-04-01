@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .sys_backend import (
     SysBackendEndpoint,
     SysBackendEndpoint_alsa,

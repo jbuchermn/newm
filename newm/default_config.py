@@ -1,3 +1,7 @@
+from __future__ import annotations
+from typing import Callable, Any
+
+from newm.layout import Layout
 import os
 import pwd
 import time
@@ -16,7 +20,8 @@ mod = PYWM_MOD_LOGO
 wallpaper = '/etc/wallpaper.jpg'
 panel_dir = '/lib/node_modules/newm-panel'
 
-def key_bindings(layout):
+
+def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
     return [
         ("M-h", lambda: layout.move(-1, 0)),
         ("M-j", lambda: layout.move(0, 1)),

@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+from __future__ import annotations
+from typing import Optional
+
+
 import math
 import time
 
@@ -16,7 +21,7 @@ except:
 logger = logging.getLogger(__name__)
 
 class Grid:
-    def __init__(self, name, x0, x1, xi, d_ovr=0, m_snap=1):
+    def __init__(self, name: str, x0: int, x1: int, xi: float, d_ovr: float=0, m_snap: float=1) -> None:
         self.name = "%s-%d" % (name, time.time() % 1000)
         self.x0 = int(x0)
         self.x1 = int(x1)
@@ -28,15 +33,15 @@ class Grid:
         self.d_ovr = d_ovr
         self.m_snap = m_snap
 
-        self.last_t = None
+        self.last_t: Optional[float] = None
 
-        self.last_x = None
-        self.last_p = None
+        self.last_x: Optional[float] = None
+        self.last_p: Optional[float] = None
 
-        self.last_x_output = None
-        self.last_p_output = None
+        self.last_x_output: Optional[float] = None
+        self.last_p_output: Optional[float] = None
 
-    def _get_bounds(self, x):
+    def _get_bounds(self, x: float) -> tuple[int, int]:
         if self.x0 <= x <= self.x1:
             self.allow_out_of_bounds = False
 
@@ -48,7 +53,7 @@ class Grid:
 
         return x0, x1
 
-    def at(self, x, silent=False):
+    def at(self, x: float, silent: bool=False) -> float:
         x0, x1 = self._get_bounds(x)
 
         t = time.time()
@@ -117,18 +122,18 @@ class Grid:
         # END DEBUG
         return xp
 
-    def final(self, throw_dist_max=None):
+    def final(self, throw_dist_max: Optional[float]=None) -> tuple[int, float]:
         if throw_dist_max is None:
             throw_dist_max = 1. - conf_min_dist()
 
         if self.last_x_output is None:
-            return self.at(self.xi), 0.
+            return round(self.at(self.xi)), 0.
 
         x0, x1 = self._get_bounds(self.last_x_output)
 
         # Find final x
         x_base = self.last_x_output
-        p = 0
+        p = 0.
         if self.last_p is not None:
             p = self.last_p
 
@@ -168,16 +173,16 @@ class Grid:
             dt = compare_t
 
         # BEGIN DEBUG
-        x0 = self.at(self.last_x_output, silent=True)
+        xb = self.at(self.last_x_output, silent=True)
         t0 = time.time()
         for i in range(2):
             logger.debug("GRID[%s]: %f, %f, %f, %f, %f",
                          self.name,
                          t0 + i * dt,
                          0,
-                         x0 + i * (xf-x0),
+                         xb + i * (xf-xb),
                          0,
-                         0 if dt == 0. else dx/dt if xf>x0 else -dx/dt)
+                         0 if dt == 0. else dx/dt if xf>xb else -dx/dt)
         # END DEBUG
 
         return xf, dt
@@ -187,7 +192,7 @@ if __name__ == '__main__':
     import sys
     import matplotlib.pyplot as plt
 
-    plots = {}
+    plots: dict[str, list[str]] = {}
     with open(sys.argv[1], 'r') as inp:
         for l in inp:
             if "GRID[" in l:

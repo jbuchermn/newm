@@ -1,7 +1,15 @@
+from __future__ import annotations
+from typing import Optional, TYPE_CHECKING
+
 from pywm.touchpad import GestureListener, LowpassGesture
+from pywm.touchpad.gestures import Gesture
 from .overlay import Overlay
 from ..grid import Grid
 from ..config import configured_value
+
+if TYPE_CHECKING:
+    from ..layout import Layout
+    from ..state import LayoutState
 
 conf_lock_dist = configured_value('swipe.lock_dist', 0.01)
 conf_gesture_factor = configured_value('swipe.gesture_factor', 4)
@@ -12,8 +20,8 @@ conf_grid_min_dist = configured_value('grid.min_dist', .05)
 
 
 class SwipeOverlay(Overlay):
-    def __init__(self, layout):
-        super().__init__(self)
+    def __init__(self, layout: Layout) -> None:
+        super().__init__(layout)
 
         self.layout = layout
 
@@ -21,7 +29,7 @@ class SwipeOverlay(Overlay):
         self.i = self.layout.state.i
         self.j = self.layout.state.j
 
-        self.locked_x = None
+        self.locked_x: Optional[bool] = None
 
         # """
         # Only allow x scrolling
@@ -30,16 +38,16 @@ class SwipeOverlay(Overlay):
 
         self.initial_x = self.i
         self.initial_y = self.j
-        self.last_delta_x = 0
-        self.last_delta_y = 0
+        self.last_delta_x = 0.
+        self.last_delta_y = 0.
 
         """
         Grids
         """
-        min_i, min_j, max_i, max_j = self.extent = self.layout.state.get_extent()
+        min_i, min_j, max_i, max_j = self.extent = [round(r) for r in self.layout.state.get_extent()]
 
-        max_i -= self.size - 1
-        max_j -= self.size - 1
+        max_i -= round(self.size) - 1
+        max_j -= round(self.size) - 1
 
         self._invalid = [False, False]
         if max_i < min_i:
@@ -55,25 +63,26 @@ class SwipeOverlay(Overlay):
 
         self._set_state()
 
-    def _exit_finished(self):
+    def _exit_finished(self) -> None:
         self.layout.update_cursor()
         super()._exit_finished()
 
-    def _exit_transition(self):
+    def _exit_transition(self) -> tuple[Optional[LayoutState], Optional[float]]:
         i, ti = self.i_grid.final(throw_dist_max=self.size - conf_grid_min_dist())
         j, tj = self.j_grid.final(throw_dist_max=self.size - conf_grid_min_dist())
         t = None
 
-        if self.locked_x:
-            j = self.initial_y
-            t = ti
-        else:
-            i = self.initial_x
-            t = tj
+        if self.locked_x is not None:
+            if self.locked_x:
+                j = round(self.initial_y)
+                t = ti
+            else:
+                i = round(self.initial_x)
+                t = tj
 
         return self.layout.state.copy(i=i, j=j), t
 
-    def _set_state(self):
+    def _set_state(self) -> None:
         if not self._invalid[0]:
             self.layout.state.i = self.i_grid.at(self.i)
         if not self._invalid[1]:
@@ -81,15 +90,16 @@ class SwipeOverlay(Overlay):
         self.layout.damage()
 
 
-    def on_gesture(self, gesture):
+    def on_gesture(self, gesture: Gesture) -> bool:
         if not self._has_gesture:
             LowpassGesture(gesture).listener(GestureListener(
                 self._on_update,
                 lambda: self.layout.exit_overlay()
             ))
             self._has_gesture = True
+        return True
 
-    def _on_update(self, values):
+    def _on_update(self, values: dict[str, float]) -> None:
         if self.locked_x is None:
             if values['delta_x']**2 + values['delta_y']**2 > conf_lock_dist()**2:
                 self.locked_x = abs(values['delta_x']) \
@@ -111,9 +121,9 @@ class SwipeOverlay(Overlay):
 
         self._set_state()
 
-    def on_motion(self, time_msec, delta_x, delta_y):
+    def on_motion(self, time_msec: int, delta_x: float, delta_y: float) -> bool:
         return False
 
-    def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
+    def on_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> bool:
         return False
 

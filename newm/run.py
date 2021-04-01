@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import logging
 
 from .layout import Layout
 
 logger = logging.getLogger(__name__)
 
-def run():
+def run() -> None:
     handler = logging.StreamHandler()
     formatter = logging.Formatter('[%(levelname)s] %(filename)s:%(lineno)s %(asctime)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 

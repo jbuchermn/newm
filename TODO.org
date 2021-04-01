@@ -68,6 +68,7 @@
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
+** Move / Resize during OverviewOverlay
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 ** Bars as panels not as widgets

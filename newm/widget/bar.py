@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from abc import abstractmethod
 from threading import Thread
 import time
@@ -8,6 +11,10 @@ from ..interpolation import WidgetDownstreamInterpolation
 from ..animate import Animate
 from ..config import configured_value
 
+if TYPE_CHECKING:
+    from ..state import LayoutState
+    from ..layout import Layout
+
 conf_bar_height = configured_value('bar.height', 20)
 conf_font_size = configured_value('bar.font-size', 12)
 
@@ -16,8 +23,8 @@ conf_bottom_bar_text = configured_value('bar.bottom_texts', lambda: ["4", "5", "
 conf_font = configured_value('bar.font', 'Source Code Pro for Powerline')
 
 
-class Bar(PyWMCairoWidget, Animate):
-    def __init__(self, wm):
+class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
+    def __init__(self, wm: Layout):
         PyWMCairoWidget.__init__(
             self, wm,
             int(wm.output_scale * wm.width),
@@ -27,11 +34,11 @@ class Bar(PyWMCairoWidget, Animate):
         self.texts = ["Leftp", "Middlep", "Rightp"]
         self.font_size = wm.output_scale * conf_font_size()
 
-    def set_texts(self, texts):
+    def set_texts(self, texts: list[str]) -> None:
         self.texts = texts
         self.render()
 
-    def _render(self, surface):
+    def _render(self, surface: cairo.ImageSurface) -> None:
         ctx = cairo.Context(surface)
 
         ctx.set_source_rgba(.0, .0, .0, .7)
@@ -58,31 +65,31 @@ class Bar(PyWMCairoWidget, Animate):
         ctx.stroke()
 
     @abstractmethod
-    def reducer(self, wm_state):
+    def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         pass
 
-    def animate(self, old_state, new_state, dt):
+    def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
         cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
         self._animate(WidgetDownstreamInterpolation(cur, nxt), dt)
 
-    def process(self):
+    def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self.wm.state))
 
 
 class TopBar(Bar, Thread):
-    def __init__(self, wm):
+    def __init__(self, wm: Layout) -> None:
         Bar.__init__(self, wm)
         Thread.__init__(self)
 
         self._running = True
         self.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self._running = False
 
-    def reducer(self, wm_state):
+    def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
         result.z_index = 5
 
@@ -91,26 +98,26 @@ class TopBar(Bar, Thread):
 
         return result
 
-    def run(self):
+    def run(self) -> None:
         while self._running:
             self.set()
             time.sleep(1.)
 
-    def set(self):
+    def set(self) -> None:
         self.set_texts(conf_top_bar_text()())
 
 class BottomBar(Bar, Thread):
-    def __init__(self, wm):
+    def __init__(self, wm: Layout):
         Bar.__init__(self, wm)
         Thread.__init__(self)
 
         self._running = True
         self.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self._running = False
 
-    def reducer(self, wm_state):
+    def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
         result.z_index = 5
 
@@ -120,10 +127,10 @@ class BottomBar(Bar, Thread):
 
         return result
 
-    def run(self):
+    def run(self) -> None:
         while self._running:
             self.set()
             time.sleep(1.)
 
-    def set(self):
+    def set(self) -> None:
         self.set_texts(conf_bottom_bar_text()())

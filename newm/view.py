@@ -1,12 +1,24 @@
+from __future__ import annotations
+from typing import Optional, TYPE_CHECKING, cast, TypeVar
+
 import math
 import logging
 
 from pywm import PyWMView, PyWMViewDownstreamState
+from pywm.pywm import PyWMDownstreamState
+from pywm.pywm_view import PyWMViewUpstreamState
 
+from .state import ViewState, LayoutState
 from .interpolation import ViewDownstreamInterpolation
 from .animate import Animate
 from .overlay import MoveResizeFloatingOverlay
 from .config import configured_value
+
+if TYPE_CHECKING:
+    from .layout import Layout
+else:
+    Layout = TypeVar('Layout')
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,31 +34,40 @@ conf_panel_launcher_h = configured_value('panels.launcher.h', 0.8)
 conf_panel_launcher_w = configured_value('panels.launcher.w', 0.8)
 conf_panel_launcher_corner_radius = configured_value('panels.launcher.corner_radius', 0)
 
-class View(PyWMView, Animate):
-    def __init__(self, wm, handle):
+class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
+    def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
 
         self.client_side_scale = 1.
 
-        self.panel = None
+        self.panel: Optional[str] = None
 
-    def __str__(self):
-        return "<View %d (%s): %s, %s, %s, %d, xwayland=%s, floating=%s>" % (
+    def __str__(self) -> str:
+        if self.up_state is None:
+            return "<View %d>" % self._handle
+
+        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
              self.up_state.title, self.app_id, self.role, self.pid,
              self.is_xwayland, self.up_state.is_floating)
 
-    def is_dialog(self):
+    def is_dialog(self) -> bool:
+        if self.up_state is None:
+            return True
+
         return self.panel is None and self.up_state.is_floating
 
-    def is_window(self):
+    def is_window(self) -> bool:
+        if self.up_state is None:
+            return False
+
         return self.panel is None and not self.up_state.is_floating
 
-    def is_panel(self):
+    def is_panel(self) -> bool:
         return self.panel is not None
 
-    def main(self, state):
+    def main(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Init: %s", self)
 
         try:
@@ -66,36 +87,39 @@ class View(PyWMView, Animate):
         except:
             pass
 
-        self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
+        if self.pid is not None:
+            self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
+
         if self.panel is not None:
             logger.debug("Registered panel %s: %s", self.app_id, self.panel)
 
             self.damage()
+            return None, None
         else:
             second_state = None
 
             """
             Place initially
             """
-            if self.up_state.is_floating:
-                min_w, _, min_h, _ = self.up_state.size_constraints
+            if self.up_state is not None and self.up_state.is_floating:
+                min_w, _, min_h, _ = [float(r) for r in self.up_state.size_constraints]
 
-                if (min_w, min_h) == (0, 0):
+                if (min_w, min_h) == (0., 0.):
                     (min_w, min_h) = self.up_state.size
 
                 if min_w == 0 or min_h == 0:
-                    return
+                    return None, None
 
                 ci = state.i + state.size / 2.
                 cj = state.j + state.size / 2.
                 if self.parent is not None:
                     try:
-                        ci = state.get_view_state(self.parent).i + state.get_view_state(self.parent).w / 2.
-                        cj = state.get_view_state(self.parent).j + state.get_view_state(self.parent).h / 2.
+                        ci = state.get_view_state(cast(View, self.parent)).i + state.get_view_state(cast(View, self.parent)).w / 2.
+                        cj = state.get_view_state(cast(View, self.parent)).j + state.get_view_state(cast(View, self.parent)).h / 2.
                     except:
                         logger.warn("Unexpected: Could not access parent %s state" % self.parent)
 
-                w, h = min_w, min_h
+                w, h = float(min_w), float(min_h)
                 w *= state.size / self.wm.width / self.client_side_scale
                 h *= state.size / self.wm.height / self.client_side_scale
 
@@ -107,7 +131,7 @@ class View(PyWMView, Animate):
                 second_state = (i, j, w, h)
 
             else:
-                min_w, _, min_h, _ = self.up_state.size_constraints
+                min_w, _, min_h, _ = [float(r) for r in self.up_state.size_constraints] if self.up_state is not None else (0., 0., 0., 0.)
                 min_w *= state.size / self.wm.width / self.client_side_scale
                 min_h *= state.size / self.wm.height / self.client_side_scale
 
@@ -133,7 +157,7 @@ class View(PyWMView, Animate):
 
             state1 = state.with_view_state(
                     self,
-                    is_tiled=not self.up_state.is_floating, i=i, j=j, w=w, h=h,
+                    is_tiled=not (self.up_state is not None and self.up_state.is_floating), i=i, j=j, w=w, h=h,
                     scale_origin=(w1, h1), move_origin=(i1, j1))
 
             state2 = state1.replacing_view_state(
@@ -143,10 +167,10 @@ class View(PyWMView, Animate):
 
             return state1, state2
 
-    def destroy(self):
+    def destroy(self) -> None:
         self.wm.destroy_view(self)
 
-    def reducer(self, up_state, state):
+    def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> PyWMViewDownstreamState:
         result = PyWMViewDownstreamState()
 
         if self.panel == "notifiers":
@@ -207,8 +231,8 @@ class View(PyWMView, Animate):
             """
             Keep focused view on top
             """
-            result.z_index = 2 if self.up_state.is_floating else 0
-            if self.up_state.is_focused:
+            result.z_index = 2 if up_state.is_floating else 0
+            if self.is_focused():
                 result.z_index += 1
 
 
@@ -256,9 +280,9 @@ class View(PyWMView, Animate):
                 w -= 2*padding
                 h -= 2*padding
 
-            if self.up_state.size[0] > 0 and self.up_state.size[1] > 0:
-                x -= self.up_state.offset[0] / self.up_state.size[0] * w
-                y -= self.up_state.offset[1] / self.up_state.size[1] * h
+            if up_state.size[0] > 0 and up_state.size[1] > 0:
+                x -= up_state.offset[0] / up_state.size[0] * w
+                y -= up_state.offset[1] / up_state.size[1] * h
 
             x, y, w, h = (x, y, w, h)
 
@@ -266,7 +290,7 @@ class View(PyWMView, Animate):
             Handle client size
             """
             w_for_size, h_for_size = self_state.scale_origin
-            if w_for_size is None:
+            if w_for_size is None or h_for_size is None:
                 w_for_size, h_for_size = self_state.w, self_state.h
 
             size = state.size_origin if state.size_origin is not None else state.size
@@ -285,14 +309,14 @@ class View(PyWMView, Animate):
                 """
                 Override: Keep floating windows scaled correctly
                 """
-                w = self.up_state.size[0] / self.client_side_scale * size / state.size
-                h = self.up_state.size[1] / self.client_side_scale * size / state.size
+                w = up_state.size[0] / self.client_side_scale * size / state.size
+                h = up_state.size[1] / self.client_side_scale * size / state.size
 
             else:
                 """
                 Override: Keep aspect-ratio of windows
                 """
-                min_w, max_w, min_h, max_h = self.up_state.size_constraints
+                min_w, max_w, min_h, max_h = up_state.size_constraints
                 width, height = result.size
 
                 if width < min_w and min_w > 0:
@@ -331,27 +355,33 @@ class View(PyWMView, Animate):
         return result
 
 
-    def animate(self, old_state, new_state, dt):
+    def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
+        if self.up_state is None:
+            return
+
         cur = self.reducer(self.up_state, old_state)
         nxt = self.reducer(self.up_state, new_state)
 
         self._animate(ViewDownstreamInterpolation(cur, nxt), dt)
 
-    def process(self, up_state):
+    def process(self, up_state: PyWMViewUpstreamState) -> PyWMViewDownstreamState:
         return self._process(self.reducer(up_state, self.wm.state))
 
-    def on_event(self, event):
+    def on_event(self, event: str) -> None:
         if event == "request_move":
-            if self.up_state.is_floating:
+            if self.up_state is not None and self.up_state.is_floating:
                 self.wm.enter_overlay(
                     MoveResizeFloatingOverlay(self.wm, self))
 
-    def find_min_w_h(self):
+    def find_min_w_h(self) -> tuple[float, float]:
         """
         Let overlays know how small we are able to get in i, j, w, h coords
         """
-        min_w, _, min_h, _ = self.up_state.size_constraints
+        min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
         min_w *= self.wm.state.size / self.wm.width / self.client_side_scale
         min_h *= self.wm.state.size / self.wm.height / self.client_side_scale
 
         return min_w, min_h
+
+    def is_focused(self) -> bool:
+        return self.up_state is not None and self.up_state.is_focused

@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import Optional, cast
+
 from threading import Thread
 import subprocess
 import time
@@ -12,21 +15,21 @@ conf_cmds = {
     'notifiers': configured_value("panels.notifiers.cmd", None)
 }
 
-conf_cwds = {k:configured_value("panels.%s.cwd" % k, None) for k in ["lock", "launcher", "notifiers"]}
+conf_cwds = {k: configured_value("panels.%s.cwd" % k, cast(Optional[str], None)) for k in ["lock", "launcher", "notifiers"]}
 
 class PanelLauncher:
-    def __init__(self, panel):
+    def __init__(self, panel: str) -> None:
         self.panel = panel
 
-        self._proc = None
+        self._proc: Optional[subprocess.Popen] = None
 
-    def get_pid(self):
-        try:
+    def get_pid(self) -> Optional[int]:
+        if self._proc is not None:
             return self._proc.pid
-        except:
+        else:
             return None
 
-    def _start(self):
+    def _start(self) -> None:
         self._proc = None
 
         cmd, cwd = conf_cmds[self.panel](), conf_cwds[self.panel]()
@@ -39,34 +42,35 @@ class PanelLauncher:
         except:
             logger.exception("Subprocess")
 
-    def check(self):
+    def check(self) -> None:
         try:
-            if self._proc.poll() is not None:
+            if self._proc is None or self._proc.poll() is not None:
                 raise Exception()
         except Exception:
             logger.info("Subprocess for panel %s died", self.panel)
             self._start()
 
-    def stop(self):
+    def stop(self) -> None:
         try:
-            self._proc.kill()
+            if self._proc is not None:
+                self._proc.kill()
             self._proc = None
         except:
             pass
 
 
 class PanelsLauncher(Thread):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._running = True
         self._panels = [PanelLauncher(k) for k in conf_cmds.keys()]
 
-    def stop(self):
+    def stop(self) -> None:
         self._running = False
         for p in self._panels:
             p.stop()
 
-    def get_panel_for_pid(self, pid):
+    def get_panel_for_pid(self, pid: int) -> Optional[str]:
         if pid is None:
             return None
 
@@ -86,7 +90,7 @@ class PanelsLauncher(Thread):
                 pass
         return None
 
-    def run(self):
+    def run(self) -> None:
         i = 0
         while self._running:
             if i%50 == 0:

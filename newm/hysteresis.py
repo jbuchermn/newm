@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import math
 
 class Hysteresis:
-    def __init__(self, amount, initial_value):
+    def __init__(self, amount: float, initial_value: float):
         self._amount = amount
         self._at = round(initial_value)
 
-    def __call__(self, value):
+    def __call__(self, value: float) -> int:
         i, j = math.floor(value), math.ceil(value)
         if self._at != i and self._at != j:
             self._at = round(value)

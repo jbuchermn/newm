@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TypeVar, Optional, Callable
+
 import pathlib
 import importlib
 import logging
@@ -49,7 +52,7 @@ def print_config(at_c=None):
         else:
             logger.warn("Config: Unexpected")
 
-def load_config(fallback=True):
+def load_config(fallback: bool=True) -> None:
     global _provider
 
     home = os.environ['HOME'] if 'HOME' in os.environ else '/'
@@ -91,7 +94,8 @@ def load_config(fallback=True):
     _update_config(_consumer, _provider)
 
 
-def configured_value(path, default=None):
+T = TypeVar('T')
+def configured_value(path, default: Optional[T]=None) -> Callable[[], T]:
     global _consumer
 
     result = None

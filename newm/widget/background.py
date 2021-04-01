@@ -1,17 +1,24 @@
-import time
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
+import time
 from pywm import PyWMBackgroundWidget, PyWMWidgetDownstreamState
 
 from ..interpolation import WidgetDownstreamInterpolation
 from ..animate import Animate
 
+if TYPE_CHECKING:
+    from ..state import LayoutState
+    from ..layout import Layout
 
-class Background(PyWMBackgroundWidget, Animate):
-    def __init__(self, wm, path):
+
+
+class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
+    def __init__(self, wm: Layout, path: str):
         PyWMBackgroundWidget.__init__(self, wm, path)
         Animate.__init__(self)
 
-    def reducer(self, wm_state):
+    def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
         result.z_index = -100
         result.opacity = wm_state.background_opacity
@@ -91,11 +98,11 @@ class Background(PyWMBackgroundWidget, Animate):
         result.box = (x, y, w, h)
         return result
 
-    def animate(self, old_state, new_state, dt):
+    def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
         cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
         self._animate(WidgetDownstreamInterpolation(cur, nxt), dt)
 
-    def process(self):
+    def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self.wm.state))

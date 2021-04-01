@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional
+
 from threading import Thread
 import time
 import logging
@@ -10,10 +13,16 @@ from pywm.touchpad import (
     GestureListener,
     LowpassGesture
 )
+from pywm.touchpad.gestures import Gesture
 from .overlay import Overlay
 from ..grid import Grid
 from ..hysteresis import Hysteresis
 from ..config import configured_value
+
+if TYPE_CHECKING:
+    from ..layout import Layout
+    from ..view import View
+    from ..state import LayoutState
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +34,24 @@ conf_hyst = configured_value("resize.hyst", 0.2)
 conf_gesture_factor = configured_value("move_resize.gesture_factor", 4)
 conf_anim_t = configured_value("anim_time", .3)
 
-class MoveOverlay:
-    def __init__(self, layout, view):
+class _Overlay:
+    def reset_gesture(self) -> None:
+        pass
+
+    def on_gesture(self, values: dict[str, float]) -> None:
+        pass
+
+    def close(self) -> tuple[float, float, float, float, float, float, float, float, float]:
+        pass
+
+
+class MoveOverlay(_Overlay):
+    def __init__(self, layout: Layout, view: View) -> None:
         self.layout = layout
 
         self.view = view
-        self.i = 0
-        self.j = 0
+        self.i = 0.
+        self.j = 0.
 
         try:
             view_state = self.layout.state.get_view_state(self.view)
@@ -46,19 +66,19 @@ class MoveOverlay:
         except Exception:
             logger.warn("Unexpected: Could not access view %s state", self.view)
 
-        self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, conf_move_grid_ovr(), conf_move_grid_m())
-        self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, conf_move_grid_ovr(), conf_move_grid_m())
+        self.i_grid = Grid("i", round(self.i - 3), round(self.i + 3), self.i, conf_move_grid_ovr(), conf_move_grid_m())
+        self.j_grid = Grid("j", round(self.j - 3), round(self.j + 3), self.j, conf_move_grid_ovr(), conf_move_grid_m())
 
-        self.last_dx = 0
-        self.last_dy = 0
+        self.last_dx = 0.
+        self.last_dy = 0.
 
         self._closed = False
 
-    def reset_gesture(self):
+    def reset_gesture(self) -> None:
         self.last_dx = 0
         self.last_dy = 0
 
-    def on_gesture(self, values):
+    def on_gesture(self, values: dict[str, float]) -> None:
         if self._closed:
             return
         
@@ -70,7 +90,7 @@ class MoveOverlay:
             self.view, i=self.i_grid.at(self.i), j=self.j_grid.at(self.j))
         self.layout.damage()
 
-    def close(self):
+    def close(self) -> tuple[float, float, float, float, float, float, float, float, float]:
         self._closed = True
 
         try:
@@ -86,15 +106,15 @@ class MoveOverlay:
             return self.i, self.j, 1, 1, round(self.i), round(self.j), 1, 1, 1
 
 
-class ResizeOverlay:
-    def __init__(self, layout, view):
+class ResizeOverlay(_Overlay):
+    def __init__(self, layout: Layout, view: View):
         self.layout = layout
         self.view = view
 
-        self.i = 0
-        self.j = 0
-        self.w = 1
-        self.h = 1
+        self.i = 0.
+        self.j = 0.
+        self.w = 1.
+        self.h = 1.
 
         self.hyst_w = lambda v: v
         self.hyst_h = lambda v: v
@@ -119,14 +139,14 @@ class ResizeOverlay:
             logger.warn("Unexpected: Could not access view %s state", self.view)
 
 
-        self.i_grid = Grid("i", self.i - 3, self.i + 3, self.i, conf_move_grid_ovr(), conf_move_grid_m())
-        self.j_grid = Grid("j", self.j - 3, self.j + 3, self.j, conf_move_grid_ovr(), conf_move_grid_m())
-        self.w_grid = Grid("w", 1, self.w + 3, self.w, conf_resize_grid_ovr(), conf_resize_grid_m())
-        self.h_grid = Grid("h", 1, self.h + 3, self.h, conf_resize_grid_ovr(), conf_resize_grid_m())
+        self.i_grid = Grid("i", round(self.i - 3), round(self.i + 3), self.i, conf_move_grid_ovr(), conf_move_grid_m())
+        self.j_grid = Grid("j", round(self.j - 3), round(self.j + 3), self.j, conf_move_grid_ovr(), conf_move_grid_m())
+        self.w_grid = Grid("w", 1, round(self.w + 3), self.w, conf_resize_grid_ovr(), conf_resize_grid_m())
+        self.h_grid = Grid("h", 1, round(self.h + 3), self.h, conf_resize_grid_ovr(), conf_resize_grid_m())
 
         self._closed = False
 
-    def on_gesture(self, values):
+    def on_gesture(self, values: dict[str, float]) -> None:
         if self._closed:
             return
 
@@ -161,7 +181,8 @@ class ResizeOverlay:
 
         self.layout.damage()
 
-    def close(self):
+
+    def close(self) -> tuple[float, float, float, float, float, float, float, float, float]:
         self._closed = True
 
         try:
@@ -181,7 +202,7 @@ class ResizeOverlay:
 
 
 class MoveResizeOverlay(Overlay, Thread):
-    def __init__(self, layout, view):
+    def __init__(self, layout: Layout, view: View):
         Overlay.__init__(self, layout)
         Thread.__init__(self)
 
@@ -189,34 +210,34 @@ class MoveResizeOverlay(Overlay, Thread):
 
         self.view = view
 
-        self.overlay = None
+        self.overlay: Optional[_Overlay] = None
 
         """
         If move has been finished and we are animating towards final position
             (view initial i, view initial j, view final i, view final j, initial time, finished time)
         """
-        self._target_view_pos = None
+        self._target_view_pos: Optional[tuple[float, float, float, float, float, float]] = None
 
         """
         If resize has been finished and we are animating towards final size
             (view initial w, view initial h, view final w, view final h, initial time, finished time)
         """
-        self._target_view_size = None
+        self._target_view_size: Optional[tuple[float, float, float, float, float, float]] = None
 
         """
         If we are adjusting viewpoint (after gesture finished or during)
             (layout initial i, layout initial j, layout final i, layout final j, initial time, finished time)
         """
-        self._target_layout_pos = None
+        self._target_layout_pos: Optional[tuple[float, float, float, float, float, float]] = None
         
         self._running = True
         self._wants_close = False
 
-    def post_init(self):
+    def post_init(self) -> None:
         logger.debug("MoveResizeOverlay: Starting thread...")
         self.start()
 
-    def run(self):
+    def run(self) -> None:
         while self._running:
             t = time.time()
 
@@ -293,10 +314,10 @@ class MoveResizeOverlay(Overlay, Thread):
         logger.debug("MoveResizeOverlay: Thread finished")
         self.layout.exit_overlay()
 
-    def on_gesture(self, gesture):
+    def on_gesture(self, gesture: Gesture) -> bool:
         if not self._running or self._wants_close:
             logger.debug("MoveResizeOverlay: Rejecting gesture")
-            return
+            return False
 
         if isinstance(gesture, TwoFingerSwipePinchGesture):
             logger.debug("MoveResizeOverlay: New TwoFingerSwipePinch")
@@ -324,7 +345,7 @@ class MoveResizeOverlay(Overlay, Thread):
         return False
 
 
-    def finish(self):
+    def finish(self) -> None:
         logger.debug("MoveResizeOverlay: Finishing gesture")
         if self.overlay is not None:
             ii, ij, iw, ih, fi, fj, fw, fh, t = self.overlay.close()
@@ -340,30 +361,33 @@ class MoveResizeOverlay(Overlay, Thread):
             logger.debug("MoveResizeOverlay: Requesting close after gesture finish")
             self.close()
 
-    def on_motion(self, time_msec, delta_x, delta_y):
+    def on_motion(self, time_msec: int, delta_x: float, delta_y: float) -> bool:
         return False
 
-    def on_axis(self, time_msec, source, orientation, delta, delta_discrete):
+    def on_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> bool:
         return False
 
-    def on_key(self, time_msec, keycode, state, keysyms):
+    def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
         if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
             if self.overlay is None:
                 logger.debug("MoveResizeOverlay: Requesting close after Mod release")
                 self.close()
+            return True
 
-    def on_modifiers(self, modifiers):
         return False
 
-    def close(self):
+    def on_modifiers(self, modifiers: int) -> bool:
+        return False
+
+    def close(self) -> None:
         if self.overlay is not None:
             self.overlay.close()
         self._wants_close = True
 
-    def pre_destroy(self):
+    def pre_destroy(self) -> None:
         self._running = False
 
-    def _exit_transition(self):
+    def _exit_transition(self) -> tuple[Optional[LayoutState], float]:
         self.layout.update_cursor(True)
         try:
             # Clean up any possible mishaps - should not be necessary

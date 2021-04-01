@@ -1,76 +1,94 @@
+from __future__ import annotations
+from typing import Any, Optional, TYPE_CHECKING
+
 import math
 import logging
+
+if TYPE_CHECKING:
+    from .view import View
 
 logger = logging.getLogger(__name__)
 
 
-
 class ViewState:
-    def __init__(self, **kwargs):
-        self.is_tiled = kwargs['is_tiled'] if 'is_tiled' in kwargs else True
+    def __init__(self, **kwargs: Any) -> None:
+        self.is_tiled: bool = kwargs['is_tiled'] if 'is_tiled' in kwargs else True
 
-        self.i = kwargs['i'] if 'i' in kwargs else 0
-        self.j = kwargs['j'] if 'j' in kwargs else 0
-        self.w = kwargs['w'] if 'w' in kwargs else 0
-        self.h = kwargs['h'] if 'h' in kwargs else 0
+        self.i: float = kwargs['i'] if 'i' in kwargs else 0
+        self.j: float = kwargs['j'] if 'j' in kwargs else 0
+        self.w: float = kwargs['w'] if 'w' in kwargs else 0
+        self.h: float = kwargs['h'] if 'h' in kwargs else 0
 
         """
         MoveResizeOverlay
         """
-        self.move_origin = kwargs['move_origin'] if 'move_origin' in kwargs \
+        self.move_origin: tuple[Optional[float], Optional[float]] = kwargs['move_origin'] if 'move_origin' in kwargs \
             else (None, None)
-        self.scale_origin = kwargs['scale_origin'] if 'scale_origin' in kwargs \
+        self.scale_origin: tuple[Optional[float], Optional[float]] = kwargs['scale_origin'] if 'scale_origin' in kwargs \
             else (None, None)
 
-    def copy(self, **kwargs):
+    def get_ijwh(self) -> tuple[float, float, float, float]:
+        i, j, w, h = self.i, self.j, self.w, self.h
+        if self.move_origin[0] is not None:
+            i = self.move_origin[0]
+        if self.move_origin[1] is not None:
+            j = self.move_origin[1]
+        if self.scale_origin[0] is not None:
+            w = self.scale_origin[0]
+        if self.scale_origin[1] is not None:
+            h = self.scale_origin[1]
+
+        return i, j, w, h
+
+    def copy(self, **kwargs: Any) -> ViewState:
         return ViewState(**{**self.__dict__, **kwargs})
 
-    def update(self, **kwargs):
+    def update(self, **kwargs: Any) -> None:
         for k, v in kwargs.items():
             self.__dict__[k] = v
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<ViewState %s>" % str(self.__dict__)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
 
 
 class LayoutState:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
 
-        self.i = kwargs['i'] if 'i' in kwargs else 0
-        self.j = kwargs['j'] if 'j' in kwargs else 0
-        self.size = kwargs['size'] if 'size' in kwargs else 2
-        self.size_origin = kwargs['size_origin'] if 'size_origin' in kwargs else None
+        self.i: float = kwargs['i'] if 'i' in kwargs else 0
+        self.j: float = kwargs['j'] if 'j' in kwargs else 0
+        self.size: float = kwargs['size'] if 'size' in kwargs else 2
+        self.size_origin: Optional[float] = kwargs['size_origin'] if 'size_origin' in kwargs else None
 
-        self.background_factor = kwargs['background_factor'] if 'background_factor' in kwargs else 3
-        self.background_opacity = kwargs['background_opacity'] if 'background_opacity' in kwargs else 0.
+        self.background_factor: float = kwargs['background_factor'] if 'background_factor' in kwargs else 3
+        self.background_opacity: float = kwargs['background_opacity'] if 'background_opacity' in kwargs else 0.
 
-        self.intermediate_rows = kwargs['intermediate_rows'] if 'intermediate_rows' in kwargs else []
-        self.intermediate_cols = kwargs['intermediate_cols'] if 'intermediate_cols' in kwargs else []
+        self.intermediate_rows: list[int] = kwargs['intermediate_rows'] if 'intermediate_rows' in kwargs else []
+        self.intermediate_cols: list[int] = kwargs['intermediate_cols'] if 'intermediate_cols' in kwargs else []
         # Non-None indicates fullscreen, in that case i, j, size, i in fullscreen, j in fullscreen, size in fullscreen
-        self.state_before_fullscreen = kwargs['state_before_fullscreen'] if 'state_before_fullscreen' in kwargs else None
+        self.state_before_fullscreen: Optional[tuple[float, float, float, float, float, float]] = kwargs['state_before_fullscreen'] if 'state_before_fullscreen' in kwargs else None
 
-        self.top_bar_dy = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
-        self.bottom_bar_dy = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0
-        self.launcher_perc = kwargs['launcher_perc'] if 'launcher_perc' in kwargs else 0
-        self.lock_perc = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
-        self.final = kwargs['final'] if 'final' in kwargs else False
+        self.top_bar_dy: float = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
+        self.bottom_bar_dy: float = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0
+        self.launcher_perc: float = kwargs['launcher_perc'] if 'launcher_perc' in kwargs else 0
+        self.lock_perc: float = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
+        self.final: bool = kwargs['final'] if 'final' in kwargs else False
 
-        self._view_states = {}
+        self._view_states: dict[int, ViewState] = {}
 
     """
     Register / Unregister
     """
 
-    def with_view_state(self, view, **kwargs):
+    def with_view_state(self, view: View, **kwargs: Any) -> LayoutState:
         self._view_states[view._handle] = ViewState(**kwargs)
         return self
 
 
-    def without_view_state(self, view):
+    def without_view_state(self, view: View) -> LayoutState:
         del self._view_states[view._handle]
         return self
 
@@ -78,23 +96,23 @@ class LayoutState:
     Copy / Update
     """
 
-    def copy(self, **kwargs):
+    def copy(self, **kwargs: Any) -> LayoutState:
         res = LayoutState(**{**self.__dict__, **kwargs})
         for h, s in self._view_states.items():
             res._view_states[h] = s.copy()
         return res
 
-    def update(self, **kwargs):
+    def update(self, **kwargs: Any) -> None:
         for k, v in kwargs.items():
             self.__dict__[k] = v
 
-    def replacing_view_state(self, view, **kwargs):
+    def replacing_view_state(self, view: View, **kwargs: Any) -> LayoutState:
         res = LayoutState(**self.__dict__)
         for h, s in self._view_states.items():
             res._view_states[h] = s.copy(**(kwargs if h==view._handle else {}))
         return res
 
-    def update_view_state(self, view, **kwargs):
+    def update_view_state(self, view: View, **kwargs: Any) -> None:
         try:
             s = self.get_view_state(view)
             s.update(**kwargs)
@@ -102,14 +120,14 @@ class LayoutState:
             logger.warn("Unexpected: Unable to update view %s state", view)
 
 
-    def validate_fullscreen(self):
+    def validate_fullscreen(self) -> None:
         if self.state_before_fullscreen is not None:
             _1, _2, _3, i, j, size = self.state_before_fullscreen
             if abs(self.i - i) + abs(self.j - j) + abs(self.size - size) > .01:
                 self.state_before_fullscreen = None
 
 
-    def constrain(self):
+    def constrain(self) -> None:
         min_i, min_j, max_i, max_j = self.get_extent()
         i_size = max_i - min_i + 1
         j_size = max_j - min_j + 1
@@ -135,26 +153,22 @@ class LayoutState:
             if not s.is_tiled:
                 continue
 
-            i_, j_, w_, h_ = s.i, s.j, s.w, s.h
-            if s.scale_origin[0] is not None:
-                w_, h_ = s.scale_origin
-            if s.move_origin[0] is not None:
-                i_, j_ = s.move_origin
+            i_, j_, w_, h_ = [round(a) for a in s.get_ijwh()]
 
             for i in range(i_, i_ + w_):
                 used_cols.add(i)
             for j in range(j_, j_ + h_):
                 used_rows.add(j)
 
-        used_cols = list(sorted(used_cols))
-        used_rows = list(sorted(used_rows))
+        cols = list(sorted(used_cols))
+        rows = list(sorted(used_rows))
         remove_cols = []
         remove_rows = []
-        for i in range(len(used_cols) - 1):
-            for x in range(used_cols[i] + 1, used_cols[i+1]):
+        for i in range(len(cols) - 1):
+            for x in range(cols[i] + 1, cols[i+1]):
                 remove_cols += [x]
-        for i in range(len(used_rows) - 1):
-            for x in range(used_rows[i] + 1, used_rows[i+1]):
+        for i in range(len(rows) - 1):
+            for x in range(rows[i] + 1, rows[i+1]):
                 remove_rows += [x]
 
         for j in reversed(remove_rows):
@@ -171,9 +185,7 @@ class LayoutState:
                     s.w = max(1, s.w - 1)
 
 
-
-
-    def _insert_intermediate_col(self, i):
+    def _insert_intermediate_col(self, i: int) -> None:
         for _, s in self._view_states.items():
             if s.i >= i:
                 s.i += 1
@@ -182,7 +194,7 @@ class LayoutState:
         self.intermediate_cols += [i]
 
 
-    def _insert_intermediate_row(self, j):
+    def _insert_intermediate_row(self, j: int) -> None:
         for _, s in self._view_states.items():
             if s.j >= j:
                 s.j += 1
@@ -190,7 +202,7 @@ class LayoutState:
                 s.h += 1
         self.intermediate_rows += [j]
 
-    def _clear_intermediate(self):
+    def _clear_intermediate(self) -> None:
         for j in reversed(sorted(self.intermediate_rows)):
             for _, s in self._view_states.items():
                 if s.j >= j:
@@ -210,7 +222,7 @@ class LayoutState:
     Reducers
     """
 
-    def focusing_view(self, view):
+    def focusing_view(self, view: View) -> LayoutState:
         state = self._view_states[view._handle]
 
         i, j, w, h = state.i, state.j, state.w, state.h
@@ -228,9 +240,10 @@ class LayoutState:
             size=target_size,
         )
 
-    def with_fullscreen(self, view):
+    def with_fullscreen(self, view: View) -> LayoutState:
         state = self.get_view_state(view)
-        i, j, w, h = state.i, state.j, state.w, state.h
+        i_, j_, w_, h_ = state.i, state.j, state.w, state.h
+        i, j, w, h = round(i_), round(j_), round(w_), round(h_)
         size = max(w, h)
 
         state_before_fullscreen = self.i, self.j, self.size, i, j, size
@@ -247,7 +260,7 @@ class LayoutState:
 
         return result
 
-    def without_fullscreen(self, drop=False):
+    def without_fullscreen(self, drop: bool=False) -> LayoutState:
         if self.state_before_fullscreen is None:
             return self.copy()
 
@@ -271,35 +284,26 @@ class LayoutState:
     Access information
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<LayoutState %s>" % str({k:v for k, v in self.__dict__.items() if k != "_view_states"})
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def get_view_state(self, view):
+    def get_view_state(self, view: View) -> ViewState:
         return self._view_states[view._handle]
 
-    def get_view_stack_index(self, view):
+    def get_view_stack_index(self, view: View) -> tuple[int, int]:
         vs = self.get_view_state(view)
         relevant = []
 
-        i, j, w, h = vs.i, vs.j, vs.w, vs.h
-        if vs.scale_origin[0] is not None:
-            w, h = vs.scale_origin
-        if vs.move_origin[0] is not None:
-            i, j = vs.move_origin
+        i, j, w, h = vs.get_ijwh()
 
         for handle, s in self._view_states.items():
             if not s.is_tiled:
                 continue
 
-            i_, j_, w_, h_ = s.i, s.j, s.w, s.h
-            if s.scale_origin[0] is not None:
-                w_, h_ = s.scale_origin
-            if s.move_origin[0] is not None:
-                i_, j_ = s.move_origin
-
+            i_, j_, w_, h_ = s.get_ijwh()
             if not ((i_ <= i < i_ + w_ - .2) or (i <= i_ < i + w - .2)):
                 continue
             if not ((j_ <= j < j_ + h_ - .2) or (j <= j_ < j + h - .2)):
@@ -314,8 +318,8 @@ class LayoutState:
         relevant = sorted(relevant)
         return relevant.index(view._handle), len(relevant)
 
-    def get_extent(self):
-        min_i, min_j, max_i, max_j = 1000000, 1000000, -1000000, -1000000
+    def get_extent(self) -> tuple[float, float, float, float]:
+        min_i, min_j, max_i, max_j = 1000000., 1000000., -1000000., -1000000.
 
         for _, s in self._view_states.items():
             if not s.is_tiled:
@@ -336,7 +340,7 @@ class LayoutState:
 
         return min_i, min_j, max_i, max_j
 
-    def is_tile_free(self, i, j):
+    def is_tile_free(self, i: int, j: int) -> bool:
         for _, s in self._view_states.items():
             if not s.is_tiled:
                 continue
@@ -347,6 +351,5 @@ class LayoutState:
 
         return True
 
-    def is_fullscreen(self):
-
+    def is_fullscreen(self) -> bool:
         return self.state_before_fullscreen is not None

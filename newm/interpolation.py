@@ -1,22 +1,30 @@
+from __future__ import annotations
+from typing import TypeVar, Generic
+
 from pywm import PyWMViewDownstreamState, PyWMWidgetDownstreamState, PyWMDownstreamState
 
 from .config import configured_value
 
 conf_size_adjustment = configured_value("interpolation.size_adjustment", .5)
 
-class LayoutDownstreamInterpolation:
-    def __init__(self, state0, state1):
+StateT = TypeVar('StateT')
+class Interpolation(Generic[StateT]):
+    def get(self, at: float) -> StateT:
+        pass
+
+class LayoutDownstreamInterpolation(Interpolation[PyWMDownstreamState]):
+    def __init__(self, state0: PyWMDownstreamState, state1: PyWMDownstreamState) -> None:
         self.lock_perc = (state0.lock_perc, state1.lock_perc)
 
-    def get(self, at):
+    def get(self, at: float) -> PyWMDownstreamState:
         at = min(1, max(0, at))
         lock_perc=self.lock_perc[0] + at * (self.lock_perc[1] - self.lock_perc[0])
         if lock_perc < 0.0001:
             lock_perc = 0.0
         return PyWMDownstreamState(lock_perc)
 
-class ViewDownstreamInterpolation:
-    def __init__(self, state0, state1):
+class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
+    def __init__(self, state0: PyWMViewDownstreamState, state1: PyWMViewDownstreamState) -> None:
         self.z_index = (state0.z_index, state1.z_index)
         self.box = (state0.box, state1.box)
         self.corner_radius = (state0.corner_radius, state1.corner_radius)
@@ -25,7 +33,7 @@ class ViewDownstreamInterpolation:
         self.opacity = (state0.opacity, state1.opacity)
         self.lock_enabled = state0.lock_enabled
 
-    def get(self, at):
+    def get(self, at: float) -> PyWMViewDownstreamState:
         at = min(1, max(0, at))
         box=(
             self.box[0][0] + (self.box[1][0] - self.box[0][0]) * at,
@@ -45,14 +53,14 @@ class ViewDownstreamInterpolation:
         res.lock_enabled=self.lock_enabled
         return res
 
-class WidgetDownstreamInterpolation:
-    def __init__(self, state0, state1):
+class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):
+    def __init__(self, state0: PyWMWidgetDownstreamState, state1: PyWMWidgetDownstreamState) -> None:
         self.z_index = (state0.z_index, state1.z_index)
         self.box = (state0.box, state1.box)
         self.opacity = (state0.opacity, state1.opacity)
         self.lock_enabled = state0.lock_enabled
 
-    def get(self, at):
+    def get(self, at: float) -> PyWMWidgetDownstreamState:
         at = min(1, max(0, at))
         box=(
             self.box[0][0] + (self.box[1][0] - self.box[0][0]) * at,
