@@ -9,7 +9,6 @@
 *** DONE VLC fullscreen -> control bar disappears -> wrong view is focused?!
 *** DONE Fix SwipToZoomOverlay jitter
 *** DONE Fix occasional weird resizing issues (Window shortly uses 2x1 then goes to 1x1 / sometimes sizes are set negative in reducer)
-*** TODO Fix typing
 *** DONE Setup 1x1 1x2 / bottom left empty -> temporary stacking on new window
 *** DONE Occasional bugs removing rows / cols (possibly related to rounding)
 *** DONE Only focus other view on close if closed view was focused
@@ -20,6 +19,8 @@
 *** DONE 2x1 layout, stacked -> sizes do not seem to match (use Chrome)
 *** DONE Generalized handling of double -> rounded pixels (in view, widget, interpolation) -> right now issue e.g. slow animation from padding to no padding
 *** DONE MoveResizeOverlay: Delayed animation on qutting animation via gesture end (as opposed to Mod release)
+*** TODO Fix typing
+*** TODO Fix imports
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -31,7 +32,7 @@
 *** DONE Embed font to make it available in greeter-mode
 *** KILL Clean-up panel installation / launch-script
 *** DONE Configurable padding and similar for panels
-*** TODO newm-basic-panel lock with nice TUI
+*** DONE newm-basic-panel lock with nice TUI
 *** TODO newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
 
 ** Usability

@@ -11,5 +11,6 @@ setup(name='newm',
       install_requires=[
           'pycairo',
           'websockets',
-          'python-pam'
+          'python-pam',
+          'pyfiglet'
       ])
