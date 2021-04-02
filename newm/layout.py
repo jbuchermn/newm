@@ -512,7 +512,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 break
         else:
             i_, j_, w_, h_ = self.find_focused_box()
-            place_i, place_j = round(i_ + w_), round(i_)
+            place_i, place_j = round(i_ + w_), round(j_)
             while not self.state.is_tile_free(place_i, place_j):
                 place_i += 1
 

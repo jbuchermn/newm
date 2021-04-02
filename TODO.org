@@ -21,7 +21,7 @@
 *** DONE MoveResizeOverlay: Delayed animation on qutting animation via gesture end (as opposed to Mod release)
 *** TODO Fix typing
 *** TODO Clean-up imports
-*** TODO Bug in initial placement
+*** DONE Bug in initial placement
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
