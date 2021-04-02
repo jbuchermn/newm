@@ -3,7 +3,7 @@ from typing import Optional, Any, TYPE_CHECKING
 
 import os
 import logging
-import pam
+import pam # type: ignore
 import sys
 import socket
 import json

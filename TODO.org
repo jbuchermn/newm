@@ -19,7 +19,7 @@
 *** DONE 2x1 layout, stacked -> sizes do not seem to match (use Chrome)
 *** DONE Generalized handling of double -> rounded pixels (in view, widget, interpolation) -> right now issue e.g. slow animation from padding to no padding
 *** DONE MoveResizeOverlay: Delayed animation on qutting animation via gesture end (as opposed to Mod release)
-*** TODO Fix typing
+*** DONE Fix typing
 *** TODO Clean-up imports
 *** DONE Bug in initial placement
 
@@ -35,7 +35,7 @@
 *** DONE Configurable padding and similar for panels
 *** DONE newm-basic-panel lock with nice TUI
 *** TODO newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
-*** STRT Resutructure panels synchronously to enable retry
+*** STRT Catch errors in send, reconnect and retry
 
 ** Usability
 *** DONE Stacking functionality

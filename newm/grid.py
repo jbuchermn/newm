@@ -190,7 +190,7 @@ class Grid:
 
 if __name__ == '__main__':
     import sys
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt # type: ignore
 
     plots: dict[str, list[str]] = {}
     with open(sys.argv[1], 'r') as inp:

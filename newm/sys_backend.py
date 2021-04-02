@@ -4,7 +4,7 @@ from typing import Callable, Any, TYPE_CHECKING, Optional
 from threading import Thread
 import os
 import time
-import psutil
+import psutil # type: ignore
 import logging
 
 if TYPE_CHECKING:

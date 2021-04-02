@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TypeVar, Optional, Callable
+from typing import TypeVar, Optional, Callable, Any, Generic, Union, cast
 
 import pathlib
 import importlib
@@ -8,31 +8,32 @@ import sys
 import os
 
 _provider = {}
-_consumer = {}
+_consumer: dict[str, Any] = {}
 
 logger = logging.getLogger(__name__)
 
 
-class _ConfiguredValue:
-    def __init__(self, name, value, default):
+T = TypeVar('T')
+class _ConfiguredValue(Generic[T]):
+    def __init__(self, name: str, value: T, default: Optional[T]):
         self._name = name
-        self._value = None
+        self._value: Optional[T] = None
         self._default = default
 
         self.update(value)
 
-    def update(self, value):
+    def update(self, value: T) -> None:
         self._value = value if value is not None else self._default
 
-    def __call__(self):
+    def __call__(self) -> Optional[T]:
         return self._value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%-60s %-40s %s" % (self._name, self._value, ("(default: %s)" % self._default) if self._default != self._value else "")
 
-def _update_config(at_c, at_p):
+def _update_config(at_c: Union[_ConfiguredValue[T], dict[str, Any]], at_p: Union[Any, dict[str, Any]]) -> None:
     if isinstance(at_c, _ConfiguredValue):
-        at_c.update(at_p)
+        at_c.update(cast(T, at_p))
     else:
         if isinstance(at_c, dict):
             for k in at_c.keys():
@@ -40,7 +41,7 @@ def _update_config(at_c, at_p):
         else:
             logger.warn("Config: Unexpected")
 
-def print_config(at_c=None):
+def print_config(at_c: Optional[dict[str, Any]]=None) -> str:
     if at_c is None:
         at_c = _consumer
 
@@ -51,6 +52,7 @@ def print_config(at_c=None):
             return "\n".join([print_config(at_c[k]) for k in at_c.keys()])
         else:
             logger.warn("Config: Unexpected")
+            return ""
 
 def load_config(fallback: bool=True) -> None:
     global _provider
@@ -67,7 +69,7 @@ def load_config(fallback: bool=True) -> None:
 
     logger.info("Loading config at %s", path)
 
-    def load(path):
+    def load(path: pathlib.Path) -> dict[str, Any]:
         module = path.stem
 
         try:
@@ -94,8 +96,8 @@ def load_config(fallback: bool=True) -> None:
     _update_config(_consumer, _provider)
 
 
-T = TypeVar('T')
-def configured_value(path, default: Optional[T]=None) -> Callable[[], T]:
+
+def configured_value(path: str, default: Optional[T]=None) -> Callable[[], T]:
     global _consumer
 
     result = None
@@ -120,15 +122,16 @@ def configured_value(path, default: Optional[T]=None) -> Callable[[], T]:
     if k in c and isinstance(c[k], _ConfiguredValue):
         return c[k]
 
-    result = _ConfiguredValue(path, result, default)
-    c[k] = result
-    return result
+    res = _ConfiguredValue(path, result, default)
+    c[k] = res
+    return cast(Callable[[], T], res)
 
 
 
 if __name__ == '__main__':
     scale = configured_value('output_scale', 1.0)
-    pywm = configured_value('pywm', {})
+    pywm = configured_value('pywm', cast(dict[str, Any], {}))
+
     while True:
         print("Scale is %f" % scale())
         print("PyWM is %s" % pywm())
