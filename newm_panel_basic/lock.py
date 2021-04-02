@@ -9,10 +9,12 @@ import asyncio
 import time
 
 from newm import SOCKET_PORT
+URI = "ws://127.0.0.1:%d" % SOCKET_PORT
 
 class Lock:
     def __init__(self) -> None:
         self.state = "request_user"
+        self.ready = False
         self.users = ["jonas", "root"]
         self.selected_user: Optional[str] = "jonas"
         self.message = ""
@@ -95,23 +97,37 @@ class Lock:
             pass
 
 
-    def process(self, message: dict[str, Any]) -> Optional[str]:
-        if message['kind'] == 'auth_request_cred':
-            self.state = "request_cred"
-            self.message = message['message']
-            self.cred = ""
+    def process(self, message: Optional[dict[str, Any]]) -> Optional[str]:
+        if message is None:
+            if self.ready:
+                if self.state == "request_cred":
+                    return json.dumps({
+                        'kind': 'auth_enter_cred',
+                        'cred': self.cred})
+                elif self.state == "request_user":
+                    return json.dumps({
+                        'kind': 'auth_choose_user',
+                        'user': self.selected_user})
+        else:
+            if message['kind'] == 'auth_request_cred':
+                self.state = "request_cred"
+                self.message = message['message']
+                self.cred = ""
 
-            self.enter_cred()
+                self.ready = False
+                self.enter_cred()
+                self.ready = True
 
-            return self.cred
-        elif message['kind'] == 'auth_request_user':
-            self.state = "request_user"
-            self.users = message['users']
-            self.selected_user = self.users[0] if len(self.users) > 0 else None
 
-            self.enter_user()
+            elif message['kind'] == 'auth_request_user':
+                self.state = "request_user"
+                self.users = message['users']
+                self.selected_user = self.users[0] if len(self.users) > 0 else None
 
-            return self.selected_user
+                self.ready = False
+                self.enter_user()
+                self.ready = True
+
 
         return None
 
@@ -119,24 +135,16 @@ class Lock:
 
 def run(lock: Lock) -> None:
     async def _run() -> None:
-        uri = "ws://127.0.0.1:%d" % SOCKET_PORT
-        async with websockets.connect(uri) as websocket:
-            await websocket.send(json.dumps({ 'kind': 'auth_register' }))
+        async with websockets.connect(URI) as websocket:
+            response = lock.process(None)
 
+            if response is not None:
+                await websocket.send(response)
+            else:
+                await websocket.send(json.dumps({ 'kind': 'auth_register' }))
 
-            while True:
-                response = json.loads(await websocket.recv())
-                if response['kind'] == 'auth_request_cred':
-                    await websocket.send(json.dumps({
-                        'kind': 'auth_enter_cred',
-                        'cred': lock.process(response)}))
-
-                elif response['kind'] == 'auth_request_user':
-                    await websocket.send(json.dumps({
-                        'kind': 'auth_choose_user',
-                        'user': lock.process(response)}))
-                else:
-                    break
+            msg = json.loads(await websocket.recv())
+            lock.process(msg)
 
     asyncio.get_event_loop().run_until_complete(_run())
 
@@ -146,9 +154,9 @@ def lock() -> None:
     while True:
         try:
             run(l)
-        except Exception as e:
-            print(e)
-        time.sleep(1.)
+        except Exception:
+            pass
+        time.sleep(.2)
     l.exit()
 
 if __name__ == '__main__':

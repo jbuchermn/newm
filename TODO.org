@@ -20,7 +20,8 @@
 *** DONE Generalized handling of double -> rounded pixels (in view, widget, interpolation) -> right now issue e.g. slow animation from padding to no padding
 *** DONE MoveResizeOverlay: Delayed animation on qutting animation via gesture end (as opposed to Mod release)
 *** TODO Fix typing
-*** TODO Fix imports
+*** TODO Clean-up imports
+*** TODO Bug in initial placement
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -34,6 +35,7 @@
 *** DONE Configurable padding and similar for panels
 *** DONE newm-basic-panel lock with nice TUI
 *** TODO newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
+*** STRT Resutructure panels synchronously to enable retry
 
 ** Usability
 *** DONE Stacking functionality
