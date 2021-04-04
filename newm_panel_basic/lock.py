@@ -19,6 +19,7 @@ class Lock:
         self.selected_user: Optional[str] = "jonas"
         self.message = ""
         self.cred = ""
+        self.pending = False
 
         self.scr = curses.initscr()
         curses.cbreak()
@@ -41,7 +42,7 @@ class Lock:
                 "",
                 "",
                 Figlet(font="big", justify="center", width=width).renderText("newm"),
-                Figlet(font="bubble", justify="center", width=width).renderText("   ".join(self.users)),
+                Figlet(font="digital", justify="center", width=width).renderText("   ".join(self.users)),
                 Figlet(font="small", justify="center", width=width).renderText(self.selected_user),
             ]
         elif self.state == "request_cred":
@@ -49,8 +50,8 @@ class Lock:
                 "",
                 "",
                 Figlet(font="big", justify="center", width=width).renderText("newm"),
-                Figlet(font="5lineoblique", justify="center", width=width).renderText(self.message),
-                Figlet(font="small", justify="center", width=width).renderText("." * len(self.cred)),
+                Figlet(font="digital", justify="center", width=width).renderText(self.message),
+                Figlet(font="small", justify="center", width=width).renderText("." * len(self.cred) if not self.pending else "-"),
             ]
 
         self.scr.erase()
@@ -64,47 +65,47 @@ class Lock:
 
 
     def enter_cred(self) -> None:
-        try:
-            while True:
-                self.render()
-                ch = self.scr.getch()
-                if ch == curses.KEY_BACKSPACE:
-                    self.cred = self.cred[:-1] if len(self.cred) > 0 else ""
-                elif ch == 10:
-                    break
-                else:
-                    sch = chr(ch)
-                    self.cred += sch
-        except:
-            pass
+        while True:
+            self.render()
+            ch = self.scr.getch()
+            if ch == curses.KEY_BACKSPACE:
+                self.cred = self.cred[:-1] if len(self.cred) > 0 else ""
+            elif ch == 10:
+                break
+            else:
+                sch = chr(ch)
+                self.cred += sch
 
     def enter_user(self) -> None:
-        try:
-            while True:
-                self.render()
-                ch = self.scr.getch()
-                if ch == 9:
-                    try:
-                        if self.selected_user is None:
-                            self.selected_user = self.users[0] if len(self.users) > 0 else None
-                        else:
-                            self.selected_user = self.users[(self.users.index(self.selected_user) + 1) % len(self.users)]
-                    except:
-                        pass
-                elif ch == 10:
-                    break
-        except:
-            pass
+        while True:
+            self.render()
+            ch = self.scr.getch()
+            if ch == 9:
+                try:
+                    if self.selected_user is None:
+                        self.selected_user = self.users[0] if len(self.users) > 0 else None
+                    else:
+                        self.selected_user = self.users[(self.users.index(self.selected_user) + 1) % len(self.users)]
+                except:
+                    pass
+            elif ch == 10:
+                break
 
 
     def process(self, message: Optional[dict[str, Any]]) -> Optional[str]:
         if message is None:
             if self.ready:
                 if self.state == "request_cred":
+                    self.pending = True
+                    self.render()
+
                     return json.dumps({
                         'kind': 'auth_enter_cred',
                         'cred': self.cred})
                 elif self.state == "request_user":
+                    self.pending = True
+                    self.render()
+
                     return json.dumps({
                         'kind': 'auth_choose_user',
                         'user': self.selected_user})
@@ -113,6 +114,7 @@ class Lock:
                 self.state = "request_cred"
                 self.message = message['message']
                 self.cred = ""
+                self.pending = False
 
                 self.ready = False
                 self.enter_cred()
@@ -123,6 +125,7 @@ class Lock:
                 self.state = "request_user"
                 self.users = message['users']
                 self.selected_user = self.users[0] if len(self.users) > 0 else None
+                self.pending = False
 
                 self.ready = False
                 self.enter_user()
@@ -131,33 +134,33 @@ class Lock:
 
         return None
 
-
-
 def run(lock: Lock) -> None:
     async def _run() -> None:
-        async with websockets.connect(URI) as websocket:
-            response = lock.process(None)
+        try:
+            async with websockets.connect(URI) as websocket:
+                response = lock.process(None)
 
-            if response is not None:
-                await websocket.send(response)
-            else:
-                await websocket.send(json.dumps({ 'kind': 'auth_register' }))
+                if response is not None:
+                    await websocket.send(response)
+                else:
+                    await websocket.send(json.dumps({ 'kind': 'auth_register' }))
 
-            msg = json.loads(await websocket.recv())
-            lock.process(msg)
+                msg = json.loads(await websocket.recv())
+                lock.process(msg)
+        except:
+            pass
 
     asyncio.get_event_loop().run_until_complete(_run())
 
 
 def lock() -> None:
     l = Lock()
-    while True:
-        try:
+    try:
+        while True:
             run(l)
-        except Exception:
-            pass
-        time.sleep(.2)
-    l.exit()
+            time.sleep(.1)
+    finally:
+        l.exit()
 
 if __name__ == '__main__':
     lock()

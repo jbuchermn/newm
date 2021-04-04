@@ -97,3 +97,42 @@ def msg(message: str) -> None:
                 print(response['msg'])
 
     asyncio.get_event_loop().run_until_complete(_send())
+
+
+if __name__ == '__main__':
+    SOCKET_DEBUG_PORT = SOCKET_PORT + 1
+    clients = []
+
+    async def send(msg: Any) -> None:
+        global clients
+        for c in clients:
+            try:
+                await c.send(json.dumps(msg))
+            except:
+                logger.exception("broadcast")
+
+    async def socket_handler(client_socket: WebSocketServerProtocol, path: str) -> None:
+        global clients
+        print("Opened connection: %s" % path)
+        clients += [client_socket]
+        try:
+            async for bmsg in client_socket:
+                try:
+                    msg = json.loads(bmsg)
+                    print(msg)
+                    if msg['kind'] == 'auth_register':
+                        await send({'kind': 'auth_request_cred', 'user': 'jonas', 'message': 'Password?'})
+                    elif msg['kind'] == 'auth_enter_cred':
+                        await send({'kind': 'auth_request_cred', 'user': 'jonas', 'message': 'Password?'})
+                except Exception:
+                    print("Received unparsable message: %s", bmsg)
+
+        finally:
+            print("Closing connection: %s" % path)
+            clients.remove(client_socket)
+
+    print("Starting debug PanelEndpoint...")
+    server = websockets.serve(socket_handler, "127.0.0.1", SOCKET_DEBUG_PORT)
+    asyncio.get_event_loop().run_until_complete(server)
+    asyncio.get_event_loop().run_forever()
+

@@ -22,6 +22,7 @@
 *** DONE Fix typing
 *** TODO Clean-up imports
 *** DONE Bug in initial placement
+*** TODO Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
@@ -34,7 +35,7 @@
 *** KILL Clean-up panel installation / launch-script
 *** DONE Configurable padding and similar for panels
 *** DONE newm-basic-panel lock with nice TUI
-*** TODO newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
+*** STRT newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
 *** STRT Catch errors in send, reconnect and retry
 
 ** Usability
@@ -54,9 +55,7 @@
 *** DONE Limit SwipeToZoom by size of focused (if possibly)
 
 ** Documentation
-*** TODO README / Install guide
-*** TODO Video
-*** TODO Tests on other machines
+*** TODO README / Install guide / Video
 
 ** Configuration
 *** DONE Read config file from .config/newm with info now in run.py and layout.py
