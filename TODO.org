@@ -20,23 +20,24 @@
 *** DONE Generalized handling of double -> rounded pixels (in view, widget, interpolation) -> right now issue e.g. slow animation from padding to no padding
 *** DONE MoveResizeOverlay: Delayed animation on qutting animation via gesture end (as opposed to Mod release)
 *** DONE Fix typing
-*** TODO Clean-up imports
 *** DONE Bug in initial placement
-*** TODO Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
+*** TODO Clean-up imports
+*** STRT Bugfix: Occasional 10s timeout in lock-panel
+*** TODO Bugfix: Second-order floating children (i.e. Save > Are you sure?) are placed behind their parents
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
 *** DONE Lock screen: Start session via pygreetd_ipc
 *** DONE Automatically lock on hibernate (e.g. via small websocket-based client sending one command to panel_endpoint - comparable to swaymsg)
 *** DONE Idle management: dim screen / lock after some time (see swayidle) / dim on lock
+*** TODO Idle management: newm-cmd inhibit-idle
 
 ** Improve panels
 *** DONE Embed font to make it available in greeter-mode
 *** KILL Clean-up panel installation / launch-script
 *** DONE Configurable padding and similar for panels
 *** DONE newm-basic-panel lock with nice TUI
-*** STRT newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
-*** STRT Catch errors in send, reconnect and retry
+*** TODO newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
 
 ** Usability
 *** DONE Stacking functionality
@@ -53,6 +54,9 @@
 *** DONE New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** DONE Remove possibility of wholes in between
 *** DONE Limit SwipeToZoom by size of focused (if possibly)
+*** TODO Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
+*** TODO Improved ordering in stacking
+*** TODO Shortcuts to switch in stacking
 
 ** Documentation
 *** TODO README / Install guide / Video

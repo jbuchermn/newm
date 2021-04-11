@@ -2,14 +2,18 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from pyfiglet import Figlet
+import os
 import curses
 import websockets
 import json
 import asyncio
 import time
+import logging
 
 from newm import SOCKET_PORT
 URI = "ws://127.0.0.1:%d" % SOCKET_PORT
+
+logger = logging.getLogger(__name__)
 
 class Lock:
     def __init__(self) -> None:
@@ -65,6 +69,7 @@ class Lock:
 
 
     def enter_cred(self) -> None:
+        logger.debug("Beginning enter cred...")
         while True:
             self.render()
             ch = self.scr.getch()
@@ -75,8 +80,10 @@ class Lock:
             else:
                 sch = chr(ch)
                 self.cred += sch
+        logger.debug("...successful (%d)" % len(self.cred))
 
     def enter_user(self) -> None:
+        logger.debug("Beginning enter user...")
         while True:
             self.render()
             ch = self.scr.getch()
@@ -90,6 +97,7 @@ class Lock:
                     pass
             elif ch == 10:
                 break
+        logger.debug("...successful (%s)" % self.selected_user)
 
 
     def process(self, message: Optional[dict[str, Any]]) -> Optional[str]:
@@ -110,6 +118,8 @@ class Lock:
                         'kind': 'auth_choose_user',
                         'user': self.selected_user})
         else:
+            logger.debug("Received message: %s", message)
+
             if message['kind'] == 'auth_request_cred':
                 self.state = "request_cred"
                 self.message = message['message']
@@ -131,29 +141,46 @@ class Lock:
                 self.enter_user()
                 self.ready = True
 
+            logger.debug("...done processing message")
+
 
         return None
 
 def run(lock: Lock) -> None:
     async def _run() -> None:
         try:
+            logger.debug("Connecting...")
             async with websockets.connect(URI) as websocket:
-                response = lock.process(None)
+                logger.debug("...connected")
 
-                if response is not None:
-                    await websocket.send(response)
-                else:
-                    await websocket.send(json.dumps({ 'kind': 'auth_register' }))
+                response = lock.process(None)
+                if response is None:
+                    response = json.dumps({ 'kind': 'auth_register' })
+
+                logger.debug("Sending...")
+                await asyncio.wait_for(websocket.send(response), 0.5)
+                logger.debug("...done")
 
                 msg = json.loads(await websocket.recv())
+                logger.debug("...received answer")
                 lock.process(msg)
         except:
+            logger.exception("Main loop")
             pass
 
     asyncio.get_event_loop().run_until_complete(_run())
 
 
 def lock() -> None:
+    handler = logging.FileHandler(os.environ['HOME'] + '/.cache/newm_panel_log' if 'HOME' in os.environ else '/tmp/newm_panel_log')
+    formatter = logging.Formatter('[%(levelname)s] %(filename)s:%(lineno)s %(asctime)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(formatter)
+
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+
     l = Lock()
     try:
         while True:
