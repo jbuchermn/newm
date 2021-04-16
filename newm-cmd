@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec python -u -c "import sys; from newm import msg; msg(sys.argv[1])" "$@"
+exec python -u -c "import sys; from newm import cmd; cmd(sys.argv[1])" "$@"

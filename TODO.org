@@ -23,14 +23,14 @@
 *** DONE Bug in initial placement
 *** TODO Clean-up imports
 *** DONE Bugfix: Occasional 10s timeout in lock-panel
-*** TODO Bugfix: Second-order floating children (i.e. Save > Are you sure?) are placed behind their parents
+*** STRT Bugfix: Second-order floating children (i.e. Save > Are you sure?) are placed behind their parents
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
 *** DONE Lock screen: Start session via pygreetd_ipc
 *** DONE Automatically lock on hibernate (e.g. via small websocket-based client sending one command to panel_endpoint - comparable to swaymsg)
 *** DONE Idle management: dim screen / lock after some time (see swayidle) / dim on lock
-*** TODO Idle management: newm-cmd inhibit-idle
+*** DONE Idle management: newm-cmd inhibit-idle
 
 ** Improve panels
 *** DONE Embed font to make it available in greeter-mode

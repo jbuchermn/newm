@@ -80,6 +80,8 @@ conf_validate_threshold = configured_value('gestures.validate_threshold', .02)
 conf_anim_t = configured_value('anim_time', .3)
 conf_blend_t = configured_value('blend_time', 1.)
 
+conf_power_times = configured_value('power_times', [120, 300, 600])
+
 
 def _score(i1: float, j1: float, w1: float, h1: float,
            im: int, jm: int,
@@ -276,6 +278,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.thread = LayoutThread(self)
 
         self._animations: list[Animation] = []
+
+        self._idle_inhibit_user = False
 
 
     def _set_mod_sym(self) -> None:
@@ -886,6 +890,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             return print_config()
         elif cmd == "debug":
             return self.debug_str()
+        elif cmd == "inhibit-idle":
+            self._idle_inhibit_user = True
+        elif cmd == "finish-inhibit-idle":
+            self._idle_inhibit_user = False
 
         return None
 
@@ -897,16 +905,18 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         os.system("%s &" % cmd)
 
     def on_idle(self, elapsed: float, idle_inhibited: bool) -> None:
+        idle_inhibited = idle_inhibited or self._idle_inhibit_user
+
         if idle_inhibited and elapsed > 0:
             return
 
         if elapsed == 0:
             self.sys_backend.idle_state(0)
-        # elif elapsed > 600:
-        # TODO - this command (no matter from where it's executed does not work at the moment)
-        #     os.system("systemctl suspend")
-        elif elapsed > 300:
+        elif len(conf_power_times()) > 2 and elapsed > conf_power_times()[2]:
+            # TODO - this command (no matter from where it's executed does not work at the moment)
+            os.system("systemctl suspend")
+        elif len(conf_power_times()) > 1 and elapsed > conf_power_times()[1]:
             self.sys_backend.idle_state(2)
             self.ensure_locked()
-        elif elapsed > 120:
+        elif len(conf_power_times()) > 0 and elapsed > conf_power_times()[0]:
             self.sys_backend.idle_state(1)

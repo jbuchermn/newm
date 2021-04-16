@@ -7,4 +7,5 @@ from .sys_backend import (
 )
 
 from .run import run
-from .panel_endpoint import msg, SOCKET_PORT
+from .cmd import cmd
+from .panel_endpoint import SOCKET_PORT
