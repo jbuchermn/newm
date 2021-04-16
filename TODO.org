@@ -22,7 +22,7 @@
 *** DONE Fix typing
 *** DONE Bug in initial placement
 *** TODO Clean-up imports
-*** STRT Bugfix: Occasional 10s timeout in lock-panel
+*** DONE Bugfix: Occasional 10s timeout in lock-panel
 *** TODO Bugfix: Second-order floating children (i.e. Save > Are you sure?) are placed behind their parents
 
 ** Session management / Lock screen
@@ -60,6 +60,7 @@
 
 ** Documentation
 *** TODO README / Install guide / Video
+*** TODO Performance test and comparison to sway (after running newm for a while - i.e. ensure there is no debt building up)
 
 ** Configuration
 *** DONE Read config file from .config/newm with info now in run.py and layout.py

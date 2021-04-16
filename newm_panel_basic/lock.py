@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 class Lock:
     def __init__(self) -> None:
         self.state = "request_user"
-        self.ready = False
         self.users = ["jonas", "root"]
         self.selected_user: Optional[str] = "jonas"
         self.message = ""
@@ -67,9 +66,11 @@ class Lock:
                 y += 1
         self.scr.refresh()
 
+    def reset(self) -> None:
+        self.scr.clear()
+        self.render()
 
     def enter_cred(self) -> None:
-        logger.debug("Beginning enter cred...")
         while True:
             self.render()
             ch = self.scr.getch()
@@ -78,12 +79,13 @@ class Lock:
             elif ch == 10:
                 break
             else:
-                sch = chr(ch)
-                self.cred += sch
-        logger.debug("...successful (%d)" % len(self.cred))
+                try:
+                    sch = chr(ch)
+                    self.cred += sch
+                except:
+                    logger.exception("enter_cred")
 
     def enter_user(self) -> None:
-        logger.debug("Beginning enter user...")
         while True:
             self.render()
             ch = self.scr.getch()
@@ -97,26 +99,24 @@ class Lock:
                     pass
             elif ch == 10:
                 break
-        logger.debug("...successful (%s)" % self.selected_user)
 
 
     def process(self, message: Optional[dict[str, Any]]) -> Optional[str]:
         if message is None:
-            if self.ready:
-                if self.state == "request_cred":
-                    self.pending = True
-                    self.render()
+            if self.state == "request_cred":
+                self.pending = True
+                self.render()
 
-                    return json.dumps({
-                        'kind': 'auth_enter_cred',
-                        'cred': self.cred})
-                elif self.state == "request_user":
-                    self.pending = True
-                    self.render()
+                return json.dumps({
+                    'kind': 'auth_enter_cred',
+                    'cred': self.cred})
+            elif self.state == "request_user":
+                self.pending = True
+                self.render()
 
-                    return json.dumps({
-                        'kind': 'auth_choose_user',
-                        'user': self.selected_user})
+                return json.dumps({
+                    'kind': 'auth_choose_user',
+                    'user': self.selected_user})
         else:
             logger.debug("Received message: %s", message)
 
@@ -126,9 +126,7 @@ class Lock:
                 self.cred = ""
                 self.pending = False
 
-                self.ready = False
                 self.enter_cred()
-                self.ready = True
 
 
             elif message['kind'] == 'auth_request_user':
@@ -137,9 +135,7 @@ class Lock:
                 self.selected_user = self.users[0] if len(self.users) > 0 else None
                 self.pending = False
 
-                self.ready = False
                 self.enter_user()
-                self.ready = True
 
             logger.debug("...done processing message")
 
@@ -149,24 +145,25 @@ class Lock:
 def run(lock: Lock) -> None:
     async def _run() -> None:
         try:
+            lock.reset()
             logger.debug("Connecting...")
             async with websockets.connect(URI) as websocket:
                 logger.debug("...connected")
+                while True:
+                    logger.debug("Run loop...")
+                    response = lock.process(None)
+                    if response is None:
+                        response = json.dumps({ 'kind': 'auth_register' })
 
-                response = lock.process(None)
-                if response is None:
-                    response = json.dumps({ 'kind': 'auth_register' })
+                    logger.debug("Sending...")
+                    await asyncio.wait_for(websocket.send(response), 0.5)
+                    logger.debug("...done")
 
-                logger.debug("Sending...")
-                await asyncio.wait_for(websocket.send(response), 0.5)
-                logger.debug("...done")
-
-                msg = json.loads(await websocket.recv())
-                logger.debug("...received answer")
-                lock.process(msg)
+                    msg = json.loads(await websocket.recv())
+                    logger.debug("...received answer")
+                    lock.process(msg)
         except:
-            logger.exception("Main loop")
-            pass
+            logger.exception("Exception in run")
 
     asyncio.get_event_loop().run_until_complete(_run())
 
@@ -181,10 +178,16 @@ def lock() -> None:
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)
 
+    logger.debug(logger.handlers)
+
     l = Lock()
     try:
         while True:
-            run(l)
+            logger.debug("Main loop...")
+            try:
+                run(l)
+            except:
+                logger.exception("Excpetion in main loop")
             time.sleep(.1)
     finally:
         l.exit()
