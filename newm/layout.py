@@ -894,6 +894,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self._idle_inhibit_user = True
         elif cmd == "finish-inhibit-idle":
             self._idle_inhibit_user = False
+        elif cmd == "close-launcher":
+            if isinstance(self.overlay, LauncherOverlay):
+                self.exit_overlay()
+
 
         return None
 

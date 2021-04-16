@@ -63,6 +63,9 @@ class LauncherOverlay(Overlay):
 
             if values is None:
                 self._is_opened = True
+                for v in self.layout.panels():
+                    if v.panel == "launcher":
+                        v.focus()
         else:
             perc = 1. - (values['delta2_s'] * conf_gesture_factor() if values is not None else 1)
             self.layout.state.launcher_perc = max(min(perc, 1.0), 0.0)
@@ -78,10 +81,7 @@ class LauncherOverlay(Overlay):
             self.layout.exit_overlay()
             return True
 
-        """
-        For now capture all keys
-        """
-        return True
+        return False
 
     def _enter_transition(self) -> tuple[Optional[LayoutState], Optional[float]]:
         if self._has_gesture:

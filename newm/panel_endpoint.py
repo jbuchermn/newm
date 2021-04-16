@@ -87,11 +87,11 @@ class PanelEndpoint(Thread):
         self._event_loop.run_forever()
 
 
-def msg(message: str) -> None:
+def msg(dct: dict[str, Any]) -> None:
     async def _send() -> None:
         uri = "ws://127.0.0.1:%d" % SOCKET_PORT
         async with websockets.connect(uri) as websocket:
-            await websocket.send(json.dumps({ 'kind': 'cmd', 'cmd': message }))
+            await websocket.send(json.dumps(dct))
             response = json.loads(await websocket.recv())
             if 'msg' in response:
                 print(response['msg'])

@@ -37,7 +37,7 @@
 *** KILL Clean-up panel installation / launch-script
 *** DONE Configurable padding and similar for panels
 *** DONE newm-basic-panel lock with nice TUI
-*** TODO newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
+*** STRT newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
 
 ** Usability
 *** DONE Stacking functionality
@@ -54,7 +54,7 @@
 *** DONE New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** DONE Remove possibility of wholes in between
 *** DONE Limit SwipeToZoom by size of focused (if possibly)
-*** TODO Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
+*** STRT Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
 *** TODO Improved ordering in stacking
 *** TODO Shortcuts to switch in stacking
 
