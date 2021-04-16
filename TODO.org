@@ -23,7 +23,7 @@
 *** DONE Bug in initial placement
 *** TODO Clean-up imports
 *** DONE Bugfix: Occasional 10s timeout in lock-panel
-*** STRT Bugfix: Second-order floating children (i.e. Save > Are you sure?) are placed behind their parents
+*** DONE Bugfix: Second-order floating children (i.e. Save > Are you sure?) are placed behind their parents
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam

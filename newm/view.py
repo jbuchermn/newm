@@ -130,6 +130,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
                 second_state = (i, j, w, h)
 
+                self.focus()
+
             else:
                 min_w, _, min_h, _ = [float(r) for r in self.up_state.size_constraints] if self.up_state is not None else (0., 0., 0., 0.)
                 min_w *= state.size / self.wm.width / self.client_side_scale
@@ -229,9 +231,19 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 result.corner_radius = 0
 
             """
+            z_index based on hierarchy
+            """
+            depth = 0
+            p = self.parent
+            while p is not None:
+                depth += 1
+                p = p.parent
+
+            result.z_index = depth + (2 if up_state.is_floating else 0)
+
+            """
             Keep focused view on top
             """
-            result.z_index = 2 if up_state.is_floating else 0
             if self.is_focused():
                 result.z_index += 1
 
