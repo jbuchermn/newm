@@ -836,7 +836,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             if view is not None:
                 try:
                     s = state.get_view_state(view)
-                    return (None, state.replacing_view_state(view, i=s.i+di, j=s.j+dj).focusing_view(view))
+                    state = state.replacing_view_state(view, i=s.i+di, j=s.j+dj).focusing_view(view)
+                    state.validate_stack_indices(view)
+                    return (None, state)
                 except:
                     return (None, state)
             else:
@@ -858,7 +860,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                     if h == 0:
                         h = 2
                         j -= 1
-                    return (None, state.replacing_view_state(view, i=i, j=j, w=w, h=h).focusing_view(view))
+
+                    s = state.get_view_state(view)
+                    state = state.replacing_view_state(view, i=i, j=j, w=w, h=h).focusing_view(view)
+                    state.validate_stack_indices(view)
+                    return (None, state)
                 except:
                     return (None, state)
             else:

@@ -400,11 +400,13 @@ class MoveResizeOverlay(Overlay, Thread):
             logger.debug("MoveResizeOverlay: Exiting with animation %d, %d, %d, %d -> %d, %d, %d, %d",
                           view_state.i, view_state.j, view_state.w, view_state.h, i, j, w, h)
 
-            return self.layout.state.replacing_view_state(
+            state = self.layout.state.replacing_view_state(
                 self.view,
                 i=i, j=j, w=w, h=h,
                 scale_origin=(None, None), move_origin=(None, None)
-            ).focusing_view(self.view), conf_anim_t()
+            ).focusing_view(self.view)
+            state.validate_stack_indices(self.view)
+            return state, conf_anim_t()
         except Exception:
             logger.warn("Unexpected: Error accessing view %s state", self.view)
             return None, 0

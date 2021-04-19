@@ -9,7 +9,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-
 class ViewState:
     def __init__(self, **kwargs: Any) -> None:
         self.is_tiled: bool = kwargs['is_tiled'] if 'is_tiled' in kwargs else True
@@ -26,6 +25,16 @@ class ViewState:
             else (None, None)
         self.scale_origin: tuple[Optional[float], Optional[float]] = kwargs['scale_origin'] if 'scale_origin' in kwargs \
             else (None, None)
+
+        """
+        stack_id / idx / len
+        """
+        self.stack_data: tuple[int, int, int] = kwargs['stack_data'] if 'stack_data' in kwargs else (-1, 0, 1)
+
+        """
+        Global stack_idx (Compare z-index) to restore ordering
+        """
+        self.stack_idx: int = kwargs['stack_idx'] if 'stack_idx' in kwargs else 0
 
     def get_ijwh(self) -> tuple[float, float, float, float]:
         i, j, w, h = self.i, self.j, self.w, self.h
@@ -125,6 +134,60 @@ class LayoutState:
             _1, _2, _3, i, j, size = self.state_before_fullscreen
             if abs(self.i - i) + abs(self.j - j) + abs(self.size - size) > .01:
                 self.state_before_fullscreen = None
+
+    def validate_stack_indices(self, moved_view: Optional[View]) -> None:
+        """
+        Set stack_data = idx, len for every view according to as-is placement
+        Place moved_view on top of stack if it is set (and set stack_idx analogously)
+        """
+        stacks: list[list[tuple[int, ViewState]]] = []
+        for v, s in self._view_states.items():
+            if not s.is_tiled:
+                continue
+
+            added_to_stack = False
+
+            i, j, w, h = s.get_ijwh()
+            for stack in stacks:
+                add_to_stack = False
+                for vp, sp in stack:
+                    i_, j_, w_, h_ = sp.get_ijwh()
+                    if not ((i_ <= i < i_ + w_ - .2) or (i <= i_ < i + w - .2)):
+                        continue
+                    if not ((j_ <= j < j_ + h_ - .2) or (j <= j_ < j + h - .2)):
+                        continue
+
+                    add_to_stack = True
+                    break
+                if add_to_stack:
+                    stack += [(v, s)]
+                    added_to_stack = True
+                    break
+
+            if not added_to_stack:
+                stacks += [[(v, s)]]
+
+        for s_id, stack in enumerate(stacks):
+            def key(a: tuple[int, ViewState]) -> int:
+                return a[1].stack_idx
+
+            if moved_view is not None:
+                for v, s in stack:
+                    if v == moved_view._handle:
+                        max_idx = max([key(a) for a in stack])
+                        if s.stack_idx < max_idx:
+                            s.stack_idx = max_idx + 1
+                        break
+
+            s_stack = sorted(stack, key=key)
+            for i, (v, s) in enumerate(s_stack):
+                s.stack_data = s_id, i, len(s_stack)
+
+            """
+            Occasionally reset stack_idx
+            """
+            if len(stack) == 1:
+                stack[0][1].stack_idx = stack[0][0]
 
 
     def constrain(self) -> None:
@@ -293,30 +356,6 @@ class LayoutState:
     def get_view_state(self, view: View) -> ViewState:
         return self._view_states[view._handle]
 
-    def get_view_stack_index(self, view: View) -> tuple[int, int]:
-        vs = self.get_view_state(view)
-        relevant = []
-
-        i, j, w, h = vs.get_ijwh()
-
-        for handle, s in self._view_states.items():
-            if not s.is_tiled:
-                continue
-
-            i_, j_, w_, h_ = s.get_ijwh()
-            if not ((i_ <= i < i_ + w_ - .2) or (i <= i_ < i + w - .2)):
-                continue
-            if not ((j_ <= j < j_ + h_ - .2) or (j <= j_ < j + h - .2)):
-                continue
-
-            relevant += [handle]
-
-        if view._handle not in relevant:
-            # In case of w or h == 0 this may happen
-            return 0, 1
-
-        relevant = sorted(relevant)
-        return relevant.index(view._handle), len(relevant)
 
     def get_extent(self) -> tuple[float, float, float, float]:
         min_i, min_j, max_i, max_j = 1000000., 1000000., -1000000., -1000000.

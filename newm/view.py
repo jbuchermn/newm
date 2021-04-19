@@ -160,7 +160,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             state1 = state.with_view_state(
                     self,
                     is_tiled=not (self.up_state is not None and self.up_state.is_floating), i=i, j=j, w=w, h=h,
-                    scale_origin=(w1, h1), move_origin=(i1, j1))
+                    scale_origin=(w1, h1), move_origin=(i1, j1),
+                    stack_idx=self._handle
+            )
 
             state2 = state1.replacing_view_state(
                     self,
@@ -252,7 +254,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             stack_idx, stack_len = 0, 1
             try:
                 self_state = state.get_view_state(self)
-                stack_idx, stack_len = state.get_view_stack_index(self)
+                _, stack_idx, stack_len = self_state.stack_data
             except Exception:
                 """
                 This can happen, if main has not been executed yet
