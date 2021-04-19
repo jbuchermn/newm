@@ -135,7 +135,7 @@ class LayoutState:
             if abs(self.i - i) + abs(self.j - j) + abs(self.size - size) > .01:
                 self.state_before_fullscreen = None
 
-    def validate_stack_indices(self, moved_view: Optional[View]) -> None:
+    def validate_stack_indices(self, moved_view: Optional[View]=None) -> None:
         """
         Set stack_data = idx, len for every view according to as-is placement
         Place moved_view on top of stack if it is set (and set stack_idx analogously)

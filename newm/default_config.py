@@ -27,6 +27,7 @@ def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
         ("M-j", lambda: layout.move(0, 1)),
         ("M-k", lambda: layout.move(0, -1)),
         ("M-l", lambda: layout.move(1, 0)),
+        ("M-t", lambda: layout.move_in_stack(1)),
 
         ("M-H", lambda: layout.move_focused_view(-1, 0)),
         ("M-J", lambda: layout.move_focused_view(0, 1)),

@@ -56,7 +56,7 @@
 *** DONE Limit SwipeToZoom by size of focused (if possibly)
 *** STRT Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
 *** DONE Improved ordering in stacking
-*** STRT Shortcuts to switch in stacking
+*** DONE Shortcuts to switch in stacking
 
 ** Documentation
 *** TODO README / Install guide / Video

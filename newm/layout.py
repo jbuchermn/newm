@@ -178,6 +178,7 @@ class Animation:
             # Enforce constraints on final state
             self._final_state.constrain()
             self._final_state.validate_fullscreen()
+            self._final_state.validate_stack_indices()
 
             self.layout._animate_to(self._final_state, self.duration)
 
@@ -724,6 +725,21 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         logger.debug("Resetting gesture")
         self.reallow_gesture()
 
+    def move_in_stack(self, delta: int) -> None:
+        view = self.find_focused_view()
+        if view is None:
+            return
+
+        try:
+            view_state = self.state.get_view_state(view)
+            sid, idx, siz = view_state.stack_data
+            nidx = (idx+1)%siz
+            next_view = [k for k, s in self.state._view_states.items() if s.stack_data[0] == sid and s.stack_data[1]==nidx]
+            if len(next_view) > 0 and next_view[0] != view:
+                self._views[next_view[0]].focus()
+        except:
+            logger.exception("Unexpected")
+
     def move(self, delta_i: int, delta_j: int) -> None:
         i, j, w, h = self.find_focused_box()
 
@@ -762,7 +778,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         view[0].close()
 
 
-    def focus_view(self, view: View) -> None:
+    def focus_view(self) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
             view.focus()
             return None, state.focusing_view(view)
