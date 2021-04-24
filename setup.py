@@ -12,5 +12,6 @@ setup(name='newm',
           'pycairo',
           'websockets',
           'python-pam',
-          'pyfiglet'
+          'pyfiglet',
+          'fuzzywuzzy'
       ])
