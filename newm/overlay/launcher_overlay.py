@@ -93,3 +93,10 @@ class LauncherOverlay(Overlay):
     def _exit_transition(self) -> tuple[Optional[LayoutState], Optional[float]]:
         logger.debug("Exiting LauncherOverlay with animation...")
         return self.layout.state.copy(launcher_perc=0), conf_anim_t()
+
+    def post_init(self) -> None:
+        launcher = [v for v in self.layout.panels() if v.panel == "launcher"]
+        if len(launcher) > 0:
+            launcher[0].focus()
+        else:
+            logger.exception("Could not find launcher")

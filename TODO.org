@@ -38,7 +38,7 @@
 *** KILL Clean-up panel installation / launch-script
 *** DONE Configurable padding and similar for panels
 *** DONE newm-basic-panel lock with nice TUI
-*** STRT newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
+*** DONE newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
 
 ** Usability
 *** DONE Stacking functionality
