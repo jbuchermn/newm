@@ -1,78 +1,12 @@
 #+TITLE: newm agenda
 
 * Current (aiming for v0.1.0)
-** Fixes / Technical debt
-*** DONE Triggering OverviewOverlay during new view animation causes this view to disappear
-*** DONE Generalize _animation / update / animate_to in view / widget / layout
-*** DONE Focus lock panel on ensure_locked
-*** DONE Fix logging of auth info
-*** DONE VLC fullscreen -> control bar disappears -> wrong view is focused?!
-*** DONE Fix SwipToZoomOverlay jitter
-*** DONE Fix occasional weird resizing issues (Window shortly uses 2x1 then goes to 1x1 / sometimes sizes are set negative in reducer)
-*** DONE Setup 1x1 1x2 / bottom left empty -> temporary stacking on new window
-*** DONE Occasional bugs removing rows / cols (possibly related to rounding)
-*** DONE Only focus other view on close if closed view was focused
-*** DONE SwipeToZoom on too big view or when focused view is not visible jumps
-*** DONE Unset fullscreen on move / zoom out
-*** DONE Debug current window layout via newm-cmd
-*** DONE Make fullscreen behaviour configurable (i.e. padding yes/no, set windows to fullscreen yes/no)
-*** DONE 2x1 layout, stacked -> sizes do not seem to match (use Chrome)
-*** DONE Generalized handling of double -> rounded pixels (in view, widget, interpolation) -> right now issue e.g. slow animation from padding to no padding
-*** DONE MoveResizeOverlay: Delayed animation on qutting animation via gesture end (as opposed to Mod release)
-*** DONE Fix typing
-*** DONE Bug in initial placement
+** Bugs / Technical debt
 *** TODO Clean-up imports
-*** DONE Bugfix: Occasional 10s timeout in lock-panel
-*** DONE Bugfix: Second-order floating children (i.e. Save > Are you sure?) are placed behind their parents
-*** DONE Increase MoveResizeOverlay speed while overview mode is on
-
-** Session management / Lock screen
-*** DONE Lock screen: Unlock via python-pam
-*** DONE Lock screen: Start session via pygreetd_ipc
-*** DONE Automatically lock on hibernate (e.g. via small websocket-based client sending one command to panel_endpoint - comparable to swaymsg)
-*** DONE Idle management: dim screen / lock after some time (see swayidle) / dim on lock
-*** DONE Idle management: newm-cmd inhibit-idle
-
-** Improve panels
-*** DONE Embed font to make it available in greeter-mode
-*** KILL Clean-up panel installation / launch-script
-*** DONE Configurable padding and similar for panels
-*** DONE newm-basic-panel lock with nice TUI
-*** DONE newm-basic-panel launcher with nice TUI inspired by fzy / dmenu or similar
-
-** Usability
-*** DONE Stacking functionality
-*** DONE Stacking and _origin
-*** MoveResizeOverlay
-**** DONE Fix jumps if we start in an out-of-bounds state
-**** DONE Focus view on close to reduce cases where we end up in out-of-bounds state
-**** DONE Exit is oftentimes too slow (small dx, but also small p -> full animation duration) - especially noticeable if switching to Three-Finger-Swipe
-**** DONE Enforce bounds more tightly - i.e. only allow scrolling beyond bounds if necessary (scale = 2, but only 1x1 window) or we are at the border and explicitly scroll further
-*** Grid
-**** DONE Better logic for decision if we jump on final() - i.e. make necessary momentum for dx=1 smaller than is now, but for dx=2 bigger than is now
-**** DONE Allow slowly swiping past multiple screens
-*** DONE (Move)ResizeOverlay and SwipeToZoomOverlay: Hysteresis-based update of size (=scale_origin) during gesture
-*** DONE New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
-*** DONE Remove possibility of wholes in between
-*** DONE Limit SwipeToZoom by size of focused (if possibly)
-*** DONE Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
-*** DONE Improved ordering in stacking
-*** DONE Shortcuts to switch in stacking
 
 ** Documentation
 *** TODO README / Install guide / Video
 *** TODO Performance test and comparison to sway (after running newm for a while - i.e. ensure there is no debt building up)
-
-** Configuration
-*** DONE Read config file from .config/newm with info now in run.py and layout.py
-*** DONE newm-cmd to show config (keys as well as current values)
-*** DONE Fail gracefully if config.py is faulty / Print out errors for unknown keys / ...
-*** DONE Keybindings
-*** DONE SysBackend
-*** DONE TopBar / BottomBar
-*** DONE Check that it works together with greeter
-*** DONE Constants: Animation time / ...
-*** DONE Don't fall back to default_config if an error occurs during hot-reload
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
