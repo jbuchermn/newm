@@ -54,7 +54,7 @@
 *** DONE New (more like classic) fullscreen functionality (especially necessary if there are 2 1x2 windows)
 *** DONE Remove possibility of wholes in between
 *** DONE Limit SwipeToZoom by size of focused (if possibly)
-*** STRT Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
+*** DONE Remove OverviewOverlay - handle entireley using state -> move / resize during "OverviewOverlay"
 *** DONE Improved ordering in stacking
 *** DONE Shortcuts to switch in stacking
 

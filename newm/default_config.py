@@ -48,7 +48,7 @@ def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
 
         ("M-f", lambda: layout.toggle_fullscreen()),
 
-        ("ModPress", lambda: layout.enter_overview_overlay())
+        ("ModPress", lambda: layout.toggle_overview())
     ]
 
 sys_backend_endpoints = [

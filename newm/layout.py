@@ -50,7 +50,6 @@ from .overlay import (
     SwipeOverlay,
     SwipeToZoomOverlay,
     LauncherOverlay,
-    OverviewOverlay
 )
 
 logger = logging.getLogger(__name__)
@@ -636,13 +635,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 self.enter_overlay(ovr)
                 return True
 
-            if isinstance(gesture, HigherSwipeGesture) \
-                    and gesture.n_touches == 4:
-                logger.debug("...SwipeToZoom")
-                ovr = SwipeToZoomOverlay(self)
-                ovr.on_gesture(gesture)
-                self.enter_overlay(ovr)
-                return True
+            if not self.state.is_in_overview():
+                if isinstance(gesture, HigherSwipeGesture) \
+                        and gesture.n_touches == 4:
+                    logger.debug("...SwipeToZoom")
+                    ovr = SwipeToZoomOverlay(self)
+                    ovr.on_gesture(gesture)
+                    self.enter_overlay(ovr)
+                    return True
 
             if isinstance(gesture, HigherSwipeGesture) \
                     and gesture.n_touches == 5:
@@ -778,7 +778,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         view[0].close()
 
 
-    def focus_view(self) -> None:
+    def focus_view(self, view: View) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
             view.focus()
             return None, state.focusing_view(view)
@@ -891,8 +891,13 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self._setup(fallback=False)
         self.damage()
 
-    def enter_overview_overlay(self) -> None:
-        self.enter_overlay(OverviewOverlay(self))
+    def toggle_overview(self) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            focused: Optional[View] = None
+            if state.is_in_overview():
+                focused = self.find_focused_view()
+            return None, state.with_overview_toggled(focused)
+        self.animate_to(reducer, conf_anim_t())
 
     def enter_launcher_overlay(self) -> None:
         self.enter_overlay(LauncherOverlay(self))

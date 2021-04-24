@@ -86,6 +86,9 @@ class LayoutState:
         self.lock_perc: float = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
         self.final: bool = kwargs['final'] if 'final' in kwargs else False
 
+        # Non-null indicates we are in overview mode, in that case i, j, size, size_origin, background_factor, top_bar_dy, bottom_bar_dy
+        self.state_before_overview: Optional[tuple[float, float, float, Optional[float], float, float, float]] = kwargs['state_before_overview'] if 'state_before_overview' in kwargs else None
+
         self._view_states: dict[int, ViewState] = {}
 
     """
@@ -342,6 +345,43 @@ class LayoutState:
         result._clear_intermediate()
         return result
 
+    def with_overview_toggled(self, view: Optional[View]=None) -> LayoutState:
+        if self.state_before_overview is None:
+            min_i, min_j, max_i, max_j = self.get_extent()
+
+            width = max_i - min_i + 3
+            height = max_j - min_j + 3
+            size = max(width, height)
+            i = min_i - (size - (max_i - min_i + 1)) / 2.
+            j = min_j - (size - (max_j - min_j + 1)) / 2.
+
+            state_before_overview = self.i, self.j, self.size, self.size_origin, self.background_factor, self.top_bar_dy, self.bottom_bar_dy
+            return self.copy(
+                i=i,
+                j=j,
+                size=size,
+                size_origin=self.size,
+                background_factor=1.,
+                top_bar_dy=1.,
+                bottom_bar_dy=1.,
+                state_before_overview=state_before_overview
+            )
+        else:
+            i, j, size, size_origin, background_factor, top_bar_dy, bottom_bar_dy = self.state_before_overview
+            state = self.copy(
+                i=i,
+                j=j,
+                size=size,
+                size_origin=size_origin,
+                background_factor=background_factor,
+                top_bar_dy=top_bar_dy,
+                bottom_bar_dy=bottom_bar_dy,
+                state_before_overview=None
+            )
+            if view is not None:
+                state = state.focusing_view(view)
+            return state
+
 
     """
     Access information
@@ -392,3 +432,6 @@ class LayoutState:
 
     def is_fullscreen(self) -> bool:
         return self.state_before_fullscreen is not None
+
+    def is_in_overview(self) -> bool:
+        return self.state_before_overview is not None
