@@ -81,9 +81,11 @@ class MoveOverlay(_Overlay):
     def on_gesture(self, values: dict[str, float]) -> None:
         if self._closed:
             return
-        
-        self.i += conf_gesture_factor()*(values['delta_x'] - self.last_dx)
-        self.j += conf_gesture_factor()*(values['delta_y'] - self.last_dy)
+
+        factor = conf_gesture_factor() if not self.layout.state.is_in_overview() else self.layout.state.size
+
+        self.i += factor*(values['delta_x'] - self.last_dx)
+        self.j += factor*(values['delta_y'] - self.last_dy)
         self.last_dx = values['delta_x']
         self.last_dy = values['delta_y']
         self.layout.state.update_view_state(
@@ -150,8 +152,9 @@ class ResizeOverlay(_Overlay):
         if self._closed:
             return
 
-        dw = conf_gesture_factor()*values['delta_x']
-        dh = conf_gesture_factor()*values['delta_y']
+        factor = conf_gesture_factor() if not self.layout.state.is_in_overview() else self.layout.state.size
+        dw = factor*values['delta_x']
+        dh = factor*values['delta_y']
 
         i, j, w, h = self.i, self.j, self.w, self.h
 

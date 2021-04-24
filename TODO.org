@@ -24,7 +24,7 @@
 *** TODO Clean-up imports
 *** DONE Bugfix: Occasional 10s timeout in lock-panel
 *** DONE Bugfix: Second-order floating children (i.e. Save > Are you sure?) are placed behind their parents
-*** TODO Increase MoveResizeOverlay speed while overview mode is on
+*** DONE Increase MoveResizeOverlay speed while overview mode is on
 
 ** Session management / Lock screen
 *** DONE Lock screen: Unlock via python-pam
