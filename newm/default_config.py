@@ -18,7 +18,6 @@ from pywm import (
 
 mod = PYWM_MOD_LOGO
 wallpaper = '/etc/wallpaper.jpg'
-panel_dir = '/lib/node_modules/newm-panel'
 
 
 def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
@@ -63,6 +62,17 @@ sys_backend_endpoints = [
     SysBackendEndpoint_alsa(
         "volume")
 ]
+
+panels = {
+    'lock': {
+        'cmd': 'alacritty -e newm-panel-basic lock',
+        'w': 0.7,
+        'h': 0.6
+    },
+    'launcher': {
+        'cmd': 'alacritty -e newm-panel-basic launcher'
+    },
+}
 
 bar = {
     'top_texts': lambda: [

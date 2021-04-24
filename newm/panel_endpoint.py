@@ -37,6 +37,7 @@ class PanelEndpoint(Thread):
                     msg = json.loads(bmsg)
                     if msg['kind'] == 'launch_app':
                         self.layout.launch_app(msg['app'])
+                        await client_socket.send(json.dumps({ 'msg': "OK" }))
 
                     elif msg['kind'] == 'cmd':
                         result = self.layout.command(msg['cmd'])
