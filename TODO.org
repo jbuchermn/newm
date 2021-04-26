@@ -4,6 +4,7 @@
 ** Bugs / Technical debt
 *** TODO Clean-up imports
 *** TODO Bug: Open window during SwipeToZoom
+*** DONE Bug: Open 4 windows (00, 01, 10, 11), resize 11 to cover all 4 fields -> stacking is wrong (correct if 00 is resized)
 
 ** Documentation
 *** TODO README / Install guide / Video

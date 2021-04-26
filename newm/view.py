@@ -387,12 +387,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 self.wm.enter_overlay(
                     MoveResizeFloatingOverlay(self.wm, self))
         elif event == "request_fullscreen":
-            logger.debug("DDEBUGG - Entering fullscreen")
             if self.is_focused() and not self.wm.state.is_fullscreen():
                 self.wm.toggle_fullscreen()
             self.set_fullscreen(True)
         elif event == "request_nofullscreen":
-            logger.debug("DDEBUGG - Leaving fullscreen")
             if self.is_focused() and self.wm.state.is_fullscreen():
                 self.wm.toggle_fullscreen()
             self.set_fullscreen(False)
