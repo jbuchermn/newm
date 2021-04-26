@@ -3,6 +3,7 @@
 * Current (aiming for v0.1.0)
 ** Bugs / Technical debt
 *** TODO Clean-up imports
+*** TODO Bug: Open window during SwipeToZoom
 
 ** Documentation
 *** TODO README / Install guide / Video
