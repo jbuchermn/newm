@@ -532,9 +532,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self._setup()
 
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
-        if self.is_locked():
-            return False
-
         # BEGIN DEBUG
         if self.modifiers & self.mod > 0 and keysyms == "D":
             self.force_close_overlay()
@@ -549,7 +546,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         return self.key_processor.on_key(state == PYWM_PRESSED,
                                          keysyms,
                                          self.modifiers & self.mod > 0,
-                                         self.modifiers & PYWM_MOD_CTRL > 0)
+                                         self.modifiers & PYWM_MOD_CTRL > 0,
+                                         self.is_locked())
 
     def on_modifiers(self, modifiers: int) -> bool:
         if self.is_locked():
