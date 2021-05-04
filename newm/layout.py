@@ -922,6 +922,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         elif cmd == "close-launcher":
             if isinstance(self.overlay, LauncherOverlay):
                 self.exit_overlay()
+        else:
+            return "Unknown command: %s" % cmd
 
 
         return None
