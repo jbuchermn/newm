@@ -82,7 +82,7 @@ class PanelsLauncher(Thread):
                 return p.panel
 
             try:
-                subprocess.check_output("pstree -aps %d | grep %d" % (pid, parent_pid), shell=True)
+                subprocess.check_output("pstree -aps %d | grep \",%d$\"" % (pid, parent_pid), shell=True)
                 # Successful
                 return p.panel
             except:
