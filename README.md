@@ -1,27 +1,51 @@
 # NeWM - PyWM reference implementation
 
-## Installing and running
+## Installing
 
-Install greetd, make wlroots compile.
+### Prerequisites and pywm
 
-### newm
-
-Sudo installation is only necessary in case greetd should run newm
+See [pywm](https://github.com/jbuchermn/pywm). If all prerequisites are installed, the command:
 
 ```
-sudo pip3 install -v git+https://github.com/jbuchermn/pywm
+pip3 install git+https://github.com/jbuchermn/pywm
+```
 
-git clone https://github.com/jbuchermn/newm
-cd newm
+should suffice.
 
-# TODO: Proper configuration
-vim newm/run.py
 
-sudo pip3 install -v .
+### Single-user installation (without newm-login)
+
+To install newm:
+
+```
+pip3 install git+https://github.com/jbuchermn/newm
+```
+
+Start it using
+
+```
 start-newm
 ```
 
-### Panel
+
+### Multi-user installation with greetd (to use newm for login)
+
+Make sure to also install pywm using sudo:
+
+```
+sudo pip3 install git+https://github.com/jbuchermn/pywm
+sudo pip3 install git+https://github.com/jbuchermn/newm
+```
+
+Check, after logging in as `greeter`, that `start-newm` works and show the login panel. If it works, set
+
+```
+command = "start-newm"
+```
+
+in `/etc/greetd/config.toml` and ensure configuration is set in `/etc/newm/config.py`
+
+## Panel
 
 See [newm-panel-nwjs](https://github.com/jbuchermn/newm-panel-nwjs)
 
