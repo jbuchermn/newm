@@ -5,7 +5,6 @@
 
 ** Documentation
 *** STRT README / Install guide / Video / Efficiency comparison to sway
-*** STRT Test documentation on clean VM
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay

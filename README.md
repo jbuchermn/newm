@@ -18,6 +18,8 @@ pip3 install git+https://github.com/jbuchermn/pywm
 
 should suffice.
 
+Additionally, unless configured otherwise, newm depends on alacritty.
+
 
 ### Single-user installation (without newm-login)
 
