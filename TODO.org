@@ -2,12 +2,11 @@
 
 * Current (aiming for v0.1.0)
 ** Bugs / Technical debt
-*** TODO Clean-up imports
-*** TODO Bug: Open window during SwipeToZoom
 *** DONE Bug: Open 4 windows (00, 01, 10, 11), resize 11 to cover all 4 fields -> stacking is wrong (correct if 00 is resized)
+*** TODO Clean-up imports
+*** TODO Bug: newm-panel-basic lock is not working in greeter-mode
 
 ** Documentation
-*** TODO Test login via newm
 *** TODO README / Install guide / Video
 *** TODO Performance test and comparison to sway (after running newm for a while - i.e. ensure there is no debt building up)
 

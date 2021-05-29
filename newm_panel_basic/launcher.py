@@ -47,6 +47,7 @@ def _launcher() -> None:
     def list_suggestions(search: str) -> list[tuple[str, str]]:
         if search == "":
             return []
+        logger.debug("Extracting '%s'" % search)
         result = process.extract(search, list(entries.keys()), limit=10)
         return [(k[0], entries[k[0]]) for k in result if k[1] > 40]
 
@@ -88,6 +89,8 @@ def _launcher() -> None:
                     search = search[:-1] if len(search) > 0 else ""
                 elif ch == 10:
                     break
+                elif ch == 27:
+                    logger.debug("Unexpected - got escape")
                 else:
                     try:
                         sch = chr(ch)
