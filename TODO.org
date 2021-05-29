@@ -8,21 +8,6 @@
 
 ** Documentation
 *** STRT README / Install guide / Video / Efficiency comparison to sway
-- wf-recorder
-- grim
-- README
-  - Intro with pictures and video
-    - Goal
-    - Built on top of wlroots
-  - Basic functionality
-    - Super and keybindings
-    - Touchpad gestures
-  - Installation
-    - Basic (without root - link to later with root)
-    - Different panels
-    - Use as login shell (with root)
-    - Lock on hibernate
-  - Configuration
 *** TODO Test documentation on clean VM
 
 * Backlog / Ideas
