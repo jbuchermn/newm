@@ -1,3 +1,3 @@
-# newm - beyond tiling (Wayland compositor)
+# newm
 
-Check out branch `v0.1`
+Wayland compositor. Check out branch `v0.1`
