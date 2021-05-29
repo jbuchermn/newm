@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from pywm.touchpad import GestureListener, LowpassGesture
 from pywm.touchpad.gestures import Gesture
+
 from .overlay import Overlay
 from ..grid import Grid
 from ..hysteresis import Hysteresis

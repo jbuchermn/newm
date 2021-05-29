@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import Callable, Any
 
-from newm.layout import Layout
 import os
 import pwd
 import time
+
+from newm.layout import Layout
 
 from newm import (
     SysBackendEndpoint_alsa,

@@ -5,6 +5,7 @@ from abc import abstractmethod
 from threading import Thread
 import time
 import cairo
+
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
 
 from ..interpolation import WidgetDownstreamInterpolation

@@ -5,6 +5,7 @@ from threading import Thread
 import subprocess
 import time
 import logging
+
 from .config import configured_value
 
 logger = logging.getLogger(__name__)

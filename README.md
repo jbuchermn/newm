@@ -80,7 +80,7 @@ sudo pip3 install git+https://github.com/jbuchermn/pywm
 sudo pip3 install git+https://github.com/jbuchermn/newm
 ```
 
-Place configuration in `/etc/newm/config.py` and check, after logging in as `greeter`, that `start-newm` works and show the login panel. If it works, set
+Place configuration in `/etc/newm/config.py` and check, after logging in as `greeter`, that `start-newm` works and shows the login panel (login itself should not work). If it works, set
 
 ``` toml
 command = "start-newm"
