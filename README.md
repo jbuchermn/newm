@@ -12,7 +12,7 @@ TODO
 
 [pywm](https://github.com/jbuchermn/pywm) is the abstraction layer for and main dependency of newm. If all prerequisites are installed, the command:
 
-```
+``` sh
 pip3 install git+https://github.com/jbuchermn/pywm
 ```
 
@@ -23,13 +23,13 @@ should suffice.
 
 To install newm:
 
-```
+``` sh
 pip3 install git+https://github.com/jbuchermn/newm
 ```
 
 Start it using
 
-```
+``` sh
 start-newm
 ```
 
@@ -39,9 +39,18 @@ start-newm
 
 Configuring is handled via Python and read from either `$HOME/.config/newm/config.py` or (lower precedence) `/etc/config.py`. Take `default_config.py` as a basis and check the source code for usages of `configured_value` to get more details about the different keys.
 
-For example, adjust:
+For example, copy:
 
+``` sh
+cd
+mkdir -p .config/newm
+cp .local/lib/pythonX.Y/site-packages/newm/default_config.py .config/newm/config.py
+vim .config/newm/config.py
 ```
+
+and adjust:
+
+``` py
 import os
 from pywm import (
     PYWM_MOD_LOGO,
@@ -57,7 +66,7 @@ wallpaper = os.environ['HOME'] + '/wallpaper.jpg'
 
 Place in `/lib/systemd/system-sleep/00-lock.sh`
 
-```
+``` sh
 #!/bin/sh
 newm-cmd lock-$1 
 ```
@@ -66,14 +75,14 @@ newm-cmd lock-$1
 
 Make sure to also install pywm using sudo:
 
-```
+``` sh
 sudo pip3 install git+https://github.com/jbuchermn/pywm
 sudo pip3 install git+https://github.com/jbuchermn/newm
 ```
 
 Place configuration in `/etc/newm/config.py` and check, after logging in as `greeter`, that `start-newm` works and show the login panel. If it works, set
 
-```
+``` toml
 command = "start-newm"
 ```
 
