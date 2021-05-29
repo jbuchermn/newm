@@ -35,7 +35,23 @@ start-newm
 
 ### Configuring
 
-TODO
+#### Setting up the config file
+
+Configuring is handled via Python and read from either `$HOME/.config/newm/config.py` or (lower precedence) `/etc/config.py`. Take `default_config.py` as a basis and check the source code for usages of `configured_value` to get more details about the different keys.
+
+For example, adjust:
+
+```
+import os
+from pywm import (
+    PYWM_MOD_LOGO,
+    PYWM_MOD_ALT
+)
+
+mod = PYWM_MOD_ALT
+wallpaper = os.environ['HOME'] + '/wallpaper.jpg'
+```
+
 
 #### Lock on hibernate
 
