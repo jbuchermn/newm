@@ -1,3 +1,4 @@
 newm.egg-info
 **/__pycache__
 .mypy_cache
+resources/*.mp4

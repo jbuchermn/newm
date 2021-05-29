@@ -1,4 +1,6 @@
-# NeWM - PyWM reference implementation
+# newm - beyond tiling
+(Wayland compositor)
+![IMAGE](https://github.com/jbuchermn/newm/blob/v0.1/resources/screenshot.png)](https://youtu.be/otMEC03ie0g)
 
 ## Installing
 
