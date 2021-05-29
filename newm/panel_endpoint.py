@@ -9,9 +9,9 @@ import websockets
 import logging
 from threading import Thread
 
-from websockets.server import Serve, WebSocketServerProtocol
 
 if TYPE_CHECKING:
+    from websockets.server import Serve, WebSocketServerProtocol
     from .layout import Layout
 
 SOCKET_PORT = 8641
