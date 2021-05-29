@@ -3,6 +3,7 @@
 * Current (aiming for v0.1.0)
 ** Bugs / Technical debt
 *** DONE Bug: Open 4 windows (00, 01, 10, 11), resize 11 to cover all 4 fields -> stacking is wrong (correct if 00 is resized)
+*** DONE Default background in resources
 *** STRT Clean-up imports
 *** STRT Bug: newm-panel-basic lock is not working in greeter-mode
 

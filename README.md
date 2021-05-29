@@ -1,5 +1,5 @@
 # newm v0.1
-[![IMAGE](https://github.com/jbuchermn/newm/blob/v0.1/resources/screenshot.png)](https://youtu.be/otMEC03ie0g)
+[![IMAGE](https://github.com/jbuchermn/newm/blob/v0.1/newm/resources/screenshot.png)](https://youtu.be/otMEC03ie0g)
 (Wayland compositor)
 
 ## Idea

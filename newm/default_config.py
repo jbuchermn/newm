@@ -17,7 +17,7 @@ from pywm import (
 )
 
 mod = PYWM_MOD_LOGO
-wallpaper = '/etc/wallpaper.jpg'
+wallpaper = os.path.dirname(os.path.realpath(__file__)) + '/resources/wallpaper.jpg'
 
 
 def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
