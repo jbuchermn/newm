@@ -73,9 +73,9 @@ Place in `/lib/systemd/system-sleep/00-lock.sh`
 newm-cmd lock-$1 
 ```
 
-### Multi-user installation with greetd (to use newm for login)
+### Multi-user installation (to use newm for login)
 
-Make sure to also install pywm using sudo:
+This setup depends on [greetd](https://git.sr.ht/~kennylevinsen/greetd). Make sure to install newm as well as pywm in a way in which the greeter-user has access, e.g.:
 
 ``` sh
 sudo pip3 install git+https://github.com/jbuchermn/pywm
