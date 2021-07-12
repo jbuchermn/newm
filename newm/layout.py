@@ -115,10 +115,12 @@ def _score(i1: float, j1: float, w1: float, h1: float,
         return 1000
 
     d_j = 0.
-    if j2 > j1 + h1:
+    if j2 >= j1 + h1:
         d_j = j2 - (j1 + h1)
-    elif j1 > j2 + h2:
+    elif j1 >= j2 + h2:
         d_j = j1 - (j2 + h2)
+    else:
+        d_j = -1
 
     return d_i + d_j
 
