@@ -1,8 +1,8 @@
 #+TITLE: newm agenda
 
-* Current (aiming for v0.1.0)
-** Documentation
-*** STRT README / Install guide / Video / Efficiency comparison to sway
+* Current (aiming for v0.1)
+** STRT README / Install guide / Video / Efficiency comparison to sway
+** DONE Bug: Open window, swipe during popup-animation, afterwards Overlay in invalid state
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
