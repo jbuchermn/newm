@@ -13,7 +13,7 @@ TODO
 [pywm](https://github.com/jbuchermn/pywm) is the abstraction layer for and main dependency of newm. If all prerequisites are installed, the command:
 
 ``` sh
-pip3 install git+https://github.com/jbuchermn/pywm
+pip3 install git+https://github.com/jbuchermn/pywm@v0.1
 ```
 
 should suffice.
@@ -78,7 +78,7 @@ newm-cmd lock-$1
 This setup depends on [greetd](https://git.sr.ht/~kennylevinsen/greetd). Make sure to install newm as well as pywm in a way in which the greeter-user has access, e.g.:
 
 ``` sh
-sudo pip3 install git+https://github.com/jbuchermn/pywm
+sudo pip3 install git+https://github.com/jbuchermn/pywm@v0.1
 sudo pip3 install git+https://github.com/jbuchermn/newm@v0.1
 ```
 
