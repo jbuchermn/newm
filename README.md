@@ -26,7 +26,7 @@ Additionally, unless configured otherwise, newm depends on alacritty.
 To install newm:
 
 ``` sh
-pip3 install git+https://github.com/jbuchermn/newm
+pip3 install git+https://github.com/jbuchermn/newm@v0.1
 ```
 
 Start it using
@@ -79,7 +79,7 @@ This setup depends on [greetd](https://git.sr.ht/~kennylevinsen/greetd). Make su
 
 ``` sh
 sudo pip3 install git+https://github.com/jbuchermn/pywm
-sudo pip3 install git+https://github.com/jbuchermn/newm
+sudo pip3 install git+https://github.com/jbuchermn/newm@v0.1
 ```
 
 Place configuration in `/etc/newm/config.py` and check, after logging in as `greeter`, that `start-newm` works and shows the login panel (login itself should not work). If it works, set
