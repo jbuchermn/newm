@@ -1,8 +1,11 @@
 #+TITLE: newm agenda
 
 * Current (aiming for v0.1)
-** STRT README / Install guide / Video / Efficiency comparison to sway
-** DONE Bug: Open window, swipe during popup-animation, afterwards Overlay in invalid state
+** TODO Install process
+*** TODO Setup standard procedure for VM-based install testing
+*** TODO AUR package
+*** TODO Install Guide
+** TODO README / Documentation
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
