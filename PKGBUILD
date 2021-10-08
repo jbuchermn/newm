@@ -1,22 +1,43 @@
-# PKGBUILD for newm
+# PKGBUILD for newm including pywm
 
 pkgname=newm
 pkgver=0.1
 pkgrel=1
 pkgdesc="Wayland compositor"
 url="https://github.com/jbuchermn/newm"
-# fuzzywuzzy pyfiglet
+# imageio
 depends=(
-    'python3'
-    'wayland'
-    'python-cairo'
-    'python-websockets'
-    'python-pam'
-    'python-evdev'
-    'python-imageio'
-    'python-numpy'
+    python3
+
+    wayland
+    libinput
+    libxcb
+    libxkbcommon
+    opengl-driver
+    pixman
+    xcb-util-errors
+    xcb-util-renderutil
+    xcb-util-wm
+    seatd
+    xorg-xwayland
+
+    python-evdev
+    python-numpy
+
+    python-cairo
+    python-psutil
+    python-websockets
+    python-pam
+    python-pyfiglet
+    python-fuzzywuzzy
 )
-makedepends=('python3' 'meson' 'ninja')
+makedepends=(
+    git
+    python3
+    meson
+    wayland-protocols
+    xorgproto
+)
 license=('MIT')
 arch=('any')
 source=(
