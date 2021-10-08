@@ -11,6 +11,7 @@ setup(name='newm',
       scripts=['start-newm', 'newm-cmd', 'newm-panel-basic'],
       install_requires=[
           'pycairo',
+          'psutil',
           'websockets',
           'python-pam',
           'pyfiglet',

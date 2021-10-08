@@ -1,0 +1,83 @@
+#+TITLE: newm developer information
+
+* Current (aiming for v0.1)
+** STRT Install process
+*** STRT Setup standard procedure for VM-based install testing
+- [ ] Proper seatd setup in virtual machine
+- [ ] Setup below has virtio not working
+*** STRT AUR package
+- [ ] Include imageio
+*** TODO Install Guide
+** TODO README / Documentation
+
+* Backlog / Ideas
+** Titles during OverviewOverlay
+** Move / Resize during OverviewOverlay
+** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
+** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
+** Bars as panels not as widgets
+** Create newm-panel-flutter
+
+* Setup clean arch chroot / qemu for testing
+
+Following https://www.collabora.com/news-and-blog/blog/2019/03/20/bootstraping-a-minimal-arch-linux-image/
+
+#+BEGIN_SRC sh
+truncate -s 20G arch_disk.raw
+mkfs.ext4 arch_disk.raw
+mkdir mnt
+sudo mount arch_disk.raw mnt
+sudo pacstrap mnt base base-devel
+sudo arch-chroot mnt
+#+END_SRC
+
+Now we are inside the chroot, very basic setup:
+
+#+BEGIN_SRC sh
+passwd
+pacman -S dhcpcd
+
+useradd --create-home test
+passwd test
+usermod -aG wheel test
+vim /etc/sudoers # add wheel
+su test
+#+END_SRC
+
+Clone the repo, get the PKGBUILD,
+
+#+BEGIN_SRC sh
+makepkg -si
+#+END_SRC
+
+Finally clean up
+
+#+BEGIN_SRC sh
+exit
+sudo umount mnt
+#+END_SRC
+
+To use the disk in a virtual machine (should be possible simpler...)
+
+#+BEGIN_SRC sh
+git clone --depth=1 git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+cd linux
+make x86_64_defconfig
+make kvm_guest.config
+make -j2
+#+END_SRC
+
+and start using
+
+#+BEGIN_SRC sh
+qemu-system-x86_64 --enable-kvm -hda arch_disk.raw -m 4G -nographic -kernel linux/arch/x86/boot/bzImage -append "root=/dev/sda rw"
+#+END_SRC
+
+To enable internet access, probably
+
+#+BEGIN_SRC sh
+systemctl enable dhcpcd
+systemctl start dhcpcd
+#+END_SRC
+
+is necessary
