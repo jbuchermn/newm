@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import time
+
 from .panel_endpoint import msg
 
 def cmd(command: str, *args: str) -> None:

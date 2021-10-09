@@ -4,9 +4,9 @@ from typing import Optional, TYPE_CHECKING
 import logging
 
 from pywm.touchpad.gestures import Gesture
-from newm.state import LayoutState
 
 if TYPE_CHECKING:
+    from ..state import LayoutState
     from ..layout import Layout
 
 logger = logging.getLogger(__name__)

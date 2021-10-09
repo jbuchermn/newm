@@ -1,0 +1,80 @@
+#+TITLE: newm developer information
+
+* Current
+** STRT Install process
+*** STRT Setup standard procedure for VM-based install testing
+- [ ] Proper seatd setup in virtual machine
+- [X] Setup below has virtio not working
+*** STRT AUR package
+- [X] Include imageio
+- [ ] Fix commit
+- [ ] Test
+** DONE README Idea
+
+* Backlog / Ideas
+** Titles during OverviewOverlay
+** Move / Resize during OverviewOverlay
+** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
+** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
+** Bars as panels not as widgets
+** Create newm-panel-flutter
+
+* Setup clean arch chroot / qemu for testing
+
+** Setup chroot
+
+Following https://www.collabora.com/news-and-blog/blog/2019/03/20/bootstraping-a-minimal-arch-linux-image/
+
+#+BEGIN_SRC sh
+truncate -s 20G arch_disk.raw
+mkfs.ext4 arch_disk.raw
+mkdir mnt
+sudo mount arch_disk.raw mnt
+sudo pacstrap mnt base base-devel linux linux-firmware
+sudo arch-chroot mnt
+#+END_SRC
+
+Now we are inside the chroot, very basic setup:
+
+#+BEGIN_SRC sh
+passwd
+pacman -S dhcpcd
+
+useradd --create-home test
+passwd test
+usermod -aG wheel test
+vim /etc/sudoers # add wheel
+su test
+#+END_SRC
+
+Finally clean up
+
+#+BEGIN_SRC sh
+exit
+sudo umount mnt
+#+END_SRC
+
+** VSetup virtual machine
+
+To use the disk in a virtual machine (not incredibly nice...)
+
+#+BEGIN_SRC sh
+sudo mount arch_disk.raw mnt
+cp -r mnt/boot mnt_boot
+sudo umount mnt
+#+END_SRC
+
+and start using
+
+#+BEGIN_SRC sh
+qemu-system-x86_64 --enable-kvm -hda arch_disk.raw -m 4G -kernel mnt_boot/vmlinuz-linux -initrd mnt_boot/initramfs-linux[-fallback].img -append "root=/dev/sda rw" -vga virtio
+#+END_SRC
+
+To enable internet access, probably
+
+#+BEGIN_SRC sh
+systemctl enable dhcpcd
+systemctl start dhcpcd
+#+END_SRC
+
+is necessary

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Callable, Any
 
 class TKeyBinding:
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool) -> bool:
+    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool, locked: bool) -> bool:
         pass
 
     def clear(self) -> None:
@@ -22,10 +22,14 @@ class KeyBinding(TKeyBinding):
 
         self.keysym = _keys[-1]
         self.action = action
+        self.lock_safe = self.keysym.startswith("XF86")
 
         self._ready_to_fire = False
 
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool) -> bool:
+    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool, locked: bool) -> bool:
+        if locked and not self.lock_safe:
+            return False
+
         if pressed and keysyms == self.keysym and \
                 mod_down == self.mod and \
                 ctrl_down == self.ctrl:
@@ -50,7 +54,10 @@ class ModPressKeyBinding(TKeyBinding):
         self.action = action
         self._ready_to_fire = False
 
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool) -> bool:
+    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool, locked: bool) -> bool:
+        if locked:
+            return False
+
         if self.mod_sym not in keysyms:
             self._ready_to_fire = False
             return False
@@ -85,10 +92,10 @@ class KeyProcessor:
         for keys, action in bindings:
             self.bindings += [keybinding_factory(self, keys, action)]
 
-    def on_key(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool) -> bool:
+    def on_key(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool, locked: bool) -> bool:
         triggered = False
         for b in self.bindings:
-            if b.process(pressed, keysyms, mod_down, ctrl_down):
+            if b.process(pressed, keysyms, mod_down, ctrl_down, locked):
                 triggered = True
 
         return triggered

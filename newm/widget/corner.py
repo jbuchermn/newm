@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import cairo
 import math
+
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
 
 from ..config import configured_value

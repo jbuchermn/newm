@@ -115,10 +115,12 @@ def _score(i1: float, j1: float, w1: float, h1: float,
         return 1000
 
     d_j = 0.
-    if j2 > j1 + h1:
+    if j2 >= j1 + h1:
         d_j = j2 - (j1 + h1)
-    elif j1 > j2 + h2:
+    elif j1 >= j2 + h2:
         d_j = j1 - (j2 + h2)
+    else:
+        d_j = -1
 
     return d_i + d_j
 
@@ -532,9 +534,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self._setup()
 
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
-        if self.is_locked():
-            return False
-
         # BEGIN DEBUG
         if self.modifiers & self.mod > 0 and keysyms == "D":
             self.force_close_overlay()
@@ -549,7 +548,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         return self.key_processor.on_key(state == PYWM_PRESSED,
                                          keysyms,
                                          self.modifiers & self.mod > 0,
-                                         self.modifiers & PYWM_MOD_CTRL > 0)
+                                         self.modifiers & PYWM_MOD_CTRL > 0,
+                                         self.is_locked())
 
     def on_modifiers(self, modifiers: int) -> bool:
         if self.is_locked():
@@ -924,6 +924,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         elif cmd == "close-launcher":
             if isinstance(self.overlay, LauncherOverlay):
                 self.exit_overlay()
+        else:
+            return "Unknown command: %s" % cmd
 
 
         return None

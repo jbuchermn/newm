@@ -1,10 +1,9 @@
 from __future__ import annotations
-
-import logging
 from typing import TYPE_CHECKING
 
-from pywm import PYWM_PRESSED
+import logging
 
+from pywm import PYWM_PRESSED
 from pywm.touchpad import (
     SingleFingerMoveGesture,
     TwoFingerSwipePinchGesture,

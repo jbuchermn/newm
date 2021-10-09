@@ -5,6 +5,7 @@ from threading import Thread
 import subprocess
 import time
 import logging
+
 from .config import configured_value
 
 logger = logging.getLogger(__name__)
@@ -82,7 +83,7 @@ class PanelsLauncher(Thread):
                 return p.panel
 
             try:
-                subprocess.check_output("pstree -aps %d | grep %d" % (pid, parent_pid), shell=True)
+                subprocess.check_output("pstree -aps %d | grep \",%d$\"" % (pid, parent_pid), shell=True)
                 # Successful
                 return p.panel
             except:

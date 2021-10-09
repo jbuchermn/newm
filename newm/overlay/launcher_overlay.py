@@ -77,8 +77,9 @@ class LauncherOverlay(Overlay):
 
 
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
-        if keysyms == "Escape" and state == PYWM_RELEASED:
-            self.layout.exit_overlay()
+        if keysyms == "Escape":
+            if state == PYWM_RELEASED:
+                self.layout.exit_overlay()
             return True
 
         return False

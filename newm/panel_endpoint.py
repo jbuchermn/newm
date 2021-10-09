@@ -9,9 +9,9 @@ import websockets
 import logging
 from threading import Thread
 
-from websockets.server import Serve, WebSocketServerProtocol
 
 if TYPE_CHECKING:
+    from websockets.server import Serve, WebSocketServerProtocol
     from .layout import Layout
 
 SOCKET_PORT = 8641
@@ -94,7 +94,7 @@ def msg(dct: dict[str, Any]) -> None:
         async with websockets.connect(uri) as websocket:
             await websocket.send(json.dumps(dct))
             response = json.loads(await websocket.recv())
-            if 'msg' in response:
+            if 'msg' in response and response['msg'] != "None":
                 print(response['msg'])
 
     asyncio.get_event_loop().run_until_complete(_send())

@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import Callable, Any
 
-from newm.layout import Layout
 import os
 import pwd
 import time
+
+from newm.layout import Layout
 
 from newm import (
     SysBackendEndpoint_alsa,
@@ -17,7 +18,7 @@ from pywm import (
 )
 
 mod = PYWM_MOD_LOGO
-wallpaper = '/etc/wallpaper.jpg'
+wallpaper = os.path.dirname(os.path.realpath(__file__)) + '/resources/wallpaper.jpg'
 
 
 def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:

@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
 from pywm.touchpad import GestureListener, LowpassGesture
-from pywm.touchpad.gestures import Gesture
+from pywm.touchpad.gestures import Gesture, HigherSwipeGesture
+
 from .overlay import Overlay
 from ..grid import Grid
 from ..hysteresis import Hysteresis
@@ -81,6 +82,10 @@ class SwipeToZoomOverlay(Overlay):
         self.layout.damage()
 
     def on_gesture(self, gesture: Gesture) -> bool:
+        if not isinstance(gesture, HigherSwipeGesture) or gesture.n_touches != 4:
+            self.layout.exit_overlay()
+            return False
+
         if not self._has_gesture:
             LowpassGesture(gesture).listener(GestureListener(
                 self._on_update,

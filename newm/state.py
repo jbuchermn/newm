@@ -143,32 +143,36 @@ class LayoutState:
         Set stack_data = idx, len for every view according to as-is placement
         Place moved_view on top of stack if it is set (and set stack_idx analogously)
         """
-        stacks: list[list[tuple[int, ViewState]]] = []
-        for v, s in self._view_states.items():
-            if not s.is_tiled:
-                continue
 
-            added_to_stack = False
+        def overlaps(s1: ViewState, s2: ViewState) -> bool:
+            i, j, w, h = s1.get_ijwh()
+            i_, j_, w_, h_ = s2.get_ijwh()
+            if not ((i_ - .2 <= i < i_ + w_ - .8) or (i - .2 <= i_ < i + w - .8)):
+                return False
+            if not ((j_ - .2 <= j < j_ + h_ - .8) or (j - .2 <= j_ < j + h - .8)):
+                return False
+            return True
 
-            i, j, w, h = s.get_ijwh()
-            for stack in stacks:
-                add_to_stack = False
-                for vp, sp in stack:
-                    i_, j_, w_, h_ = sp.get_ijwh()
-                    if not ((i_ <= i < i_ + w_ - .2) or (i <= i_ < i + w - .2)):
-                        continue
-                    if not ((j_ <= j < j_ + h_ - .2) or (j <= j_ < j + h - .2)):
-                        continue
+        def stacks_overlap(s1: list[tuple[int, ViewState]], s2: list[tuple[int, ViewState]]) -> bool:
+            for v, s in s1:
+                for vp, sp in s2:
+                    if overlaps(s, sp):
+                        return True
+            return False
 
-                    add_to_stack = True
+        stacks: list[list[tuple[int, ViewState]]] = [[(v, s)] for v, s in self._view_states.items() if s.is_tiled]
+        change = True
+        while change:
+            change = False
+            for i in range(len(stacks)):
+                for j in range(i):
+                    if stacks_overlap(stacks[i], stacks[j]):
+                        stacks[i] += stacks[j]
+                        del stacks[j]
+                        change = True
+                        break
+                if change:
                     break
-                if add_to_stack:
-                    stack += [(v, s)]
-                    added_to_stack = True
-                    break
-
-            if not added_to_stack:
-                stacks += [[(v, s)]]
 
         for s_id, stack in enumerate(stacks):
             def key(a: tuple[int, ViewState]) -> int:
