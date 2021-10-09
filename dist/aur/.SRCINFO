@@ -1,0 +1,42 @@
+pkgbase = newm
+	pkgdesc = Wayland compositor
+	pkgver = 0
+	pkgrel = 1
+	url = https://github.com/jbuchermn/newm
+	arch = any
+	license = MIT
+	makedepends = git
+	makedepends = sed
+	makedepends = python3
+	makedepends = meson
+	makedepends = wayland-protocols
+	makedepends = xorgproto
+	depends = python3
+	depends = wayland
+	depends = libinput
+	depends = libxcb
+	depends = libxkbcommon
+	depends = opengl-driver
+	depends = pixman
+	depends = xcb-util-errors
+	depends = xcb-util-renderutil
+	depends = xcb-util-wm
+	depends = seatd
+	depends = xorg-xwayland
+	depends = python-evdev
+	depends = python-numpy
+	depends = python-imageio
+	depends = python-cairo
+	depends = python-psutil
+	depends = python-websockets
+	depends = python-pam
+	depends = python-pyfiglet
+	depends = python-fuzzywuzzy
+	provides = newm
+	conflicts = newm
+	source = git://github.com/jbuchermn/pywm.git#branch=v0.1
+	source = git://github.com/jbuchermn/newm.git#branch=v0.1
+	md5sums = SKIP
+	md5sums = SKIP
+
+pkgname = newm
