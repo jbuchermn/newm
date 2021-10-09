@@ -35,9 +35,7 @@ The most relevant functional limitation at the moment is missing support for mul
 
 ### Arch Linux
 
-For Arch Linux users, a `PKGBUILD` is provided (will be on the AUR). Currently this installation requires the python package `imageio` to be installed via the AUR or vie `pip`.
-
-Alternatively, the installation procedure below is powered by pip.
+For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, the installation procedure below is powered by pip.
 
 ### Prerequisites and pywm
 
