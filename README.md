@@ -1,5 +1,5 @@
 # newm v0.1
-[![IMAGE](https://github.com/jbuchermn/newm/blob/v0.1/newm/resources/screenshot.png)](https://youtu.be/otMEC03ie0g)
+[![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/otMEC03ie0g)
 (Wayland compositor)
 
 ## Idea
@@ -42,7 +42,7 @@ For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, the 
 [pywm](https://github.com/jbuchermn/pywm) is the abstraction layer for and main dependency of newm. If all prerequisites are installed, the command:
 
 ``` sh
-pip3 install git+https://github.com/jbuchermn/pywm@v0.1
+pip3 install git+https://github.com/jbuchermn/pywm
 ```
 
 should suffice.
@@ -54,7 +54,7 @@ Additionally, unless configured otherwise, newm depends on alacritty for a defau
 To install newm:
 
 ``` sh
-pip3 install git+https://github.com/jbuchermn/newm@v0.1
+pip3 install git+https://github.com/jbuchermn/newm
 ```
 
 Start it using
@@ -108,8 +108,8 @@ newm-cmd lock-$1
 This setup depends on [greetd](https://git.sr.ht/~kennylevinsen/greetd). Make sure to install newm as well as pywm in a way in which the greeter-user has access, e.g.:
 
 ``` sh
-sudo pip3 install git+https://github.com/jbuchermn/pywm@v0.1
-sudo pip3 install git+https://github.com/jbuchermn/newm@v0.1
+sudo pip3 install git+https://github.com/jbuchermn/pywm
+sudo pip3 install git+https://github.com/jbuchermn/newm
 ```
 
 Place configuration in `/etc/newm/config.py` and check, after logging in as `greeter`, that `start-newm` works and shows the login panel (login itself should not work). If it works, set
