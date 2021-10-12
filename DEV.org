@@ -1,15 +1,11 @@
 #+TITLE: newm developer information
 
 * Current
-** STRT Install process
-*** STRT Setup standard procedure for VM-based install testing
-- [ ] Proper seatd setup in virtual machine
-- [X] Setup below has virtio not working
-*** STRT AUR package
-- [X] Include imageio
-- [ ] Fix commit
-- [ ] Test
-** DONE README Idea
+** Documentation
+*** STRT Wiki on installation and configuration
+**** TODO Check multi-user installation and AUR (possible to get rid of sudo pip?)
+**** TODO Documentation on all configured_values
+**** TODO Basic (default) config not relying on touchpad
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay

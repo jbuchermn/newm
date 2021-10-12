@@ -25,11 +25,6 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 - `Logo-f`: Toggle a fullscreen view of the focused window (possibly resizing it)
 - ...
 
-## Status and limitations
-
-This is the first release of newm. Therefore a lot of configurable behaviour, quality of documentation and the like is still missing. However the basic building blocks have been in use on my machine from the beginning (2018) continuously.
-
-The most relevant functional limitation at the moment is missing support for multi-monitor setups. Apart from that see [pywm](https://github.com/jbuchermn/pywm) for known issues concerning certain applications.
 
 ## Installing
 
@@ -57,13 +52,22 @@ To install newm:
 pip3 install git+https://github.com/jbuchermn/newm
 ```
 
-Start it using
+### Starting and tests
+
+Start newm using
 
 ``` sh
 start-newm
 ```
 
-See also [pywm](https://github.com/jbuchermn/pywm) for troubleshooting.
+Open a terminal window (default `alacritty`) using `Logo+Enter` (default config). Check if the touchpad works by pressing `Logo` and resizing the window using two-finger touch. If the touchpad does not work (and you intend to use it), check that your user has access by either command:
+
+```
+ls -al /dev/input/event*
+evtest
+```
+
+More details about this can be found on the troubleshooting page of [pywm](https://github.com/jbuchermn/pywm).
 
 ### Configuring
 
@@ -119,6 +123,14 @@ command = "start-newm"
 ```
 
 in `/etc/greetd/config.toml`.
+
+
+## Status and limitations
+
+This is the first release of newm. Therefore a lot of configurable behaviour, quality of documentation and the like is still missing. However the basic building blocks have been in use on my machine from the beginning (2018) continuously.
+
+The most relevant functional limitation at the moment is missing support for multi-monitor setups. Apart from that see [pywm](https://github.com/jbuchermn/pywm) for known issues concerning certain applications.
+
 
 ## Panel
 
