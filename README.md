@@ -1,4 +1,4 @@
-# newm v0.1
+# newm
 [![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/otMEC03ie0g)
 (Wayland compositor)
 
@@ -30,7 +30,7 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 
 ### Arch Linux
 
-For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, the installation procedure below is powered by pip.
+For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, see below for pip installation.
 
 ### Prerequisites and pywm
 
@@ -73,9 +73,9 @@ More details about this can be found on the troubleshooting page of [pywm](https
 
 #### Setting up the config file
 
-Configuring is handled via Python and read from either `$HOME/.config/newm/config.py` or (lower precedence) `/etc/config.py`. Take `default_config.py` as a basis and check the source code for usages of `configured_value` to get more details about the different keys.
+Configuring is handled via Python and read from either `$HOME/.config/newm/config.py` or (lower precedence) `/etc/newm/config.py`. Take `default_config.py` as a basis and check the source code for usages of `configured_value` to get more details about the different keys.
 
-For example, copy:
+For example, copy (path of `default_config.py` in the example assumes pip installation)
 
 ``` sh
 cd
