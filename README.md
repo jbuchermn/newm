@@ -69,7 +69,7 @@ evtest
 
 More details about this can be found on the troubleshooting page of [pywm](https://github.com/jbuchermn/pywm).
 
-### Configuring
+### Configuration
 
 #### Setting up the config file
 
@@ -84,7 +84,7 @@ cp .local/lib/pythonX.Y/site-packages/newm/default_config.py .config/newm/config
 vim .config/newm/config.py
 ```
 
-and adjust:
+and adjust, for example
 
 ``` py
 import os
@@ -95,7 +95,22 @@ from pywm import (
 
 mod = PYWM_MOD_ALT
 wallpaper = os.environ['HOME'] + '/wallpaper.jpg'
+
+output_scale = 2.0
+round_scale = 2.0
+
+pywm = {
+    'xkb_model': "macintosh",
+    'xkb_layout': "de,de",
+    'xkb_options': "caps:escape",
+}
 ```
+
+#### Configuration options
+
+Work in progress
+- Document all keys by searching for `configured_value`
+- [pywm](https://github.com/jbuchermn/pywm) for the keys in `pywm` (`output_scale` and `round_scale` are passed automatically)
 
 
 #### Lock on hibernate
