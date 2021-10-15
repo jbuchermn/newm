@@ -19,6 +19,7 @@ To be able to arange the windows in a useful manner, use
 - `Logo` (unless configured otherwise) plus two fingers on the touchpad to change the extent of a window
 
 To get a quick overview of all windows, just hit the Logo (unless configured otherwise) key.
+Additionally with a quick 5-finger swipe a launcher panel can be opened.
 
 These behaviours can (partly) be configured (see below for setup). By default (check [default_config.py](newm/default_config.py)), the following key bindings (among others) are in place
 - `Logo-hjkl`: Move around
@@ -219,18 +220,23 @@ By default *newm_panel_basic* is included, where the first two of these are impl
 See below for a different implementation using NW.js.
 
 
-| Configuration key                | Default value                              | Description |
-|----------------------------------|--------------------------------------------|-------------|
-| `panels.launcher.cmd`            | `"alacritty -e newm-panel-basic launcher"` |             |
-| `panels.launcher.corner_radius`  | `0`                                        |             |
-| `panels.launcher.h`              | `0.8`                                      |             |
-| `panels.launcher.w`              | `0.8`                                      |             |
-| `panels.launcher.gesture_factor` | `200`                                      |             |
-| `panels.lock.cmd`                | `"alacritty -e newm-panel-basic lock"`     |             |
-| `panels.lock.corner_radius`      | `50`                                       |             |
-| `panels.lock.h`                  | `0.6`                                      |             |
-| `panels.lock.w`                  | `0.7`                                      |             |
-| `panels.notifiers.cmd`           |                                            |             |
+| Configuration key                | Default value                              | Description                                                                          |
+|----------------------------------|--------------------------------------------|--------------------------------------------------------------------------------------|
+| `panels.launcher.cmd`            | `"alacritty -e newm-panel-basic launcher"` | Command to start launcher panel                                                      |
+| `panels.launcher.cwd`            |                                            | Directory to start launcher panel in                                                 |
+| `panels.launcher.corner_radius`  | `0`                                        | Launcher panel: corner radius (pixel)                                                |
+| `panels.launcher.h`              | `0.8`                                      | Launcher panel: height (`1.0` is full height)                                        |
+| `panels.launcher.w`              | `0.8`                                      | Launcher panel: width (`1.0` is full width)                                          |
+| `panels.launcher.gesture_factor` | `200`                                      | Higher number means less movement with 5 fingers is necessary to open laucnher panel |
+| `panels.lock.cmd`                | `"alacritty -e newm-panel-basic lock"`     | Command to start lock panel                                                          |
+| `panels.lock.cwd`                |                                            | Directory to start lock panel in                                                     |
+| `panels.lock.corner_radius`      | `50`                                       | Lock panel: corner radius (pixel)                                                    |
+| `panels.lock.h`                  | `0.6`                                      | Lock panel: height (`1.0` is full height)                                            |
+| `panels.lock.w`                  | `0.7`                                      | Lock panel: width (`1.0` is full width)                                              |
+| `panels.notifiers.cmd`           |                                            | Command to start notifiers panel                                                     |
+| `panels.notifiers.cwd`           |                                            | Directory to start notifiers panel in                                                |
+| `panels.notifiers.h`             | `0.3`                                      | Notifiers panel: height (`1.0` is full height)                                       |
+| `panels.notifiers.w`             | `0.2`                                      | Notifiers panel: width (`1.0` is full width)                                         |
 
 The basic launcher panel is configured using `~/.config/newm/launcher.py`, e.g.
 
@@ -240,13 +246,13 @@ entries = {
     "alacritty": "alacritty"
 }
 shortcuts = {
-    1: ("Chromium", "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland"),
-    2: ("Alacritty", "alacritty")
+    1: ("chromium", "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland"),
+    2: ("alacritty", "alacritty")
 }
 ```
 
 
-provides ways to start Chromium and alacritty either by typing their names, or by using the keys 1 and 2 when the launcher is open.
+provides ways to start chromium and alacritty either by typing their names, or by using the keys 1 and 2 when the launcher is open.
 
 #### Using newm-cmd, configuring lock on hibernate
 

@@ -33,6 +33,8 @@ conf_panel_lock_corner_radius = configured_value('panels.lock.corner_radius', 50
 conf_panel_launcher_h = configured_value('panels.launcher.h', 0.8)
 conf_panel_launcher_w = configured_value('panels.launcher.w', 0.8)
 conf_panel_launcher_corner_radius = configured_value('panels.launcher.corner_radius', 0)
+conf_panel_notifiers_h = configured_value('panels.notifiers.h', 0.3)
+conf_panel_notifiers_w = configured_value('panels.notifiers.w', 0.2)
 
 class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def __init__(self, wm: Layout, handle: int):
@@ -183,14 +185,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             result.lock_enabled = True
 
             result.size = (
-                int(self.wm.width * 0.2 * self.client_side_scale),
-                int(self.wm.height * 0.3 * self.client_side_scale))
+                int(self.wm.width * conf_panel_notifiers_w() * self.client_side_scale),
+                int(self.wm.height * conf_panel_notifiers_h() * self.client_side_scale))
 
             result.box = (
-                self.wm.width * 0.4,
-                self.wm.height * 0.7,
-                self.wm.width * 0.2,
-                self.wm.height * 0.3)
+                self.wm.width * (1. - conf_panel_notifiers_w())/2.,
+                self.wm.height * (1. - conf_panel_notifiers_h()),
+                self.wm.width * conf_panel_notifiers_w(),
+                self.wm.height * conf_panel_notfiers_h())
 
         elif self.panel == "launcher":
             result.z_index = 5
