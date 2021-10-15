@@ -26,10 +26,10 @@ for file in glob.iglob(os.path.join(os.path.dirname(os.path.realpath(__file__)),
 print("|%-40s|%-40s|%-20s|" % ("Configuration key", "Default value", "Description"))
 print("|%-40s|%-40s|%-20s|" % ("-"*40, "-"*40, "-"*20))
 for k, d in sorted(keys, key=lambda k: k[0]):
-    print("|%-40s|%-40s|                    |" % (k, "" if d is None or d.strip() == "None" else d))
+    print("|%-40s|%-40s|                    |" % ("`%s`" % k, "" if d is None or d.strip() == "None" else "`%s`" % d))
 
 for k, d in keys:
-    r_check = re.compile(r'\|\s*(%s)\s*\|\s*(%s).*' % (re.escape(k), re.escape("" if d is None or d.strip() == "None" else d)))
+    r_check = re.compile(r'\|\s*(%s)\s*\|\s*(%s).*' % (re.escape("`%s`" % k), re.escape("" if d is None or d.strip() == "None" else "`%s`" % d)))
     for l in open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "README.md"), 'r'):
         if r_check.match(l) is not None:
             break
