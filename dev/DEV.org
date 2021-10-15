@@ -3,15 +3,12 @@
 * Current
 ** Documentation
 *** STRT Wiki on installation and configuration
-**** TODO Check multi-user installation and AUR (possible to get rid of sudo pip?)
 **** STRT Documentation on all configured_values
-- [ ] Script to find and check
-- [ ] Details on reload (pywm values vs other configured values)
 **** TODO Basic (default) config not relying on touchpad
 ** Functionality
+*** STRT Configurable libinput devices pywm-side based on sway
 *** TODO Layout class functionality to zoom-out / -in
-*** TODO Configurable screen-sizes based on sway
-*** TODO Configurable touchpad pywm-side (libinput) based on sway
+*** DONE Configurable screen-sizes based on sway
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
