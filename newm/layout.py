@@ -55,7 +55,6 @@ from .overlay import (
 logger = logging.getLogger(__name__)
 
 conf_wallpaper = configured_value('wallpaper', cast(Optional[str], None))
-conf_panel_dir = configured_value('panel_dir', cast(Optional[str], None))
 conf_mod = configured_value('mod', PYWM_MOD_LOGO)
 conf_pywm = configured_value('pywm', cast(dict[str, Any], {}))
 conf_output_scale = configured_value('output_scale', 1.0)

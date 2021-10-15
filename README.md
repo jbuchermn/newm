@@ -108,87 +108,145 @@ pywm = {
 
 #### Configuring
 
-Work in progress
-- Config file format
-    - Dots are hierarchies (python dicts)
-- Reload
-- Fill out / Structure
+The configuration works by evaluating the python config file and extracting the variables which the file exports. So basically you can do whatever you please to provide the configuration values, this is why certain config elements are callbacks. Some elements are hierarchical, to set these use PYthon dicts - e.g. for `x.y`:
+
+```py
+x = {
+    'y': 2.0
+}
+```
 
 
+The configuration can be dynamically updated (apart from a couple of fixed keys) using `Layout.update_config` (by default bound to `Mod+C`).
 
-| Configuration key                       | Default value                          | Description                                                                                                                                                                                                                                      |
-|-----------------------------------------|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `output_scale`                          | `1.0`                                  | Number: HiDPI scale of output. Passed to pywm; therefore not subject to dynamic reloading.                                                                                                                                                       |
-| `round_scale`                           | `1.0`                                  | Number: Scale used for rounding positions and widths (i.e. if set equal to `output_scale`, windows will be positioned according to logical pixels, if set to 1 according to pixels). Passed to pywm; therefore not subject to dynamic reloading. |
-| `pywm`                                  |                                        | Dictionary: [pywm](https://github.com/jbuchermn/pywm) config, see possible keys below (is not updated on `Layout.update_config`)                                                                                                                 |
-| `pywm.xkb_model`                        |                                        | String: Keyboard model (`xkb`)                                                                                                                                                                                                                   |
-| `pywm.xkb_layout`                       | `us`                                   | String: Keyboard layout (`xkb`)                                                                                                                                                                                                                  |
-| `pywm.xkb_options`                      |                                        | String: Keyboard options (`xkb`)                                                                                                                                                                                                                 |
-| `pywm.output_name`                      | `""`                                   | String: If not "", pick the output (remember, only one supported at the moment) based on its name                                                                                                                                                |
-| `pywm.output_width`                     | `0`                                    | Integer: Output configuration, width (or zero to use preferred)                                                                                                                                                                                  |
-| `pywm.output_height`                    | `0`                                    | Integer: Output configuration, height (or zero to use preferred)                                                                                                                                                                                 |
-| `pywm.output_mHz`                       | `0`                                    | Integer: Output configuration, refresh rate in milli Hertz (or zero to use preferred)                                                                                                                                                            |
-| `pywm.enable_xwayland`                  | `False `                               | Boolean: Start `XWayland`                                                                                                                                                                                                                        |
-| `pywm.enable_output_manager`            | `True`                                 | Boolean: Enable the wayland protocol `xdg_output_manager_v1`                                                                                                                                                                                     |
-| `pywm.xcursor_theme`                    |                                        | String: `XCursor` theme                                                                                                                                                                                                                          |
-| `pywm.xcursor_size`                     | `24`                                   | Integer: `XCursor` size                                                                                                                                                                                                                          |
-| `pywm.focus_follows_mouse`              | `True`                                 | Boolean: `Focus` window upon mouse enter                                                                                                                                                                                                         |
-| `pywm.contstrain_popups_to_toplevel`    | `False`                                | Boolean: Try to keep popups contrained within their window                                                                                                                                                                                       |
-| `pywm.encourage_csd`                    | `True`                                 | Boolean: Encourage clients to show client-side-decorations (see `wlr_server_decoration_manager`)                                                                                                                                                 |
-|                                         |                                        |                                                                                                                                                                                                                                                  |
-| `anim_time`                             | `.3`                                   |                                                                                                                                                                                                                                                  |
-| `bar.bottom_texts`                      | `lambda: ["4", "5", "6"]`              |                                                                                                                                                                                                                                                  |
-| `bar.font`                              | `'Source Code Pro for Powerline'`      |                                                                                                                                                                                                                                                  |
-| `bar.font_size`                         | `12`                                   |                                                                                                                                                                                                                                                  |
-| `bar.height`                            | `20`                                   |                                                                                                                                                                                                                                                  |
-| `bar.top_texts`                         | `lambda: ["1", "2", "3"]`              |                                                                                                                                                                                                                                                  |
-| `blend_time`                            | `1.`                                   |                                                                                                                                                                                                                                                  |
-| `corner_radius`                         | `17.5`                                 |                                                                                                                                                                                                                                                  |
-| `gestures.lp_freq`                      | `60.`                                  |                                                                                                                                                                                                                                                  |
-| `gestures.lp_inertia`                   | `.8`                                   |                                                                                                                                                                                                                                                  |
-| `gestures.two_finger_min_dist`          | `.1`                                   |                                                                                                                                                                                                                                                  |
-| `gestures.validate_threshold`           | `.02`                                  |                                                                                                                                                                                                                                                  |
-| `greeter_user`                          | `'greeter'`                            |                                                                                                                                                                                                                                                  |
-| `grid.min_dist`                         | `.05`                                  |                                                                                                                                                                                                                                                  |
-| `grid.throw_ps`                         | `[1, 5, 15]`                           |                                                                                                                                                                                                                                                  |
-| `grid.time_scale`                       | `.3`                                   |                                                                                                                                                                                                                                                  |
-| `interpolation.size_adjustment`         | `.5`                                   |                                                                                                                                                                                                                                                  |
-| `key_bindings`                          | `lambda layout: []`                    |                                                                                                                                                                                                                                                  |
-| `launcher.gesture_factor`               | `200`                                  |                                                                                                                                                                                                                                                  |
-| `mod`                                   | `PYWM_MOD_LOGO`                        |                                                                                                                                                                                                                                                  |
-| `move.grid_m`                           | `2`                                    |                                                                                                                                                                                                                                                  |
-| `move.grid_ovr`                         | `0.2`                                  |                                                                                                                                                                                                                                                  |
-| `move_resize.gesture_factor`            | `4`                                    |                                                                                                                                                                                                                                                  |
-| `panel_dir`                             |                                        |                                                                                                                                                                                                                                                  |
-| `panels.launcher.cmd`                   |                                        |                                                                                                                                                                                                                                                  |
-| `panels.launcher.corner_radius`         | `0`                                    |                                                                                                                                                                                                                                                  |
-| `panels.launcher.h`                     | `0.8`                                  |                                                                                                                                                                                                                                                  |
-| `panels.launcher.w`                     | `0.8`                                  |                                                                                                                                                                                                                                                  |
-| `panels.lock.cmd`                       | `"alacritty -e newm-panel-basic lock"` |                                                                                                                                                                                                                                                  |
-| `panels.lock.corner_radius`             | `50`                                   |                                                                                                                                                                                                                                                  |
-| `panels.lock.h`                         | `0.5`                                  |                                                                                                                                                                                                                                                  |
-| `panels.lock.w`                         | `0.5`                                  |                                                                                                                                                                                                                                                  |
-| `panels.notifiers.cmd`                  |                                        |                                                                                                                                                                                                                                                  |
-| `power_times`                           | `[120, 300, 600]`                      |                                                                                                                                                                                                                                                  |
-| `resize.grid_m`                         | `3`                                    |                                                                                                                                                                                                                                                  |
-| `resize.grid_ovr`                       | `0.1`                                  |                                                                                                                                                                                                                                                  |
-| `resize.hyst`                           | `0.2`                                  |                                                                                                                                                                                                                                                  |
-| `swipe.gesture_factor`                  | `4`                                    |                                                                                                                                                                                                                                                  |
-| `swipe.grid_m`                          | `1`                                    |                                                                                                                                                                                                                                                  |
-| `swipe.grid_ovr`                        | `0.2`                                  |                                                                                                                                                                                                                                                  |
-| `swipe.lock_dist`                       | `0.01`                                 |                                                                                                                                                                                                                                                  |
-| `swipe_zoom.gesture_factor`             | `4`                                    |                                                                                                                                                                                                                                                  |
-| `swipe_zoom.grid_m`                     | `1`                                    |                                                                                                                                                                                                                                                  |
-| `swipe_zoom.grid_ovr`                   | `0.2`                                  |                                                                                                                                                                                                                                                  |
-| `swipe_zoom.hyst`                       | `0.2`                                  |                                                                                                                                                                                                                                                  |
-| `sys_backend_endpoints`                 | `[]`                                   |                                                                                                                                                                                                                                                  |
-| `view.corner_radius`                    | `12.5`                                 |                                                                                                                                                                                                                                                  |
-| `view.fullscreen_padding`               | `0`                                    |                                                                                                                                                                                                                                                  |
-| `view.padding`                          | `8`                                    |                                                                                                                                                                                                                                                  |
-| `view.send_fullscreen`                  | `True`                                 |                                                                                                                                                                                                                                                  |
-| `view.xwayland_handle_scale_clientside` | `False`                                |                                                                                                                                                                                                                                                  |
-| `wallpaper`                             |                                        |                                                                                                                                                                                                                                                  |
+#### Config: Basic
 
+These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and configure basic behaviour needed c-side.
+
+| Configuration key                    | Default value | Description                                                                                                                                                                                                                                      |
+|--------------------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `output_scale`                       | `1.0`         | Number: HiDPI scale of output. Passed to pywm; therefore not subject to dynamic reloading.                                                                                                                                                       |
+| `round_scale`                        | `1.0`         | Number: Scale used for rounding positions and widths (i.e. if set equal to `output_scale`, windows will be positioned according to logical pixels, if set to 1 according to pixels). Passed to pywm; therefore not subject to dynamic reloading. |
+| `pywm`                               |               | Dictionary: [pywm](https://github.com/jbuchermn/pywm) config, see possible keys below (is not updated on `Layout.update_config`)                                                                                                                 |
+| `pywm.xkb_model`                     |               | String: Keyboard model (`xkb`)                                                                                                                                                                                                                   |
+| `pywm.xkb_layout`                    | `us`          | String: Keyboard layout (`xkb`)                                                                                                                                                                                                                  |
+| `pywm.xkb_options`                   |               | String: Keyboard options (`xkb`)                                                                                                                                                                                                                 |
+| `pywm.output_name`                   | `""`          | String: If not "", pick the output (remember, only one supported at the moment) based on its name                                                                                                                                                |
+| `pywm.output_width`                  | `0`           | Integer: Output configuration, width (or zero to use preferred)                                                                                                                                                                                  |
+| `pywm.output_height`                 | `0`           | Integer: Output configuration, height (or zero to use preferred)                                                                                                                                                                                 |
+| `pywm.output_mHz`                    | `0`           | Integer: Output configuration, refresh rate in milli Hertz (or zero to use preferred)                                                                                                                                                            |
+| `pywm.enable_xwayland`               | `False `      | Boolean: Start `XWayland`                                                                                                                                                                                                                        |
+| `pywm.enable_output_manager`         | `True`        | Boolean: Enable the wayland protocol `xdg_output_manager_v1`                                                                                                                                                                                     |
+| `pywm.xcursor_theme`                 |               | String: `XCursor` theme                                                                                                                                                                                                                          |
+| `pywm.xcursor_size`                  | `24`          | Integer: `XCursor` size                                                                                                                                                                                                                          |
+| `pywm.focus_follows_mouse`           | `True`        | Boolean: `Focus` window upon mouse enter                                                                                                                                                                                                         |
+| `pywm.contstrain_popups_to_toplevel` | `False`       | Boolean: Try to keep popups contrained within their window                                                                                                                                                                                       |
+| `pywm.encourage_csd`                 | `True`        | Boolean: Encourage clients to show client-side-decorations (see `wlr_server_decoration_manager`)                                                                                                                                                 |
+
+#### Config: General appearance
+
+Some basic appearence and animation related configuration:
+
+| Configuration key               | Default value | Description                                                                                                                                                                |
+|---------------------------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `wallpaper`                     |               | Path to wallpaper image                                                                                                                                                    |
+| `blend_time`                    | `1.`          | Time in seconds to blend in and out (at startup and shutdown)                                                                                                              |
+| `anim_time`                     | `.3`          | Timescale of all animations in seconds                                                                                                                                     |
+| `corner_radius`                 | `17.5`        | Radius of blacked out corners of display (0 to disable)                                                                                                                    |
+| `view.corner_radius`            | `12.5`        | Corner radius of views (0 to disable)                                                                                                                                      |
+| `view.padding`                  | `8`           | Padding around windows in normal mode (pixels)                                                                                                                             |
+| `view.fullscreen_padding`       | `0`           | Padding around windows when they are in fullscreen (pixels)                                                                                                                         |
+| `interpolation.size_adjustment` | `.5`          | When window size adjustments of windows (slow) happen during gestures and animations, let them take place at the middle (`.5`) or closer to start / end (`.1` / `.9` e.g.) |
+
+#### Config: Behaviour, keys and gestures
+
+| Configuration key                       | Default value       | Description |
+|-----------------------------------------|---------------------|-------------|
+| `mod`                                   | `PYWM_MOD_LOGO`     |             |
+| `key_bindings`                          | `lambda layout: []` |             |
+| `view.send_fullscreen`                  | `True`              |             |
+| `view.xwayland_handle_scale_clientside` | `False`             |             |
+| `power_times`                           | `[120, 300, 600]`   |             |
+| `sys_backend_endpoints`                 | `[]`                |             |
+| `greeter_user`                          | `'greeter'`         |             |
+
+| Configuration key              | Default value | Description |
+|--------------------------------|---------------|-------------|
+| `gestures.lp_freq`             | `60.`         |             |
+| `gestures.lp_inertia`          | `.8`          |             |
+| `gestures.two_finger_min_dist` | `.1`          |             |
+| `gestures.validate_threshold`  | `.02`         |             |
+| `grid.min_dist`                | `.05`         |             |
+| `grid.throw_ps`                | `[1, 5, 15]`  |             |
+| `grid.time_scale`              | `.3`          |             |
+| `resize.grid_m`                | `3`           |             |
+| `resize.grid_ovr`              | `0.1`         |             |
+| `resize.hyst`                  | `0.2`         |             |
+| `swipe.gesture_factor`         | `4`           |             |
+| `swipe.grid_m`                 | `1`           |             |
+| `swipe.grid_ovr`               | `0.2`         |             |
+| `swipe.lock_dist`              | `0.01`        |             |
+| `swipe_zoom.gesture_factor`    | `4`           |             |
+| `swipe_zoom.grid_m`            | `1`           |             |
+| `swipe_zoom.grid_ovr`          | `0.2`         |             |
+| `swipe_zoom.hyst`              | `0.2`         |             |
+| `move.grid_m`                  | `2`           |             |
+| `move.grid_ovr`                | `0.2`         |             |
+| `move_resize.gesture_factor`   | `4`           |             |
+
+#### Config: Top and bottom bars
+
+The top and bottom bars are visible during the zoom-out ("Overview") mode. Configure font and texts (for an example see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py))
+
+| Configuration key  | Default value                     | Description                                       |
+|--------------------|-----------------------------------|---------------------------------------------------|
+| `bar.font`         | `'Source Code Pro for Powerline'` | Font name used in both bars                       |
+| `bar.font_size`    | `12`                              | Font size used in both bars                       |
+| `bar.height`       | `20`                              | Pixel height of both bars                         |
+| `bar.top_texts`    | `lambda: ["1", "2", "3"]`         | Function called each time top bar is rendered     |
+| `bar.bottom_texts` | `lambda: ["4", "5", "6"]`         | Function called each time bottom bar is rendererd |
+
+#### Config: Panels
+
+Panels in this context means the UI elements you interact with to
+- Launch an application from a menu (launcher)
+- Unlock the screen (locker)
+- Get information on changed volume etc (notifiers)
+
+These are in general separate apps and can be developed independently of newm; connection to the compositor is established via websockets.
+
+By default *newm_panel_basic* is included, where the first two of these are implemented as terminal applications in a very basic manner.
+See below for a different implementation using NW.js.
+
+
+| Configuration key                | Default value                              | Description |
+|----------------------------------|--------------------------------------------|-------------|
+| `panels.launcher.cmd`            | `"alacritty -e newm-panel-basic launcher"` |             |
+| `panels.launcher.corner_radius`  | `0`                                        |             |
+| `panels.launcher.h`              | `0.8`                                      |             |
+| `panels.launcher.w`              | `0.8`                                      |             |
+| `panels.launcher.gesture_factor` | `200`                                      |             |
+| `panels.lock.cmd`                | `"alacritty -e newm-panel-basic lock"`     |             |
+| `panels.lock.corner_radius`      | `50`                                       |             |
+| `panels.lock.h`                  | `0.6`                                      |             |
+| `panels.lock.w`                  | `0.7`                                      |             |
+| `panels.notifiers.cmd`           |                                            |             |
+
+The basic launcher panel is configured using `~/.config/newm/launcher.py`, e.g.
+
+```py
+entries = {
+    "chromium": "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland",
+    "alacritty": "alacritty"
+}
+shortcuts = {
+    1: ("Chromium", "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland"),
+    2: ("Alacritty", "alacritty")
+}
+```
+
+
+provides ways to start Chromium and alacritty either by typing their names, or by using the keys 1 and 2 when the launcher is open.
 
 #### Using newm-cmd, configuring lock on hibernate
 
@@ -207,7 +265,7 @@ newm-cmd lock-$1
 
 ### Using newm for login
 
-This setup depends on [greetd](https://git.sr.ht/~kennylevinsen/greetd). Make sure to install newm as well as pywm in a way in which the greeter-user has access, i.e. either form the AUR, or e.g.:
+This setup depends on [greetd](https://git.sr.ht/~kennylevinsen/greetd). Make sure to install newm as well as pywm and a newm panel in a way in which the greeter-user has access, i.e. either form the AUR, or e.g.:
 
 ``` sh
 sudo pip3 install git+https://github.com/jbuchermn/pywm
@@ -230,6 +288,6 @@ This is the first release of newm. Therefore a lot of configurable behaviour, qu
 The most relevant functional limitation at the moment is missing support for multi-monitor setups. Apart from that see [pywm](https://github.com/jbuchermn/pywm) for known issues concerning certain applications.
 
 
-## Panel
+## Other panel implementations
 
 See [newm-panel-nwjs](https://github.com/jbuchermn/newm-panel-nwjs) for a different panel implementation (launcher, locker, notifiers) based on NW.js.

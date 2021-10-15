@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 conf_cmds = {
     'lock': configured_value("panels.lock.cmd", "alacritty -e newm-panel-basic lock"),
-    'launcher': configured_value("panels.launcher.cmd", None),
+    'launcher': configured_value("panels.launcher.cmd", "alacritty -e newm-panel-basic launcher"),
     'notifiers': configured_value("panels.notifiers.cmd", None)
 }
 

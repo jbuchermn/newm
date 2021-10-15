@@ -25,7 +25,7 @@ def _launcher() -> None:
     path = pathlib.Path(home) / '.config' / 'newm' / 'launcher.py'
 
     if not path.is_file():
-        path = pathlib.Path('/etc') / 'newm' / 'config.py'
+        path = pathlib.Path('/etc') / 'newm' / 'launcher.py'
 
     if path.is_file():
         logger.info("Loading config at %s", path)

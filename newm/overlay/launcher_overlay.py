@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-conf_gesture_factor = configured_value("launcher.gesture_factor", 200)
+conf_gesture_factor = configured_value("panels.launcher.gesture_factor", 200)
 conf_anim_t = configured_value("anim_time", .3)
 
 class LauncherOverlay(Overlay):

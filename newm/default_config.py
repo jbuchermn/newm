@@ -67,8 +67,6 @@ sys_backend_endpoints = [
 panels = {
     'lock': {
         'cmd': 'alacritty -e newm-panel-basic lock',
-        'w': 0.7,
-        'h': 0.6
     },
     'launcher': {
         'cmd': 'alacritty -e newm-panel-basic launcher'
