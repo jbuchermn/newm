@@ -1,6 +1,8 @@
 # newm
+[![License](https://img.shields.io/github/license/jbuchermn/newm)](LICENSE)
+[![AUR](https://img.shields.io/aur/version/newm-git)](LICENSE)
+
 [![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/otMEC03ie0g)
-(Wayland compositor)
 
 ## Idea
 

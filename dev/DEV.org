@@ -2,13 +2,10 @@
 
 * Current
 ** Documentation
+*** TODO Basic (default) config not relying on touchpad
 *** STRT Wiki on installation and configuration
-**** STRT Documentation on all configured_values
-**** TODO Basic (default) config not relying on touchpad
 ** Functionality
-*** STRT Configurable libinput devices pywm-side based on sway
 *** TODO Layout class functionality to zoom-out / -in
-*** DONE Configurable screen-sizes based on sway
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
