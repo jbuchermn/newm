@@ -400,11 +400,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         if self.thread is not None:
             self.thread.stop()
 
-    def terminate(self) -> None:
-        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-            return state.copy(final=True), state.copy(final=True, background_opacity=0.)
-        self.animate_to(reducer, conf_blend_t(), self._terminate)
-
 
     def _execute_view_main(self, view: View) -> None:
         self.animate_to(view.main, conf_anim_t(), None)
@@ -453,6 +448,15 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         if self.bottom_bar is not None:
             self.bottom_bar.animate(self.state, new_state, duration)
 
+
+    def _trusted_unlock(self) -> None:
+        if self.is_locked():
+            def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+                return None, state.copy(lock_perc=0., background_opacity=1.)
+            self.animate_to(
+                reducer,
+                conf_anim_t(),
+                lambda: self.update_cursor())
 
 
     """
@@ -654,9 +658,32 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         return False
 
 
+    def on_idle(self, elapsed: float, idle_inhibited: bool) -> None:
+        idle_inhibited = idle_inhibited or self._idle_inhibit_user
+
+        if idle_inhibited and elapsed > 0:
+            return
+
+        if elapsed == 0:
+            self.sys_backend.idle_state(0)
+        elif len(conf_power_times()) > 2 and elapsed > conf_power_times()[2]:
+            # TODO - this command (no matter from where it's executed does not work at the moment)
+            os.system("systemctl suspend")
+        elif len(conf_power_times()) > 1 and elapsed > conf_power_times()[1]:
+            self.sys_backend.idle_state(2)
+            self.ensure_locked()
+        elif len(conf_power_times()) > 0 and elapsed > conf_power_times()[0]:
+            self.sys_backend.idle_state(1)
+
+
     """
     Actions
     """
+
+    def terminate(self) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            return state.copy(final=True), state.copy(final=True, background_opacity=0.)
+        self.animate_to(reducer, conf_blend_t(), self._terminate)
 
     def enter_overlay(self, overlay: Overlay) -> None:
         self.thread.push(overlay)
@@ -698,15 +725,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         if dim:
             self.sys_backend.idle_state(1)
 
-    def _trusted_unlock(self) -> None:
-        if self.is_locked():
-            def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
-                return None, state.copy(lock_perc=0., background_opacity=1.)
-            self.animate_to(
-                reducer,
-                conf_anim_t(),
-                lambda: self.update_cursor())
-
     def exit_overlay(self) -> None:
         logger.debug("Going to exit overlay...")
         if self.overlay is None:
@@ -738,6 +756,18 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 self._views[next_view[0]].focus()
         except:
             logger.exception("Unexpected")
+
+    def basic_move(self, delta_i: int, delta_j: int) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+            state = state.copy(i=state.i+delta_i, j=state.j+delta_j)
+            return None, state
+        self.animate_to(reducer, conf_anim_t())
+
+    def basic_scale(self, delta_s: int) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+            state = state.copy(size=max(1, state.size+delta_s))
+            return None, state
+        self.animate_to(reducer, conf_anim_t())
 
     def move(self, delta_i: int, delta_j: int) -> None:
         i, j, w, h = self.find_focused_box()
@@ -935,20 +965,3 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         """
         self.exit_overlay()
         os.system("%s &" % cmd)
-
-    def on_idle(self, elapsed: float, idle_inhibited: bool) -> None:
-        idle_inhibited = idle_inhibited or self._idle_inhibit_user
-
-        if idle_inhibited and elapsed > 0:
-            return
-
-        if elapsed == 0:
-            self.sys_backend.idle_state(0)
-        elif len(conf_power_times()) > 2 and elapsed > conf_power_times()[2]:
-            # TODO - this command (no matter from where it's executed does not work at the moment)
-            os.system("systemctl suspend")
-        elif len(conf_power_times()) > 1 and elapsed > conf_power_times()[1]:
-            self.sys_backend.idle_state(2)
-            self.ensure_locked()
-        elif len(conf_power_times()) > 0 and elapsed > conf_power_times()[0]:
-            self.sys_backend.idle_state(1)

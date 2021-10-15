@@ -23,6 +23,7 @@ Additionally with a quick 5-finger swipe a launcher panel can be opened.
 
 These behaviours can (partly) be configured (see below for setup). By default (check [default_config.py](newm/default_config.py)), the following key bindings (among others) are in place
 - `Logo-hjkl`: Move around
+- `Logo-un`: Scale
 - `Logo-HJKL`: Move windows around
 - `Logo-Ctrl-hjkl`: Resize windows
 - `Logo-f`: Toggle a fullscreen view of the focused window (possibly resizing it)
@@ -214,9 +215,9 @@ Panels in this context means the UI elements you interact with to
 - Unlock the screen (locker)
 - Get information on changed volume etc (notifiers)
 
-These are in general separate apps and can be developed independently of newm; connection to the compositor is established via websockets.
+These are in general separate apps and can be developed independently of newm; they are started by newm and establish a connection to the compositor via websockets.
 
-By default *newm_panel_basic* is included, where the first two of these are implemented as terminal applications in a very basic manner.
+By default **newm_panel_basic** is included, where the first two of these are implemented as terminal applications in a very basic manner.
 See below for a different implementation using NW.js.
 
 

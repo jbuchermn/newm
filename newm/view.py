@@ -192,7 +192,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 self.wm.width * (1. - conf_panel_notifiers_w())/2.,
                 self.wm.height * (1. - conf_panel_notifiers_h()),
                 self.wm.width * conf_panel_notifiers_w(),
-                self.wm.height * conf_panel_notfiers_h())
+                self.wm.height * conf_panel_notifiers_h())
 
         elif self.panel == "launcher":
             result.z_index = 5

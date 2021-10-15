@@ -2,10 +2,8 @@
 
 * Current
 ** Documentation
-*** TODO Basic (default) config not relying on touchpad
 *** STRT Wiki on installation and configuration
 ** Functionality
-*** TODO Layout class functionality to zoom-out / -in
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
