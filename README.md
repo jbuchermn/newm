@@ -162,39 +162,44 @@ Some basic appearence and animation related configuration:
 
 #### Config: Behaviour, keys and gestures
 
-| Configuration key                       | Default value       | Description |
-|-----------------------------------------|---------------------|-------------|
-| `mod`                                   | `PYWM_MOD_LOGO`     |             |
-| `key_bindings`                          | `lambda layout: []` |             |
-| `view.send_fullscreen`                  | `True`              |             |
-| `view.xwayland_handle_scale_clientside` | `False`             |             |
-| `power_times`                           | `[120, 300, 600]`   |             |
-| `sys_backend_endpoints`                 | `[]`                |             |
-| `greeter_user`                          | `'greeter'`         |             |
+The most important configuration options with regard to behaviour are `mod` and `key_bindings`; see below for them and some more detailed ones.
 
-| Configuration key              | Default value | Description |
-|--------------------------------|---------------|-------------|
-| `gestures.lp_freq`             | `60.`         |             |
-| `gestures.lp_inertia`          | `.8`          |             |
-| `gestures.two_finger_min_dist` | `.1`          |             |
-| `gestures.validate_threshold`  | `.02`         |             |
-| `grid.min_dist`                | `.05`         |             |
-| `grid.throw_ps`                | `[1, 5, 15]`  |             |
-| `grid.time_scale`              | `.3`          |             |
-| `resize.grid_m`                | `3`           |             |
-| `resize.grid_ovr`              | `0.1`         |             |
-| `resize.hyst`                  | `0.2`         |             |
-| `swipe.gesture_factor`         | `4`           |             |
-| `swipe.grid_m`                 | `1`           |             |
-| `swipe.grid_ovr`               | `0.2`         |             |
-| `swipe.lock_dist`              | `0.01`        |             |
-| `swipe_zoom.gesture_factor`    | `4`           |             |
-| `swipe_zoom.grid_m`            | `1`           |             |
-| `swipe_zoom.grid_ovr`          | `0.2`         |             |
-| `swipe_zoom.hyst`              | `0.2`         |             |
-| `move.grid_m`                  | `2`           |             |
-| `move.grid_ovr`                | `0.2`         |             |
-| `move_resize.gesture_factor`   | `4`           |             |
+| Configuration key                       | Default value       | Description                                                                                                                                                     |
+|-----------------------------------------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `mod`                                   | `PYWM_MOD_LOGO`     | Modifier key, either `PYWM_MOD_ALT` or `PYWM_MOD_LOGO`                                                                                                          |
+| `key_bindings`                          | `lambda layout: []` | Key bindings as array, see `default_config.py`, `layout.py` and [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py)) |
+| `view.send_fullscreen`                  | `True`              | Let clients know when they are set to fullscreen (which leads to them adjusting, e.g. YouTube fullscreen)                                                       |
+| `view.xwayland_handle_scale_clientside` | `False`             | Assume `XWayland` clients handle HiDPI scale (this does not work if `xdg_output_manager_v1` is running)                                                         |
+| `power_times`                           | `[120, 300, 600]`   | Times in seconds after which to dim the screen, turn it off and hibernate (in seconds)                                                                          |
+| `sys_backend_endpoints`                 | `[]`                | Endpoint functions for things like audio, backlight, ... (see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py)))  |
+| `greeter_user`                          | `'greeter'`         | Relevant if newm is run as login display manager, username used for `greetd`                                                                                    |
+
+Gestures are configured by a lot of numeric parameters; these are structured by the different gesture kinds (swipe to move, swipe to zoom, move, resize)
+as well as some general ones (`gestures` and `grid`). The best way is to experiment with these and hot-reload the configuration (by default `M-C`).
+
+| Configuration key              | Default value |
+|--------------------------------|---------------|
+| `gestures.lp_freq`             | `60.`         |
+| `gestures.lp_inertia`          | `.8`          |
+| `gestures.two_finger_min_dist` | `.1`          |
+| `gestures.validate_threshold`  | `.02`         |
+| `grid.min_dist`                | `.05`         |
+| `grid.throw_ps`                | `[1, 5, 15]`  |
+| `grid.time_scale`              | `.3`          |
+| `resize.grid_m`                | `3`           |
+| `resize.grid_ovr`              | `0.1`         |
+| `resize.hyst`                  | `0.2`         |
+| `swipe.gesture_factor`         | `4`           |
+| `swipe.grid_m`                 | `1`           |
+| `swipe.grid_ovr`               | `0.2`         |
+| `swipe.lock_dist`              | `0.01`        |
+| `swipe_zoom.gesture_factor`    | `4`           |
+| `swipe_zoom.grid_m`            | `1`           |
+| `swipe_zoom.grid_ovr`          | `0.2`         |
+| `swipe_zoom.hyst`              | `0.2`         |
+| `move.grid_m`                  | `2`           |
+| `move.grid_ovr`                | `0.2`         |
+| `move_resize.gesture_factor`   | `4`           |
 
 #### Config: Top and bottom bars
 

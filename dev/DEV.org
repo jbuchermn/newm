@@ -1,9 +1,6 @@
 #+TITLE: newm developer information
 
 * Current
-** Documentation
-*** STRT Wiki on installation and configuration
-** Functionality
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
