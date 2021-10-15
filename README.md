@@ -8,19 +8,19 @@
 
 **newm** is a Wayland compositor written with laptops and touchpads in mind. The idea is, instead of placing windows inside the small viewport (that is, the monitor) to arrange them along an arbitrarily large two-dimensional wall (generally without windows overlapping) and focus the compositors job on moving around along this wall efficiently and providing ways to the user to rearrange the wall such that he finds the overall layout intuitive.
 
-So, windows are placed on a two-dimensional grid of tiles taking either one by one, one by two, two by one, ... tiles of that grid. The compositor shows a one by one, two by two, ... view of that grid but scales the windows so they are usable on any zoom level (that is, zooming out the compositor actually changes the windows sizes). This makes switching between a couple of fullscreen applications very easy - place them in adjacent one by one tiles and have the compositor show a one by one view. And so on...
+So, windows are placed on a two-dimensional grid of tiles taking either one by one, one by two, two by one, ... tiles of that grid. The compositor shows a one by one, two by two, ... view of that grid but scales the windows so they are usable on any zoom level (that is, zooming out the compositor actually changes the windows sizes). This makes for example switching between a couple of fullscreen applications very easy - place them in adjacent one by one tiles and have the compositor show a one by one view. And if you need to see them in parallel, zoom out. Then back in, and so on...
 
 The basic commands therefore are navigation (left, right, top, bottom) and zoom-in and -out. These commands can be handled very intuitively on the touchpad (one- and two-finger gestures are reserved for interacting with the apps):
 - Use three fingers to move around the wall
 - Use four fingers to zoom out (move them upward) or in (downward)
 
 To be able to arange the windows in a useful manner, use
-- Logo (unless configured otherwise) plus one finger on the touchpad to move windows
-- Logo (unless configured otherwise) plus two fingers on the touchpad to change the extent of a window
+- `Logo` (unless configured otherwise) plus one finger on the touchpad to move windows
+- `Logo` (unless configured otherwise) plus two fingers on the touchpad to change the extent of a window
 
-To get a quick overview of all windows, just hit the Mod (that is, unless configured otherwise, the Logo) key.
+To get a quick overview of all windows, just hit the Logo (unless configured otherwise) key.
 
-These behaviours can (partly) be configured (see below for setup). By default (check [default_config.py](newm/default_config.py)), for example the following key bindings are in place
+These behaviours can (partly) be configured (see below for setup). By default (check [default_config.py](newm/default_config.py)), the following key bindings (among others) are in place
 - `Logo-hjkl`: Move around
 - `Logo-HJKL`: Move windows around
 - `Logo-Ctrl-hjkl`: Resize windows
