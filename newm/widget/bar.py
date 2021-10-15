@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from ..layout import Layout
 
 conf_bar_height = configured_value('bar.height', 20)
-conf_font_size = configured_value('bar.font-size', 12)
+conf_font_size = configured_value('bar.font_size', 12)
 
 conf_top_bar_text = configured_value('bar.top_texts', lambda: ["1", "2", "3"])
 conf_bottom_bar_text = configured_value('bar.bottom_texts', lambda: ["4", "5", "6"])

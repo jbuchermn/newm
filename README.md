@@ -112,6 +112,64 @@ Work in progress
 - Document all keys by searching for `configured_value`
 - [pywm](https://github.com/jbuchermn/pywm) for the keys in `pywm` (`output_scale` and `round_scale` are passed automatically)
 
+|Configuration key                       |Default value                           |Description         |
+|----------------------------------------|----------------------------------------|--------------------|
+|anim_time                               |.3                                      |                    |
+|bar.bottom_texts                        |lambda: ["4", "5", "6"]                 |                    |
+|bar.font                                |'Source Code Pro for Powerline'         |                    |
+|bar.font_size                           |12                                      |                    |
+|bar.height                              |20                                      |                    |
+|bar.top_texts                           |lambda: ["1", "2", "3"]                 |                    |
+|blend_time                              |1.                                      |                    |
+|corner_radius                           |17.5                                    |                    |
+|gestures.lp_freq                        |60.                                     |                    |
+|gestures.lp_inertia                     |.8                                      |                    |
+|gestures.two_finger_min_dist            |.1                                      |                    |
+|gestures.validate_threshold             |.02                                     |                    |
+|greeter_user                            |'greeter'                               |                    |
+|grid.min_dist                           |.05                                     |                    |
+|grid.throw_ps                           |[1, 5, 15]                              |                    |
+|grid.time_scale                         |.3                                      |                    |
+|interpolation.size_adjustment           |.5                                      |                    |
+|key_bindings                            |cast(TKeyBindings, lambda layout: [])   |                    |
+|launcher.gesture_factor                 |200                                     |                    |
+|mod                                     |PYWM_MOD_LOGO                           |                    |
+|move.grid_m                             |2                                       |                    |
+|move.grid_ovr                           |0.2                                     |                    |
+|move_resize.gesture_factor              |4                                       |                    |
+|output_scale                            |1.0                                     |                    |
+|panel_dir                               |cast(Optional[str], None)               |                    |
+|panels.launcher.cmd                     |                                        |                    |
+|panels.launcher.corner_radius           |0                                       |                    |
+|panels.launcher.h                       |0.8                                     |                    |
+|panels.launcher.w                       |0.8                                     |                    |
+|panels.lock.cmd                         |"alacritty -e newm-panel-basic lock"    |                    |
+|panels.lock.corner_radius               |50                                      |                    |
+|panels.lock.h                           |0.5                                     |                    |
+|panels.lock.w                           |0.5                                     |                    |
+|panels.notifiers.cmd                    |                                        |                    |
+|power_times                             |[120, 300, 600]                         |                    |
+|pywm                                    |cast(dict[str, Any], {})                |                    |
+|resize.grid_m                           |3                                       |                    |
+|resize.grid_ovr                         |0.1                                     |                    |
+|resize.hyst                             |0.2                                     |                    |
+|round_scale                             |1.0                                     |                    |
+|swipe.gesture_factor                    |4                                       |                    |
+|swipe.grid_m                            |1                                       |                    |
+|swipe.grid_ovr                          |0.2                                     |                    |
+|swipe.lock_dist                         |0.01                                    |                    |
+|swipe_zoom.gesture_factor               |4                                       |                    |
+|swipe_zoom.grid_m                       |1                                       |                    |
+|swipe_zoom.grid_ovr                     |0.2                                     |                    |
+|swipe_zoom.hyst                         |0.2                                     |                    |
+|sys_backend_endpoints                   |cast(list[SysBackendEndpoint], [])      |                    |
+|view.corner_radius                      |12.5                                    |                    |
+|view.fullscreen_padding                 |0                                       |                    |
+|view.padding                            |8                                       |                    |
+|view.send_fullscreen                    |True                                    |                    |
+|view.xwayland_handle_scale_clientside   |False                                   |                    |
+|wallpaper                               |cast(Optional[str], None)               |                    |
+
 
 #### Lock on hibernate
 
