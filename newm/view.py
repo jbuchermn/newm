@@ -389,12 +389,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 self.wm.enter_overlay(
                     MoveResizeFloatingOverlay(self.wm, self))
         elif event == "request_fullscreen":
-            if self.is_focused() and not self.wm.state.is_fullscreen():
-                self.wm.toggle_fullscreen()
+            logger.debug("Client requested fullscreen - following")
+            if self.is_focused():
+                self.wm.toggle_fullscreen(True)
             self.set_fullscreen(True)
         elif event == "request_nofullscreen":
-            if self.is_focused() and self.wm.state.is_fullscreen():
-                self.wm.toggle_fullscreen()
+            logger.debug("Client requests to leave fullscreen - following")
+            if self.is_focused():
+                self.wm.toggle_fullscreen(False)
             self.set_fullscreen(False)
 
     def find_min_w_h(self) -> tuple[float, float]:

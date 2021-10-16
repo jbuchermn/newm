@@ -1,7 +1,6 @@
 #+TITLE: newm developer information
 
 * Current
-** Bug: Firefox dance on setting fullscreen
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay

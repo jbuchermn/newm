@@ -43,15 +43,17 @@ class LauncherOverlay(Overlay):
                 return True
 
         else:
-            """
-            Initial gesture
-            """
-            LowpassGesture(gesture).listener(GestureListener(
-                self._on_update,
-                lambda: self._on_update(None)
-            ))
-            self._has_gesture = True
-            return True
+            if isinstance(gesture, HigherSwipeGesture) \
+                    and gesture.n_touches == 5:
+                """
+                Initial gesture
+                """
+                LowpassGesture(gesture).listener(GestureListener(
+                    self._on_update,
+                    lambda: self._on_update(None)
+                ))
+                self._has_gesture = True
+                return True
 
         return False
 
