@@ -99,7 +99,6 @@ mod = PYWM_MOD_ALT
 wallpaper = os.environ['HOME'] + '/wallpaper.jpg'
 
 output_scale = 2.0
-round_scale = 2.0
 
 pywm = {
     'xkb_model': "macintosh",
@@ -128,8 +127,8 @@ These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and 
 | Configuration key                    | Default value | Description                                                                                                                                                                                                                                      |
 |--------------------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `output_scale`                       | `1.0`         | Number: HiDPI scale of output. Passed to pywm; therefore not subject to dynamic reloading.                                                                                                                                                       |
-| `round_scale`                        | `1.0`         | Number: Scale used for rounding positions and widths (i.e. if set equal to `output_scale`, windows will be positioned according to logical pixels, if set to 1 according to pixels). Passed to pywm; therefore not subject to dynamic reloading. |
 | `pywm`                               |               | Dictionary: [pywm](https://github.com/jbuchermn/pywm) config, see possible keys below (is not updated on `Layout.update_config`)                                                                                                                 |
+| `pywm.round_scale`                   | `1.0`         | Number: Scale used for rounding positions and widths (i.e. if set equal to `output_scale`, windows will be positioned according to logical pixels, if set to 1 according to pixels). Passed to pywm; therefore not subject to dynamic reloading. |
 | `pywm.xkb_model`                     |               | String: Keyboard model (`xkb`)                                                                                                                                                                                                                   |
 | `pywm.xkb_layout`                    | `us`          | String: Keyboard layout (`xkb`)                                                                                                                                                                                                                  |
 | `pywm.xkb_options`                   |               | String: Keyboard options (`xkb`)                                                                                                                                                                                                                 |
@@ -272,7 +271,14 @@ The last command can be used to achieve locking on hibernate in order to have th
 
 ``` sh
 #!/bin/sh
-newm-cmd lock-$1 
+/usr/[local/]/bin/newm-cmd lock-$1 
+```
+
+Depending on installation process this might not work right ahead, as`systemd` runs these scripts in a clean environment as `root`. To check:
+
+``` sh
+su root
+env -i /usr/[local/]bin/newm-cmd lock-pre
 ```
 
 ### Using newm for login
