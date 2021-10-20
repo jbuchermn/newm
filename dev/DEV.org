@@ -1,14 +1,37 @@
 #+TITLE: newm developer information
 
 * Current
+** TODO Clear intermediate rows / cols also on moving away from fullscreen window
+** TODO Possibility to scale windows moving others out of the way instead of overlapping
+** TODO Make bars optional
+
+* v0.2
+** Multi-output support
+*** TODO Specify requirements
+** Improved panel
+- Bars as panels not as widgets
+- Possibly flutter-based?
+- Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
+*** TODO Specify requirments for newm <-> panel interaction
 
 * Backlog / Ideas
 ** Titles during OverviewOverlay
-** Move / Resize during OverviewOverlay
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
-** Bars as panels not as widgets
-** Create newm-panel-flutter
+
+
+* Multi-output spec
+** Aspects
+*** Mouse movement: needs to be possible intuitively between screens --> outputs must be placed in a defined layout
+*** Config: configured per output, e.g. scale --> Rearrange some config aspects
+*** Windows: Need to be placed on a certain output and moved between --> Good mapping from state to which output(s) a window is on
+- Windows are displayed on multiple outputs simultaneously if moved between
+- Different output scales --> smooth performance? (Should be possible wl_surface::send_enter can be n<->m)
+*** Panels and widgets: some need to be present per output / some once --> Place them per output (consistent with window mapping) and replicate if necessary
+*** State: Per output overview should be possible --> some aspects of LayoutState per output others not: Loosely or tightly coupled states among outputs
+- Fullscreen window: per output
+- Scale?
+- In overview state: per output?
 
 * Setup clean arch chroot / qemu for testing
 
