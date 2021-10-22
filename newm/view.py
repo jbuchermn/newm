@@ -296,9 +296,19 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 w -= 2*padding
                 h -= 2*padding
 
+            """
+            An attempt to reduce the effect of dreadful CSD
+            As always Chrome is ahead in this regard, rendering completely unwanted shadows
+            --> If up_state.offset indicates weird CSD stuff going on, just fix the tile using masks
+            """
+            use_mask_for_offset: Optional[tuple[float, float]] = None
+
             if up_state.size[0] > 0 and up_state.size[1] > 0:
-                x -= up_state.offset[0] / up_state.size[0] * w
-                y -= up_state.offset[1] / up_state.size[1] * h
+                ox = up_state.offset[0] / up_state.size[0] * w
+                oy = up_state.offset[1] / up_state.size[1] * h
+                x -= ox
+                y -= oy
+                use_mask_for_offset = ox, oy
 
             x, y, w, h = (x, y, w, h)
 
@@ -358,6 +368,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 result.size = (width, height)
 
             result.box = (x, y, w, h)
+            if use_mask_for_offset is not None:
+                result.mask = (use_mask_for_offset[0], use_mask_for_offset[1], w, h)
 
             if 0.99 < result.box[2] / result.size[0] < 1.01:
                 if result.box[2] != result.size[0]:
