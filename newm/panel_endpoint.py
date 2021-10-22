@@ -40,7 +40,7 @@ class PanelEndpoint(Thread):
                         await client_socket.send(json.dumps({ 'msg': "OK" }))
 
                     elif msg['kind'] == 'cmd':
-                        result = self.layout.command(msg['cmd'])
+                        result = self.layout.command(msg['cmd'], msg['arg'] if 'arg' in msg else None)
                         await client_socket.send(json.dumps({ 'msg': str(result) }))
 
                     elif msg['kind'].startswith('auth_'):

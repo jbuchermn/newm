@@ -57,7 +57,6 @@ logger = logging.getLogger(__name__)
 conf_wallpaper = configured_value('wallpaper', cast(Optional[str], None))
 conf_mod = configured_value('mod', PYWM_MOD_LOGO)
 conf_pywm = configured_value('pywm', cast(dict[str, Any], {}))
-conf_output_scale = configured_value('output_scale', 1.0)
 
 conf_send_fullscreen_to_views = configured_value('view.send_fullscreen', True)
 
@@ -253,7 +252,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def __init__(self) -> None:
         load_config()
 
-        PyWM.__init__(self, View, output_scale=conf_output_scale(), **conf_pywm())
+        PyWM.__init__(self, View, **conf_pywm())
         Animate.__init__(self)
 
         self.mod = conf_mod()
@@ -931,7 +930,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def enter_launcher_overlay(self) -> None:
         self.enter_overlay(LauncherOverlay(self))
 
-    def command(self, cmd: str) -> Optional[str]:
+    def command(self, cmd: str, arg: Optional[str]=None) -> Optional[str]:
         logger.debug("Received command %s", cmd)
         if cmd == "anim-lock":
             self.ensure_locked()
@@ -953,6 +952,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         elif cmd == "close-launcher":
             if isinstance(self.overlay, LauncherOverlay):
                 self.exit_overlay()
+        elif cmd == "open-virtual-output" and arg is not None:
+            self.open_virtual_output(arg)
+        elif cmd == "close-virtual-output" and arg is not None:
+            self.close_virtual_output(arg)
         else:
             return "Unknown command: %s" % cmd
 

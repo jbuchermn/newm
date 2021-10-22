@@ -17,4 +17,4 @@ def cmd(command: str, *args: str) -> None:
     elif command == "launcher":
         msg({'kind': 'launch_app', 'app': " ".join(args)})
     else:
-        msg({'kind': 'cmd', 'cmd': command})
+        msg({'kind': 'cmd', 'cmd': command, 'arg': " ".join(args)})
