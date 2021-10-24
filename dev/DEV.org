@@ -2,7 +2,15 @@
 
 * Current (v0.2)
 ** Multi-output support
-*** STRT Specify requirements
+*** STRT newm-sidecar showcase using wayvnc, guacamole, qrencode
+- [ ] Document newm-cmd open/close-virtual-output
+- [ ] Handle authentication of guacamole by guacamole-auth-hmac
+- [ ] Document newm-sidecar
+*** STRT Multi-output
+- Need: get rid of layout.output_scale, layout.width, layout.height
+- [X] Widgets per output
+- [ ] Coordinate grids per output placing all windows on first output
+- [ ] Move windows between outputs
 ** Improved panel
 - Bars as panels not as widgets
 - Possibly flutter-based?
@@ -14,19 +22,6 @@
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 
-
-* Multi-output spec
-** Aspects
-*** Mouse movement: needs to be possible intuitively between screens --> outputs must be placed in a defined layout
-*** Config: configured per output, e.g. scale --> Rearrange some config aspects
-*** Windows: Need to be placed on a certain output and moved between --> Good mapping from state to which output(s) a window is on
-- Windows are displayed on multiple outputs simultaneously if moved between
-- Different output scales --> smooth performance? (Should be possible wl_surface::send_enter can be n<->m)
-*** Panels and widgets: some need to be present per output / some once --> Place them per output (consistent with window mapping) and replicate if necessary
-*** State: Per output overview should be possible --> some aspects of LayoutState per output others not: Loosely or tightly coupled states among outputs
-- Fullscreen window: per output
-- Scale?
-- In overview state: per output?
 
 * Setup clean arch chroot / qemu for testing
 

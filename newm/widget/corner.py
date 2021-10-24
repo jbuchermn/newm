@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import cairo
 import math
 
-from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
+from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState, PyWMOutput
 
 from ..config import configured_value
 
@@ -16,11 +16,11 @@ conf_corner_radius = configured_value('corner_radius', 17.5)
 
 
 class Corner(PyWMCairoWidget):
-    def __init__(self, wm: Layout, left: bool, top: bool):
+    def __init__(self, wm: Layout, output: PyWMOutput, left: bool, top: bool):
         self.r = conf_corner_radius()
-        self.radius = round(wm.output_scale * self.r)
+        self.radius = round(output.scale * self.r)
 
-        super().__init__(wm, self.radius, self.radius)
+        super().__init__(wm, output, self.radius, self.radius)
 
         self.left = left
         self.top = top
@@ -30,8 +30,8 @@ class Corner(PyWMCairoWidget):
     def process(self) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
         result.z_index = 100
-        result.box = (0 if self.left else self.wm.width - self.r,
-                      0 if self.top else self.wm.height - self.r,
+        result.box = ((0 if self.left else self.output.width - self.r) + self.output.pos[0],
+                      (0 if self.top else self.output.height - self.r) + self.output.pos[1],
                       self.r, self.r)
         return result
 

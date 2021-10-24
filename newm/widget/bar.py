@@ -6,7 +6,7 @@ from threading import Thread
 import time
 import cairo
 
-from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState
+from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState, PyWMOutput
 
 from ..interpolation import WidgetDownstreamInterpolation
 from ..animate import Animate
@@ -25,15 +25,15 @@ conf_font = configured_value('bar.font', 'Source Code Pro for Powerline')
 
 
 class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
-    def __init__(self, wm: Layout):
+    def __init__(self, wm: Layout, output: PyWMOutput):
         PyWMCairoWidget.__init__(
-            self, wm,
-            int(wm.output_scale * wm.width),
-            int(wm.output_scale * conf_bar_height()))
+            self, wm, output,
+            int(output.scale * output.width),
+            int(output.scale * conf_bar_height()))
         Animate.__init__(self)
 
         self.texts = ["Leftp", "Middlep", "Rightp"]
-        self.font_size = wm.output_scale * conf_font_size()
+        self.font_size = output.scale * conf_font_size()
 
     def set_texts(self, texts: list[str]) -> None:
         self.texts = texts
@@ -80,8 +80,8 @@ class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
 
 
 class TopBar(Bar, Thread):
-    def __init__(self, wm: Layout) -> None:
-        Bar.__init__(self, wm)
+    def __init__(self, wm: Layout, output: PyWMOutput) -> None:
+        Bar.__init__(self, wm, output)
         Thread.__init__(self)
 
         self._running = True
@@ -95,7 +95,7 @@ class TopBar(Bar, Thread):
         result.z_index = 5
 
         dy = wm_state.top_bar_dy * conf_bar_height()
-        result.box = (0, dy - conf_bar_height(), self.wm.width, conf_bar_height())
+        result.box = (self.output.pos[0], self.output.pos[1] + dy - conf_bar_height(), self.wm.width, conf_bar_height())
 
         return result
 
@@ -108,8 +108,8 @@ class TopBar(Bar, Thread):
         self.set_texts(conf_top_bar_text()())
 
 class BottomBar(Bar, Thread):
-    def __init__(self, wm: Layout):
-        Bar.__init__(self, wm)
+    def __init__(self, wm: Layout, output: PyWMOutput):
+        Bar.__init__(self, wm, output)
         Thread.__init__(self)
 
         self._running = True
@@ -123,7 +123,7 @@ class BottomBar(Bar, Thread):
         result.z_index = 5
 
         dy = wm_state.bottom_bar_dy * conf_bar_height()
-        result.box = (0, self.wm.height - dy, self.wm.width,
+        result.box = (self.output.pos[0], self.output.pos[1] + self.output.height - dy, self.output.width,
                       conf_bar_height())
 
         return result

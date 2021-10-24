@@ -269,10 +269,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
         self.overlay: Optional[Overlay] = None
 
-        self.background: Optional[Background] = None
-        self.top_bar: Optional[TopBar] = None
-        self.bottom_bar: Optional[BottomBar] = None
-        self.corners: list[Corner] = []
+        self.backgrounds: list[Background] = []
+        self.top_bars: list[TopBar] = []
+        self.bottom_bars: list[BottomBar] = []
+        self.corners: list[list[Corner]] = []
 
         self.thread = LayoutThread(self)
 
@@ -290,6 +290,43 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         else:
             raise Exception("Unknown mod")
 
+    def _setup_layout(self) -> None:
+        for b in self.bottom_bars:
+            b.stop()
+            b.destroy()
+        self.bottom_bars = []
+
+        for t in self.top_bars:
+            t.stop()
+            t.destroy()
+        self.top_bars = []
+
+        for bg in self.backgrounds:
+            bg.destroy()
+        self.backgrounds = []
+
+        for c in self.corners:
+            for c2 in c:
+                c2.destroy()
+        self.corners = []
+
+        self.bottom_bars = [self.create_widget(BottomBar, o) for o in self.layout]
+        self.top_bars = [self.create_widget(TopBar, o) for o in self.layout]
+
+        # TODO: Config per output
+        if (wp := conf_wallpaper()) is not None:
+            self.backgrounds = [self.create_widget(Background, o, wp) for o in self.layout]
+
+        for o in self.layout:
+            self.corners += [[
+                self.create_widget(Corner, o, True, True),
+                self.create_widget(Corner, o, True, False),
+                self.create_widget(Corner, o, False, True),
+                self.create_widget(Corner, o, False, False)
+            ]]
+
+        self.damage()
+
     def _setup(self, fallback: bool=True) -> None:
         load_config(fallback=fallback)
 
@@ -302,34 +339,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             conf_lp_inertia(),
             conf_validate_threshold())
 
-        if self.bottom_bar is not None:
-            self.bottom_bar.stop()
-            self.bottom_bar.destroy()
-            self.bottom_bar = None
-
-        if self.top_bar is not None:
-            self.top_bar.stop()
-            self.top_bar.destroy()
-            self.top_bar = None
-
-        if self.background is not None:
-            self.background.destroy()
-            self.background = None
-
-        for c in self.corners:
-            c.destroy()
-        self.corners = []
-
-        self.bottom_bar = self.create_widget(BottomBar)
-        self.top_bar = self.create_widget(TopBar)
-        if (wp := conf_wallpaper()) is not None:
-            self.background = self.create_widget(Background, wp)
-        self.corners = [
-            self.create_widget(Corner, True, True),
-            self.create_widget(Corner, True, False),
-            self.create_widget(Corner, False, True),
-            self.create_widget(Corner, False, False)
-        ]
+        self._setup_layout()
 
         self.key_processor.clear()
         if (kb := conf_key_bindings()) is not None:
@@ -416,14 +426,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         for _, v in self._views.items():
             v.damage()
 
-        if self.background is not None:
-            self.background.damage()
+        for bg in self.backgrounds:
+            bg.damage()
 
-        if self.top_bar is not None:
-            self.top_bar.damage()
+        for t in self.top_bars:
+            t.damage()
 
-        if self.bottom_bar is not None:
-            self.bottom_bar.damage()
+        for b in self.bottom_bars:
+            b.damage()
 
 
     def update(self, new_state: LayoutState) -> None:
@@ -436,14 +446,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         for _, v in self._views.items():
             v.animate(self.state, new_state, duration)
 
-        if self.background is not None:
-            self.background.animate(self.state, new_state, duration)
+        for bg in self.backgrounds:
+            bg.animate(self.state, new_state, duration)
 
-        if self.top_bar is not None:
-            self.top_bar.animate(self.state, new_state, duration)
+        for t in self.top_bars:
+            t.animate(self.state, new_state, duration)
 
-        if self.bottom_bar is not None:
-            self.bottom_bar.animate(self.state, new_state, duration)
+        for b in self.bottom_bars:
+            b.animate(self.state, new_state, duration)
 
 
     def _trusted_unlock(self) -> None:
@@ -531,7 +541,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     """
 
     def on_layout_change(self) -> None:
-        self._setup()
+        self._setup_layout()
 
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
         # BEGIN DEBUG
