@@ -21,6 +21,7 @@ class Corner(PyWMCairoWidget):
         self.radius = round(output.scale * self.r)
 
         super().__init__(wm, output, self.radius, self.radius)
+        self._output: PyWMOutput = output
 
         self.left = left
         self.top = top
@@ -30,8 +31,8 @@ class Corner(PyWMCairoWidget):
     def process(self) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
         result.z_index = 100
-        result.box = ((0 if self.left else self.output.width - self.r) + self.output.pos[0],
-                      (0 if self.top else self.output.height - self.r) + self.output.pos[1],
+        result.box = ((0 if self.left else self._output.width - self.r) + self._output.pos[0],
+                      (0 if self.top else self._output.height - self.r) + self._output.pos[1],
                       self.r, self.r)
         return result
 

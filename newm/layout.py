@@ -255,6 +255,12 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         PyWM.__init__(self, View, **conf_pywm())
         Animate.__init__(self)
 
+        # TODO Clean up all references to these and drop
+        self.width = 0
+        self.height = 0
+        self.output_scale = 1.
+        # ---
+
         self.mod = conf_mod()
         self.mod_sym = ""
         self._set_mod_sym()
@@ -398,10 +404,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.panel_endpoint.stop()
         self.panel_launcher.stop()
 
-        if self.top_bar is not None:
-            self.top_bar.stop()
-        if self.bottom_bar is not None:
-            self.bottom_bar.stop()
+        for t in self.top_bars:
+            t.stop()
+        for b in self.bottom_bars:
+            b.stop()
         if self.sys_backend is not None:
             self.sys_backend.stop()
         if self.thread is not None:
@@ -542,6 +548,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
     def on_layout_change(self) -> None:
         self._setup_layout()
+
+        # TODO Remove
+        self.width = max([o.pos[0] + o.width for o in self.layout])
+        self.height = max([o.pos[1] + o.height for o in self.layout])
+        # ----------
 
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
         # BEGIN DEBUG

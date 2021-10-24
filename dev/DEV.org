@@ -3,14 +3,15 @@
 * Current (v0.2)
 ** Multi-output support
 *** STRT newm-sidecar showcase using wayvnc, guacamole, qrencode
-- [ ] Document newm-cmd open/close-virtual-output
+- [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 - [ ] Handle authentication of guacamole by guacamole-auth-hmac
-- [ ] Document newm-sidecar
+- [X] Document newm-sidecar
 *** STRT Multi-output
 - Need: get rid of layout.output_scale, layout.width, layout.height
 - [X] Widgets per output
 - [ ] Coordinate grids per output placing all windows on first output
 - [ ] Move windows between outputs
+- [ ] Document new config options
 ** Improved panel
 - Bars as panels not as widgets
 - Possibly flutter-based?

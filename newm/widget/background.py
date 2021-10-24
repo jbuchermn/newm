@@ -19,6 +19,8 @@ class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
         PyWMBackgroundWidget.__init__(self, wm, output, path)
         Animate.__init__(self)
 
+        self._output: PyWMOutput = output
+
     def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
         result.z_index = -100
@@ -75,12 +77,12 @@ class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
         Transform such that viewport has
         x, y == 0; w == wm.width; h == wm.height
         """
-        m = self.output.width / vp_w
+        m = self._output.width / vp_w
         b = - vp_x * m
         x, w = (m * x + b), (m * (x + w) + b)
         w -= x
 
-        m = self.output.height / vp_h
+        m = self._output.height / vp_h
         b = - vp_y * m
         y, h = (m * y + b), (m * (y + h) + b)
         h -= y
@@ -97,7 +99,7 @@ class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
             x -= (new_w - w)/2.
             w = new_w
 
-        result.box = (x + self.output.pos[0], y + self.output.pos[1], w, h)
+        result.box = (x + self._output.pos[0], y + self._output.pos[1], w, h)
         return result
 
     def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
