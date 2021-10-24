@@ -258,7 +258,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         # TODO Clean up all references to these and drop
         self.width = 0
         self.height = 0
-        self.output_scale = 1.
         # ---
 
         self.mod = conf_mod()
@@ -477,7 +476,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     """
 
     def __str__(self) -> str:
-        return "<Layout %dx%d %s>" % (self.width, self.height, self.config)
+        return "<Layout %s>" % (self.config)
 
     def debug_str(self) -> str:
         res = "%s\n  %s\n\n" % (self, str(self.state))

@@ -85,7 +85,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                         https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/432
                     - Then again, the future should by without X11/XWayland
                     """
-                    self.client_side_scale = self.wm.output_scale
+                    self.client_side_scale = max([o.scale for o in self.wm.layout])
         except:
             pass
 
