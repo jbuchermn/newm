@@ -12,10 +12,11 @@
 - [X] Coordinate grids per output (or group of overlapping output) placing all windows on first output
 - [X] Fix overlapping windows outside of one workspace displayed on other
 - [X] Fix orphans
-- [ ] Merge workspaces on update / elaborate orphan handling
-- [ ] Fix select view on overview
-- [ ] Enable mirrored outputs --> needs more elaborate concept of "fixed_output" pywm-side
+- [X] Fix select view on overview
 - [ ] Move windows between outputs
+- [ ] Merge workspaces on update / elaborate orphan handling
+- [ ] Fix  overlapping windows from other screens blocking input
+- [ ] Enable mirrored outputs --> needs more elaborate concept of "fixed_output" pywm-side
 - [ ] Configurable Anim prevention for certain outputs
 - [ ] Document new config options
 

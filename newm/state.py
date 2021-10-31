@@ -547,7 +547,7 @@ class LayoutState:
                     bottom_bar_dy=bottom_bar_dy
                 )
                 for h, s in self._workspace_states.items():
-                    res._workspace_states[h] = s.with_overview_set(False)
+                    res._workspace_states[h] = s.with_overview_set(False, view)
             else:
                 raise Exception("Greetings, mypy")
 
