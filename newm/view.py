@@ -385,8 +385,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
 
-        # TODO: Cannot handle mirrored outputs
-        result.fixed_output = ws.outputs[0]
+        if self_state.move_origin[0] is not None and self_state.scale_origin[0] is None:
+            # No fixed output during a move
+            result.fixed_output = None
+        else:
+            # TODO: Cannot handle mirrored outputs
+            result.fixed_output = ws.outputs[0]
 
         return result
 
