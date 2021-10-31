@@ -1,10 +1,8 @@
 #+TITLE: newm developer information
 
 * Current
-** TODO Clear intermediate rows / cols also on moving away from fullscreen window
+** DONE Clear intermediate rows / cols also on moving away from fullscreen window
 ** TODO Possibility to scale windows moving others out of the way instead of overlapping
-** TODO Make bars optional
-
 
 
 * Setup clean arch chroot / qemu for testing
