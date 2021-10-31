@@ -9,9 +9,12 @@
 *** STRT Multi-output
 - Need: get rid of layout.output_scale, layout.width, layout.height
 - [X] Widgets per output
-- [ ] Fix background not blending in and initially scaled wrong
-- [ ] Coordinate grids per output (or group of overlapping output) placing all windows on first output
+- [X] Fix background not blending in and initially scaled wrong
+- [X] Coordinate grids per output (or group of overlapping output) placing all windows on first output
+- [ ] Fix overlapping windows outside of one workspace displayed on other
+- [ ] Fix orphans
 - [ ] Move windows between outputs
+- [ ] Enable anim prevention for certain outputs
 - [ ] Document new config options
 
 * v0.3

@@ -6,6 +6,7 @@ import logging
 
 if TYPE_CHECKING:
     from .view import View
+    from .layout import Layout, Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -63,53 +64,46 @@ class ViewState:
         return str(self)
 
 
-
-class LayoutState:
+class WorkspaceState:
     def __init__(self, **kwargs: Any) -> None:
-
         self.i: float = kwargs['i'] if 'i' in kwargs else 0
         self.j: float = kwargs['j'] if 'j' in kwargs else 0
+
         self.size: float = kwargs['size'] if 'size' in kwargs else 2
         self.size_origin: Optional[float] = kwargs['size_origin'] if 'size_origin' in kwargs else None
 
-        self.background_factor: float = kwargs['background_factor'] if 'background_factor' in kwargs else 3
-        self.background_opacity: float = kwargs['background_opacity'] if 'background_opacity' in kwargs else 0.
 
         self.intermediate_rows: list[int] = kwargs['intermediate_rows'] if 'intermediate_rows' in kwargs else []
         self.intermediate_cols: list[int] = kwargs['intermediate_cols'] if 'intermediate_cols' in kwargs else []
         # Non-None indicates fullscreen, in that case i, j, size, i in fullscreen, j in fullscreen, size in fullscreen
         self.state_before_fullscreen: Optional[tuple[float, float, float, float, float, float]] = kwargs['state_before_fullscreen'] if 'state_before_fullscreen' in kwargs else None
 
-        self.top_bar_dy: float = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
-        self.bottom_bar_dy: float = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0
-        self.launcher_perc: float = kwargs['launcher_perc'] if 'launcher_perc' in kwargs else 0
-        self.lock_perc: float = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
-        self.final: bool = kwargs['final'] if 'final' in kwargs else False
-
-        # Non-null indicates we are in overview mode, in that case i, j, size, size_origin, background_factor, top_bar_dy, bottom_bar_dy
-        self.state_before_overview: Optional[tuple[float, float, float, Optional[float], float, float, float]] = kwargs['state_before_overview'] if 'state_before_overview' in kwargs else None
+        # Non-null indicates we are in overview mode, in that case i, j, size, size_origin
+        self.state_before_overview: Optional[tuple[float, float, float, Optional[float]]] = kwargs['state_before_overview'] if 'state_before_overview' in kwargs else None
 
         self._view_states: dict[int, ViewState] = {}
+
 
     """
     Register / Unregister
     """
 
-    def with_view_state(self, view: View, **kwargs: Any) -> LayoutState:
+    def with_view_state(self, view: View, **kwargs: Any) -> WorkspaceState:
         self._view_states[view._handle] = ViewState(**kwargs)
         return self
 
 
-    def without_view_state(self, view: View) -> LayoutState:
-        del self._view_states[view._handle]
+    def without_view_state(self, view: View) -> WorkspaceState:
+        if view._handle in self._view_states:
+            del self._view_states[view._handle]
         return self
 
     """
     Copy / Update
     """
 
-    def copy(self, **kwargs: Any) -> LayoutState:
-        res = LayoutState(**{**self.__dict__, **kwargs})
+    def copy(self, **kwargs: Any) -> WorkspaceState:
+        res = WorkspaceState(**{**self.__dict__, **kwargs})
         for h, s in self._view_states.items():
             res._view_states[h] = s.copy()
         return res
@@ -118,8 +112,8 @@ class LayoutState:
         for k, v in kwargs.items():
             self.__dict__[k] = v
 
-    def replacing_view_state(self, view: View, **kwargs: Any) -> LayoutState:
-        res = LayoutState(**self.__dict__)
+    def replacing_view_state(self, view: View, **kwargs: Any) -> WorkspaceState:
+        res = WorkspaceState(**self.__dict__)
         for h, s in self._view_states.items():
             res._view_states[h] = s.copy(**(kwargs if h==view._handle else {}))
         return res
@@ -292,7 +286,44 @@ class LayoutState:
     Reducers
     """
 
-    def focusing_view(self, view: View) -> LayoutState:
+    def with_overview_set(self, overview: bool, view: Optional[View]=None) -> WorkspaceState:
+        if overview:
+            min_i, min_j, max_i, max_j = self.get_extent()
+
+            width = max_i - min_i + 3
+            height = max_j - min_j + 3
+            size = max(width, height)
+            i = min_i - (size - (max_i - min_i + 1)) / 2.
+            j = min_j - (size - (max_j - min_j + 1)) / 2.
+
+            state_before_overview = self.i, self.j, self.size, self.size_origin
+            return self.copy(
+                i=i,
+                j=j,
+                size=size,
+                size_origin=self.size,
+                state_before_overview=state_before_overview
+            )
+        else:
+            if self.state_before_overview is not None:
+                i, j, size, size_origin = self.state_before_overview
+                state = self.copy(
+                    i=i,
+                    j=j,
+                    size=size,
+                    size_origin=size_origin,
+                    state_before_overview=None
+                )
+            else:
+                state = self
+            if view is not None:
+                state = state.focusing_view(view)
+            return state
+
+    def focusing_view(self, view: View) -> WorkspaceState:
+        if view._handle not in self._view_states:
+            return self
+
         state = self._view_states[view._handle]
 
         i, j, w, h = state.i, state.j, state.w, state.h
@@ -310,7 +341,7 @@ class LayoutState:
             size=target_size,
         )
 
-    def with_fullscreen(self, view: View) -> LayoutState:
+    def with_fullscreen(self, view: View) -> WorkspaceState:
         state = self.get_view_state(view)
         i_, j_, w_, h_ = state.i, state.j, state.w, state.h
         i, j, w, h = round(i_), round(j_), round(w_), round(h_)
@@ -330,7 +361,7 @@ class LayoutState:
 
         return result
 
-    def without_fullscreen(self, drop: bool=False) -> LayoutState:
+    def without_fullscreen(self, drop: bool=False) -> WorkspaceState:
         if self.state_before_fullscreen is None:
             return self.copy()
 
@@ -349,58 +380,9 @@ class LayoutState:
         result._clear_intermediate()
         return result
 
-    def with_overview_toggled(self, view: Optional[View]=None) -> LayoutState:
-        if self.state_before_overview is None:
-            min_i, min_j, max_i, max_j = self.get_extent()
-
-            width = max_i - min_i + 3
-            height = max_j - min_j + 3
-            size = max(width, height)
-            i = min_i - (size - (max_i - min_i + 1)) / 2.
-            j = min_j - (size - (max_j - min_j + 1)) / 2.
-
-            state_before_overview = self.i, self.j, self.size, self.size_origin, self.background_factor, self.top_bar_dy, self.bottom_bar_dy
-            return self.copy(
-                i=i,
-                j=j,
-                size=size,
-                size_origin=self.size,
-                background_factor=1.,
-                top_bar_dy=1.,
-                bottom_bar_dy=1.,
-                state_before_overview=state_before_overview
-            )
-        else:
-            i, j, size, size_origin, background_factor, top_bar_dy, bottom_bar_dy = self.state_before_overview
-            state = self.copy(
-                i=i,
-                j=j,
-                size=size,
-                size_origin=size_origin,
-                background_factor=background_factor,
-                top_bar_dy=top_bar_dy,
-                bottom_bar_dy=bottom_bar_dy,
-                state_before_overview=None
-            )
-            if view is not None:
-                state = state.focusing_view(view)
-            return state
-
-
     """
     Access information
     """
-
-    def __str__(self) -> str:
-        return "<LayoutState %s>" % str({k:v for k, v in self.__dict__.items() if k != "_view_states"})
-
-    def __repr__(self) -> str:
-        return str(self)
-
-    def get_view_state(self, view: View) -> ViewState:
-        return self._view_states[view._handle]
-
-
     def get_extent(self) -> tuple[float, float, float, float]:
         min_i, min_j, max_i, max_j = 1000000., 1000000., -1000000., -1000000.
 
@@ -436,6 +418,174 @@ class LayoutState:
 
     def is_fullscreen(self) -> bool:
         return self.state_before_fullscreen is not None
+
+    def is_in_overview(self) -> bool:
+        return self.state_before_overview is not None
+
+    def __str__(self) -> str:
+        return "<WorkspaceState %s>" % str({k:v for k, v in self.__dict__.items() if k != "_view_states"})
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def get_view_state(self, view: View) -> ViewState:
+        return self._view_states[view._handle]
+
+
+class LayoutState:
+    def __init__(self, **kwargs: Any) -> None:
+        self.launcher_perc: float = kwargs['launcher_perc'] if 'launcher_perc' in kwargs else 0
+        self.lock_perc: float = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
+        self.final: bool = kwargs['final'] if 'final' in kwargs else False
+
+        self.background_opacity: float = kwargs['background_opacity'] if 'background_opacity' in kwargs else 0.
+        self.background_factor: float = kwargs['background_factor'] if 'background_factor' in kwargs else 3
+        self.top_bar_dy: float = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
+        self.bottom_bar_dy: float = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0
+
+        # Non-null indicates we are in overview mode, in that case background_Factor, top_bar_dy, bottom_bar_dy
+        self.state_before_overview: Optional[tuple[float, float, float]] = kwargs['state_before_overview'] if 'state_before_overview' in kwargs else None
+
+        self._workspace_states: dict[int, WorkspaceState] = {}
+
+    """
+    Register / Unregister
+    """
+
+    def with_workspaces(self, layout: Layout) -> LayoutState:
+        for w in layout.workspaces:
+            if w._handle not in self._workspace_states:
+                self._workspace_states[w._handle] = WorkspaceState()
+
+        orphans = []
+        for k in list(self._workspace_states.keys()):
+            if k not in [w._handle for w in layout.workspaces]:
+                orphans += [(k, self._workspace_states[k].copy())]
+                del self._workspace_states[k]
+
+        orphan_ws = self._workspace_states[layout.workspaces[0]._handle]
+        for k, o in orphans:
+            orphan_ws._view_states[k] = o
+
+        return self
+
+    def without_view_state(self, view: View) -> LayoutState:
+        for h, s in self._workspace_states.items():
+            s.without_view_state(view)
+        return self
+
+
+    """
+    Copy / Update
+    """
+
+    def copy(self, **kwargs: Any) -> LayoutState:
+        res = LayoutState(**{**self.__dict__, **kwargs})
+        for h, s in self._workspace_states.items():
+            res._workspace_states[h] = s.copy()
+        return res
+
+    def update(self, **kwargs: Any) -> None:
+        for k, v in kwargs.items():
+            self.__dict__[k] = v
+
+    def replacing_workspace_state(self, workspace: Workspace, **kwargs: Any) -> LayoutState:
+        res = LayoutState(**self.__dict__)
+        for h, s in self._workspace_states.items():
+            res._workspace_states[h] = s.copy(**(kwargs if h==workspace._handle else {}))
+        return res
+
+    def setting_workspace_state(self, workspace: Workspace, state: WorkspaceState) -> LayoutState:
+        res = LayoutState(**self.__dict__)
+        for h, s in self._workspace_states.items():
+            res._workspace_states[h] = s.copy() if h!=workspace._handle else state
+        return res
+
+    def update_view_state(self, view: View, **kwargs: Any) -> None:
+        try:
+            s = self.get_view_state(view)
+            s.update(**kwargs)
+        except Exception:
+            logger.warn("Unexpected: Unable to update view %s state", view)
+
+    def validate_fullscreen(self) -> None:
+        for h, s in self._workspace_states.items():
+            s.validate_fullscreen()
+
+    def validate_stack_indices(self, moved_view: Optional[View]=None) -> None:
+        for h, s in self._workspace_states.items():
+            s.validate_stack_indices()
+
+    def constrain(self) -> None:
+        for h, s in self._workspace_states.items():
+            s.constrain()
+
+
+    """
+    Reducers
+    """
+
+    def with_overview_toggled(self, view: Optional[View]=None) -> LayoutState:
+        if not self.is_in_overview():
+            res = self.copy(
+                state_before_overview=(self.background_factor, self.top_bar_dy, self.bottom_bar_dy),
+                background_factor=1.,
+                top_bar_dy=1.,
+                bottom_bar_dy=1.,
+            )
+            for h, s in self._workspace_states.items():
+                res._workspace_states[h] = s.with_overview_set(True)
+        else:
+            if self.state_before_overview is not None:
+                background_factor, top_bar_dy, bottom_bar_dy = self.state_before_overview
+                res = self.copy(
+                    state_before_overview=None,
+                    background_factor=background_factor,
+                    top_bar_dy=top_bar_dy,
+                    bottom_bar_dy=bottom_bar_dy
+                )
+                for h, s in self._workspace_states.items():
+                    res._workspace_states[h] = s.with_overview_set(False)
+            else:
+                raise Exception("Greetings, mypy")
+
+        return res
+
+    def focusing_view(self, view: View) -> LayoutState:
+        res = self.copy()
+        for h, s in self._workspace_states.items():
+            res._workspace_states[h] = s.focusing_view(view)
+        return res
+
+
+    """
+    Access information
+    """
+
+    def __str__(self) -> str:
+        return "<LayoutState %s>" % str({k:v for k, v in self.__dict__.items() if k != "_workspace_states"})
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def get_workspace_state(self, workspace: Workspace) -> WorkspaceState:
+        return self._workspace_states[workspace._handle]
+
+    def get_view_state(self, view: View) -> ViewState:
+        for h, s in self._workspace_states.items():
+            try:
+                return s.get_view_state(view)
+            except:
+                pass
+        raise Exception("Could not find view %d state" % view._handle)
+
+    def find_view(self, view: View) -> tuple[ViewState, WorkspaceState, int]:
+        for h, s in self._workspace_states.items():
+            try:
+                return s.get_view_state(view), s, h
+            except:
+                pass
+        raise Exception("Could not find view %d state" % view._handle)
 
     def is_in_overview(self) -> bool:
         return self.state_before_overview is not None

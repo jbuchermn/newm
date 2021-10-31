@@ -48,21 +48,25 @@ class _Overlay:
 class MoveOverlay(_Overlay):
     def __init__(self, layout: Layout, view: View) -> None:
         self.layout = layout
+        self.workspace = layout.workspaces[0]
+        self.ws_state = self.layout.state.get_workspace_state(self.workspace)
 
         self.view = view
         self.i = 0.
         self.j = 0.
 
         try:
-            view_state = self.layout.state.get_view_state(self.view)
+            view_state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
+            self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
             self.i = view_state.i
             self.j = view_state.j
 
             self.layout.update(
-                self.layout.state.replacing_view_state(
-                    self.view,
-                    move_origin=(self.i, self.j)
-                ))
+                self.layout.state.setting_workspace_state(
+                    self.workspace, self.ws_state.replacing_view_state(
+                        self.view,
+                        move_origin=(self.i, self.j)
+                    )))
         except Exception:
             logger.warn("Unexpected: Could not access view %s state", self.view)
 
@@ -82,7 +86,7 @@ class MoveOverlay(_Overlay):
         if self._closed:
             return
 
-        factor = conf_gesture_factor() if not self.layout.state.is_in_overview() else self.layout.state.size
+        factor = conf_gesture_factor() if not self.layout.state.is_in_overview() else self.ws_state.size
 
         self.i += factor*(values['delta_x'] - self.last_dx)
         self.j += factor*(values['delta_y'] - self.last_dy)
@@ -96,7 +100,8 @@ class MoveOverlay(_Overlay):
         self._closed = True
 
         try:
-            state = self.layout.state.get_view_state(self.view)
+            state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
+            self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
             fi, ti = self.i_grid.final()
             fj, tj = self.j_grid.final()
 
@@ -111,8 +116,10 @@ class MoveOverlay(_Overlay):
 class ResizeOverlay(_Overlay):
     def __init__(self, layout: Layout, view: View):
         self.layout = layout
-        self.view = view
+        self.workspace = layout.workspaces[0]
+        self.ws_state = self.layout.state.get_workspace_state(self.workspace)
 
+        self.view = view
         self.i = 0.
         self.j = 0.
         self.w = 1.
@@ -122,7 +129,8 @@ class ResizeOverlay(_Overlay):
         self.hyst_h = lambda v: v
 
         try:
-            view_state = self.layout.state.get_view_state(self.view)
+            view_state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
+            self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
             self.i = view_state.i
             self.j = view_state.j
             self.w = view_state.w
@@ -132,11 +140,13 @@ class ResizeOverlay(_Overlay):
             self.hyst_h = Hysteresis(conf_hyst(), self.h)
 
             self.layout.update(
-                self.layout.state.replacing_view_state(
-                    self.view,
-                    move_origin=(self.i, self.j),
-                    scale_origin=(self.w, self.h)
-                ))
+                self.layout.state.setting_workspace_state(
+                    self.workspace, self.ws_state.replacing_view_state(
+                        self.view,
+                        move_origin=(self.i, self.j),
+                        scale_origin=(self.w, self.h)
+                    )))
+
         except Exception:
             logger.warn("Unexpected: Could not access view %s state", self.view)
 
@@ -152,7 +162,7 @@ class ResizeOverlay(_Overlay):
         if self._closed:
             return
 
-        factor = conf_gesture_factor() if not self.layout.state.is_in_overview() else self.layout.state.size
+        factor = conf_gesture_factor() if not self.layout.state.is_in_overview() else self.ws_state.size
         dw = factor*values['delta_x']
         dh = factor*values['delta_y']
 
@@ -211,7 +221,16 @@ class MoveResizeOverlay(Overlay, Thread):
 
         self.layout.update_cursor(False)
 
+        # TODO: Clean this up a bit (code duplicated -> _Overlay)
         self.view = view
+        self.workspace = layout.workspaces[0]
+        self.ws_state = self.layout.state.get_workspace_state(self.workspace)
+
+        try:
+            view_state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
+            self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
+        except:
+            logger.warn("Unexpected: Could not access view %s state", self.view)
 
         self.overlay: Optional[_Overlay] = None
 
@@ -272,13 +291,13 @@ class MoveResizeOverlay(Overlay, Thread):
                 in_prog = True
                 ii, ij, fi, fj, it, ft = self._target_layout_pos
                 if t > ft:
-                    self.layout.state.i = fi
-                    self.layout.state.j = fj
+                    self.ws_state.i = fi
+                    self.ws_state.j = fj
                     self._target_layout_pos = None
                 else:
                     perc = (t-it)/(ft-it)
-                    self.layout.state.i=ii + perc*(fi-ii)
-                    self.layout.state.j=ij + perc*(fj-ij)
+                    self.ws_state.i=ii + perc*(fi-ii)
+                    self.ws_state.j=ij + perc*(fj-ij)
                 self.layout.damage()
 
             elif self.overlay is not None:
@@ -287,13 +306,13 @@ class MoveResizeOverlay(Overlay, Thread):
                     i, j, w, h = view_state.i, view_state.j, view_state.w, view_state.h
                     i, j, w, h = round(i), round(j), round(w), round(h)
 
-                    fi, fj = self.layout.state.i, self.layout.state.j
+                    fi, fj = self.ws_state.i, self.ws_state.j
 
-                    if i + w > fi + self.layout.state.size:
-                        fi = i + w - self.layout.state.size
+                    if i + w > fi + self.ws_state.size:
+                        fi = i + w - self.ws_state.size
 
-                    if j + h > fj + self.layout.state.size:
-                        fj = j + h - self.layout.state.size
+                    if j + h > fj + self.ws_state.size:
+                        fj = j + h - self.ws_state.size
 
                     if i < fi:
                         fi = i
@@ -301,10 +320,10 @@ class MoveResizeOverlay(Overlay, Thread):
                     if j < fj:
                         fj = j
 
-                    if fi != self.layout.state.i or fj != self.layout.state.j:
+                    if fi != self.ws_state.i or fj != self.ws_state.j:
                         logger.debug("MoveResizeOverlay: Adjusting viewpoint (%f %f) -> (%f %f)",
-                                     self.layout.state.i, self.layout.state.j, fi, fj)
-                        self._target_layout_pos = (self.layout.state.i, self.layout.state.j, fi, fj, t, t + conf_anim_t())
+                                     self.ws_state.i, self.ws_state.j, fi, fj)
+                        self._target_layout_pos = (self.ws_state.i, self.ws_state.j, fi, fj, t, t + conf_anim_t())
 
                 except Exception:
                     logger.warn("Unexpected: Could not access view %s state", self.view)
@@ -403,11 +422,12 @@ class MoveResizeOverlay(Overlay, Thread):
             logger.debug("MoveResizeOverlay: Exiting with animation %d, %d, %d, %d -> %d, %d, %d, %d",
                           view_state.i, view_state.j, view_state.w, view_state.h, i, j, w, h)
 
-            state = self.layout.state.replacing_view_state(
-                self.view,
-                i=i, j=j, w=w, h=h,
-                scale_origin=(None, None), move_origin=(None, None)
-            ).focusing_view(self.view)
+            state = self.layout.state.setting_workspace_state(
+                self.workspace, self.layout.state.get_workspace_state(self.workspace).replacing_view_state(
+                    self.view,
+                    i=i, j=j, w=w, h=h,
+                    scale_origin=(None, None), move_origin=(None, None)
+                ).focusing_view(self.view))
             state.validate_stack_indices(self.view)
             return state, conf_anim_t()
         except Exception:

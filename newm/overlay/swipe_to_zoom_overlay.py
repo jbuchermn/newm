@@ -24,10 +24,12 @@ class SwipeToZoomOverlay(Overlay):
         super().__init__(layout)
 
         self.layout = layout
+        self.workspace = layout.get_active_workspace()
+        self.ws_state = layout.state.get_workspace_state(self.workspace)
 
-        self.i = self.layout.state.i
-        self.j = self.layout.state.j
-        self.size = self.layout.state.size
+        self.i = self.ws_state.i
+        self.j = self.ws_state.j
+        self.size = self.ws_state.size
         self.initial_size = round(self.size)
 
         self.last_delta_y = 0.
@@ -58,25 +60,25 @@ class SwipeToZoomOverlay(Overlay):
 
     def _exit_transition(self) -> tuple[Optional[LayoutState], Optional[float]]:
         size, t = self.grid.final()
-        state = self.layout.state.copy(size=size, size_origin=None)
+        state = self.layout.state.replacing_workspace_state(self.workspace, size=size, size_origin=None)
         if self._focused is not None:
             state = state.focusing_view(self._focused)
 
         if size != self.initial_size:
-            state = state.without_fullscreen(drop=True)
+            state = state.setting_workspace_state(self.workspace, state.get_workspace_state(self.workspace).without_fullscreen(drop=True))
 
         return state, t
 
     def _set_state(self) -> None:
-        self.layout.state.size_origin = float(self.hyst(self.layout.state.size))
-        self.layout.state.size = self.grid.at(self.size)
+        self.ws_state.size_origin = float(self.hyst(self.ws_state.size))
+        self.ws_state.size = self.grid.at(self.size)
 
         # Enforce constraints real-time
         if self._focused_br is not None:
             # Move bottom right corner into view
             i, j = self._focused_br
-            self.layout.state.i = max(self.i, i - self.layout.state.size)
-            self.layout.state.j = max(self.j, j - self.layout.state.size)
+            self.ws_state.i = max(self.i, i - self.ws_state.size)
+            self.ws_state.j = max(self.j, j - self.ws_state.size)
         self.layout.state.constrain()
 
         self.layout.damage()

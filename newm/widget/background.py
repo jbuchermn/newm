@@ -10,32 +10,35 @@ from ..animate import Animate
 
 if TYPE_CHECKING:
     from ..state import LayoutState
-    from ..layout import Layout
+    from ..layout import Layout, Workspace
 
 
 
 class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
-    def __init__(self, wm: Layout, output: PyWMOutput, path: str):
+    def __init__(self, wm: Layout, output: PyWMOutput, workspace: Workspace, path: str):
         PyWMBackgroundWidget.__init__(self, wm, output, path)
         Animate.__init__(self)
 
         self._output: PyWMOutput = output
+        self._workspace: Workspace = workspace
 
     def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
         result.z_index = -100
         result.opacity = wm_state.background_opacity
 
+        ws_state = wm_state.get_workspace_state(self._workspace)
+
         # TODO: Adjust to per output state
-        min_i, min_j, max_i, max_j = wm_state.get_extent()
+        min_i, min_j, max_i, max_j = ws_state.get_extent()
 
         """
         Possibly extend bounds
         """
-        min_i = min(min_i, wm_state.i)
-        min_j = min(min_j, wm_state.j)
-        max_i = max(max_i, min_i + wm_state.size - 1)
-        max_j = max(max_j, min_j + wm_state.size - 1)
+        min_i = min(min_i, ws_state.i)
+        min_j = min(min_j, ws_state.j)
+        max_i = max(max_i, min_i + ws_state.size - 1)
+        max_j = max(max_j, min_j + ws_state.size - 1)
 
         """
         Box of background
@@ -49,10 +52,10 @@ class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
         """
         Box of viewport
         """
-        vp_x = wm_state.i
-        vp_y = wm_state.j
-        vp_w = wm_state.size
-        vp_h = wm_state.size
+        vp_x = ws_state.i
+        vp_y = ws_state.j
+        vp_w = ws_state.size
+        vp_h = ws_state.size
 
         """
         Enlarge box and viewport
@@ -99,7 +102,7 @@ class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
             x -= (new_w - w)/2.
             w = new_w
 
-        result.box = (x + self._output.pos[0], y + self._output.pos[1], w, h)
+        result.box = (x + self._workspace.pos_x, y + self._workspace.pos_y, w, h)
         return result
 
     def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:

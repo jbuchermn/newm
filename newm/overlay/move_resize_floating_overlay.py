@@ -24,6 +24,7 @@ class MoveResizeFloatingOverlay(Overlay):
     def __init__(self, layout: Layout, view: View):
         super().__init__(layout)
 
+
         self.layout.update_cursor(False)
 
         self.view = view
@@ -31,10 +32,13 @@ class MoveResizeFloatingOverlay(Overlay):
         self.j = 0.
         self.w = 1.
         self.h = 1.
+        self.workspace = self.layout.workspaces[0]
+        self.ws_state = self.layout.state.get_workspace_state(self.workspace)
 
         self.min_w, self.min_h = view.find_min_w_h()
         try:
-            state = self.layout.state.get_view_state(self.view)
+            state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
+            self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
             self.i = state.i
             self.j = state.j
             self.w = state.w
@@ -48,15 +52,15 @@ class MoveResizeFloatingOverlay(Overlay):
         self._gesture_last_dy = 0.
 
     def move(self, dx: float, dy: float) -> None:
-        self.i += dx * self.layout.state.size
-        self.j += dy * self.layout.state.size
+        self.i += dx * self.ws_state.size
+        self.j += dy * self.ws_state.size
 
         self.layout.state.update_view_state(self.view, i=self.i, j=self.j)
         self.layout.damage()
 
     def resize(self, dx: float, dy: float) -> None:
-        self.w += dx * self.layout.state.size
-        self.h += dy * self.layout.state.size
+        self.w += dx * self.ws_state.size
+        self.h += dy * self.ws_state.size
 
         self.w = max(self.min_w, self.w)
         self.h = max(self.min_h, self.h)

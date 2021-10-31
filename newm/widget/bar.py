@@ -97,7 +97,7 @@ class TopBar(Bar, Thread):
         result.z_index = 5
 
         dy = wm_state.top_bar_dy * conf_bar_height()
-        result.box = (self._output.pos[0], self._output.pos[1] + dy - conf_bar_height(), self.wm.width, conf_bar_height())
+        result.box = (self._output.pos[0], self._output.pos[1] + dy - conf_bar_height(), self._output.width, conf_bar_height())
 
         return result
 

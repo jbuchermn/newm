@@ -72,6 +72,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def main(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Init: %s", self)
 
+        # Always place in active workspace
+        ws = self.wm.get_active_workspace()
+        ws_state = state.get_workspace_state(ws)
+
         try:
             if conf_xwayland_css():
                 if self.is_xwayland:
@@ -94,9 +98,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if self.panel is not None:
             logger.debug("Registered panel %s: %s", self.app_id, self.panel)
-
             self.damage()
-            return None, None
+
+            # Place dummy ViewState
+            ws_state1 = ws_state.with_view_state(self, is_tiled=False)
+            state1 = state.setting_workspace_state(ws, ws_state1)
+            return state1, state1
         else:
             second_state = None
 
@@ -112,8 +119,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 if min_w == 0 or min_h == 0:
                     return None, None
 
-                ci = state.i + state.size / 2.
-                cj = state.j + state.size / 2.
+                ci = ws_state.i + ws_state.size / 2.
+                cj = ws_state.j + ws_state.size / 2.
                 if self.parent is not None:
                     try:
                         ci = state.get_view_state(cast(View, self.parent)).i + state.get_view_state(cast(View, self.parent)).w / 2.
@@ -122,8 +129,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                         logger.warn("Unexpected: Could not access parent %s state" % self.parent)
 
                 w, h = float(min_w), float(min_h)
-                w *= state.size / self.wm.width / self.client_side_scale
-                h *= state.size / self.wm.height / self.client_side_scale
+                w *= ws_state.size / ws.width / self.client_side_scale
+                h *= ws_state.size / ws.height / self.client_side_scale
 
                 i = ci - w / 2.
                 j = cj - h / 2.
@@ -136,12 +143,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
             else:
                 min_w, _, min_h, _ = [float(r) for r in self.up_state.size_constraints] if self.up_state is not None else (0., 0., 0., 0.)
-                min_w *= state.size / self.wm.width / self.client_side_scale
-                min_h *= state.size / self.wm.height / self.client_side_scale
+                min_w *= ws_state.size / ws.width / self.client_side_scale
+                min_h *= ws_state.size / ws.height / self.client_side_scale
 
                 w = max(math.ceil(min_w), 1)
                 h = max(math.ceil(min_h), 1)
-                i, j = self.wm.place_initial(w, h)
+                i, j = self.wm.place_initial(ws, w, h)
 
                 second_state = (i, j, w, h)
 
@@ -159,19 +166,19 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             h = 0
 
 
-            state1 = state.with_view_state(
+            ws_state1 = ws_state.with_view_state(
                     self,
                     is_tiled=not (self.up_state is not None and self.up_state.is_floating), i=i, j=j, w=w, h=h,
                     scale_origin=(w1, h1), move_origin=(i1, j1),
                     stack_idx=self._handle
             )
 
-            state2 = state1.replacing_view_state(
+            ws_state2 = ws_state1.replacing_view_state(
                     self,
                     i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None), move_origin=(None, None)
                 ).focusing_view(self)
 
-            return state1, state2
+            return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
     def destroy(self) -> None:
         self.wm.destroy_view(self)
@@ -179,20 +186,32 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> PyWMViewDownstreamState:
         result = PyWMViewDownstreamState()
 
+        try:
+            self_state, ws_state, ws_handle = state.find_view(self)
+            ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
+            _, stack_idx, stack_len = self_state.stack_data
+        except Exception:
+            """
+            This can happen, if main has not been executed yet
+            (e.g. during an overlay) - just return a box not displayed
+            """
+            logger.exception("Could not access view %s state" % self)
+            return result
+
         if self.panel == "notifiers":
             result.z_index = 6
             result.accepts_input = False
             result.lock_enabled = True
 
             result.size = (
-                int(self.wm.width * conf_panel_notifiers_w() * self.client_side_scale),
-                int(self.wm.height * conf_panel_notifiers_h() * self.client_side_scale))
+                int(ws.width * conf_panel_notifiers_w() * self.client_side_scale),
+                int(ws.height * conf_panel_notifiers_h() * self.client_side_scale))
 
             result.box = (
-                self.wm.width * (1. - conf_panel_notifiers_w())/2.,
-                self.wm.height * (1. - conf_panel_notifiers_h()),
-                self.wm.width * conf_panel_notifiers_w(),
-                self.wm.height * conf_panel_notifiers_h())
+                ws.width * (1. - conf_panel_notifiers_w())/2.,
+                ws.height * (1. - conf_panel_notifiers_h()),
+                ws.width * conf_panel_notifiers_w(),
+                ws.height * conf_panel_notifiers_h())
 
         elif self.panel == "launcher":
             result.z_index = 5
@@ -200,16 +219,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             result.corner_radius = conf_panel_launcher_corner_radius()
 
             result.size = (
-                round(self.wm.width * conf_panel_launcher_w() * self.client_side_scale),
-                round(self.wm.height * conf_panel_launcher_h() * self.client_side_scale))
+                round(ws.width * conf_panel_launcher_w() * self.client_side_scale),
+                round(ws.height * conf_panel_launcher_h() * self.client_side_scale))
 
             result.box = (
-                (self.wm.width - result.size[0] / self.client_side_scale) / 2.,
-                (self.wm.height - result.size[1] / self.client_side_scale) / 2. + (1. - state.launcher_perc) * self.wm.height,
+                (ws.width - result.size[0] / self.client_side_scale) / 2.,
+                (ws.height - result.size[1] / self.client_side_scale) / 2. + (1. - state.launcher_perc) * ws.height,
                 result.size[0] / self.client_side_scale,
                 result.size[1] / self.client_side_scale)
-
-
 
         elif self.panel == "lock":
             result.z_index = 100
@@ -218,12 +235,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             result.lock_enabled = True
 
             result.size = (
-                round(self.wm.width * conf_panel_lock_w() * self.client_side_scale),
-                round(self.wm.height * conf_panel_lock_h() * self.client_side_scale))
+                round(ws.width * conf_panel_lock_w() * self.client_side_scale),
+                round(ws.height * conf_panel_lock_h() * self.client_side_scale))
 
             result.box = (
-                (self.wm.width - result.size[0] / self.client_side_scale) / 2.,
-                (self.wm.height - result.size[1] / self.client_side_scale) / 2. + (1. - state.lock_perc) * self.wm.height,
+                (ws.width - result.size[0] / self.client_side_scale) / 2.,
+                (ws.height - result.size[1] / self.client_side_scale) / 2. + (1. - state.lock_perc) * ws.height,
                 result.size[0] / self.client_side_scale,
                 result.size[1] / self.client_side_scale)
 
@@ -231,7 +248,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             result.accepts_input = True
             result.corner_radius = conf_corner_radius() if self.parent is None else 0
 
-            if state.is_fullscreen() and conf_fullscreen_padding() == 0:
+            if ws_state.is_fullscreen() and conf_fullscreen_padding() == 0:
                 result.corner_radius = 0
 
             """
@@ -251,21 +268,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             if self.is_focused():
                 result.z_index += 1
 
-
-            self_state = None
-            stack_idx, stack_len = 0, 1
-            try:
-                self_state = state.get_view_state(self)
-                _, stack_idx, stack_len = self_state.stack_data
-            except Exception:
-                """
-                This can happen, if main has not been executed yet
-                (e.g. during an overlay) - just return a box not displayed
-                """
-                logger.exception("Could not access view %s state" % self)
-                return result
-
-
             """
             Handle box
             """
@@ -276,19 +278,19 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
             if stack_len > 1:
                 i += 0.05 * stack_idx / (stack_len - 1)
-                j += 0.05 * self.wm.width / self.wm.height * stack_idx / (stack_len - 1)
+                j += 0.05 * ws.width / ws.height * stack_idx / (stack_len - 1)
                 w -= 0.05
-                h -= 0.05 * self.wm.width / self.wm.height
+                h -= 0.05 * ws.width / ws.height
 
-            x = i - state.i
-            y = j - state.j
+            x = i - ws_state.i
+            y = j - ws_state.j
 
-            x *= self.wm.width / state.size
-            y *= self.wm.height / state.size
-            w *= self.wm.width / state.size
-            h *= self.wm.height / state.size
+            x *= ws.width / ws_state.size
+            y *= ws.height / ws_state.size
+            w *= ws.width / ws_state.size
+            h *= ws.height / ws_state.size
 
-            padding = conf_fullscreen_padding() if state.is_fullscreen() else conf_padding()
+            padding = conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding()
 
             if w != 0 and h != 0:
                 x += padding
@@ -319,10 +321,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             if w_for_size is None or h_for_size is None:
                 w_for_size, h_for_size = self_state.w, self_state.h
 
-            size = state.size_origin if state.size_origin is not None else state.size
+            size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
 
-            w_for_size *= self.wm.width / size
-            h_for_size *= self.wm.height / size
+            w_for_size *= ws.width / size
+            h_for_size *= ws.height / size
             w_for_size -= 2*padding
             h_for_size -= 2*padding
 
@@ -335,8 +337,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 """
                 Override: Keep floating windows scaled correctly
                 """
-                w = up_state.size[0] / self.client_side_scale * size / state.size
-                h = up_state.size[1] / self.client_side_scale * size / state.size
+                w = up_state.size[0] / self.client_side_scale * size / ws_state.size
+                h = up_state.size[1] / self.client_side_scale * size / ws_state.size
 
             else:
                 """
@@ -380,6 +382,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
+        result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
         return result
 
 
@@ -412,12 +415,19 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             self.set_fullscreen(False)
 
     def find_min_w_h(self) -> tuple[float, float]:
+        try:
+            self_state, ws_state, ws_handle = self.wm.state.find_view(self)
+            ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
+        except Exception:
+            logger.exception("Could not access view %s state" % self)
+            return (0, 0)
+
         """
         Let overlays know how small we are able to get in i, j, w, h coords
         """
         min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
-        min_w *= self.wm.state.size / self.wm.width / self.client_side_scale
-        min_h *= self.wm.state.size / self.wm.height / self.client_side_scale
+        min_w *= ws_state.size / ws.width / self.client_side_scale
+        min_h *= ws_state.size / ws.height / self.client_side_scale
 
         return min_w, min_h
 
