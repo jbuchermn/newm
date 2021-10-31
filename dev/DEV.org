@@ -4,14 +4,17 @@
 ** Multi-output support
 *** STRT newm-sidecar showcase using wayvnc, guacamole, qrencode
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
-- [ ] Handle authentication of guacamole by guacamole-auth-hmac
+- [X] Handle authentication of guacamole by guacamole-auth-hmac
 - [X] Document newm-sidecar
 *** STRT Multi-output
 - Need: get rid of layout.output_scale, layout.width, layout.height
 - [X] Widgets per output
-- [ ] Coordinate grids per output placing all windows on first output
+- [ ] Fix background not blending in and initially scaled wrong
+- [ ] Coordinate grids per output (or group of overlapping output) placing all windows on first output
 - [ ] Move windows between outputs
 - [ ] Document new config options
+
+* v0.3
 ** Improved panel
 - Bars as panels not as widgets
 - Possibly flutter-based?
@@ -19,6 +22,7 @@
 *** TODO Specify requirments for newm <-> panel interaction
 
 * Backlog / Ideas
+** Dynamic background?
 ** Titles during OverviewOverlay
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)

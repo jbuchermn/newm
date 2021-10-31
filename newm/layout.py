@@ -356,6 +356,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         )
         self.sys_backend.register_xf86_keybindings()
 
+        self.reconfigure(conf_pywm())
+
     def reducer(self, state: LayoutState) -> PyWMDownstreamState:
         return PyWMDownstreamState(state.lock_perc)
 
