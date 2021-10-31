@@ -460,13 +460,15 @@ class LayoutState:
         orphans = []
         for k in list(self._workspace_states.keys()):
             if k not in [w._handle for w in layout.workspaces]:
-                orphans += [(k, self._workspace_states[k].copy())]
+                orphans += [(l, self._workspace_states[k]._view_states[l].copy()) for l in
+                            self._workspace_states[k]._view_states.keys()]
                 del self._workspace_states[k]
 
         orphan_ws = self._workspace_states[layout.workspaces[0]._handle]
         for k, o in orphans:
             orphan_ws._view_states[k] = o
 
+        self.validate_stack_indices()
         return self
 
     def without_view_state(self, view: View) -> LayoutState:

@@ -33,6 +33,7 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
         self.size = (state0.size, state1.size)
         self.opacity = (state0.opacity, state1.opacity)
         self.lock_enabled = state0.lock_enabled
+        self.fixed_output = state1.fixed_output
 
     def get(self, at: float) -> PyWMViewDownstreamState:
         at = min(1, max(0, at))
@@ -59,6 +60,7 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
         res.opacity = self.opacity[0] + at * (self.opacity[1] - self.opacity[0])
         res.size=self.size[1] if at > conf_size_adjustment() else self.size[0]
         res.lock_enabled=self.lock_enabled
+        res.fixed_output=self.fixed_output
         return res
 
 class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):

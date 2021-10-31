@@ -249,8 +249,9 @@ class LayoutThread(Thread):
 
 
 class Workspace:
-    def __init__(self, handle: int, pos_x: int, pos_y: int, width: int, height: int):
-        self._handle = handle
+    def __init__(self, output: PyWMOutput, pos_x: int, pos_y: int, width: int, height: int) -> None:
+        self._handle = -1
+        self.outputs = [output]
 
         self.pos_x = pos_x
         self.pos_y = pos_y
@@ -258,7 +259,6 @@ class Workspace:
         self.height = height
 
     def swallow(self, other: Workspace) -> bool:
-        print(self, other)
         if self.pos_x + self.width <= other.pos_x:
             return False
         if self.pos_y + self.height <= other.pos_y:
@@ -267,7 +267,6 @@ class Workspace:
             return False
         if self.pos_y >= other.pos_y + other.height:
             return False
-        print("SWALLOWING")
 
         pos_x = min(self.pos_x, other.pos_x)
         pos_y = min(self.pos_y, other.pos_y)
@@ -277,6 +276,7 @@ class Workspace:
         self.pos_y = pos_y
         self.width = width
         self.height = height
+        self.outputs += other.outputs
 
         return True
 
@@ -307,7 +307,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.panel_launcher = PanelsLauncher()
         self.panel_endpoint = PanelEndpoint(self)
 
-        self.workspaces: list[Workspace] = [Workspace(0, 0, 0, 1280, 720)]
+        self.workspaces: list[Workspace] = [Workspace(PyWMOutput("dummy", 1., 1280, 720, (0, 0)), 0, 0, 1280, 720)]
 
         self.state = LayoutState()
 
@@ -335,7 +335,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             raise Exception("Unknown mod")
 
     def _setup_workspaces(self) -> None:
-        ws = [Workspace(-1, o.pos[0], o.pos[1], o.width, o.height) for o in self.layout]
+        ws = [Workspace(o, o.pos[0], o.pos[1], o.width, o.height) for o in self.layout]
         i, j = 0, len(ws) - 1
         while i < len(ws) and j < len(ws) and i < j:
             if ws[i].swallow(ws[j]):

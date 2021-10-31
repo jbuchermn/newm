@@ -166,17 +166,18 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             h = 0
 
 
+
             ws_state1 = ws_state.with_view_state(
-                    self,
-                    is_tiled=not (self.up_state is not None and self.up_state.is_floating), i=i, j=j, w=w, h=h,
-                    scale_origin=(w1, h1), move_origin=(i1, j1),
-                    stack_idx=self._handle
+                self,
+                is_tiled=not (self.up_state is not None and self.up_state.is_floating), i=i, j=j, w=w, h=h,
+                scale_origin=(w1, h1), move_origin=(i1, j1),
+                stack_idx=self._handle,
             )
 
             ws_state2 = ws_state1.replacing_view_state(
-                    self,
-                    i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None), move_origin=(None, None)
-                ).focusing_view(self)
+                self,
+                i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None), move_origin=(None, None)
+            ).focusing_view(self)
 
             return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
@@ -383,6 +384,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
+
+        # TODO: Cannot handle mirrored outputs
+        result.fixed_output = ws.outputs[0]
+
         return result
 
 
