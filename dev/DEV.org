@@ -13,10 +13,10 @@
 - [X] Fix overlapping windows outside of one workspace displayed on other
 - [X] Fix orphans
 - [X] Fix select view on overview
-- [ ] Move windows between outputs
-- [ ] Merge workspaces on update / elaborate orphan handling
 - [X] Fix  overlapping windows from other screens blocking input
 - [X] Enable mirrored outputs --> needs more elaborate concept of "fixed_output" pywm-side
+- [ ] Move windows between outputs
+- [ ] Merge workspaces on update / elaborate orphan handling
 - [ ] Configurable Anim prevention for certain outputs
 - [ ] Document new config options
 
