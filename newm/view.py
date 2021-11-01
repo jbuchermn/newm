@@ -387,10 +387,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if self_state.move_origin[0] is not None and self_state.scale_origin[0] is None:
             # No fixed output during a move
-            result.fixed_output = None
+            result.workspace = None
         else:
-            # TODO: Cannot handle mirrored outputs
-            result.fixed_output = ws.outputs[0]
+            result.workspace = (ws.pos_x, ws.pos_y, ws.width, ws.height)
 
         return result
 
