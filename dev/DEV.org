@@ -15,8 +15,8 @@
 - [X] Fix select view on overview
 - [ ] Move windows between outputs
 - [ ] Merge workspaces on update / elaborate orphan handling
-- [ ] Fix  overlapping windows from other screens blocking input
-- [ ] Enable mirrored outputs --> needs more elaborate concept of "fixed_output" pywm-side
+- [X] Fix  overlapping windows from other screens blocking input
+- [X] Enable mirrored outputs --> needs more elaborate concept of "fixed_output" pywm-side
 - [ ] Configurable Anim prevention for certain outputs
 - [ ] Document new config options
 
