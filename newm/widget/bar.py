@@ -75,7 +75,7 @@ class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
         cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
-        self._animate(WidgetDownstreamInterpolation(cur, nxt), dt)
+        self._animate(WidgetDownstreamInterpolation(self.wm, self, cur, nxt), dt)
 
     def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self.wm.state))

@@ -59,6 +59,8 @@ conf_wallpaper = configured_value('wallpaper', cast(Optional[str], None))
 conf_mod = configured_value('mod', PYWM_MOD_LOGO)
 conf_pywm = configured_value('pywm', cast(dict[str, Any], {}))
 
+conf_outputs = configured_value('outputs', cast(list[dict[str, Any]], []))
+
 conf_send_fullscreen_to_views = configured_value('view.send_fullscreen', True)
 
 if TYPE_CHECKING:
@@ -249,7 +251,7 @@ class LayoutThread(Thread):
 
 
 class Workspace:
-    def __init__(self, output: PyWMOutput, pos_x: int, pos_y: int, width: int, height: int) -> None:
+    def __init__(self, output: PyWMOutput, pos_x: int, pos_y: int, width: int, height: int, prevent_anim: bool=False) -> None:
         self._handle = -1
         self.outputs = [output]
 
@@ -257,6 +259,8 @@ class Workspace:
         self.pos_y = pos_y
         self.width = width
         self.height = height
+
+        self.prevent_anim = prevent_anim
 
     def swallow(self, other: Workspace) -> bool:
         if self.pos_x + self.width <= other.pos_x:
@@ -277,6 +281,7 @@ class Workspace:
         self.width = width
         self.height = height
         self.outputs += other.outputs
+        self.prevent_anim |= other.prevent_anim
 
         return True
 
@@ -294,7 +299,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def __init__(self) -> None:
         load_config()
 
-        PyWM.__init__(self, View, **conf_pywm())
+        PyWM.__init__(self, View, **conf_pywm(), outputs=conf_outputs())
         Animate.__init__(self)
 
         self.mod = conf_mod()
@@ -335,7 +340,13 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             raise Exception("Unknown mod")
 
     def _setup_workspaces(self) -> None:
-        ws = [Workspace(o, o.pos[0], o.pos[1], o.width, o.height) for o in self.layout]
+        output_conf = conf_outputs()
+        def disable_anim(output: PyWMOutput) -> bool:
+            for o in output_conf:
+                if o['name'] == output.name:
+                    return 'anim' in o and not o['anim']
+            return False
+        ws = [Workspace(o, o.pos[0], o.pos[1], o.width, o.height, disable_anim(o)) for o in self.layout]
         i, j = 0, len(ws) - 1
         while i < len(ws) and j < len(ws) and i < j:
             if ws[i].swallow(ws[j]):
@@ -438,7 +449,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.sys_backend.register_xf86_keybindings()
 
         if reconfigure:
-            self.reconfigure(conf_pywm())
+            self.reconfigure(dict(**conf_pywm(), outputs=conf_outputs()))
 
     def reducer(self, state: LayoutState) -> PyWMDownstreamState:
         return PyWMDownstreamState(state.lock_perc)
@@ -447,7 +458,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         cur = self.reducer(old_state)
         nxt = self.reducer(new_state)
 
-        self._animate(LayoutDownstreamInterpolation(cur, nxt), dt)
+        self._animate(LayoutDownstreamInterpolation(self, cur, nxt), dt)
 
     def process(self) -> PyWMDownstreamState:
         return self._process(self.reducer(self.state))

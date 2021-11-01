@@ -1,9 +1,12 @@
 from __future__ import annotations
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, TYPE_CHECKING
 
-from pywm import PyWMViewDownstreamState, PyWMWidgetDownstreamState, PyWMDownstreamState
+from pywm import PyWMViewDownstreamState, PyWMWidgetDownstreamState, PyWMDownstreamState, PyWMWidget
 
 from .config import configured_value
+
+if TYPE_CHECKING:
+    from .layout import Layout
 
 conf_size_adjustment = configured_value("interpolation.size_adjustment", .5)
 
@@ -13,7 +16,7 @@ class Interpolation(Generic[StateT]):
         pass
 
 class LayoutDownstreamInterpolation(Interpolation[PyWMDownstreamState]):
-    def __init__(self, state0: PyWMDownstreamState, state1: PyWMDownstreamState) -> None:
+    def __init__(self, layout: Layout, state0: PyWMDownstreamState, state1: PyWMDownstreamState) -> None:
         self.lock_perc = (state0.lock_perc, state1.lock_perc)
 
     def get(self, at: float) -> PyWMDownstreamState:
@@ -24,7 +27,7 @@ class LayoutDownstreamInterpolation(Interpolation[PyWMDownstreamState]):
         return PyWMDownstreamState(lock_perc)
 
 class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
-    def __init__(self, state0: PyWMViewDownstreamState, state1: PyWMViewDownstreamState) -> None:
+    def __init__(self, layout: Layout, state0: PyWMViewDownstreamState, state1: PyWMViewDownstreamState) -> None:
         self.z_index = (state0.z_index, state1.z_index)
         self.box = (state0.box, state1.box)
         self.mask = (state0.mask, state1.mask)
@@ -48,7 +51,20 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
                 h = state1.workspace[1] + state1.workspace[3] - y
             self.workspace = x, y, w, h
 
+        self.anim = True
+        if self.workspace is not None:
+            for ws in layout.workspaces:
+                if ws.pos_x <= self.workspace[0] <= self.workspace[0] + self.workspace[2] <= ws.pos_x + ws.width and \
+                   ws.pos_y <= self.workspace[1] <= self.workspace[1] + self.workspace[3] <= ws.pos_y + ws.height:
+                    if ws.prevent_anim:
+                        self.anim = False
+                        break
+
+
     def get(self, at: float) -> PyWMViewDownstreamState:
+        if not self.anim:
+            at = 1.
+
         at = min(1, max(0, at))
         box=(
             self.box[0][0] + (self.box[1][0] - self.box[0][0]) * at,
@@ -77,13 +93,26 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
         return res
 
 class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):
-    def __init__(self, state0: PyWMWidgetDownstreamState, state1: PyWMWidgetDownstreamState) -> None:
+    def __init__(self, layout: Layout, widget: PyWMWidget, state0: PyWMWidgetDownstreamState, state1: PyWMWidgetDownstreamState) -> None:
         self.z_index = (state0.z_index, state1.z_index)
         self.box = (state0.box, state1.box)
         self.opacity = (state0.opacity, state1.opacity)
         self.lock_enabled = state0.lock_enabled
 
+
+        self.anim = True
+        if widget.output is not None:
+            for ws in layout.workspaces:
+                if ws.pos_x <= widget.output.pos[0] <= widget.output.pos[0] + widget.output.width <= ws.pos_x + ws.width and \
+                    ws.pos_y <= widget.output.pos[1] <= widget.output.pos[1] + widget.output.height <= ws.pos_y + ws.height:
+                    if ws.prevent_anim:
+                        self.anim = False
+                        break
+
     def get(self, at: float) -> PyWMWidgetDownstreamState:
+        if not self.anim:
+            at = 1.
+
         at = min(1, max(0, at))
         box=(
             self.box[0][0] + (self.box[1][0] - self.box[0][0]) * at,

@@ -17,8 +17,9 @@
 - [X] Enable mirrored outputs --> needs more elaborate concept of "fixed_output" pywm-side
 - [ ] Move windows between outputs
 - [ ] Merge workspaces on update / elaborate orphan handling
-- [ ] Configurable Anim prevention for certain outputs
+- [X] Configurable Anim prevention for certain outputs
 - [ ] Document new config options
+- [ ] Occasionally slow animations when enabling second output without high cpu load --> timer issues?
 
 * v0.3
 ** Improved panel

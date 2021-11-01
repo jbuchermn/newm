@@ -401,7 +401,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         cur = self.reducer(self.up_state, old_state)
         nxt = self.reducer(self.up_state, new_state)
 
-        self._animate(ViewDownstreamInterpolation(cur, nxt), dt)
+        self._animate(ViewDownstreamInterpolation(self.wm, cur, nxt), dt)
 
     def process(self, up_state: PyWMViewUpstreamState) -> PyWMViewDownstreamState:
         return self._process(self.reducer(up_state, self.wm.state))
