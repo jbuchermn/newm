@@ -15,20 +15,23 @@
 - [X] Fix select view on overview
 - [X] Fix  overlapping windows from other screens blocking input
 - [X] Enable mirrored outputs --> needs more elaborate concept of "fixed_output" pywm-side
-- [ ] Move windows between outputs
+- [X] Move windows between outputs
 - [ ] Merge workspaces on update / elaborate orphan handling
 - [X] Configurable Anim prevention for certain outputs
 - [ ] Document new config options
+
 - [ ] Occasionally slow animations when enabling second output without high cpu load --> timer issues?
-- [ ] Open second screen, move cursor to first, open window, animation wrong
+- [X] Open second screen, move cursor to first, open window, animation wrong
+- [ ] Place panels on first screen
 - [ ] Move between screens: Floating windows
 - [ ] Move between screens: Shortcuts
 - [ ] Improved background (probably more general issue)
-- [ ] Open second screen, overview -> Hacky background animation
+- [ ] Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
 
 
 * v0.3
 ** Improved panel
+- Useful handling of multiple workspaces
 - Bars as panels not as widgets
 - Possibly flutter-based?
 - Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic

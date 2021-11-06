@@ -389,6 +389,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self_state.move_origin[0] is not None and self_state.scale_origin[0] is None:
             # No fixed output during a move
             result.workspace = None
+        elif up_state.is_floating:
+            # Workspaces don't really matter for floating windows, just leave them attached to initial workspace
+            result.workspace = None
         else:
             result.workspace = (ws.pos_x, ws.pos_y, ws.width, ws.height)
 
