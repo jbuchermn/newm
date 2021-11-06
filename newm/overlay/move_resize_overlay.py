@@ -111,6 +111,7 @@ class MoveOverlay(_Overlay):
         workspace, i, j, self.w, self.h = self.view.transform_to_closest_ws(self.workspace, i0, j0, self.w, self.h)
 
         if workspace != self.workspace:
+            logger.debug("Move - switching workspace %d -> %d" % (self.workspace._handle, workspace._handle))
             self.di += (i - i0)
             self.dj += (j - j0)
 
@@ -125,7 +126,6 @@ class MoveOverlay(_Overlay):
         self._closed = True
 
         try:
-
             state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
             self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
 
@@ -144,6 +144,7 @@ class MoveOverlay(_Overlay):
             self.h = max(1, round(self.h)) 
 
             if workspace != self.workspace:
+                logger.debug("Move - switching workspace %d -> %d" % (self.workspace._handle, workspace._handle))
                 self.layout.state.move_view_state(self.view, self.workspace, workspace)
                 self.workspace = workspace
 

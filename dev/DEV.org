@@ -6,11 +6,12 @@
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 
 *** STRT Multi-output
-- [ ] Merge workspaces on update / elaborate orphan handling
+- [ ] Backgrounds when moving window between workspaces (issue with move_origin)
+- [X] Merge workspaces on update / elaborate orphan handling
 - [ ] Occasionally slow animations when having a second virtual output
 - [ ] Open second screen, move cursor to first, open window, animation wrong
-- [ ] Place panels on first screen
-- [ ] Move between screens: Floating windows
+- [X] Place panels on first screen
+- [X] Move between screens: Floating windows
 - [ ] Move between screens: Shortcuts
 - [ ] Improved background (probably more general issue)
 - [ ] Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)

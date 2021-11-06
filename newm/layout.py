@@ -285,6 +285,25 @@ class Workspace:
 
         return True
 
+    def score(self, other: Workspace) -> float:
+        x, y, w, h = self.pos_x, self.pos_y, self.width, self.height
+        if other.pos_x > x:
+            w -= (other.pos_x - x)
+            x += (other.pos_x - x)
+        if other.pos_y > y:
+            h -= (other.pos_y - y)
+            y += (other.pos_y - y)
+        if x + w > other.pos_x + other.width:
+            w -= (x + w - other.pos_x - other.width)
+        if y + h > other.pos_y + other.height:
+            h -= (y + h - other.pos_y - other.height)
+
+        if w <= 0 or h <= 0:
+            return 0
+
+        return w*h / (self.width * self.height)
+
+
     def __str__(self) -> str:
         return "Workspace[%d] at %d, %d --> %d, %d" % (
             self._handle,
@@ -358,10 +377,28 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 else:
                     j -= 1
 
-        # TODO: merge ws with self.workspaces instead of this:
-        for i, w in enumerate(ws):
-            w._handle = i
+        for w in self.workspaces:
+            best_score = 0.1
+            best_ws = None
+            for wp in ws:
+                if wp._handle >= 0:
+                    continue
+                score = w.score(wp)
+                if score > best_score:
+                    best_score = score
+                    best_ws = wp
+            if best_ws is not None:
+                best_ws._handle = w._handle
+
         self.workspaces = ws
+        for w in [w for w in self.workspaces if w._handle < 0]:
+            h = 0
+            while True:
+                if h not in [w._handle for w in self.workspaces]:
+                    break
+                h+=1
+            w._handle = h
+
 
         logger.debug("Setup of newm workspaces")
         for w in self.workspaces:
