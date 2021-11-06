@@ -476,7 +476,6 @@ class LayoutState:
             s.without_view_state(view)
         return self
 
-
     """
     Copy / Update
     """
@@ -509,6 +508,13 @@ class LayoutState:
             s.update(**kwargs)
         except Exception:
             logger.warn("Unexpected: Unable to update view %s state", view)
+
+    def move_view_state(self, view: View, from_ws: Workspace, to_ws: Workspace) -> None:
+        from_ws_state = self._workspace_states[from_ws._handle]
+        to_ws_state = self._workspace_states[to_ws._handle]
+        view_state = from_ws_state.get_view_state(view)
+        from_ws_state.without_view_state(view)
+        to_ws_state._view_states[view._handle] = view_state
 
     def validate_fullscreen(self) -> None:
         for h, s in self._workspace_states.items():

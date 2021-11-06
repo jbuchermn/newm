@@ -20,7 +20,7 @@ from ..hysteresis import Hysteresis
 from ..config import configured_value
 
 if TYPE_CHECKING:
-    from ..layout import Layout
+    from ..layout import Layout, Workspace
     from ..view import View
     from ..state import LayoutState
 
@@ -41,7 +41,7 @@ class _Overlay:
     def on_gesture(self, values: dict[str, float]) -> None:
         pass
 
-    def close(self) -> tuple[float, float, float, float, float, float, float, float, float]:
+    def close(self) -> tuple[Workspace, float, float, float, float, float, float, float, float, float]:
         pass
 
 
@@ -54,12 +54,20 @@ class MoveOverlay(_Overlay):
         self.view = view
         self.i = 0.
         self.j = 0.
+        self.w = 1.
+        self.h = 1.
+
+        # In case of switched workspace
+        self.di = 0
+        self.dj = 0
 
         try:
             view_state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
             self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
             self.i = view_state.i
             self.j = view_state.j
+            self.w = view_state.w
+            self.h = view_state.h
 
             self.layout.update(
                 self.layout.state.setting_workspace_state(
@@ -90,27 +98,61 @@ class MoveOverlay(_Overlay):
 
         self.i += factor*(values['delta_x'] - self.last_dx)
         self.j += factor*(values['delta_y'] - self.last_dy)
+
+        i0 = self.i_grid.at(self.i)
+        j0 = self.j_grid.at(self.j)
+
         self.last_dx = values['delta_x']
         self.last_dy = values['delta_y']
+
+        i0 += self.di
+        j0 += self.dj
+
+        workspace, i, j, self.w, self.h = self.view.transform_to_closest_ws(self.workspace, i0, j0, self.w, self.h)
+
+        if workspace != self.workspace:
+            self.di += (i - i0)
+            self.dj += (j - j0)
+
+            self.layout.state.move_view_state(self.view, self.workspace, workspace)
+            self.workspace = workspace
+
         self.layout.state.update_view_state(
-            self.view, i=self.i_grid.at(self.i), j=self.j_grid.at(self.j))
+            self.view, i=i, j=j, w=self.w, h=self.h)
         self.layout.damage()
 
-    def close(self) -> tuple[float, float, float, float, float, float, float, float, float]:
+    def close(self) -> tuple[Workspace, float, float, float, float, float, float, float, float, float]:
         self._closed = True
 
         try:
+
             state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
             self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
+
             fi, ti = self.i_grid.final()
             fj, tj = self.j_grid.final()
 
+            fi += self.di
+            fj += self.dj
+
+            workspace, fi, fj, _, __ = self.view.transform_to_closest_ws(self.workspace, fi, fj, self.w, self.h)
+
+            fi = round(fi)
+            fj = round(fj)
+
+            self.w = max(1, round(self.w)) 
+            self.h = max(1, round(self.h)) 
+
+            if workspace != self.workspace:
+                self.layout.state.move_view_state(self.view, self.workspace, workspace)
+                self.workspace = workspace
+
             logger.debug("Move - Grid finals: %f %f (%f %f)", fi, fj, ti, tj)
 
-            return state.i, state.j, state.w, state.h, fi, fj, state.w, state.h, max(ti, tj)
+            return self.workspace, state.i, state.j, state.w, state.h, fi, fj, round(self.w), round(self.h), max(ti, tj)
         except Exception:
             logger.warn("Unexpected: Could not access view %s state... returning default placement", self.view)
-            return self.i, self.j, 1, 1, round(self.i), round(self.j), 1, 1, 1
+            return self.workspace, self.i, self.j, 1, 1, round(self.i), round(self.j), 1, 1, 1
 
 
 class ResizeOverlay(_Overlay):
@@ -195,7 +237,7 @@ class ResizeOverlay(_Overlay):
         self.layout.damage()
 
 
-    def close(self) -> tuple[float, float, float, float, float, float, float, float, float]:
+    def close(self) -> tuple[Workspace, float, float, float, float, float, float, float, float, float]:
         self._closed = True
 
         try:
@@ -207,10 +249,10 @@ class ResizeOverlay(_Overlay):
 
             logger.debug("Resize - Grid finals: %f %f %f %f (%f %f %f %f)", fi, fj, fw, fh, ti, tj, tw, th)
 
-            return state.i, state.j, state.w, state.h, fi, fj, fw, fh, max(ti, tj, tw, th)
+            return self.workspace, state.i, state.j, state.w, state.h, fi, fj, fw, fh, max(ti, tj, tw, th)
         except Exception:
             logger.warn("Unexpected: Could not access view %s state... returning default placement", self.view)
-            return self.i, self.j, self.w, self.h, self.i, self.j, self.w, self.h, 1
+            return self.workspace, self.i, self.j, self.w, self.h, self.i, self.j, self.w, self.h, 1
 
 
 
@@ -370,9 +412,10 @@ class MoveResizeOverlay(Overlay, Thread):
     def finish(self) -> None:
         logger.debug("MoveResizeOverlay: Finishing gesture")
         if self.overlay is not None:
-            ii, ij, iw, ih, fi, fj, fw, fh, t = self.overlay.close()
+            ws, ii, ij, iw, ih, fi, fj, fw, fh, t = self.overlay.close()
             self.overlay = None
 
+            self.workspace = ws
             if ii != fi or ij != fj:
                 self._target_view_pos = (ii, ij, fi, fj, time.time(), time.time() + t)
             if iw != fw or ih != fh:

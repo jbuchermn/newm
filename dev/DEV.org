@@ -20,6 +20,12 @@
 - [X] Configurable Anim prevention for certain outputs
 - [ ] Document new config options
 - [ ] Occasionally slow animations when enabling second output without high cpu load --> timer issues?
+- [ ] Open second screen, move cursor to first, open window, animation wrong
+- [ ] Move between screens: Floating windows
+- [ ] Move between screens: Shortcuts
+- [ ] Improved background (probably more general issue)
+- [ ] Open second screen, overview -> Hacky background animation
+
 
 * v0.3
 ** Improved panel

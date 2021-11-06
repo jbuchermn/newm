@@ -15,7 +15,7 @@ from .overlay import MoveResizeFloatingOverlay
 from .config import configured_value
 
 if TYPE_CHECKING:
-    from .layout import Layout
+    from .layout import Layout, Workspace
 else:
     Layout = TypeVar('Layout')
 
@@ -26,6 +26,7 @@ conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', Fa
 conf_corner_radius = configured_value('view.corner_radius', 12.5)
 conf_padding = configured_value('view.padding', 8)
 conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0)
+conf_border_ws_switch = configured_value('view.border_ws_switch', 10.)
 
 conf_panel_lock_h = configured_value('panels.lock.h', 0.6)
 conf_panel_lock_w = configured_value('panels.lock.w', 0.7)
@@ -441,3 +442,45 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def is_focused(self) -> bool:
         return self.up_state is not None and self.up_state.is_focused
+
+    def transform_to_closest_ws(self, ws: Workspace, i0: float, j0: float, w0: float, h0: float) -> tuple[Workspace, float, float, float, float]:
+        if self.panel is not None:
+            return ws, i0, j0, w0, h0
+
+        ws_state = self.wm.state.get_workspace_state(ws)
+
+        x = i0 - ws_state.i
+        y = j0 - ws_state.j
+
+        x *= ws.width / ws_state.size
+        y *= ws.height / ws_state.size
+        w = w0 * ws.width / ws_state.size
+        h = h0 * ws.height / ws_state.size
+
+        x += ws.pos_x
+        y += ws.pos_y
+
+        cx = x + .5*w
+        cy = y + .5*h
+
+        border_ws_switch = conf_border_ws_switch()
+
+        if ws.pos_x - border_ws_switch <= cx <= ws.pos_x + ws.width + border_ws_switch and ws.pos_y - border_ws_switch <= cy <= ws.pos_y + ws.height + border_ws_switch:
+            return ws, i0, j0, w0, h0
+
+        for wsp in self.wm.workspaces:
+            if wsp.pos_x < cx < wsp.pos_x + wsp.width and wsp.pos_y < cy < wsp.pos_y + wsp.height:
+                wsp_state = self.wm.state.get_workspace_state(wsp)
+                wp = w * wsp_state.size / wsp.width
+                hp = h * wsp_state.size / wsp.height
+
+                wp = min(wp, wsp_state.size)
+                hp = min(hp, wsp_state.size)
+
+                ip = (cx - .5 * wp * wsp.width / wsp_state.size - wsp.pos_x) * wsp_state.size / wsp.width + wsp_state.i
+                jp = (cy - .5 * hp * wsp.height / wsp_state.size - wsp.pos_y) * wsp_state.size / wsp.height + wsp_state.j
+
+                return wsp, ip, jp, wp, hp
+
+        logger.debug("View outside of workspaces - defaulting")
+        return ws, i0, j0, w0, h0
