@@ -4,29 +4,18 @@
 ** Multi-output support
 *** STRT newm-sidecar showcase using wayvnc, guacamole, qrencode
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
-- [X] Handle authentication of guacamole by guacamole-auth-hmac
-- [X] Document newm-sidecar
-*** STRT Multi-output
-- [X] Widgets per output
-- [X] Fix background not blending in and initially scaled wrong
-- [X] Coordinate grids per output (or group of overlapping output) placing all windows on first output
-- [X] Fix overlapping windows outside of one workspace displayed on other
-- [X] Fix orphans
-- [X] Fix select view on overview
-- [X] Fix  overlapping windows from other screens blocking input
-- [X] Enable mirrored outputs --> needs more elaborate concept of "fixed_output" pywm-side
-- [X] Move windows between outputs
-- [ ] Merge workspaces on update / elaborate orphan handling
-- [X] Configurable Anim prevention for certain outputs
-- [ ] Document new config options
 
-- [ ] Occasionally slow animations when enabling second output without high cpu load --> timer issues?
-- [X] Open second screen, move cursor to first, open window, animation wrong
+*** STRT Multi-output
+- [ ] Merge workspaces on update / elaborate orphan handling
+- [ ] Occasionally slow animations when having a second virtual output
+- [ ] Open second screen, move cursor to first, open window, animation wrong
 - [ ] Place panels on first screen
 - [ ] Move between screens: Floating windows
 - [ ] Move between screens: Shortcuts
 - [ ] Improved background (probably more general issue)
 - [ ] Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
+
+- [ ] Document new config options
 
 
 * v0.3
