@@ -19,7 +19,7 @@ class Animate(Generic[StateT]):
         if self._animation is not None:
             interpolation, s, d, last_ts = self._animation
             ts = time.time()
-            if ts - last_ts > 1. / 30.:
+            if ts - last_ts > 1. / 50.:
                 logger.debug("Slow animation frame: %.2ffps", (1. / (ts-last_ts)))
             self._animation = (interpolation, s, d, ts)
 
