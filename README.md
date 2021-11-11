@@ -100,6 +100,9 @@ wallpaper = os.environ['HOME'] + '/wallpaper.jpg'
 
 output_scale = 2.0
 
+def on_startup():
+    os.system("alacritty &")
+
 pywm = {
     'xkb_model': "macintosh",
     'xkb_layout': "de,de",
@@ -172,6 +175,7 @@ The most important configuration options with regard to behaviour are `mod` and 
 | `power_times`                           | `[120, 300, 600]`   | Times in seconds after which to dim the screen, turn it off and hibernate (in seconds)                                                                          |
 | `sys_backend_endpoints`                 | `[]`                | Endpoint functions for things like audio, backlight, ... (see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py)))  |
 | `greeter_user`                          | `'greeter'`         | Relevant if newm is run as login display manager, username used for `greetd`                                                                                    |
+| `on_startup`                            | `lambda: None`      | Function called when the compositor has started, use to run certain things using `os.system("... &")`                                                           |
 
 Gestures are configured by a lot of numeric parameters; these are structured by the different gesture kinds (swipe to move, swipe to zoom, move, resize)
 as well as some general ones (`gestures` and `grid`). The best way is to experiment with these and hot-reload the configuration (by default `M-C`).

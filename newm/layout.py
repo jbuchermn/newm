@@ -81,6 +81,8 @@ conf_blend_t = configured_value('blend_time', 1.)
 
 conf_power_times = configured_value('power_times', [120, 300, 600])
 
+conf_on_startup = configured_value('on_startup', lambda: None)
+
 
 def _score(i1: float, j1: float, w1: float, h1: float,
            im: int, jm: int,
@@ -511,6 +513,12 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
         # Initially display cursor
         self.update_cursor()
+
+        # Run on_startup
+        try:
+            conf_on_startup()()
+        except Exception:
+            logger.exception("on_startup")
 
         # Fade in
         def fade_in() -> None:
