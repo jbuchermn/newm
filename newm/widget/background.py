@@ -29,7 +29,6 @@ class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
 
         ws_state = wm_state.get_workspace_state(self._workspace)
 
-        # TODO: Adjust to per output state
         min_i, min_j, max_i, max_j = ws_state.get_extent()
 
         """

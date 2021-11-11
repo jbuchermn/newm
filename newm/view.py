@@ -167,7 +167,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             h = 0
 
 
-
             ws_state1 = ws_state.with_view_state(
                 self,
                 is_tiled=not (self.up_state is not None and self.up_state.is_floating), i=i, j=j, w=w, h=h,
@@ -313,8 +312,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 x -= ox
                 y -= oy
                 use_mask_for_offset = ox, oy
-
-            x, y, w, h = (x, y, w, h)
 
             """
             Handle client size

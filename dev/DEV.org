@@ -2,20 +2,20 @@
 
 * Current (v0.2)
 ** Multi-output support
-*** STRT newm-sidecar showcase using wayvnc, guacamole, qrencode
-- [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
-
 *** STRT Multi-output
 - [ ] Backgrounds when moving window between workspaces (issue with move_origin)
-- [X] Merge workspaces on update / elaborate orphan handling
-- [ ] Occasionally slow animations when having a second virtual output
-- [ ] Open second screen, move cursor to first, open window, animation wrong
-- [X] Place panels on first screen
-- [X] Move between screens: Floating windows
-- [ ] Move between screens: Shortcuts
 - [ ] Improved background (probably more general issue)
 - [ ] Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
+- [ ] Occasionally slow animations when having a second virtual output
+- [X] Open second screen, open first window, animation wrong
+- [ ] Move between screens: Shortcuts
 
+*** TODO Bugs
+- [ ] If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
+
+*** TODO Release
+- [ ] TODO comments
+- [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 - [ ] Document new config options
 
 
@@ -23,6 +23,7 @@
 ** Improved panel
 - Useful handling of multiple workspaces
 - Bars as panels not as widgets
+- layer-shell for bars and possibly more?
 - Possibly flutter-based?
 - Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
 *** TODO Specify requirments for newm <-> panel interaction

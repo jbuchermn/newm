@@ -66,8 +66,8 @@ class ViewState:
 
 class WorkspaceState:
     def __init__(self, **kwargs: Any) -> None:
-        self.i: float = kwargs['i'] if 'i' in kwargs else 0
-        self.j: float = kwargs['j'] if 'j' in kwargs else 0
+        self.i: float = kwargs['i'] if 'i' in kwargs else -0.5
+        self.j: float = kwargs['j'] if 'j' in kwargs else -0.5
 
         self.size: float = kwargs['size'] if 'size' in kwargs else 2
         self.size_origin: Optional[float] = kwargs['size_origin'] if 'size_origin' in kwargs else None
