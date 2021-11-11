@@ -12,6 +12,8 @@
 
 *** TODO Bugs
 - [ ] If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
+- [ ] Transitioning from overview to fullscreen does not work
+- [ ] Scaling a window to the left means right border jumps, to the right is ok
 
 *** TODO Release
 - [ ] TODO comments
@@ -20,6 +22,7 @@
 
 
 * v0.3
+** Scale windows moving others "out of the way"
 ** Improved panel
 - Useful handling of multiple workspaces
 - Bars as panels not as widgets
