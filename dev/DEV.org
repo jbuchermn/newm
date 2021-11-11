@@ -14,7 +14,8 @@
 *** TODO Bugs
 - [ ] If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 - [ ] Transitioning from overview to fullscreen does not work
-- [ ] Scaling a window to the left means right border jumps, to the right is ok
+- [X] Scaling a window to the left means right border jumps, to the right is ok
+- [ ] Floating window placement and resizing: example catapult and Firefox Save As
 
 *** TODO Release
 - [ ] TODO comments
@@ -28,6 +29,7 @@
 - Useful handling of multiple workspaces
 - Bars as panels not as widgets
 - layer-shell for bars and possibly more?
+- catapult
 - Possibly flutter-based?
 - Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
 *** TODO Specify requirements for newm <-> panel interaction

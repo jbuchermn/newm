@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 conf_move_grid_ovr = configured_value("move.grid_ovr", 0.2)
-conf_move_grid_m = configured_value("move.grid_m", 2)
+conf_move_grid_m = configured_value("move.grid_m", 3)
 conf_resize_grid_ovr = configured_value("resize.grid_ovr", 0.1)
 conf_resize_grid_m = configured_value("resize.grid_m", 3)
 conf_hyst = configured_value("resize.hyst", 0.2)
