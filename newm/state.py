@@ -131,6 +131,11 @@ class WorkspaceState:
             _1, _2, _3, i, j, size = self.state_before_fullscreen
             if abs(self.i - i) + abs(self.j - j) + abs(self.size - size) > .01:
                 self.state_before_fullscreen = None
+                i_stolen, j_stolen = self._clear_intermediate(self.i, self.j)
+                self.i -= i_stolen
+                self.j -= j_stolen
+                self.constrain()
+
 
     def validate_stack_indices(self, moved_view: Optional[View]=None) -> None:
         """
@@ -266,21 +271,30 @@ class WorkspaceState:
                 s.h += 1
         self.intermediate_rows += [j]
 
-    def _clear_intermediate(self) -> None:
+    def _clear_intermediate(self, i_ref: Optional[int]=None, j_ref: Optional[int]=None) -> tuple[int, int]:
+        i_stolen = 0
+        j_stolen = 0
+
         for j in reversed(sorted(self.intermediate_rows)):
             for _, s in self._view_states.items():
                 if s.j >= j:
                     s.j -= 1
                 elif s.j + s.h - 1 >= j:
                     s.h = max(1, s.h - 1)
+            if j_ref is not None and j <= j_ref:
+                j_stolen += 1
         for i in reversed(sorted(self.intermediate_cols)):
             for _, s in self._view_states.items():
                 if s.i >= i:
                     s.i -= 1
                 elif s.i + s.w - 1 >= i:
                     s.w = max(1, s.w - 1)
+            if i_ref is not None and i <= i_ref:
+                i_stolen += 1
         self.intermediate_rows = []
         self.intermediate_cols = []
+
+        return i_stolen, j_stolen
 
     """
     Reducers
