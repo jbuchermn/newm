@@ -2,21 +2,18 @@
 
 * Current (v0.2)
 ** Bugs
-*** DONE Floating window placement and resizing: example catapult and Firefox Save As
-*** KILL Init animation on firefox "Save As" dialog sometime break
-*** DONE Resizing floating windows may lag behind
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
-*** TODO Transitioning from overview to fullscreen does not work
+*** DONE Transitioning from overview to fullscreen does not work
 *** TODO Do animations block before the compositor even starts? (Really slow startup when anim time is set high)
+*** TODO Occasionally slow animations when having a second virtual output
 
 ** Multi-output support
 *** TODO Backgrounds when moving window between workspaces (issue with move_origin)
 *** TODO Improved background (probably more general issue)
-*** TODO Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
-*** TODO Occasionally slow animations when having a second virtual output
-*** TODO Move between screens: Shortcuts
+*** STRT Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
+*** STRT Move between screens: Shortcuts
 
-** TODO Toggle floating floating <-> tiled
+** STRT Toggle floating floating <-> tiled
 ** DONE Exec config for commands to be run after startup
 
 ** Release

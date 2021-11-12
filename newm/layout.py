@@ -1031,6 +1031,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def toggle_fullscreen(self, defined_state: Optional[bool] = None) -> None:
         active_ws = self.get_active_workspace()
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            if state.is_in_overview():
+                state = state.with_overview_toggled()
+
             view = self.find_focused_view()
 
             ws: Optional[Workspace] = None
