@@ -10,8 +10,10 @@
 ** Multi-output support
 *** TODO Backgrounds when moving window between workspaces (issue with move_origin)
 *** TODO Improved background (probably more general issue)
-*** STRT Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
+*** TODO Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
 *** STRT Move between screens: Shortcuts
+
+** TODO Possible to speed up animations (e.g. fullscreen) by not having all windows update size or at least not at the same time?
 
 ** DONE Toggle floating floating <-> tiled
 ** DONE Exec config for commands to be run after startup
