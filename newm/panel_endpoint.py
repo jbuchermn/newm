@@ -5,13 +5,12 @@ from asyncio.events import AbstractEventLoop
 import os
 import json
 import asyncio
-import websockets
+from websockets import serve, connect  # type: ignore
 import logging
 from threading import Thread
 
 
 if TYPE_CHECKING:
-    from websockets.server import Serve, WebSocketServerProtocol
     from .layout import Layout
 
 SOCKET_PORT = 8641
@@ -24,11 +23,11 @@ class PanelEndpoint(Thread):
         self.layout = layout
 
         self._event_loop: Optional[AbstractEventLoop] = None
-        self._server: Optional[Serve] = None
+        self._server: Optional[Any] = None
 
-        self._clients: list[WebSocketServerProtocol] = []
+        self._clients: list[Any] = []
 
-    async def _socket_handler(self, client_socket: WebSocketServerProtocol, path: str) -> None:
+    async def _socket_handler(self, client_socket: Any, path: str) -> None:
         logger.info("Opened connection: %s" % path)
         self._clients += [client_socket]
         try:
@@ -82,7 +81,7 @@ class PanelEndpoint(Thread):
         self._event_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._event_loop)
 
-        self._server = websockets.serve(self._socket_handler, "127.0.0.1", SOCKET_PORT)
+        self._server = serve(self._socket_handler, "127.0.0.1", SOCKET_PORT)
         self._event_loop.run_until_complete(self._server)
         logger.info("Starting PanelEndpoint...")
         self._event_loop.run_forever()
@@ -91,7 +90,7 @@ class PanelEndpoint(Thread):
 def msg(dct: dict[str, Any]) -> None:
     async def _send() -> None:
         uri = "ws://127.0.0.1:%d" % SOCKET_PORT
-        async with websockets.connect(uri) as websocket:
+        async with connect(uri) as websocket:
             await websocket.send(json.dumps(dct))
             response = json.loads(await websocket.recv())
             if 'msg' in response and response['msg'] != "None":
@@ -102,7 +101,7 @@ def msg(dct: dict[str, Any]) -> None:
 
 if __name__ == '__main__':
     SOCKET_DEBUG_PORT = SOCKET_PORT + 1
-    clients = []
+    clients: list[Any] = []
 
     async def send(msg: Any) -> None:
         global clients
@@ -112,7 +111,7 @@ if __name__ == '__main__':
             except:
                 logger.exception("broadcast")
 
-    async def socket_handler(client_socket: WebSocketServerProtocol, path: str) -> None:
+    async def socket_handler(client_socket: Any, path: str) -> None:
         global clients
         print("Opened connection: %s" % path)
         clients += [client_socket]
@@ -133,7 +132,7 @@ if __name__ == '__main__':
             clients.remove(client_socket)
 
     print("Starting debug PanelEndpoint...")
-    server = websockets.serve(socket_handler, "127.0.0.1", SOCKET_DEBUG_PORT)
+    server = serve(socket_handler, "127.0.0.1", SOCKET_DEBUG_PORT)
     asyncio.get_event_loop().run_until_complete(server)
     asyncio.get_event_loop().run_forever()
 

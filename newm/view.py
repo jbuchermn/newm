@@ -253,7 +253,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> ViewState:
         self.is_floating = not self.is_floating
-        if self.is_floating:
+        if self.is_floating and self.up_state is not None:
             self.floating_size = self.up_state.size
 
         i = round(state.i)
