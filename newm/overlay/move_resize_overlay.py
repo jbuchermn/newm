@@ -112,8 +112,8 @@ class MoveOverlay(_Overlay):
 
         if workspace != self.workspace:
             logger.debug("Move - switching workspace %d -> %d" % (self.workspace._handle, workspace._handle))
-            self.di += (i - i0)
-            self.dj += (j - j0)
+            self.di += round(i - i0)
+            self.dj += round(j - j0)
 
             self.layout.state.move_view_state(self.view, self.workspace, workspace)
             self.workspace = workspace
@@ -129,6 +129,8 @@ class MoveOverlay(_Overlay):
             state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
             self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
 
+            fi: float = 0.
+            fj: float = 0.
             fi, ti = self.i_grid.final()
             fj, tj = self.j_grid.final()
 

@@ -131,7 +131,7 @@ class WorkspaceState:
             _1, _2, _3, i, j, size = self.state_before_fullscreen
             if abs(self.i - i) + abs(self.j - j) + abs(self.size - size) > .01:
                 self.state_before_fullscreen = None
-                i_stolen, j_stolen = self._clear_intermediate(self.i, self.j)
+                i_stolen, j_stolen = self._clear_intermediate(round(self.i), round(self.j))
                 self.i -= i_stolen
                 self.j -= j_stolen
                 self.constrain()
