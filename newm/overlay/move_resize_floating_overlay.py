@@ -30,8 +30,6 @@ class MoveResizeFloatingOverlay(Overlay):
         self.view = view
         self.i = 0.
         self.j = 0.
-        self.w = 1.
-        self.h = 1.
         self.workspace = self.layout.workspaces[0]
         self.ws_state = self.layout.state.get_workspace_state(self.workspace)
 
@@ -41,8 +39,6 @@ class MoveResizeFloatingOverlay(Overlay):
             self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
             self.i = state.i
             self.j = state.j
-            self.w = state.w
-            self.h = state.h
         except Exception:
             logger.warn("Unexpected: Could not access view %s state", self.view)
 
@@ -59,13 +55,7 @@ class MoveResizeFloatingOverlay(Overlay):
         self.layout.damage()
 
     def resize(self, dx: float, dy: float) -> None:
-        self.w += dx * self.ws_state.size
-        self.h += dy * self.ws_state.size
-
-        self.w = max(self.min_w, self.w)
-        self.h = max(self.min_h, self.h)
-
-        self.layout.state.update_view_state(self.view, w=self.w, h=self.h)
+        self.view.resize_floating(round(dx * self.workspace.width), round(dy * self.workspace.height))
         self.layout.damage()
 
     def gesture_move(self, values: dict[str, float]) -> None:

@@ -44,6 +44,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         self.client_side_scale = 1.
 
+        # Only relevant for floating views
+        self.floating_size: Optional[tuple[int, int]] = None
+
         self.panel: Optional[str] = None
 
     def __str__(self) -> str:
@@ -135,7 +138,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if min_w == 0 or min_h == 0:
             return None, None
 
+
         w, h = float(min_w), float(min_h)
+        self.floating_size = w, h
+
         w *= ws_state.size / ws.width / self.client_side_scale
         h *= ws_state.size / ws.height / self.client_side_scale
 
@@ -224,6 +230,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def destroy(self) -> None:
         self.wm.destroy_view(self)
 
+    def resize_floating(self, dw: int, dh: int) -> None: 
+        if self.floating_size is not None:
+            w, h = self.floating_size
+            self.floating_size = w+dw, h+dh
 
     """
     Reducer implementations
@@ -418,6 +428,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         return result
 
+
     def _reducer_floating(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
         result = PyWMViewDownstreamState()
         result.accepts_input = True
@@ -441,46 +452,33 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             result.z_index += 1
 
         """
+        Handle client size
+        """
+        result.size = self.floating_size
+        width, height = result.size
+
+        """
         Handle box
         """
         i = self_state.i
         j = self_state.j
-        w = self_state.w
-        h = self_state.h
+        w = width / ws.width * ws_state.size
+        h = height / ws.height * ws_state.size
+
+        # Allow animations
+        if self_state.w == 0 or self_state.h == 0:
+            w = 0
+            h = 0
 
         x = i - ws_state.i
         y = j - ws_state.j
-
+        
         x *= ws.width / ws_state.size
         y *= ws.height / ws_state.size
         w *= ws.width / ws_state.size
         h *= ws.height / ws_state.size
-
-        """
-        Handle client size
-        """
-        w_for_size, h_for_size = self_state.scale_origin
-        if w_for_size is None or h_for_size is None:
-            w_for_size, h_for_size = self_state.w, self_state.h
-
-        size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
-
-        w_for_size *= ws.width / size
-        h_for_size *= ws.height / size
-
-        width = math.ceil(w_for_size * self.client_side_scale)
-        height = math.ceil(h_for_size * self.client_side_scale)
-
-        result.size = (width, height)
-
-        """
-        Override: Keep floating windows scaled correctly
-        """
-        # TODO
-        # w = up_state.size[0] / self.client_side_scale * size / ws_state.size
-        # h = up_state.size[1] / self.client_side_scale * size / ws_state.size
-
         result.box = (x, y, w, h)
+        result.mask = (0, 0, w + up_state.offset[0], h + up_state.offset[1])
 
         if 0.99 < result.box[2] / result.size[0] < 1.01:
             if result.box[2] != result.size[0]:
@@ -497,7 +495,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.workspace = None
 
         return result
-
 
     def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> PyWMViewDownstreamState:
 
@@ -548,6 +545,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             if self.is_focused():
                 self.wm.toggle_fullscreen(False)
             self.set_fullscreen(False)
+
 
     def find_min_w_h(self) -> tuple[float, float]:
         try:
@@ -610,3 +608,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         logger.debug("View outside of workspaces - defaulting")
         return ws, i0, j0, w0, h0
+
+    def on_resized(self, width: int, height: int) -> None:
+        logger.debug("View %s changes size: %dx%d" % (self, width, height))
+        if self.up_state.is_floating:
+            self.floating_size = (width, height)
+            self.damage()

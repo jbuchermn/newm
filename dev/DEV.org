@@ -12,10 +12,11 @@
 *** DONE Exec config for commands to be run after startup
 
 *** TODO Bugs
+- [ ] Floating window placement and resizing: example catapult and Firefox Save As
+- [ ] Prevent resizing 0, 0 -> 800, 600 -> 734, 453 due to reducer_tiled ignoring padding on size 0
 - [ ] If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 - [ ] Transitioning from overview to fullscreen does not work
 - [X] Scaling a window to the left means right border jumps, to the right is ok
-- [ ] Floating window placement and resizing: example catapult and Firefox Save As
 - [ ] Do animations block before the compositor even starts? (Really slow startup when anim time is set high)
 
 *** TODO Release
