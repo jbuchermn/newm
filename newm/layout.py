@@ -80,6 +80,7 @@ conf_anim_t = configured_value('anim_time', .3)
 conf_blend_t = configured_value('blend_time', 1.)
 
 conf_power_times = configured_value('power_times', [120, 300, 600])
+conf_suspend_command = configured_value('suspend_command', "systemctl suspend")
 
 conf_on_startup = configured_value('on_startup', lambda: None)
 
@@ -832,8 +833,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         if elapsed == 0:
             self.sys_backend.idle_state(0)
         elif len(conf_power_times()) > 2 and elapsed > conf_power_times()[2]:
-            # TODO - this command (no matter from where it's executed does not work at the moment)
-            os.system("systemctl suspend")
+            os.system(conf_suspend_command())
         elif len(conf_power_times()) > 1 and elapsed > conf_power_times()[1]:
             self.sys_backend.idle_state(2)
             self.ensure_locked()
