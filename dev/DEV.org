@@ -13,7 +13,7 @@
 *** STRT Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
 *** STRT Move between screens: Shortcuts
 
-** STRT Toggle floating floating <-> tiled
+** DONE Toggle floating floating <-> tiled
 ** DONE Exec config for commands to be run after startup
 
 ** Release

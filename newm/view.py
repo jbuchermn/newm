@@ -28,6 +28,8 @@ conf_padding = configured_value('view.padding', 8)
 conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0)
 conf_border_ws_switch = configured_value('view.border_ws_switch', 10.)
 
+conf_float_callback = configured_value('view.should_float', lambda view: None)
+
 conf_panel_lock_h = configured_value('panels.lock.h', 0.6)
 conf_panel_lock_w = configured_value('panels.lock.w', 0.7)
 conf_panel_lock_corner_radius = configured_value('panels.lock.corner_radius', 50)
@@ -44,6 +46,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         self.client_side_scale = 1.
 
+        # Overrides up_state.is_floating
+        self.is_floating = False
+
         # Only relevant for floating views
         self.floating_size: Optional[tuple[int, int]] = None
         self.floating_size_lock: Optional[tuple[int, int]] = None
@@ -57,19 +62,19 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
              self.up_state.title, self.app_id, self.role, self.pid,
-             self.is_xwayland, self.up_state.is_floating)
+             self.is_xwayland, self.is_floating)
 
     def is_dialog(self) -> bool:
         if self.up_state is None:
             return True
 
-        return self.panel is None and self.up_state.is_floating
+        return self.panel is None and self.is_floating
 
     def is_window(self) -> bool:
         if self.up_state is None:
             return False
 
-        return self.panel is None and not self.up_state.is_floating
+        return self.panel is None and not self.is_floating
 
     def is_panel(self) -> bool:
         return self.panel is not None
@@ -128,6 +133,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
     def _main_floating(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        self.is_floating = True
         min_w, min_h = 0., 0.
 
         if self.up_state is not None:
@@ -219,9 +225,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return self._main_panel(ws, state, ws_state)
 
         else:
-            second_state = None
+            floats = conf_float_callback()(self)
+            if floats is None:
+                floats = self.up_state and self.up_state.is_floating
 
-            if self.up_state is not None and self.up_state.is_floating:
+            if floats:
                 return self._main_floating(ws, state, ws_state)
 
             else:
@@ -235,10 +243,29 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.floating_size_lock is None:
             self.floating_size_lock = self.floating_size
 
-        w, h = self.floating_size_lock
-        self.floating_size_lock = w+dw, h+dh
+        # Courtesy of mypy
+        if self.floating_size_lock is not None:
+            w, h = self.floating_size_lock
+            self.floating_size_lock = w+dw, h+dh
 
-        self.floating_size = self.floating_size_lock
+            self.floating_size = self.floating_size_lock
+
+
+    def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> ViewState:
+        self.is_floating = not self.is_floating
+        if self.is_floating:
+            self.floating_size = self.up_state.size
+
+        i = round(state.i)
+        j = round(state.j)
+        w = state.w
+        h = state.h
+        if not self.is_floating and self.floating_size is not None:
+            w = self.floating_size[0] / ws.width * ws_state.size
+            h = self.floating_size[1] / ws.height * ws_state.size
+            self.floating_size = None
+
+        return state.copy(is_tiled=not self.is_floating, i=i, j=j, w=w, h=h)
 
     """
     Reducer implementations
@@ -375,9 +402,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         w_for_size *= ws.width / size
         h_for_size *= ws.height / size
-        if not up_state.is_floating:
-            w_for_size -= 2*padding
-            h_for_size -= 2*padding
+        w_for_size -= 2*padding
+        h_for_size -= 2*padding
 
         width = math.ceil(w_for_size * self.client_side_scale)
         height = math.ceil(h_for_size * self.client_side_scale)
@@ -518,7 +544,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if self.panel is not None:
             return self._reducer_panel(up_state, state, self_state, ws, ws_state)
-        elif up_state.is_floating:
+        elif self.is_floating:
             return self._reducer_floating(up_state, state, self_state, ws, ws_state)
         else:
             return self._reducer_tiled(up_state, state, self_state, ws, ws_state)
@@ -538,7 +564,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def on_event(self, event: str) -> None:
         if event == "request_move":
-            if self.up_state is not None and self.up_state.is_floating:
+            if self.up_state is not None and self.is_floating:
                 self.wm.enter_overlay(
                     MoveResizeFloatingOverlay(self.wm, self))
         elif event == "request_fullscreen":
@@ -616,7 +642,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return ws, i0, j0, w0, h0
 
     def on_resized(self, width: int, height: int) -> None:
-        if self.up_state is not None and self.up_state.is_floating:
+        if self.up_state is not None and self.is_floating:
             self.floating_size = (width, height)
             if self.floating_size == self.floating_size_lock:
                 self.floating_size_lock = None

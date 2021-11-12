@@ -1061,6 +1061,30 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 return None, None
         self.animate_to(reducer, conf_anim_t())
 
+    def toggle_focused_view_floating(self) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            view = self.find_focused_view()
+            if view is not None:
+                try:
+                    s, ws_state, ws_handle = state.find_view(view)
+                    ws = [w for w in self.workspaces if w._handle == ws_handle][0]
+                    s = view.toggle_floating(s, ws, ws_state)
+
+                    ws_state0 = ws_state.replacing_view_state(view, h=s.h, w=s.w)
+
+                    d = dict(s.__dict__)
+                    d['w'] = max(1, round(s.w))
+                    d['h'] = max(1, round(s.h))
+                    ws_state1 = ws_state.replacing_view_state(view, **d)
+                    ws_state1.validate_stack_indices(view)
+
+                    return (state.setting_workspace_state(ws, ws_state0), state.setting_workspace_state(ws, ws_state1))
+                except:
+                    return (None, state)
+            else:
+                return (None, state)
+        self.animate_to(reducer, conf_anim_t())
+
 
     def move_focused_view(self, di: int, dj: int) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
