@@ -3,9 +3,9 @@
 * Current (v0.2)
 ** Bugs
 *** DONE Floating window placement and resizing: example catapult and Firefox Save As
-*** TODO Init animation on firefox save as dialog sometime break
-*** TODO Resizing floating windows may lag behind
-*** TODO Prevent resizing 0, 0 -> 800, 600 -> 734, 453 due to reducer_tiled ignoring padding on size 0
+*** STRT Init animation on firefox "Save As" dialog sometime break
+*** DONE Resizing floating windows may lag behind
+*** STRT Prevent resizing 0, 0 -> 800, 600 -> 734, 453 due to reducer_tiled ignoring padding on size 0
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 *** TODO Transitioning from overview to fullscreen does not work
 *** TODO Do animations block before the compositor even starts? (Really slow startup when anim time is set high)
@@ -17,7 +17,7 @@
 *** TODO Occasionally slow animations when having a second virtual output
 *** TODO Move between screens: Shortcuts
 
-** TODO Toggle floating views as being floating
+** TODO Toggle floating floating <-> tiled
 ** DONE Exec config for commands to be run after startup
 
 ** Release

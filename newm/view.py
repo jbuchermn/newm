@@ -46,6 +46,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         # Only relevant for floating views
         self.floating_size: Optional[tuple[int, int]] = None
+        self.floating_size_lock: Optional[tuple[int, int]] = None
 
         self.panel: Optional[str] = None
 
@@ -231,9 +232,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         self.wm.destroy_view(self)
 
     def resize_floating(self, dw: int, dh: int) -> None: 
-        if self.floating_size is not None:
-            w, h = self.floating_size
-            self.floating_size = w+dw, h+dh
+        if self.floating_size_lock is None:
+            self.floating_size_lock = self.floating_size
+
+        w, h = self.floating_size_lock
+        self.floating_size_lock = w+dw, h+dh
+
+        self.floating_size = self.floating_size_lock
 
     """
     Reducer implementations
@@ -339,7 +344,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         padding = conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding()
 
-        if w != 0 and h != 0 and not up_state.is_floating:
+        if w != 0 and h != 0:
             x += padding
             y += padding
             w -= 2*padding
@@ -613,4 +618,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def on_resized(self, width: int, height: int) -> None:
         if self.up_state is not None and self.up_state.is_floating:
             self.floating_size = (width, height)
+            if self.floating_size == self.floating_size_lock:
+                self.floating_size_lock = None
+
             self.damage()

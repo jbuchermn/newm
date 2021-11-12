@@ -86,7 +86,7 @@ class MoveResizeFloatingOverlay(Overlay):
 
     def on_motion(self, time_msec: int, delta_x: float, delta_y: float) -> bool:
         if self._motion_mode:
-            self.move(delta_x, delta_y);
+            self.move(delta_x / self.workspace.width, delta_y / self.workspace.height)
         return False
 
     def on_button(self, time_msec: int, button: int, state: int) -> bool:
