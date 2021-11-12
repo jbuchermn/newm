@@ -139,8 +139,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return None, None
 
 
+        self.floating_size = round(min_w), round(min_h)
         w, h = float(min_w), float(min_h)
-        self.floating_size = w, h
 
         w *= ws_state.size / ws.width / self.client_side_scale
         h *= ws_state.size / ws.height / self.client_side_scale
@@ -454,8 +454,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         """
         Handle client size
         """
-        result.size = self.floating_size
-        width, height = result.size
+        if self.floating_size is not None:
+            result.size = self.floating_size
+        width, height = up_state.size
 
         """
         Handle box
@@ -506,7 +507,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             This can happen, if main has not been executed yet
             (e.g. during an overlay) - just return a box not displayed
             """
-            logger.exception("Could not access view %s state" % self)
+            logger.debug("Warning: Could not access view %s state" % self)
             return PyWMViewDownstreamState()
 
 
@@ -610,7 +611,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return ws, i0, j0, w0, h0
 
     def on_resized(self, width: int, height: int) -> None:
-        logger.debug("View %s changes size: %dx%d" % (self, width, height))
-        if self.up_state.is_floating:
+        if self.up_state is not None and self.up_state.is_floating:
             self.floating_size = (width, height)
             self.damage()
