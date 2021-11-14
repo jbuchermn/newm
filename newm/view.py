@@ -132,29 +132,37 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
-    def _main_floating(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+    def _main_floating(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         self.is_floating = True
-        min_w, min_h = 0., 0.
 
+        width, height = -1, -1
         if self.up_state is not None:
-            min_w, _, min_h, _ = [float(r) for r in self.up_state.size_constraints]
+            width, height = self.up_state.size
+            if size_hint is not None:
+                min_w, max_w, min_h, max_h = self.up_state.size_constraints
+                if max_w < 0:
+                    max_w = size_hint[0]
+                if max_h < 0:
+                    max_h = size_hint[0]
+                width = max(min_w, min(max_w, size_hint[0]))
+                height = max(min_h, min(max_h, size_hint[1]))
 
-        if (min_w, min_h) == (0., 0.) and self.up_state is not None:
-            (min_w, min_h) = self.up_state.size
-
-        if min_w == 0 or min_h == 0:
+        if width <= 0 or height <= 0:
             return None, None
 
-
-        self.floating_size = round(min_w), round(min_h)
-        w, h = float(min_w), float(min_h)
+        self.floating_size = width, height
+        w, h = float(width), float(height)
 
         w *= ws_state.size / ws.width / self.client_side_scale
         h *= ws_state.size / ws.height / self.client_side_scale
 
         ci = ws_state.i + ws_state.size / 2.
         cj = ws_state.j + ws_state.size / 2.
-        if self.parent is not None:
+
+        if pos_hint is not None:
+            ci = ws_state.i + pos_hint[0] * ws_state.size
+            cj = ws_state.j + pos_hint[1] * ws_state.size
+        elif self.parent is not None:
             try:
                 p_state = state.get_view_state(cast(View, self.parent))
                 ci = p_state.i + p_state.w / 2.
@@ -226,11 +234,19 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         else:
             floats = conf_float_callback()(self)
+            size_hint: Optional[tuple[int, int]] = None
+            pos_hint: Optional[tuple[float, float]] = None
+
             if floats is None:
                 floats = self.up_state and self.up_state.is_floating
+            elif isinstance(floats, tuple) and len(floats) == 2:
+                floats, size_hint = floats
+            elif isinstance(floats, tuple) and len(floats) == 3:
+                floats, size_hint, pos_hint = floats
+
 
             if floats:
-                return self._main_floating(ws, state, ws_state)
+                return self._main_floating(ws, state, ws_state, size_hint=size_hint, pos_hint=pos_hint)
 
             else:
                 return self._main_tiled(ws, state, ws_state)
