@@ -3,17 +3,19 @@
 * Current (v0.2)
 ** Bugs
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
-*** DONE Transitioning from overview to fullscreen does not work
 *** TODO Do animations block before the compositor even starts? (Really slow startup when anim time is set high)
 *** TODO Occasionally slow animations when having a second virtual output
 
-** Multi-output support
+** Backgrounds
+*** TODO Background sshould (if res is sufficient) never be scaled up, no matter how many windows
 *** TODO Backgrounds when moving window between workspaces (issue with move_origin)
-*** TODO Improved background (probably more general issue)
 *** TODO Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
+*** TODO Background per output
+
+** Multi-output support
 *** STRT Move between screens: Shortcuts
 
-** TODO Possible to speed up animations (e.g. fullscreen) by not having all windows update size or at least not at the same time?
+** STRT Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should speed up fullscreen enter-leave animations in situations with lots of windows a bit smoother
 
 ** DONE Toggle floating floating <-> tiled
 ** DONE Exec config for commands to be run after startup
