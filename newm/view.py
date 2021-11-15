@@ -49,9 +49,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         # Overrides up_state.is_floating
         self.is_floating = False
 
-        # Only relevant for floating views
+        # Only relevant for floating views - improper state handling...
         self.floating_size: Optional[tuple[int, int]] = None
         self.floating_size_lock: Optional[tuple[int, int]] = None
+        self.floating_size_initial: Optional[tuple[int, int]] = None
 
         self.panel: Optional[str] = None
 
@@ -137,20 +138,24 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         width, height = -1, -1
         if self.up_state is not None:
+            logger.debug("Floating window: size constraints %d %d %d %d" % self.up_state.size_constraints)
+
             width, height = self.up_state.size
             if size_hint is not None:
                 min_w, max_w, min_h, max_h = self.up_state.size_constraints
-                if max_w < 0:
+                if max_w <= 0:
                     max_w = size_hint[0]
-                if max_h < 0:
-                    max_h = size_hint[0]
+                if max_h <= 0:
+                    max_h = size_hint[1]
                 width = max(min_w, min(max_w, size_hint[0]))
                 height = max(min_h, min(max_h, size_hint[1]))
+                logger.debug("Respecting size hint %dx%d (constrained %dx%d)" % (size_hint[0], size_hint[1], width, height))
 
         if width <= 0 or height <= 0:
             return None, None
 
         self.floating_size = width, height
+        self.floating_size_initial = width, height
         w, h = float(width), float(height)
 
         w *= ws_state.size / ws.width / self.client_side_scale
@@ -162,6 +167,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if pos_hint is not None:
             ci = ws_state.i + pos_hint[0] * ws_state.size
             cj = ws_state.j + pos_hint[1] * ws_state.size
+            logger.debug("Respecting position hint %f %f" % pos_hint)
         elif self.parent is not None:
             try:
                 p_state = state.get_view_state(cast(View, self.parent))
@@ -256,6 +262,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         self.wm.destroy_view(self)
 
     def resize_floating(self, dw: int, dh: int) -> None: 
+        self.floating_size_initial = None
+
         if self.floating_size_lock is None:
             self.floating_size_lock = self.floating_size
 
@@ -268,6 +276,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
 
     def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> ViewState:
+        self.floating_size_initial = None
+
         self.is_floating = not self.is_floating
         if self.is_floating and self.up_state is not None:
             self.floating_size = self.up_state.size
@@ -505,6 +515,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             result.size = self.floating_size
         width, height = up_state.size
 
+        if self.floating_size_initial is not None:
+            width, height = self.floating_size_initial
+
         """
         Handle box
         """
@@ -658,6 +671,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return ws, i0, j0, w0, h0
 
     def on_resized(self, width: int, height: int) -> None:
+        self.floating_size_initial = None
+
         if self.up_state is not None and self.is_floating:
             self.floating_size = (width, height)
             if self.floating_size == self.floating_size_lock:
