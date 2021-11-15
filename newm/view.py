@@ -521,10 +521,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         """
         Handle box
         """
+        size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
+
         i = self_state.i
         j = self_state.j
-        w = width / ws.width * ws_state.size
-        h = height / ws.height * ws_state.size
+        w = width / ws.width * size
+        h = height / ws.height * size
 
         # Allow animations
         if self_state.w == 0 or self_state.h == 0:
