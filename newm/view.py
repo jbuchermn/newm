@@ -46,6 +46,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         self.client_side_scale = 1.
 
+        # Initial state for e.g. size setting even before the state is registered in state tree
+        self._initial_state: Optional[PyWMViewDownstreamState] = None
+
         # Overrides up_state.is_floating
         self.is_floating = False
 
@@ -53,6 +56,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         self.floating_size: Optional[tuple[int, int]] = None
         self.floating_size_lock: Optional[tuple[int, int]] = None
         self.floating_size_initial: Optional[tuple[int, int]] = None
+        self.floating_pos_hint: Optional[tuple[float, float]] = None
 
         self.panel: Optional[str] = None
 
@@ -62,7 +66,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
-             self.up_state.title, self.app_id, self.role, self.pid,
+             self.title, self.app_id, self.role, self.pid,
              self.is_xwayland, self.is_floating)
 
     def is_dialog(self) -> bool:
@@ -83,8 +87,121 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Init implementations
     """
+    def _init_panel(self, ws: Workspace) -> None:
+        pass
+
+    def _init_tiled(self, ws: Workspace) -> None:
+        pass
+
+
+    def _init_layer(self, ws: Workspace) -> None:
+        width: int = 0
+        height: int = 0
+        if self.up_state is not None:
+            width, height = self.up_state.size_constraints[1:3]
+
+        if width == 0:
+            width = 500
+        if height == 0:
+            height = 500
+
+        self.is_floating = True
+        self.floating_size = width, height
+        self.floating_size_initial = width, height
+
+        if self._initial_state is not None:
+            self._initial_state.size = (width, height)
+
+    def _init_floating(self, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> None:
+        width, height = -1, -1
+        if self.up_state is not None:
+
+            width, height = self.up_state.size
+            if size_hint is not None:
+                min_w, max_w, min_h, max_h = self.up_state.size_constraints
+                if max_w <= 0:
+                    max_w = size_hint[0]
+                if max_h <= 0:
+                    max_h = size_hint[1]
+                width = max(min_w, min(max_w, size_hint[0]))
+                height = max(min_h, min(max_h, size_hint[1]))
+                logger.debug("Respecting size hint %dx%d (constrained %dx%d)" % (size_hint[0], size_hint[1], width, height))
+
+        self.is_floating = True
+        self.floating_size = width, height
+        self.floating_size_initial = width, height
+        self.floating_pos_hint = pos_hint
+
+        if self._initial_state is not None:
+            self._initial_state.size = (width, height)
+
+
+    def init(self) -> None:
+        logger.info("Init: %s", self)
+
+        self._initial_state = PyWMViewDownstreamState()
+
+        # Always place in active workspace
+        ws = self.wm.get_active_workspace()
+
+        try:
+            if conf_xwayland_css():
+                if self.is_xwayland:
+                    """
+                    xwayland_handle_scale_clientside means clients should know and handle HiDPI-scale (e.g. --force-device-scale-factor=2)
+                    and are thereforee set to scale 1 serverside
+                    - this cannot work with multi-dpi setups and therefore is only a hack
+                    - it does not work in conjunction with xdg_output_manager, since the output_manager exposes logical pixels
+                        and XWayland does not handle that properly (result: mouse movements beyond screen_dimensions / output_scale will get truncated)
+                    - Maybe XWayland will get smarter in the future: https://github.com/swaywm/wlroots/pull/2064 and
+                        https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/432
+                    - Then again, the future should by without X11/XWayland
+                    """
+                    self.client_side_scale = max([o.scale for o in self.wm.layout])
+        except:
+            pass
+
+        if self.pid is not None:
+            self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
+
+        if self.panel is not None:
+            return self._init_panel(ws)
+
+        elif self.role == "layer":
+            return self._init_layer(ws)
+
+        else:
+            size_hint: Optional[tuple[int, int]] = None
+            pos_hint: Optional[tuple[float, float]] = None
+
+            floats = self.up_state is not None and self.up_state.is_floating
+            try:
+                hints = conf_float_callback()(self)
+                if hints is not None:
+                    if isinstance(hints, tuple):
+                        if len(hints) >= 1:
+                            floats = hints[0]
+                        if len(hints) >= 2:
+                            size_hint = hints[1]
+                        if len(hints) >= 3:
+                            pos_hint = hints[2]
+                    else:
+                        floats = hints != False
+            except Exception:
+                logger.exception("floats callback")
+
+
+            if floats:
+                return self._init_floating(ws, size_hint=size_hint, pos_hint=pos_hint)
+
+            else:
+                return self._init_tiled(ws)
+
+    """
+    Main implementations
+    """
     def _main_panel(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        logger.debug("Registered panel %s: %s", self.app_id, self.panel)
+        logger.debug("Main: Registered panel %s: %s", self.app_id, self.panel)
         self.damage()
 
         # Place dummy ViewState
@@ -93,7 +210,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return state1, state1
 
     def _main_tiled(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        min_w, _, min_h, _ = [float(r) for r in self.up_state.size_constraints] if self.up_state is not None else (0., 0., 0., 0.)
+        min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
         min_w *= ws_state.size / ws.width / self.client_side_scale
         min_h *= ws_state.size / ws.height / self.client_side_scale
 
@@ -133,28 +250,27 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
-    def _main_floating(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        self.is_floating = True
+    def _main_layer(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        ws_state1 = ws_state.with_view_state(
+            self,
+            is_tiled=False, i=0, j=0, w=1, h=1,
+            stack_idx=self._handle,
+        )
 
-        width, height = -1, -1
-        if self.up_state is not None:
+        ws_state2 = ws_state.with_view_state(
+            self,
+            is_tiled=False, i=0, j=0, w=1, h=1,
+            stack_idx=self._handle,
+        ).focusing_view(self)
 
-            width, height = self.up_state.size
-            if size_hint is not None:
-                min_w, max_w, min_h, max_h = self.up_state.size_constraints
-                if max_w <= 0:
-                    max_w = size_hint[0]
-                if max_h <= 0:
-                    max_h = size_hint[1]
-                width = max(min_w, min(max_w, size_hint[0]))
-                height = max(min_h, min(max_h, size_hint[1]))
-                logger.debug("Respecting size hint %dx%d (constrained %dx%d)" % (size_hint[0], size_hint[1], width, height))
+        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
-        if width <= 0 or height <= 0:
-            return None, None
+    def _main_floating(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        if self.floating_size is None:
+            logger.warn("Missing floating_size")
+            self.floating_size = 0, 0
 
-        self.floating_size = width, height
-        self.floating_size_initial = width, height
+        width, height = self.floating_size
         w, h = float(width), float(height)
 
         w *= ws_state.size / ws.width / self.client_side_scale
@@ -163,10 +279,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         ci = ws_state.i + ws_state.size / 2.
         cj = ws_state.j + ws_state.size / 2.
 
-        if pos_hint is not None:
-            ci = ws_state.i + pos_hint[0] * ws_state.size
-            cj = ws_state.j + pos_hint[1] * ws_state.size
-            logger.debug("Respecting position hint %f %f" % pos_hint)
+        if self.floating_pos_hint is not None:
+            ci = ws_state.i + self.floating_pos_hint[0] * ws_state.size
+            cj = ws_state.j + self.floating_pos_hint[1] * ws_state.size
+            logger.debug("Respecting position hint %f %f" % self.floating_pos_hint)
         elif self.parent is not None:
             try:
                 p_state = state.get_view_state(cast(View, self.parent))
@@ -207,62 +323,25 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
+
     def main(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        logger.info("Init: %s", self)
+        logger.info("Main: %s", self)
 
         # Always place in active workspace
         ws = self.wm.get_active_workspace()
         ws_state = state.get_workspace_state(ws)
 
-        try:
-            if conf_xwayland_css():
-                if self.is_xwayland:
-                    """
-                    xwayland_handle_scale_clientside means clients should know and handle HiDPI-scale (e.g. --force-device-scale-factor=2)
-                    and are thereforee set to scale 1 serverside
-                    - this cannot work with multi-dpi setups and therefore is only a hack
-                    - it does not work in conjunction with xdg_output_manager, since the output_manager exposes logical pixels
-                        and XWayland does not handle that properly (result: mouse movements beyond screen_dimensions / output_scale will get truncated)
-                    - Maybe XWayland will get smarter in the future: https://github.com/swaywm/wlroots/pull/2064 and
-                        https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/432
-                    - Then again, the future should by without X11/XWayland
-                    """
-                    self.client_side_scale = max([o.scale for o in self.wm.layout])
-        except:
-            pass
-
-        if self.pid is not None:
-            self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
-
         if self.panel is not None:
             return self._main_panel(ws, state, ws_state)
 
+        elif self.role == "layer":
+            return self._main_layer(ws, state, ws_state)
+
+        elif self.is_floating:
+            return self._main_floating(ws, state, ws_state)
+
         else:
-            size_hint: Optional[tuple[int, int]] = None
-            pos_hint: Optional[tuple[float, float]] = None
-
-            floats = self.up_state is not None and self.up_state.is_floating
-            try:
-                hints = conf_float_callback()(self)
-                if hints is not None:
-                    if isinstance(hints, tuple):
-                        if len(hints) >= 1:
-                            floats = hints[0]
-                        if len(hints) >= 2:
-                            size_hint = hints[1]
-                        if len(hints) >= 3:
-                            pos_hint = hints[2]
-                    else:
-                        floats = hints != False
-            except Exception:
-                logger.exception("floats callback")
-
-
-            if floats:
-                return self._main_floating(ws, state, ws_state, size_hint=size_hint, pos_hint=pos_hint)
-
-            else:
-                return self._main_tiled(ws, state, ws_state)
+            return self._main_tiled(ws, state, ws_state)
 
 
     def destroy(self) -> None:
@@ -567,18 +646,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return result
 
     def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> PyWMViewDownstreamState:
-
         try:
             self_state, ws_state, ws_handle = state.find_view(self)
             ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
+            self._initial_state = None
         except Exception:
-            """
-            This can happen, if main has not been executed yet
-            (e.g. during an overlay) - just return a box not displayed
-            """
-            logger.debug("Warning: Could not access view %s state" % self)
-            return PyWMViewDownstreamState()
-
+            if self._initial_state is None:
+                logger.warn("Missing initial state: %s" % self)
+                return PyWMViewDownstreamState()
+            return self._initial_state
 
         if self.panel is not None:
             return self._reducer_panel(up_state, state, self_state, ws, ws_state)
