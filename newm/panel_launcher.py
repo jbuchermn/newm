@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional, cast
 
 from threading import Thread
+import os
 import subprocess
 import time
 import logging
@@ -75,6 +76,7 @@ class PanelsLauncher(Thread):
         if pid is None:
             return None
 
+        result: Optional[str] = None
         for p in self._panels:
             parent_pid = p.get_pid()
             if parent_pid is None:
@@ -85,11 +87,18 @@ class PanelsLauncher(Thread):
             try:
                 subprocess.check_output("pstree -aps %d | grep \",%d$\"" % (pid, parent_pid), shell=True)
                 # Successful
-                return p.panel
+                result = p.panel
+                break
             except:
                 # Unsuccessful
                 pass
-        return None
+
+        try:
+            os.kill(pid, 0)
+        except:
+            # Not running anymore
+            return None
+        return result
 
     def run(self) -> None:
         i = 0
