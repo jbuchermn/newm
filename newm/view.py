@@ -138,7 +138,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         width, height = -1, -1
         if self.up_state is not None:
-            logger.debug("Floating window: size constraints %d %d %d %d" % self.up_state.size_constraints)
 
             width, height = self.up_state.size
             if size_hint is not None:
@@ -239,16 +238,24 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return self._main_panel(ws, state, ws_state)
 
         else:
-            floats = conf_float_callback()(self)
             size_hint: Optional[tuple[int, int]] = None
             pos_hint: Optional[tuple[float, float]] = None
 
-            if floats is None:
-                floats = self.up_state and self.up_state.is_floating
-            elif isinstance(floats, tuple) and len(floats) == 2:
-                floats, size_hint = floats
-            elif isinstance(floats, tuple) and len(floats) == 3:
-                floats, size_hint, pos_hint = floats
+            floats = self.up_state is not None and self.up_state.is_floating
+            try:
+                hints = conf_float_callback()(self)
+                if hints is not None:
+                    if isinstance(hints, tuple):
+                        if len(hints) >= 1:
+                            floats = hints[0]
+                        if len(hints) >= 2:
+                            size_hint = hints[1]
+                        if len(hints) >= 3:
+                            pos_hint = hints[2]
+                    else:
+                        floats = hints != False
+            except Exception:
+                logger.exception("floats callback")
 
 
             if floats:

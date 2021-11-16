@@ -5,9 +5,10 @@
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 *** TODO Do animations block before the compositor even starts? (Really slow startup when anim time is set high)
 *** TODO Occasionally slow animations when having a second virtual output
+*** TODO Can floating specific attributes in view be moved (at least partially) to state?
 
 ** Backgrounds
-*** TODO Background sshould (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
+*** TODO Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
 *** TODO Backgrounds when moving window between workspaces (issue with move_origin)
 *** TODO Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
 *** TODO Background per output
@@ -18,6 +19,8 @@
 
 ** STRT Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
+
+** STRT Layer shell
 
 ** Release
 - [ ] TODO comments
