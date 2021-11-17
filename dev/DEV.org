@@ -11,6 +11,8 @@
 *** TODO view get_min_w_h still necessary?
 *** TODO Remove orphaned view states
 
+*** STRT catapult bug: sets min and max size but not window geometry - therefore no size_changed is triggered
+
 ** Backgrounds
 *** TODO Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
 *** TODO Backgrounds when moving window between workspaces (issue with move_origin)

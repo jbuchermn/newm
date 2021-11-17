@@ -93,8 +93,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         pass
 
     def _init_tiled(self, ws: Workspace) -> None:
-        # TODO
-        self._initial_state.size = (734, 453)
+        if self.up_state is not None:
+            ws = self.wm.get_active_workspace()
+            ws_state = self.wm.state.get_workspace_state(ws)
+            self._initial_state = self._reducer_tiled(self.up_state, self.wm.state, ViewState(w=1, h=1), ws, ws_state)
+            self._initial_state.box = (0, 0, 0, 0)
 
     def _init_layer(self, ws: Workspace) -> None:
         width: int = 0
@@ -355,6 +358,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return self._main_tiled(ws, state, ws_state)
 
     def on_map(self) -> None:
+        logger.debug("Map: %s" % self)
         self.wm.animate_to(self.main, conf_anim_t(), None)
 
     def destroy(self) -> None:
@@ -771,9 +775,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return ws, i0, j0, w0, h0
 
     def on_resized(self, width: int, height: int) -> None:
-        self.floating_size_initial = None
-
         if self.up_state is not None and self.is_floating:
+            self.floating_size_initial = None
             self.floating_size = (width, height)
             if self.floating_size == self.floating_size_lock:
                 self.floating_size_lock = None
