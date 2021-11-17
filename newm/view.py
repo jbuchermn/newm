@@ -207,7 +207,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         # Place dummy ViewState
         ws_state1 = ws_state.with_view_state(self, is_tiled=False)
         state1 = state.setting_workspace_state(ws, ws_state1)
-        return state1, state1
+        return state1, None
 
     def _main_tiled(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
