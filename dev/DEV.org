@@ -1,11 +1,15 @@
 #+TITLE: newm developer information
 
 * Current (v0.2)
-** Bugs
+** Bugs / Technical debt
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
+*** TODO Stacked windows are not scaled properly
 *** DONE Do animations block before the compositor even starts? (Really slow startup when anim time is set high)
 *** TODO Occasionally slow animations when having a second virtual output
 *** TODO Can floating specific attributes in view be moved (at least partially) to state?
+*** TODO Switching tiled -> floating means a little jump due to padding, floating -> tiled has buggy animations
+*** TODO view get_min_w_h still necessary?
+*** TODO Remove orphaned view states
 
 ** Backgrounds
 *** TODO Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
@@ -17,7 +21,7 @@
 *** STRT Move between screens: Shortcuts (move windows as well as focus)
 *** TODO Overview per output
 
-** STRT Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
+** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
 
 ** STRT Layer shell
@@ -29,7 +33,6 @@
 
 
 * v0.3
-** Configure views as floating by name or similar
 ** Scale windows moving others "out of the way"
 ** Improved panel
 - Useful handling of multiple workspaces
@@ -38,7 +41,7 @@
 - catapult
 - Possibly flutter-based?
 - Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
-*** TODO Specify requirements for newm <-> panel interaction
+
 ** Widgets
 - Animated border around current window
 - Titles during OverviewOverlay
@@ -84,7 +87,7 @@ exit
 sudo umount mnt
 #+END_SRC
 
-** VSetup virtual machine
+** Setup virtual machine
 
 To use the disk in a virtual machine (not incredibly nice...)
 

@@ -39,6 +39,8 @@ conf_panel_launcher_corner_radius = configured_value('panels.launcher.corner_rad
 conf_panel_notifiers_h = configured_value('panels.notifiers.h', 0.3)
 conf_panel_notifiers_w = configured_value('panels.notifiers.w', 0.2)
 
+conf_anim_t = configured_value('anim_time', .3)
+
 class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
@@ -91,8 +93,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         pass
 
     def _init_tiled(self, ws: Workspace) -> None:
-        pass
-
+        # TODO
+        self._initial_state.size = (734, 453)
 
     def _init_layer(self, ws: Workspace) -> None:
         width: int = 0
@@ -115,17 +117,20 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def _init_floating(self, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> None:
         width, height = -1, -1
         if self.up_state is not None:
+            logger.debug("Init floating: size=%s constraints=%s hints=%s" %
+                         (self.up_state.size, self.up_state.size_constraints, size_hint))
 
             width, height = self.up_state.size
             if size_hint is not None:
-                min_w, max_w, min_h, max_h = self.up_state.size_constraints
-                if max_w <= 0:
-                    max_w = size_hint[0]
-                if max_h <= 0:
-                    max_h = size_hint[1]
-                width = max(min_w, min(max_w, size_hint[0]))
-                height = max(min_h, min(max_h, size_hint[1]))
-                logger.debug("Respecting size hint %dx%d (constrained %dx%d)" % (size_hint[0], size_hint[1], width, height))
+                width, height = size_hint
+
+            min_w, max_w, min_h, max_h = self.up_state.size_constraints
+            if max_w <= 0:
+                max_w = width
+            if max_h <= 0:
+                max_h = height
+            width = max(min_w, min(max_w, width))
+            height = max(min_h, min(max_h, height))
 
         self.is_floating = True
         self.floating_size = width, height
@@ -136,7 +141,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             self._initial_state.size = (width, height)
 
 
-    def init(self) -> None:
+    def init(self) -> PyWMViewDownstreamState:
         logger.info("Init: %s", self)
 
         self._initial_state = PyWMViewDownstreamState()
@@ -165,10 +170,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
 
         if self.panel is not None:
-            return self._init_panel(ws)
+            self._init_panel(ws)
 
         elif self.role == "layer":
-            return self._init_layer(ws)
+            self._init_layer(ws)
 
         else:
             size_hint: Optional[tuple[int, int]] = None
@@ -192,10 +197,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
 
             if floats:
-                return self._init_floating(ws, size_hint=size_hint, pos_hint=pos_hint)
+                self._init_floating(ws, size_hint=size_hint, pos_hint=pos_hint)
 
             else:
-                return self._init_tiled(ws)
+                self._init_tiled(ws)
+
+        return self._initial_state
 
     """
     Main implementations
@@ -266,9 +273,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
     def _main_floating(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        if self.floating_size is None or self.floating_size[0] <= 0 or self.floating_size[1] <= 0:
+            logger.warn("Floating init did not set size correctly")
+            self._init_floating(ws, pos_hint=self.floating_pos_hint)
+
         if self.floating_size is None:
-            logger.warn("Missing floating_size")
-            self.floating_size = 0, 0
+            logger.warn("Unexpected state")
+            return None, None
 
         width, height = self.floating_size
         w, h = float(width), float(height)
@@ -343,6 +354,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         else:
             return self._main_tiled(ws, state, ws_state)
 
+    def on_map(self) -> None:
+        self.wm.animate_to(self.main, conf_anim_t(), None)
 
     def destroy(self) -> None:
         self.wm.destroy_view(self)
@@ -553,12 +566,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if use_mask_for_offset is not None:
             result.mask = (use_mask_for_offset[0], use_mask_for_offset[1], w, h)
 
-        if 0.99 < result.box[2] / result.size[0] < 1.01:
-            if result.box[2] != result.size[0]:
-                logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
-        if 0.99 < result.box[3] / result.size[1] < 1.01:
-            if result.box[3] != result.size[1]:
-                logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
+        if result.size[0] > 0 and result.size[1] > 0:
+            if 0.99 < result.box[2] / result.size[0] < 1.01:
+                if result.box[2] != result.size[0]:
+                    logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
+            if 0.99 < result.box[3] / result.size[1] < 1.01:
+                if result.box[3] != result.size[1]:
+                    logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
@@ -629,12 +643,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.box = (x, y, w, h)
         result.mask = (0, 0, w + up_state.offset[0], h + up_state.offset[1])
 
-        if 0.99 < result.box[2] / result.size[0] < 1.01:
-            if result.box[2] != result.size[0]:
-                logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
-        if 0.99 < result.box[3] / result.size[1] < 1.01:
-            if result.box[3] != result.size[1]:
-                logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
+        if result.size[0] > 0 and result.size[1] > 0:
+            if 0.99 < result.box[2] / result.size[0] < 1.01:
+                if result.box[2] != result.size[0]:
+                    logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
+            if 0.99 < result.box[3] / result.size[1] < 1.01:
+                if result.box[3] != result.size[1]:
+                    logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
 
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity

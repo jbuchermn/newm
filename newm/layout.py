@@ -554,11 +554,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self.thread.stop()
 
 
-    def _execute_view_main(self, view: View) -> None:
-        view.init()
-        self.animate_to(view.main, conf_anim_t(), None)
-
-
     def animate_to(self,
                    reducer: Callable[[LayoutState], tuple[Optional[LayoutState], Optional[LayoutState]]],
                    duration: float,
