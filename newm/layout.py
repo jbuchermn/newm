@@ -1066,11 +1066,18 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                     ws = [w for w in self.workspaces if w._handle == ws_handle][0]
                     s = view.toggle_floating(s, ws, ws_state)
 
-                    ws_state0 = ws_state.replacing_view_state(view, h=s.h, w=s.w)
-
                     d = dict(s.__dict__)
-                    d['w'] = max(1, round(s.w))
-                    d['h'] = max(1, round(s.h))
+                    ws_state0 = ws_state.replacing_view_state(view, **d)
+
+                    if s.is_tiled:
+                        d['w'] = max(1, round(s.w))
+                        d['h'] = max(1, round(s.h))
+                        d['i'] = round(s.i)
+                        d['j'] = round(s.j)
+                    else:
+                        d['i'] += 0.05
+                        d['j'] -= 0.1
+
                     ws_state1 = ws_state.replacing_view_state(view, **d)
                     ws_state1.validate_stack_indices(view)
 

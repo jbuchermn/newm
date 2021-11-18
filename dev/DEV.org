@@ -6,8 +6,9 @@
 *** TODO Stacked windows are not scaled properly
 *** TODO Occasionally slow animations when having a second virtual output
 *** TODO Can floating specific attributes in view be moved (at least partially) to state?
-*** TODO Switching tiled -> floating means a little jump due to padding, floating -> tiled has buggy animations
+*** DONE Switching tiled -> floating means a little jump due to padding, floating -> tiled has buggy animations
 *** TODO Remove orphaned view states
+*** TODO Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
 
 ** Backgrounds
 *** TODO Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller

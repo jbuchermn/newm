@@ -380,17 +380,23 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.is_floating and self.up_state is not None:
             self.floating_size = self.up_state.size
 
-        i = round(state.i)
-        j = round(state.j)
+        i = state.i
+        j = state.j
         w = state.w
         h = state.h
-        if not self.is_floating and self.floating_size is not None:
-            w = self.floating_size[0] / ws.width * ws_state.size
-            h = self.floating_size[1] / ws.height * ws_state.size
+        padding = conf_padding() if not ws_state.is_fullscreen() else 0
 
-            # TODO: Account for padding here
+        if not self.is_floating and self.floating_size is not None:
+            w = (self.floating_size[0] + 2*padding) / ws.width * ws_state.size
+            h = (self.floating_size[1] + 2*padding) / ws.height * ws_state.size
+            i -= padding / ws.width * ws_state.size
+            j -= padding / ws.height * ws_state.size
 
             self.floating_size = None
+        else:
+            i += padding / ws.width * ws_state.size
+            j += padding / ws.height * ws_state.size
+
 
         return state.copy(is_tiled=not self.is_floating, i=i, j=j, w=w, h=h)
 
