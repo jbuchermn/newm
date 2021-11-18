@@ -1088,6 +1088,33 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 return (None, state)
         self.animate_to(reducer, conf_anim_t())
 
+    def change_focused_view_workspace(self, ds: int=1) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            view = self.find_focused_view()
+            if view is not None:
+                try:
+                    s, ws_state, ws_handle = state.find_view(view)
+                    i, ws = [(i, w) for i, w in enumerate(self.workspaces) if w._handle == ws_handle][0]
+
+                    if not s.is_tiled:
+                        return None, None
+
+                    i = (i + ds) % len(self.workspaces)
+                    ws_new = self.workspaces[i]
+                    ws_state = state.get_workspace_state(ws_new)
+
+                    if ws == ws_new:
+                        return None, None
+
+                    state = state.without_view_state(view)
+                    state0, state1 = view._main_tiled(ws_new, state, ws_state)
+                    return (state0, state1)
+                except:
+                    return (None, state)
+            else:
+                return (None, state)
+        self.animate_to(reducer, conf_anim_t())
+
 
     def move_focused_view(self, di: int, dj: int) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:

@@ -17,7 +17,7 @@
 *** TODO Background per output
 
 ** Multi-output support
-*** STRT Move between screens: Shortcuts (move windows as well as focus)
+*** DONE Move between screens: Shortcuts (move windows as well as focus)
 *** TODO Overview per output
 
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
