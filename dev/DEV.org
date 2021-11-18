@@ -8,7 +8,7 @@
 *** TODO Occasionally slow animations when having a second virtual output
 *** TODO Can floating specific attributes in view be moved (at least partially) to state?
 *** TODO Switching tiled -> floating means a little jump due to padding, floating -> tiled has buggy animations
-*** TODO view get_min_w_h still necessary?
+*** DONE view get_min_w_h still necessary?
 *** TODO Remove orphaned view states
 
 *** STRT catapult bug: sets min and max size but not window geometry - therefore no size_changed is triggered
@@ -29,6 +29,7 @@
 ** STRT Layer shell
 
 ** Release
+- [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway
 - [ ] TODO comments
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 - [ ] Document new config options

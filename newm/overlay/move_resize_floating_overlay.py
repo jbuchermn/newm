@@ -33,7 +33,6 @@ class MoveResizeFloatingOverlay(Overlay):
         self.workspace = self.layout.workspaces[0]
         self.ws_state = self.layout.state.get_workspace_state(self.workspace)
 
-        self.min_w, self.min_h = view.find_min_w_h()
         try:
             state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
             self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]

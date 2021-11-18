@@ -711,24 +711,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 self.wm.toggle_fullscreen(False)
             self.set_fullscreen(False)
 
-
-    def find_min_w_h(self) -> tuple[float, float]:
-        try:
-            self_state, ws_state, ws_handle = self.wm.state.find_view(self)
-            ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
-        except Exception:
-            logger.exception("Could not access view %s state" % self)
-            return (0, 0)
-
-        """
-        Let overlays know how small we are able to get in i, j, w, h coords
-        """
-        min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
-        min_w *= ws_state.size / ws.width / self.client_side_scale
-        min_h *= ws_state.size / ws.height / self.client_side_scale
-
-        return min_w, min_h
-
     def is_focused(self) -> bool:
         return self.up_state is not None and self.up_state.is_focused
 
