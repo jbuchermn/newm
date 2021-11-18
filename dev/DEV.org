@@ -4,14 +4,10 @@
 ** Bugs / Technical debt
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 *** TODO Stacked windows are not scaled properly
-*** DONE Do animations block before the compositor even starts? (Really slow startup when anim time is set high)
 *** TODO Occasionally slow animations when having a second virtual output
 *** TODO Can floating specific attributes in view be moved (at least partially) to state?
 *** TODO Switching tiled -> floating means a little jump due to padding, floating -> tiled has buggy animations
-*** DONE view get_min_w_h still necessary?
 *** TODO Remove orphaned view states
-
-*** STRT catapult bug: sets min and max size but not window geometry - therefore no size_changed is triggered
 
 ** Backgrounds
 *** TODO Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
