@@ -22,7 +22,6 @@ else:
 
 logger = logging.getLogger(__name__)
 
-conf_xwayland_css = configured_value('view.xwayland_handle_scale_clientside', False)
 conf_corner_radius = configured_value('view.corner_radius', 12.5)
 conf_padding = configured_value('view.padding', 8)
 conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0)
@@ -93,11 +92,17 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         pass
 
     def _init_tiled(self, ws: Workspace) -> None:
+        """
+        Make a best-guess assumption w=h=1 and workspace size unchanged to ask the view to open with correct size
+        Note that we can't be sure the view is going to be tiled at this stage - views do change min / max sizes later on
+        which means they might be detected as floating in on_map
+        """
         if self.up_state is not None:
             ws = self.wm.get_active_workspace()
             ws_state = self.wm.state.get_workspace_state(ws)
             self._initial_state = self._reducer_tiled(self.up_state, self.wm.state, ViewState(w=1, h=1), ws, ws_state)
             self._initial_state.box = (0, 0, 0, 0)
+            self._initial_state.floating = None
 
     def _init_layer(self, ws: Workspace) -> None:
         width: int = 0
@@ -118,7 +123,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             self._initial_state.size = (width, height)
 
     def _init_floating(self, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> None:
-        width, height = -1, -1
+        """
+        Set floating attributes on init if it is clear the window will float
+        """
+        width, height = 0, 0
         if self.up_state is not None:
             logger.debug("Init floating: size=%s constraints=%s hints=%s" %
                          (self.up_state.size, self.up_state.size_constraints, size_hint))
@@ -141,6 +149,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         self.floating_pos_hint = pos_hint
 
         if self._initial_state is not None:
+            self._initial_state.floating = True
             self._initial_state.size = (width, height)
 
 
@@ -149,25 +158,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         self._initial_state = PyWMViewDownstreamState()
 
-        # Always place in active workspace
+        # TODO: If up_state has fixed output --> set
         ws = self.wm.get_active_workspace()
-
-        try:
-            if conf_xwayland_css():
-                if self.is_xwayland:
-                    """
-                    xwayland_handle_scale_clientside means clients should know and handle HiDPI-scale (e.g. --force-device-scale-factor=2)
-                    and are thereforee set to scale 1 serverside
-                    - this cannot work with multi-dpi setups and therefore is only a hack
-                    - it does not work in conjunction with xdg_output_manager, since the output_manager exposes logical pixels
-                        and XWayland does not handle that properly (result: mouse movements beyond screen_dimensions / output_scale will get truncated)
-                    - Maybe XWayland will get smarter in the future: https://github.com/swaywm/wlroots/pull/2064 and
-                        https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/432
-                    - Then again, the future should by without X11/XWayland
-                    """
-                    self.client_side_scale = max([o.scale for o in self.wm.layout])
-        except:
-            pass
 
         if self.pid is not None:
             self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
@@ -341,7 +333,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def main(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Main: %s", self)
 
-        # Always place in active workspace
+        # TODO: If up_state has fixed output --> set
         ws = self.wm.get_active_workspace()
         ws_state = state.get_workspace_state(ws)
 
@@ -351,7 +343,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         elif self.role == "layer":
             return self._main_layer(ws, state, ws_state)
 
-        elif self.is_floating:
+        elif self.is_floating or self.up_state and (
+            self.up_state.is_floating or self.parent is not None or
+            (self.up_state.size_constraints[0] > 0 and self.up_state.size_constraints[0] == self.up_state.size_constraints[1] and
+             self.up_state.size_constraints[2] > 0 and self.up_state.size_constraints[2] == self.up_state.size_constraints[3])):
             return self._main_floating(ws, state, ws_state)
 
         else:
@@ -392,6 +387,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if not self.is_floating and self.floating_size is not None:
             w = self.floating_size[0] / ws.width * ws_state.size
             h = self.floating_size[1] / ws.height * ws_state.size
+
+            # TODO: Account for padding here
+
             self.floating_size = None
 
         return state.copy(is_tiled=not self.is_floating, i=i, j=j, w=w, h=h)
@@ -452,6 +450,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def _reducer_tiled(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
         result = PyWMViewDownstreamState()
+        result.floating = False
         result.accepts_input = True
         result.corner_radius = conf_corner_radius() if self.parent is None else 0
 
@@ -592,6 +591,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def _reducer_floating(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
         result = PyWMViewDownstreamState()
+        result.floating = True
         result.accepts_input = True
         result.corner_radius = conf_corner_radius() if self.parent is None else 0
 
@@ -645,7 +645,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         w *= ws.width / ws_state.size
         h *= ws.height / ws_state.size
         result.box = (x, y, w, h)
-        result.mask = (0, 0, w + up_state.offset[0], h + up_state.offset[1])
+        result.mask = (-100000, -100000, w + 200000, h + 200000)
 
         if result.size[0] > 0 and result.size[1] > 0:
             if 0.99 < result.box[2] / result.size[0] < 1.01:
