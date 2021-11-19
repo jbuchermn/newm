@@ -13,29 +13,31 @@ logger = logging.getLogger(__name__)
 class ViewState:
     def __init__(self, **kwargs: Any) -> None:
         self.is_tiled: bool = kwargs['is_tiled'] if 'is_tiled' in kwargs else True
+        self.is_layer: bool = kwargs['is_layer'] if 'is_layer' in kwargs else False
 
+        # - Tiled views
         self.i: float = kwargs['i'] if 'i' in kwargs else 0
         self.j: float = kwargs['j'] if 'j' in kwargs else 0
         self.w: float = kwargs['w'] if 'w' in kwargs else 0
         self.h: float = kwargs['h'] if 'h' in kwargs else 0
 
-        """
-        MoveResizeOverlay
-        """
+        # stack_id / idx / len
+        self.stack_data: tuple[int, int, int] = kwargs['stack_data'] if 'stack_data' in kwargs else (-1, 0, 1)
+
+        # global stack_idx (Compare z-index) to restore ordering
+        self.stack_idx: int = kwargs['stack_idx'] if 'stack_idx' in kwargs else 0
+
         self.move_origin: tuple[Optional[float], Optional[float]] = kwargs['move_origin'] if 'move_origin' in kwargs \
             else (None, None)
         self.scale_origin: tuple[Optional[float], Optional[float]] = kwargs['scale_origin'] if 'scale_origin' in kwargs \
             else (None, None)
 
-        """
-        stack_id / idx / len
-        """
-        self.stack_data: tuple[int, int, int] = kwargs['stack_data'] if 'stack_data' in kwargs else (-1, 0, 1)
+        # - Floating views
+        self.float_pos: tuple[float, float] = kwargs['float_pos'] if 'float_pos' in kwargs else (0, 0)
+        self.float_size: tuple[int, int] = kwargs['float_size'] if 'float_size' in kwargs else (0, 0)
 
-        """
-        Global stack_idx (Compare z-index) to restore ordering
-        """
-        self.stack_idx: int = kwargs['stack_idx'] if 'stack_idx' in kwargs else 0
+        # - Layer views
+
 
     def get_ijwh(self) -> tuple[float, float, float, float]:
         i, j, w, h = self.i, self.j, self.w, self.h

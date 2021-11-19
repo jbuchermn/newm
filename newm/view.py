@@ -46,20 +46,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
 
-        self.client_side_scale = 1.
-
-        # Initial state for e.g. size setting even before the state is registered in state tree
+        # Initial state while waiting for map
         self._initial_state: Optional[PyWMViewDownstreamState] = None
-
-        # Overrides up_state.is_floating
-        self.is_floating = False
-
-        # Only relevant for floating views - improper state handling...
-        self.floating_size: Optional[tuple[int, int]] = None
-        self.floating_size_lock: Optional[tuple[int, int]] = None
-        self.floating_size_initial: Optional[tuple[int, int]] = None
-        self.floating_pos_hint: Optional[tuple[float, float]] = None
-        self.floating_delayed_map = False
 
         self.panel: Optional[str] = None
 
@@ -70,45 +58,128 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
              self.title, self.app_id, self.role, self.pid,
-             self.is_xwayland, self.is_floating)
+             self.is_xwayland, self.up_state.is_floating)
 
     def is_dialog(self) -> bool:
         if self.up_state is None:
             return True
 
-        return self.panel is None and self.is_floating
+        return self.panel is None and self.up_state.is_floating
 
     def is_window(self) -> bool:
         if self.up_state is None:
             return False
 
-        return self.panel is None and not self.is_floating
+        return self.panel is None and not self.up_state.is_floating
 
     def is_panel(self) -> bool:
         return self.panel is not None
 
+    def _decide_floating(self) -> tuple[bool, Optional[tuple[int, int]], Optional[tuple[float, float]]]:
+        size_hint: Optional[tuple[int, int]] = None
+        pos_hint: Optional[tuple[float, float]] = None
+
+        floats = self.up_state is not None and self.up_state.is_floating
+        try:
+            hints = conf_float_callback()(self)
+            if hints is not None:
+                if isinstance(hints, tuple):
+                    if len(hints) >= 1:
+                        floats = hints[0]
+                    if len(hints) >= 2:
+                        size_hint = hints[1]
+                    if len(hints) >= 3:
+                        pos_hint = hints[2]
+                else:
+                    floats = hints != False
+        except Exception:
+            logger.exception("floats callback")
+
+        if (self.up_state is not None and
+           self.up_state.size_constraints[0] > 0 and
+           self.up_state.size_constraints[2] > 0 and
+           self.up_state.size_constraints[0] == self.up_state.size_constraints[1] and
+           self.up_state.size_constraints[2] == self.up_state.size_constraints[3]):
+            floats = True
+
+        if self.parent is not None:
+            floats = True
+
+        return floats, size_hint, pos_hint
+
     """
-    Init implementations
+    Panel
     """
     def _init_panel(self, ws: Workspace) -> PyWMViewDownstreamState:
         return PyWMViewDownstreamState()
 
-    def _init_tiled(self, ws: Workspace) -> PyWMViewDownstreamState:
-        """
-        Make a best-guess assumption w=h=1 and workspace size unchanged to ask the view to open with correct size
-        Note that we can't be sure the view is going to be tiled at this stage - views do change min / max sizes later on
-        which means they might be detected as floating in on_map
-        """
-        if self.up_state is not None:
-            ws = self.wm.get_active_workspace()
-            ws_state = self.wm.state.get_workspace_state(ws)
-            result = self._reducer_tiled(self.up_state, self.wm.state, ViewState(w=1, h=1), ws, ws_state)
-            result.box = (0, 0, 0, 0)
-            result.floating = None
-            return result
-        else:
-            return PyWMViewDownstreamState()
+    def _main_panel(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        if self._initial_state is None:
+            logger.debug("Suppressing duplicate map")
+            return None, None
 
+        logger.debug("Main: Registered panel %s: %s", self.app_id, self.panel)
+        self.damage()
+
+        # Place dummy ViewState
+        ws_state1 = ws_state.with_view_state(self, is_tiled=False)
+        state1 = state.setting_workspace_state(ws, ws_state1)
+        return state1, None
+
+    def _reducer_panel(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
+        result = PyWMViewDownstreamState()
+
+        if self.panel == "notifiers":
+            result.z_index = 6
+            result.accepts_input = False
+            result.lock_enabled = True
+
+            result.size = (
+                int(ws.width * conf_panel_notifiers_w()),
+                int(ws.height * conf_panel_notifiers_h()))
+
+            result.box = (
+                ws.width * (1. - conf_panel_notifiers_w())/2.,
+                ws.height * (1. - conf_panel_notifiers_h()),
+                ws.width * conf_panel_notifiers_w(),
+                ws.height * conf_panel_notifiers_h())
+
+        elif self.panel == "launcher":
+            result.z_index = 5
+            result.accepts_input = True
+            result.corner_radius = conf_panel_launcher_corner_radius()
+
+            result.size = (
+                round(ws.width * conf_panel_launcher_w()),
+                round(ws.height * conf_panel_launcher_h()))
+
+            result.box = (
+                (ws.width - result.size[0]) / 2.,
+                (ws.height - result.size[1]) / 2. + (1. - state.launcher_perc) * ws.height,
+                result.size[0],
+                result.size[1])
+
+        elif self.panel == "lock":
+            result.z_index = 100
+            result.accepts_input = True
+            result.corner_radius = conf_panel_lock_corner_radius()
+            result.lock_enabled = True
+
+            result.size = (
+                round(ws.width * conf_panel_lock_w()),
+                round(ws.height * conf_panel_lock_h()))
+
+            result.box = (
+                (ws.width - result.size[0]) / 2.,
+                (ws.height - result.size[1]) / 2. + (1. - state.lock_perc) * ws.height,
+                result.size[0],
+                result.size[1])
+
+        return result
+
+    """
+    Layer
+    """
     def _init_layer(self, ws: Workspace) -> PyWMViewDownstreamState:
         result = PyWMViewDownstreamState()
 
@@ -117,19 +188,38 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.up_state is not None:
             width, height = self.up_state.size_constraints[1:3]
 
+        # TODO
         if width == 0:
             width = 500
         if height == 0:
             height = 500
 
-        self.is_floating = True
-        self.floating_size = width, height
-        self.floating_size_initial = width, height
-
         result.size = (width, height)
         result.fixed_output = self.up_state.fixed_output if (self.up_state is not None and self.up_state.fixed_output is not None) else ws.outputs[0]
         return result
 
+    def _main_layer(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        if self._initial_state is None:
+            logger.debug("Suppressing duplicate map")
+            return None, None
+
+        ws_state1 = ws_state.with_view_state(
+            self,
+            is_tiled=False, i=0, j=0, w=1, h=1,
+            stack_idx=self._handle,
+        )
+
+        ws_state2 = ws_state.with_view_state(
+            self,
+            is_tiled=False, i=0, j=0, w=1, h=1,
+            stack_idx=self._handle,
+        ).focusing_view(self)
+
+        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
+
+    """
+    Floating
+    """
     def _init_floating(self, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> PyWMViewDownstreamState:
         """
         Set floating attributes on init if it is clear the window will float
@@ -156,82 +246,157 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             width = max(min_w, min(max_w, width))
             height = max(min_h, min(max_h, height))
 
-        self.is_floating = True
-        self.floating_size = width, height
-        self.floating_size_initial = width, height
-        self.floating_pos_hint = pos_hint
-
         result.floating = True
         result.size = (width, height)
+
         return result
 
+    def _main_floating(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState, size_hint: Optional[tuple[int, int]], pos_hint: Optional[tuple[float, float]]) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        initial_state = self._init_floating(ws, size_hint=size_hint, pos_hint=pos_hint)
+        width, height = initial_state.size
 
-    def init(self) -> PyWMViewDownstreamState:
-        logger.info("Init: %s", self)
-
-        ws = self.wm.get_active_workspace()
-        if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
-            wss = [w for w in self.wm.workspaces if output in w.outputs]
-            if len(wss) != 1:
-                logger.warn("Unexpected: Could not find output %s in workspaces" % output)
-            else:
-                ws = wss[0]
+        if self.up_state is not None and self.up_state.size != (width, height):
+            logger.debug("Delaying map for resize: %s != %s" % (self.up_state.size, (width, height)))
+            self._initial_state = initial_state
+            self.damage()
+            return None, None
 
 
-        if self.pid is not None:
-            self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
+        if self._initial_state is None:
+            logger.debug("Suppressing duplicate map")
+            return None, None
+        w, h = width, height
 
-        if self.panel is not None:
-            self._initial_state = self._init_panel(ws)
+        if pos_hint is not None:
+            ci = ws_state.i + pos_hint[0] * ws_state.size
+            cj = ws_state.j + pos_hint[1] * ws_state.size
+            logger.debug("Respecting position hint %f %f" % pos_hint)
 
-        elif self.role == "layer":
-            self._initial_state = self._init_layer(ws)
-
-        else:
-            size_hint: Optional[tuple[int, int]] = None
-            pos_hint: Optional[tuple[float, float]] = None
-
-            floats = self.up_state is not None and self.up_state.is_floating
+        elif self.parent is not None:
             try:
-                hints = conf_float_callback()(self)
-                if hints is not None:
-                    if isinstance(hints, tuple):
-                        if len(hints) >= 1:
-                            floats = hints[0]
-                        if len(hints) >= 2:
-                            size_hint = hints[1]
-                        if len(hints) >= 3:
-                            pos_hint = hints[2]
-                    else:
-                        floats = hints != False
-            except Exception:
-                logger.exception("floats callback")
+                p_state = state.get_view_state(cast(View, self.parent))
+                ci = p_state.i + p_state.w / 2.
+                cj = p_state.j + p_state.h / 2.
+            except:
+                logger.warn("Unexpected: Could not access parent %s state" % self.parent)
+        else:
+            ci = ws_state.i + ws_state.size / 2.
+            cj = ws_state.j + ws_state.size / 2.
 
 
-            if floats:
-                self._initial_state = self._init_floating(ws, size_hint=size_hint, pos_hint=pos_hint)
+        wt, ht = w / ws.width * ws_state.size, h / ws.height * ws_state.size
+        i = ci - wt / 2.
+        j = cj - ht / 2.
 
-            else:
-                self._initial_state = self._init_tiled(ws)
+        ws_state1 = ws_state.with_view_state(
+            self,
+            is_tiled=False,
+            float_pos=(ci, cj),
+            float_size=(0, 0),
+            stack_idx=self._handle,
+        )
 
-        return self._initial_state
+        ws_state2 = ws_state1.replacing_view_state(
+            self,
+            is_tiled=False,
+            float_pos=(i, j),
+            float_size=(w, h),
+            stack_idx=self._handle,
+        ).focusing_view(self)
+
+        self.focus()
+        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
+
+
+    def _reducer_floating(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
+        result = PyWMViewDownstreamState()
+        result.floating = True
+        result.accepts_input = True
+        result.corner_radius = conf_corner_radius() if self.parent is None else 0
+
+        # TODO This is only for layer shell
+        result.fixed_output = up_state.fixed_output
+
+        # z_index based on hierarchy
+        depth = 0
+        p = self.parent
+        while p is not None:
+            depth += 1
+            p = p.parent
+
+        result.z_index = depth + 2
+
+        # Keep focused view on top
+        if self.is_focused():
+            result.z_index += 1
+
+        # Handle client size
+        result.size = self_state.float_size if self_state.float_size[0] > 0 else (-1, -1)
+        width, height = up_state.size
+
+        # For animation purposes
+        if self_state.float_size == (0, 0):
+            width, height = 0, 0
+
+        # Handle box
+        size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
+        width *= size / ws_state.size
+        height *= size / ws_state.size
+
+        i, j = self_state.float_pos
+
+        x = i - ws_state.i
+        y = j - ws_state.j
+
+        x *= ws.width / ws_state.size
+        y *= ws.height / ws_state.size
+        result.box = (x, y, width, height)
+        result.mask = (-100000, -100000, width + 200000, height + 200000)
+
+        if result.size[0] > 0 and result.size[1] > 0:
+            if 0.99 < result.box[2] / result.size[0] < 1.01:
+                if result.box[2] != result.size[0]:
+                    logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
+            if 0.99 < result.box[3] / result.size[1] < 1.01:
+                if result.box[3] != result.size[1]:
+                    logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
+
+
+        result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
+        result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
+
+        # Workspaces don't really matter for floating windows, just leave them attached to initial workspace
+        result.workspace = None
+
+        return result
 
     """
-    Main implementations
+    Tiled
     """
-    def _main_panel(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        logger.debug("Main: Registered panel %s: %s", self.app_id, self.panel)
-        self.damage()
-
-        # Place dummy ViewState
-        ws_state1 = ws_state.with_view_state(self, is_tiled=False)
-        state1 = state.setting_workspace_state(ws, ws_state1)
-        return state1, None
+    def _init_tiled(self, ws: Workspace) -> PyWMViewDownstreamState:
+        """
+        Make a best-guess assumption w=h=1 and workspace size unchanged to ask the view to open with correct size
+        Note that we can't be sure the view is going to be tiled at this stage - views do change min / max sizes later on
+        which means they might be detected as floating in on_map
+        """
+        if self.up_state is not None:
+            ws = self.wm.get_active_workspace()
+            ws_state = self.wm.state.get_workspace_state(ws)
+            result = self._reducer_tiled(self.up_state, self.wm.state, ViewState(w=1, h=1), ws, ws_state)
+            result.box = (0, 0, 0, 0)
+            result.floating = None
+            return result
+        else:
+            return PyWMViewDownstreamState()
 
     def _main_tiled(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        if self._initial_state is None:
+            logger.debug("Suppressing duplicate map")
+            return None, None
+
         min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
-        min_w *= ws_state.size / ws.width / self.client_side_scale
-        min_h *= ws_state.size / ws.height / self.client_side_scale
+        min_w *= ws_state.size / ws.width
+        min_h *= ws_state.size / ws.height
 
         w = max(math.ceil(min_w), 1)
         h = max(math.ceil(min_h), 1)
@@ -242,11 +407,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         second_state = (i, j, w, h)
 
-        self.focus()
-
-        """
-        Present
-        """
         i, j, w, h = second_state
         i1, j1, w1, h1 = second_state
 
@@ -267,221 +427,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None), move_origin=(None, None)
         ).focusing_view(self)
 
-        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
-
-    def _main_layer(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        ws_state1 = ws_state.with_view_state(
-            self,
-            is_tiled=False, i=0, j=0, w=1, h=1,
-            stack_idx=self._handle,
-        )
-
-        ws_state2 = ws_state.with_view_state(
-            self,
-            is_tiled=False, i=0, j=0, w=1, h=1,
-            stack_idx=self._handle,
-        ).focusing_view(self)
-
-        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
-
-    def _main_floating(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        if self.floating_size is None or self.floating_size[0] <= 0 or self.floating_size[1] <= 0:
-            logger.debug("Floating init did not set size correctly")
-            self._initial_state = self._init_floating(ws, pos_hint=self.floating_pos_hint)
-
-        if self.floating_size is None:
-            logger.warn("Unexpected state")
-            return None, None
-
-        if self.up_state is not None and self.up_state.size != self.floating_size:
-            logger.debug("Delaying map of floating window until size is set")
-            self.damage()
-            self.floating_delayed_map = True
-            return None, None
-
-        width, height = self.floating_size
-        w, h = float(width), float(height)
-
-        w *= ws_state.size / ws.width / self.client_side_scale
-        h *= ws_state.size / ws.height / self.client_side_scale
-
-        ci = ws_state.i + ws_state.size / 2.
-        cj = ws_state.j + ws_state.size / 2.
-
-        if self.floating_pos_hint is not None:
-            ci = ws_state.i + self.floating_pos_hint[0] * ws_state.size
-            cj = ws_state.j + self.floating_pos_hint[1] * ws_state.size
-            logger.debug("Respecting position hint %f %f" % self.floating_pos_hint)
-        elif self.parent is not None:
-            try:
-                p_state = state.get_view_state(cast(View, self.parent))
-                ci = p_state.i + p_state.w / 2.
-                cj = p_state.j + p_state.h / 2.
-            except:
-                logger.warn("Unexpected: Could not access parent %s state" % self.parent)
-
-
-        i = ci - w / 2.
-        j = cj - h / 2.
-        second_state = (i, j, w, h)
-
         self.focus()
-
-        """
-        Present
-        """
-        i, j, w, h = second_state
-        i1, j1, w1, h1 = second_state
-
-        i += .5*w
-        j += .5*h
-        w = 0
-        h = 0
-
-        ws_state1 = ws_state.with_view_state(
-            self,
-            is_tiled=False, i=i, j=j, w=w, h=h,
-            scale_origin=(w1, h1), move_origin=(i1, j1),
-            stack_idx=self._handle,
-        )
-
-        ws_state2 = ws_state1.replacing_view_state(
-            self,
-            i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None), move_origin=(None, None)
-        ).focusing_view(self)
-
         return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
-
-    def main(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        logger.info("Main: %s", self)
-
-        ws = self.wm.get_active_workspace()
-        if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
-            wss = [w for w in self.wm.workspaces if output in w.outputs]
-            if len(wss) != 1:
-                logger.warn("Unexpected: Could not find output %s in workspaces" % output)
-            else:
-                ws = wss[0]
-
-        ws_state = state.get_workspace_state(ws)
-
-        if self.panel is not None:
-            return self._main_panel(ws, state, ws_state)
-
-        elif self.role == "layer":
-            return self._main_layer(ws, state, ws_state)
-
-        elif self.is_floating or self.up_state and (
-            self.up_state.is_floating or self.parent is not None or
-            (self.up_state.size_constraints[0] > 0 and self.up_state.size_constraints[0] == self.up_state.size_constraints[1] and
-             self.up_state.size_constraints[2] > 0 and self.up_state.size_constraints[2] == self.up_state.size_constraints[3])):
-            return self._main_floating(ws, state, ws_state)
-
-        else:
-            return self._main_tiled(ws, state, ws_state)
-
-    def on_map(self) -> None:
-        logger.debug("Map: %s" % self)
-        self.wm.animate_to(self.main, conf_anim_t(), None)
-
-    def destroy(self) -> None:
-        self.wm.destroy_view(self)
-
-    def resize_floating(self, dw: int, dh: int) -> None: 
-        self.floating_size_initial = None
-
-        if self.floating_size_lock is None:
-            self.floating_size_lock = self.floating_size
-
-        # Courtesy of mypy
-        if self.floating_size_lock is not None:
-            w, h = self.floating_size_lock
-            self.floating_size_lock = w+dw, h+dh
-
-            self.floating_size = self.floating_size_lock
-
-
-    def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> ViewState:
-        self.floating_size_initial = None
-
-        self.is_floating = not self.is_floating
-        if self.is_floating and self.up_state is not None:
-            self.floating_size = self.up_state.size
-
-        i = state.i
-        j = state.j
-        w = state.w
-        h = state.h
-        padding = conf_padding() if not ws_state.is_fullscreen() else 0
-
-        if not self.is_floating and self.floating_size is not None:
-            w = (self.floating_size[0] + 2*padding) / ws.width * ws_state.size
-            h = (self.floating_size[1] + 2*padding) / ws.height * ws_state.size
-            i -= padding / ws.width * ws_state.size
-            j -= padding / ws.height * ws_state.size
-
-            self.floating_size = None
-        else:
-            i += padding / ws.width * ws_state.size
-            j += padding / ws.height * ws_state.size
-
-
-        return state.copy(is_tiled=not self.is_floating, i=i, j=j, w=w, h=h)
-
-    """
-    Reducer implementations
-    """
-    def _reducer_panel(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
-
-        if self.panel == "notifiers":
-            result.z_index = 6
-            result.accepts_input = False
-            result.lock_enabled = True
-
-            result.size = (
-                int(ws.width * conf_panel_notifiers_w() * self.client_side_scale),
-                int(ws.height * conf_panel_notifiers_h() * self.client_side_scale))
-
-            result.box = (
-                ws.width * (1. - conf_panel_notifiers_w())/2.,
-                ws.height * (1. - conf_panel_notifiers_h()),
-                ws.width * conf_panel_notifiers_w(),
-                ws.height * conf_panel_notifiers_h())
-
-        elif self.panel == "launcher":
-            result.z_index = 5
-            result.accepts_input = True
-            result.corner_radius = conf_panel_launcher_corner_radius()
-
-            result.size = (
-                round(ws.width * conf_panel_launcher_w() * self.client_side_scale),
-                round(ws.height * conf_panel_launcher_h() * self.client_side_scale))
-
-            result.box = (
-                (ws.width - result.size[0] / self.client_side_scale) / 2.,
-                (ws.height - result.size[1] / self.client_side_scale) / 2. + (1. - state.launcher_perc) * ws.height,
-                result.size[0] / self.client_side_scale,
-                result.size[1] / self.client_side_scale)
-
-        elif self.panel == "lock":
-            result.z_index = 100
-            result.accepts_input = True
-            result.corner_radius = conf_panel_lock_corner_radius()
-            result.lock_enabled = True
-
-            result.size = (
-                round(ws.width * conf_panel_lock_w() * self.client_side_scale),
-                round(ws.height * conf_panel_lock_h() * self.client_side_scale))
-
-            result.box = (
-                (ws.width - result.size[0] / self.client_side_scale) / 2.,
-                (ws.height - result.size[1] / self.client_side_scale) / 2. + (1. - state.lock_perc) * ws.height,
-                result.size[0] / self.client_side_scale,
-                result.size[1] / self.client_side_scale)
-
-        return result
 
     def _reducer_tiled(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
         result = PyWMViewDownstreamState()
@@ -568,8 +516,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         w_for_size -= 2*padding
         h_for_size -= 2*padding
 
-        width = math.ceil(w_for_size * self.client_side_scale)
-        height = math.ceil(h_for_size * self.client_side_scale)
+        width = round(w_for_size)
+        height = round(h_for_size)
 
         result.size = (width, height)
 
@@ -624,83 +572,75 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return result
 
 
-    def _reducer_floating(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
-        result.floating = True
-        result.accepts_input = True
-        result.corner_radius = conf_corner_radius() if self.parent is None else 0
+    """
+    Init and map
+    """
+    def init(self) -> PyWMViewDownstreamState:
+        logger.info("Init: %s", self)
 
-        # TODO This is only for layer shell
-        result.fixed_output = up_state.fixed_output
+        ws = self.wm.get_active_workspace()
+        if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
+            wss = [w for w in self.wm.workspaces if output in w.outputs]
+            if len(wss) != 1:
+                logger.warn("Unexpected: Could not find output %s in workspaces" % output)
+            else:
+                ws = wss[0]
 
-        """
-        z_index based on hierarchy
-        """
-        depth = 0
-        p = self.parent
-        while p is not None:
-            depth += 1
-            p = p.parent
+        if self.pid is not None:
+            self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
 
-        result.z_index = depth + 2
+        if self.panel is not None:
+            self._initial_state = self._init_panel(ws)
 
-        """
-        Keep focused view on top
-        """
-        if self.is_focused():
-            result.z_index += 1
+        elif self.role == "layer":
+            self._initial_state = self._init_layer(ws)
 
-        """
-        Handle client size
-        """
-        if self.floating_size is not None:
-            result.size = self.floating_size
-        width, height = up_state.size
+        else:
+            floats, size_hint, pos_hint = self._decide_floating()
 
-        if self.floating_size_initial is not None:
-            width, height = self.floating_size_initial
+            if floats:
+                self._initial_state = self._init_floating(ws, size_hint=size_hint, pos_hint=pos_hint)
 
-        """
-        Handle box
-        """
-        size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
+            else:
+                self._initial_state = self._init_tiled(ws)
 
-        i = self_state.i
-        j = self_state.j
-        w = width / ws.width * size
-        h = height / ws.height * size
+        return self._initial_state
 
-        # Allow animations
-        if self_state.w == 0 or self_state.h == 0:
-            w = 0
-            h = 0
+    def main(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        logger.info("Main: %s", self)
 
-        x = i - ws_state.i
-        y = j - ws_state.j
-        
-        x *= ws.width / ws_state.size
-        y *= ws.height / ws_state.size
-        w *= ws.width / ws_state.size
-        h *= ws.height / ws_state.size
-        result.box = (x, y, w, h)
-        result.mask = (-100000, -100000, w + 200000, h + 200000)
+        ws = self.wm.get_active_workspace()
+        if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
+            wss = [w for w in self.wm.workspaces if output in w.outputs]
+            if len(wss) != 1:
+                logger.warn("Unexpected: Could not find output %s in workspaces" % output)
+            else:
+                ws = wss[0]
 
-        if result.size[0] > 0 and result.size[1] > 0:
-            if 0.99 < result.box[2] / result.size[0] < 1.01:
-                if result.box[2] != result.size[0]:
-                    logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
-            if 0.99 < result.box[3] / result.size[1] < 1.01:
-                if result.box[3] != result.size[1]:
-                    logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
+        ws_state = state.get_workspace_state(ws)
 
+        if self.panel is not None:
+            result = self._main_panel(ws, state, ws_state)
 
-        result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
-        result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
+        elif self.role == "layer":
+            result = self._main_layer(ws, state, ws_state)
 
-        # Workspaces don't really matter for floating windows, just leave them attached to initial workspace
-        result.workspace = None
+        else:
+            floats, size_hint, pos_hint = self._decide_floating()
+
+            if floats:
+                result = self._main_floating(ws, state, ws_state, size_hint=size_hint, pos_hint=pos_hint)
+            else:
+                result = self._main_tiled(ws, state, ws_state)
+
+        if result != (None, None):
+            self._initial_state is not None
 
         return result
+
+    def on_map(self) -> None:
+        logger.debug("Map: %s" % self)
+        self.wm.animate_to(self.main, conf_anim_t(), None)
 
     def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> PyWMViewDownstreamState:
         try:
@@ -715,10 +655,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if self.panel is not None:
             return self._reducer_panel(up_state, state, self_state, ws, ws_state)
-        elif self.is_floating:
+        elif self_state.is_tiled:
+            return self._reducer_tiled(up_state, state, self_state, ws, ws_state)
+        elif self_state.is_layer:
+            # TODO
             return self._reducer_floating(up_state, state, self_state, ws, ws_state)
         else:
-            return self._reducer_tiled(up_state, state, self_state, ws, ws_state)
+            return self._reducer_floating(up_state, state, self_state, ws, ws_state)
 
 
     def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
@@ -735,7 +678,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def on_event(self, event: str) -> None:
         if event == "request_move":
-            if self.up_state is not None and self.is_floating:
+            if self.up_state is not None and self.up_state.is_floating:
                 self.wm.enter_overlay(
                     MoveResizeFloatingOverlay(self.wm, self))
         elif event == "request_fullscreen":
@@ -751,6 +694,28 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def is_focused(self) -> bool:
         return self.up_state is not None and self.up_state.is_focused
+
+
+    def destroy(self) -> None:
+        self.wm.destroy_view(self)
+
+
+    def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> tuple[ViewState, ViewState]:
+        padding = conf_padding() if not ws_state.is_fullscreen() else 0
+        if state.is_tiled:
+            float_size = self.up_state.size if self.up_state is not None else (100, 100)
+            float_pos = state.i + 0.1, state.j - 0.1
+            return state, state.copy(is_tiled=False, float_size=float_size, float_pos=float_pos)
+
+        else:
+            w = max(1, round((state.float_size[0] + 2*padding) / ws.width * ws_state.size))
+            h = max(1, round((state.float_size[1] + 2*padding) / ws.height * ws_state.size))
+            i = round(state.float_pos[0])
+            j = round(state.float_pos[1])
+            return state, state.copy(is_tiled=True, i=i, j=j, w=w, h=h)
+
+        return state.copy(is_tiled=not self.is_floating, i=i, j=j, w=w, h=h)
+
 
     def transform_to_closest_ws(self, ws: Workspace, i0: float, j0: float, w0: float, h0: float) -> tuple[Workspace, float, float, float, float]:
         if self.panel is not None:
@@ -795,16 +760,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return ws, i0, j0, w0, h0
 
     def on_resized(self, width: int, height: int, client_leading: bool) -> None:
-        if self.floating_delayed_map:
-            logger.debug("Delayed map of floating window")
-            self.floating_delayed_map = True
+        if self._initial_state is not None:
+            logger.debug("Retrying map")
             self.on_map()
             return
 
-        if client_leading and self.up_state is not None and self.is_floating:
-            self.floating_size_initial = None
-            self.floating_size = (width, height)
-            if self.floating_size == self.floating_size_lock:
-                self.floating_size_lock = None
-
+        if client_leading and self.up_state is not None and self.up_state.is_floating:
+            self.wm.state.update_view_state(self, float_size=(width, height))
             self.damage()
