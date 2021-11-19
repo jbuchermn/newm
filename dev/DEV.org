@@ -1,11 +1,16 @@
 #+TITLE: newm developer information
 
 * Current (v0.2)
+** STRT View state handling rewrite
+- [ ] One reducer for all views (everything inside state)
+- [ ] Seperate class to handle state transitions differently for floating views, handle delayed map, ...
+
 ** Bugs / Technical debt
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
-*** TODO Can floating specific attributes in view be moved (at least partially) to state?
 *** TODO Regularly remove orphaned view states
+*** TODO Rounding errors on workspace setup
 
+** TODO Configurable: Set floating windows to chosen size or smallest possible
 ** TODO Stacked windows are not scaled properly
 ** TODO Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
 ** STRT Layer shell
