@@ -3,27 +3,29 @@
 * Current (v0.2)
 ** Bugs / Technical debt
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
-*** TODO Stacked windows are not scaled properly
-*** TODO Occasionally slow animations when having a second virtual output
 *** TODO Can floating specific attributes in view be moved (at least partially) to state?
-*** DONE Switching tiled -> floating means a little jump due to padding, floating -> tiled has buggy animations
-*** TODO Remove orphaned view states
-*** TODO Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
+*** TODO Regularly remove orphaned view states
+
+** TODO Stacked windows are not scaled properly
+** TODO Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
+** STRT Layer shell
 
 ** Backgrounds
 *** TODO Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
-*** TODO Backgrounds when moving window between workspaces (issue with move_origin)
+*** TODO Backgrounds when moving window between workspaces (issue with move_origin) / switching windows from tiled to floating
 *** TODO Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
-*** TODO Background per output
+*** TODO Respect no_anim outputs
 
 ** Multi-output support
-*** DONE Move between screens: Shortcuts (move windows as well as focus)
+*** TODO Background issues on overlapping outputs
+*** TODO Background per output
 *** TODO Overview per output
 
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
 
-** STRT Layer shell
+** TODO Test DBeaver
+** TODO Possibly: Enable CSD for floating windows?
 
 ** Release
 - [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway

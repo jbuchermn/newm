@@ -334,7 +334,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.panel_launcher = PanelsLauncher()
         self.panel_endpoint = PanelEndpoint(self)
 
-        self.workspaces: list[Workspace] = [Workspace(PyWMOutput("dummy", 1., 1280, 720, (0, 0)), 0, 0, 1280, 720)]
+        self.workspaces: list[Workspace] = [Workspace(PyWMOutput("dummy", 0, 1., 1280, 720, (0, 0)), 0, 0, 1280, 720)]
 
         self.state = LayoutState()
 

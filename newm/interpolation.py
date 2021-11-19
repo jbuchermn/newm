@@ -37,7 +37,6 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
         self.opacity = (state0.opacity, state1.opacity)
         self.lock_enabled = state0.lock_enabled
         self.workspace = None
-        self.floating = (state0.floating, state1.floating)
         if state0.workspace is not None and state1.workspace is not None:
             x, y, w, h = state0.workspace
             if state1.workspace[0] < x:
@@ -51,6 +50,9 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
             if state1.workspace[1] + state1.workspace[3] > y + h:
                 h = state1.workspace[1] + state1.workspace[3] - y
             self.workspace = x, y, w, h
+
+        self.floating = (state0.floating, state1.floating)
+        self.fixed_output = (state0.fixed_output, state1.fixed_output)
 
         self.anim = True
         if self.workspace is not None:
@@ -92,6 +94,7 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
         res.floating=self.floating[1] if at > conf_size_adjustment() else self.floating[0]
         res.lock_enabled=self.lock_enabled
         res.workspace=self.workspace
+        res.fixed_output=self.fixed_output[1] if at > conf_size_adjustment() else self.fixed_output[0]
         return res
 
 class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):

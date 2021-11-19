@@ -457,7 +457,7 @@ class LayoutState:
         self.top_bar_dy: float = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
         self.bottom_bar_dy: float = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0
 
-        # Non-null indicates we are in overview mode, in that case background_Factor, top_bar_dy, bottom_bar_dy
+        # Non-null indicates we are in overview mode, in that case background_factor, top_bar_dy, bottom_bar_dy
         self.state_before_overview: Optional[tuple[float, float, float]] = kwargs['state_before_overview'] if 'state_before_overview' in kwargs else None
 
         self._workspace_states: dict[int, WorkspaceState] = {}

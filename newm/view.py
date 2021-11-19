@@ -121,6 +121,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if self._initial_state is not None:
             self._initial_state.size = (width, height)
+            self._initial_state.fixed_output = self.up_state.fixed_output if (self.up_state is not None and self.up_state.fixed_output is not None) else ws.outputs[0]
 
     def _init_floating(self, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> None:
         """
@@ -158,8 +159,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         self._initial_state = PyWMViewDownstreamState()
 
-        # TODO: If up_state has fixed output --> set
         ws = self.wm.get_active_workspace()
+        if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
+            wss = [w for w in self.wm.workspaces if output in w.outputs]
+            if len(wss) != 1:
+                logger.warn("Unexpected: Could not find output %s in workspaces" % output)
+            else:
+                ws = wss[0]
+
 
         if self.pid is not None:
             self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
@@ -333,8 +340,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def main(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Main: %s", self)
 
-        # TODO: If up_state has fixed output --> set
         ws = self.wm.get_active_workspace()
+        if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
+            wss = [w for w in self.wm.workspaces if output in w.outputs]
+            if len(wss) != 1:
+                logger.warn("Unexpected: Could not find output %s in workspaces" % output)
+            else:
+                ws = wss[0]
+
         ws_state = state.get_workspace_state(ws)
 
         if self.panel is not None:
@@ -600,6 +613,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.floating = True
         result.accepts_input = True
         result.corner_radius = conf_corner_radius() if self.parent is None else 0
+
+        # TODO This is only for layer shell
+        result.fixed_output = up_state.fixed_output
 
         """
         z_index based on hierarchy
