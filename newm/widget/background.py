@@ -24,7 +24,7 @@ class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
 
     def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
-        result.z_index = -100
+        result.z_index = -10000
         result.opacity = wm_state.background_opacity
 
         ws_state = wm_state.get_workspace_state(self._workspace)

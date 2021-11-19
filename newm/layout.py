@@ -629,11 +629,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             res += "%2d: %s on workspace %d\n      %s\n" % (i, v, ws_handle, s)
         return res
 
-    def windows(self) -> list[View]:
-        return [v for _, v in self._views.items() if v.is_window()]
-
-    def dialogs(self) -> list[View]:
-        return [v for _, v in self._views.items() if v.is_dialog()]
+    def tiles(self) -> list[View]:
+        return [v for _, v in self._views.items() if v.is_tiled(self.state)]
 
     def panels(self) -> list[View]:
         return [v for _, v in self._views.items() if v.is_panel()]
@@ -780,13 +777,13 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 view = self.find_focused_view()
 
                 ovr: Optional[Overlay] = None
-                if view is not None and view.is_dialog():
+                if view is not None and view.is_float(self.state):
                     ovr = MoveResizeFloatingOverlay(self, view)
                     ovr.on_gesture(gesture)
                     self.enter_overlay(ovr)
                     return True
 
-                elif view is not None and view.is_window():
+                elif view is not None and view.is_tiled(self.state):
                     ovr = MoveResizeOverlay(self, view)
                     ovr.on_gesture(gesture)
                     self.enter_overlay(ovr)
@@ -1046,7 +1043,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 return None, None
 
             if conf_send_fullscreen_to_views():
-                for v in self.windows():
+                for v in self.tiles():
                     v.set_fullscreen(not fs)
 
             if fs:

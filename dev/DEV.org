@@ -4,12 +4,14 @@
 ** Bugs / Technical debt
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 *** TODO Regularly remove orphaned view states
-*** TODO Rounding errors on workspace setup
+*** STRT Rounding errors on workspace setup
+*** STRT Cmd-W no longer works
+*** STRT Jumpy transition between workspaces (MoveResizeOverlay)
 
-** TODO Configurable: Set floating windows to chosen size or smallest possible
-** TODO Stacked windows are not scaled properly
-** TODO Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
-** STRT Layer shell
+** DONE Configurable: Set floating windows to chosen size or smallest possible
+** STRT Stacked windows are not scaled properly
+** STRT Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
+** DONE Layer shell
 
 ** Backgrounds
 *** TODO Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
@@ -18,7 +20,7 @@
 *** TODO Respect no_anim outputs
 
 ** Multi-output support
-*** TODO Background issues on overlapping outputs
+*** STRT Background issues on overlapping outputs
 *** TODO Background per output
 *** TODO Overview per output
 
@@ -36,6 +38,7 @@
 
 
 * v0.3
+** Layer shell - Exclusive zones and keyboard interactivity
 ** Scale windows moving others "out of the way"
 ** Improved panel
 - Useful handling of multiple workspaces
