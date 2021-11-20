@@ -986,21 +986,29 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             return
 
         best_view: Optional[int] = None
-        best_view_score = 1000.
         if view.is_focused():
-            logger.debug("Finding view to focus since %s (%d) closes...", view.app_id, view._handle)
-            for k, s in ws_state._view_states.items():
-                if not s.is_tiled:
-                    continue
+            logger.debug("Finding view to focus since %s closes...", view)
+            if view.parent is not None:
+                p = cast(View, view.parent)
+                while not p.is_tiled(self.state) and p.parent is not None:
+                    p = cast(View, p.parent)
+                if p is not None:
+                    best_view = p._handle
 
-                if k == view._handle:
-                    continue
+            if best_view is None:
+                best_view_score = 1000.
+                for k, s in ws_state._view_states.items():
+                    if not s.is_tiled:
+                        continue
 
-                sc = (s.i - state.i + s.w / 2. - state.w / 2.)**2 + (s.j - state.j + s.h / 2. - state.h / 2.)**2
-                logger.debug("View (%d) has score %f", k, sc)
-                if sc < best_view_score:
-                    best_view_score = sc
-                    best_view = k
+                    if k == view._handle:
+                        continue
+
+                    sc = (s.i - state.i + s.w / 2. - state.w / 2.)**2 + (s.j - state.j + s.h / 2. - state.h / 2.)**2
+                    logger.debug("View (%d) has score %f", k, sc)
+                    if sc < best_view_score:
+                        best_view_score = sc
+                        best_view = k
 
         if best_view is not None and best_view in self._views:
             bv: int = best_view
@@ -1028,6 +1036,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 state = state.with_overview_toggled()
 
             view = self.find_focused_view()
+
+            if view is not None:
+                while view.parent is not None and not view.is_tiled(state):
+                    view = cast(View, view.parent)
 
             ws: Optional[Workspace] = None
             ws_state: Optional[WorkspaceState] = None

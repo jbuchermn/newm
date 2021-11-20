@@ -124,6 +124,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return PyWMViewDownstreamState()
 
     def _main_panel(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        logger.info("Main - panel: %s", self)
         if self._mapped:
             logger.debug("Suppressing duplicate map")
             return None, None
@@ -243,6 +244,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return result
 
     def _main_layer(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        logger.info("Main - layer: %s", self)
 
         # Place dummy ViewState
         ws_state1 = ws_state.with_view_state(self, is_tiled=False, is_layer=True)
@@ -295,9 +297,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         width, height = 0, 0
         if self.up_state is not None:
-            logger.debug("Init floating: size=%s constraints=%s hints=%s" %
-                         (self.up_state.size, self.up_state.size_constraints, size_hint))
-
             width, height = self.up_state.size
             if size_hint is not None:
                 width, height = size_hint
@@ -316,9 +315,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.floating = True
         result.size = (width, height)
 
+        if self.up_state is not None:
+            logger.debug("Floating size decision: %dx%d (%s) --> %dx%d" % (*self.up_state.size,
+                                                                           self.up_state.size_constraints, width, height))
+
         return result
 
     def _main_floating(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState, size_hint: Optional[tuple[int, int]], pos_hint: Optional[tuple[float, float]]) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        logger.debug("Main - floating: %s" % self)
+
         initial_state = self._init_floating(ws, size_hint=size_hint, pos_hint=pos_hint)
         width, height = initial_state.size
         w, h = width, height
@@ -358,7 +363,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             float_pos=(i, j),
             float_size=(w, h),
             stack_idx=self._handle,
-        ).focusing_view(self)
+        )
 
         self.focus()
         return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
@@ -445,6 +450,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return PyWMViewDownstreamState()
 
     def _main_tiled(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+        logger.debug("Main - tiled: %s" % self)
         min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
         min_w *= ws_state.size / ws.width
         min_h *= ws_state.size / ws.height
@@ -682,7 +688,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return None, None
 
         if self._block_map_until_resize is not None:
-            logger.debug("DDEBUGG %s" % str(self.up_state.size))
             logger.debug("Block: waiting for resize %dx%d" % self._block_map_until_resize)
             return None, None
 
@@ -722,7 +727,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return result
 
     def on_map(self) -> None:
-        logger.debug("Map: %s" % self)
         self.wm.animate_to(self.main, conf_anim_t(), None)
 
     def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> PyWMViewDownstreamState:

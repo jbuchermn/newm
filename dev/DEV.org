@@ -10,6 +10,7 @@
 *** DONE Try a little harder to force size on windows (e.g. Firefox > Save As)
 *** STRT Move newly floating windows inside extent
 *** STRT Bug: Move floating window to other screen, change to tiled
+*** DONE Bug: Open Firefox on a 2x2 tile fullscreen, on every popup focus is moved back
 
 ** DONE Configurable: Set floating windows to chosen size or smallest possible
 ** STRT Stacked windows are not scaled properly
@@ -31,6 +32,7 @@
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
 
 ** TODO Test DBeaver
+** TODO Test a game
 ** TODO Possibly: Enable CSD for floating windows?
 
 ** Release
