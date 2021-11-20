@@ -49,7 +49,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         # Initial state while waiting for map
         self._initial_state: Optional[PyWMViewDownstreamState] = None
         self._initial_kind: str = 't'
-        self._block_map_until_resize = False
+        self._block_map_until_resize: Optional[tuple[int, int]] = None
         self._mapped = False
 
         self.panel: Optional[str] = None
@@ -624,6 +624,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Init and map
     """
+    def _possibly_block(self) -> None:
+        self._block_map_until_resize = None
+        if self.up_state is not None and self._initial_state is not None:
+            if self._initial_state.size != self.up_state.size or self._initial_state.size == (0, 0):
+                self._block_map_until_resize = self._initial_state.size
+                if self._block_map_until_resize == (0, 0):
+                    # This will never be hit exactly, but next resize will trigger re-init
+                    self._block_map_until_resize = (-1, -1)
+
     def init(self) -> PyWMViewDownstreamState:
         logger.info("Init: %s", self)
 
@@ -641,13 +650,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.panel is not None:
             self._initial_state = self._init_panel(ws)
             self._initial_kind = 'p'
-            self._block_map_until_resize = False
+            self._block_map_until_resize = None
 
         elif self.role == "layer":
             self._initial_state = self._init_layer(ws)
             self._initial_kind = 'l'
-            if self.up_state is not None and self._initial_state.size != self.up_state.size:
-                self._block_map_until_resize = True
+            self._possibly_block()
 
         else:
             floats, size_hint, pos_hint = self._decide_floating()
@@ -655,14 +663,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             if floats:
                 self._initial_state = self._init_floating(ws, size_hint=size_hint, pos_hint=pos_hint)
                 self._initial_kind = 'f'
-                if self.up_state is not None and self._initial_state.size != self.up_state.size:
-                    self._block_map_until_resize = True
+                self._possibly_block()
 
             else:
                 self._initial_state = self._init_tiled(ws)
                 self._initial_kind = 't'
-                if self.up_state is not None and self._initial_state.size != self.up_state.size:
-                    self._block_map_until_resize = True
+                self._possibly_block()
 
         return self._initial_state
 
@@ -673,8 +679,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             logger.debug("Suppressing second map")
             return None, None
 
-        if self._block_map_until_resize:
-            logger.debug("Block: waiting for resize")
+        if self._block_map_until_resize is not None:
+            logger.debug("DDEBUGG %s" % str(self.up_state.size))
+            logger.debug("Block: waiting for resize %dx%d" % self._block_map_until_resize)
             return None, None
 
         ws = self.wm.get_active_workspace()
@@ -698,6 +705,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
             if floats:
                 if self._initial_kind != 'f':
+                    logger.debug("DDEBUGG - Changing to f")
                     logger.debug("Changing view from %s to floating" % self._initial_kind)
                     self.init()
                     return None, None
@@ -834,9 +842,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def on_resized(self, width: int, height: int, client_leading: bool) -> None:
         if self._block_map_until_resize is not None:
-            self._block_map_until_resize = False
-            logger.debug("Retrying map")
-            self.on_map()
+            if (width, height) == self._block_map_until_resize:
+                self._block_map_until_resize = None
+                logger.debug("Retrying map")
+                self.on_map()
+            else:
+                logger.debug("View does not provide expected size")
+                self.init()
+                self.damage()
             return
 
         if client_leading and self.up_state is not None and self.up_state.is_floating:
