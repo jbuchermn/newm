@@ -58,8 +58,8 @@ class MoveOverlay(_Overlay):
         self.h = 1.
 
         # In case of switched workspace
-        self.di = 0
-        self.dj = 0
+        self.di = 0.
+        self.dj = 0.
 
         try:
             view_state, self.ws_state, ws_handle = self.layout.state.find_view(self.view)
@@ -73,7 +73,7 @@ class MoveOverlay(_Overlay):
                 self.layout.state.setting_workspace_state(
                     self.workspace, self.ws_state.replacing_view_state(
                         self.view,
-                        move_origin=(self.i, self.j)
+                        move_origin=(self.i, self.j, self.workspace)
                     )))
         except Exception:
             logger.warn("Unexpected: Could not access view %s state", self.view)
@@ -111,9 +111,9 @@ class MoveOverlay(_Overlay):
         workspace, i, j, self.w, self.h = self.view.transform_to_closest_ws(self.workspace, i0, j0, self.w, self.h)
 
         if workspace != self.workspace:
-            logger.debug("Move - switching workspace %d -> %d" % (self.workspace._handle, workspace._handle))
-            self.di += round(i - i0)
-            self.dj += round(j - j0)
+            logger.debug("Move - switching workspace %d (%f %f)-> %d (%f %f)" % (self.workspace._handle, i0, j0, workspace._handle, i, j))
+            self.di += (i - i0)
+            self.dj += (j - j0)
 
             self.layout.state.move_view_state(self.view, self.workspace, workspace)
             self.workspace = workspace
@@ -188,7 +188,7 @@ class ResizeOverlay(_Overlay):
                 self.layout.state.setting_workspace_state(
                     self.workspace, self.ws_state.replacing_view_state(
                         self.view,
-                        move_origin=(self.i, self.j),
+                        move_origin=(self.i, self.j, self.workspace),
                         scale_origin=(self.w, self.h)
                     )))
 
@@ -472,7 +472,7 @@ class MoveResizeOverlay(Overlay, Thread):
                 self.workspace, self.layout.state.get_workspace_state(self.workspace).replacing_view_state(
                     self.view,
                     i=i, j=j, w=w, h=h,
-                    scale_origin=(None, None), move_origin=(None, None)
+                    scale_origin=None, move_origin=None
                 ).focusing_view(self.view))
             state.validate_stack_indices(self.view)
             return state, conf_anim_t()

@@ -4,7 +4,7 @@
 ** Bugs / Technical debt
 *** DONE Rounding errors on workspace setup
 *** KILL Cmd-W no longer works
-*** STRT Jumpy transition between workspaces (MoveResizeOverlay) - possibly only after change workspace sizes
+*** DONE Jumpy transition between workspaces (MoveResizeOverlay) - possibly only after change workspace sizes
 *** DONE Try a little harder to force size on windows (e.g. Firefox > Save As)
 *** STRT Move newly floating windows inside extent
 *** STRT Bug: Move floating window to other screen, change to tiled
@@ -14,7 +14,7 @@
 ** DONE If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 ** TODO Regularly remove orphaned view states
 ** DONE Configurable: Set floating windows to chosen size or smallest possible
-** STRT Stacked windows are not scaled properly
+** TODO Stacked windows are not scaled properly
 ** DONE Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
 ** DONE Layer shell
 
@@ -59,6 +59,7 @@
 
 * Backlog / Ideas
 ** Dynamic background
+** Move tiles from workspace to another -> animate size change instead of jump
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 

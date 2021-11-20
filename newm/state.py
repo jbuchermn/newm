@@ -27,10 +27,10 @@ class ViewState:
         # global stack_idx (Compare z-index) to restore ordering
         self.stack_idx: int = kwargs['stack_idx'] if 'stack_idx' in kwargs else 0
 
-        self.move_origin: tuple[Optional[float], Optional[float]] = kwargs['move_origin'] if 'move_origin' in kwargs \
-            else (None, None)
-        self.scale_origin: tuple[Optional[float], Optional[float]] = kwargs['scale_origin'] if 'scale_origin' in kwargs \
-            else (None, None)
+        self.move_origin: Optional[tuple[float, float, Workspace]] = kwargs['move_origin'] if 'move_origin' in kwargs \
+            else None
+        self.scale_origin: Optional[tuple[float, float]] = kwargs['scale_origin'] if 'scale_origin' in kwargs \
+            else None
 
         # - Floating views
         self.float_pos: tuple[float, float] = kwargs['float_pos'] if 'float_pos' in kwargs else (0, 0)
@@ -41,13 +41,13 @@ class ViewState:
 
     def get_ijwh(self) -> tuple[float, float, float, float]:
         i, j, w, h = self.i, self.j, self.w, self.h
-        if self.move_origin[0] is not None:
+        if self.move_origin is not None:
             i = self.move_origin[0]
-        if self.move_origin[1] is not None:
+        if self.move_origin is not None:
             j = self.move_origin[1]
-        if self.scale_origin[0] is not None:
+        if self.scale_origin is not None:
             w = self.scale_origin[0]
-        if self.scale_origin[1] is not None:
+        if self.scale_origin is not None:
             h = self.scale_origin[1]
 
         return i, j, w, h
@@ -67,7 +67,9 @@ class ViewState:
 
 
 class WorkspaceState:
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, handle: int, **kwargs: Any) -> None:
+        self._handle = handle
+
         self.i: float = kwargs['i'] if 'i' in kwargs else -0.5
         self.j: float = kwargs['j'] if 'j' in kwargs else -0.5
 
@@ -105,7 +107,7 @@ class WorkspaceState:
     """
 
     def copy(self, **kwargs: Any) -> WorkspaceState:
-        res = WorkspaceState(**{**self.__dict__, **kwargs})
+        res = WorkspaceState(self._handle, **{**self.__dict__, **kwargs})
         for h, s in self._view_states.items():
             res._view_states[h] = s.copy()
         return res
@@ -115,7 +117,7 @@ class WorkspaceState:
             self.__dict__[k] = v
 
     def replacing_view_state(self, view: View, **kwargs: Any) -> WorkspaceState:
-        res = WorkspaceState(**self.__dict__)
+        res = WorkspaceState(self._handle, **self.__dict__)
         for h, s in self._view_states.items():
             res._view_states[h] = s.copy(**(kwargs if h==view._handle else {}))
         return res
@@ -407,9 +409,10 @@ class WorkspaceState:
                 continue
             if s.w == 0 or s.h == 0:
                 continue
+            if s.move_origin is not None and s.move_origin[2]._handle != self._handle:
+                continue
 
-            i, j = s.i, s.j
-            w, h = s.w, s.h
+            i, j, w, h = s.get_ijwh()
 
             min_i = min(min_i, i)
             min_j = min(min_j, j)
@@ -471,7 +474,7 @@ class LayoutState:
     def with_workspaces(self, layout: Layout) -> LayoutState:
         for w in layout.workspaces:
             if w._handle not in self._workspace_states:
-                self._workspace_states[w._handle] = WorkspaceState()
+                self._workspace_states[w._handle] = WorkspaceState(w._handle)
 
         orphans = []
         for k in list(self._workspace_states.keys()):

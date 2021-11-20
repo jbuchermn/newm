@@ -470,13 +470,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         ws_state1 = ws_state.with_view_state(
             self,
             is_tiled=True, i=i, j=j, w=w, h=h,
-            scale_origin=(w1, h1), move_origin=(i1, j1),
+            scale_origin=(w1, h1), move_origin=(i1, j1, ws),
             stack_idx=self._handle,
         )
 
         ws_state2 = ws_state1.replacing_view_state(
             self,
-            i=i1, j=j1, w=w1, h=h1, scale_origin=(None, None), move_origin=(None, None)
+            i=i1, j=j1, w=w1, h=h1, scale_origin=None, move_origin=None
         ).focusing_view(self)
 
         self.focus()
@@ -557,8 +557,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         """
         Handle client size
         """
-        w_for_size, h_for_size = self_state.scale_origin
-        if w_for_size is None or h_for_size is None:
+        if self_state.scale_origin is not None:
+            w_for_size, h_for_size = self_state.scale_origin
+        else:
             w_for_size, h_for_size = self_state.w, self_state.h
 
         size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
@@ -607,7 +608,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
 
-        if self_state.move_origin[0] is not None and self_state.scale_origin[0] is None:
+        if self_state.move_origin is not None and self_state.scale_origin is None:
             # No fixed output during a move
             result.workspace = None
         else:
@@ -791,21 +792,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
 
     def transform_to_closest_ws(self, ws: Workspace, i0: float, j0: float, w0: float, h0: float) -> tuple[Workspace, float, float, float, float]:
-        if self.panel is not None:
+        if self.panel is not None or self.up_state is None:
             return ws, i0, j0, w0, h0
 
         ws_state = self.wm.state.get_workspace_state(ws)
+        down = self._reducer_tiled(self.up_state, self.wm.state, ViewState(i=i0, j=j0, w=w0, h=h0), ws, ws_state)
 
-        x = i0 - ws_state.i
-        y = j0 - ws_state.j
-
-        x *= ws.width / ws_state.size
-        y *= ws.height / ws_state.size
-        w = w0 * ws.width / ws_state.size
-        h = h0 * ws.height / ws_state.size
-
-        x += ws.pos_x
-        y += ws.pos_y
+        x, y, w, h = down.box
 
         cx = x + .5*w
         cy = y + .5*h
@@ -818,14 +811,26 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         for wsp in self.wm.workspaces:
             if wsp.pos_x < cx < wsp.pos_x + wsp.width and wsp.pos_y < cy < wsp.pos_y + wsp.height:
                 wsp_state = self.wm.state.get_workspace_state(wsp)
-                wp = w * wsp_state.size / wsp.width
-                hp = h * wsp_state.size / wsp.height
+                wp: float = max(1, min(wsp_state.size, round(w * wsp_state.size / wsp.width)))
+                hp: float = max(1, min(wsp_state.size, round(h * wsp_state.size / wsp.height)))
 
-                wp = min(wp, wsp_state.size)
-                hp = min(hp, wsp_state.size)
+                ip, jp = 0., 0.
+                statep = self.wm.state.copy()
+                statep.move_view_state(self, ws, wsp)
+                statep.update_view_state(self, i=ip, j=jp, w=wp, h=hp)
+                for _ in range(3):
 
-                ip = (cx - .5 * wp * wsp.width / wsp_state.size - wsp.pos_x) * wsp_state.size / wsp.width + wsp_state.i
-                jp = (cy - .5 * hp * wsp.height / wsp_state.size - wsp.pos_y) * wsp_state.size / wsp.height + wsp_state.j
+                    statep.update_view_state(self, i=ip, j=jp)
+
+                    view_state, wsp_state, _ = statep.find_view(self)
+                    down_transformed = self._reducer_tiled(self.up_state, statep, view_state, wsp, wsp_state)
+
+                    xp, yp, widthp, heightp = down_transformed.box
+                    cxp = xp + .5 * widthp
+                    cyp = yp + .5 * heightp
+
+                    ip += (cx - cxp) * wsp_state.size / wsp.width
+                    jp += (cy - cyp) * wsp_state.size / wsp.height
 
                 return wsp, ip, jp, wp, hp
 
