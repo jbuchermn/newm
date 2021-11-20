@@ -325,7 +325,7 @@ class MoveResizeOverlay(Overlay, Thread):
                 in_prog = True
                 iw, ih, fw, fh, it, ft = self._target_view_size
                 if t > ft:
-                    self.layout.state.update_view_state(self.view, w=fw, h=fh, scale_origin=(None, None))
+                    self.layout.state.update_view_state(self.view, w=fw, h=fh, scale_origin=None)
                     self._target_view_size = None
                 else:
                     perc = (t-it)/(ft-it)
