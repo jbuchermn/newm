@@ -5,10 +5,11 @@
 *** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 *** TODO Regularly remove orphaned view states
 *** STRT Rounding errors on workspace setup
-*** STRT Cmd-W no longer works
-*** STRT Jumpy transition between workspaces (MoveResizeOverlay)
+*** KILL Cmd-W no longer works
+*** STRT Jumpy transition between workspaces (MoveResizeOverlay) - possibly only after change workspace sizes
 *** DONE Try a little harder to force size on windows (e.g. Firefox > Save As)
 *** STRT Move newly floating windows inside extent
+*** STRT Bug: Move floating window to other screen, change to tiled
 
 ** DONE Configurable: Set floating windows to chosen size or smallest possible
 ** STRT Stacked windows are not scaled properly
