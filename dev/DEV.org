@@ -2,8 +2,6 @@
 
 * Current (v0.2)
 ** Bugs / Technical debt
-*** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
-*** TODO Regularly remove orphaned view states
 *** STRT Rounding errors on workspace setup
 *** KILL Cmd-W no longer works
 *** STRT Jumpy transition between workspaces (MoveResizeOverlay) - possibly only after change workspace sizes
@@ -11,7 +9,10 @@
 *** STRT Move newly floating windows inside extent
 *** STRT Bug: Move floating window to other screen, change to tiled
 *** DONE Bug: Open Firefox on a 2x2 tile fullscreen, on every popup focus is moved back
+*** DONE Background issues on overlapping outputs
 
+** TODO If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
+** TODO Regularly remove orphaned view states
 ** DONE Configurable: Set floating windows to chosen size or smallest possible
 ** STRT Stacked windows are not scaled properly
 ** DONE Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
@@ -24,7 +25,6 @@
 *** TODO Respect no_anim outputs
 
 ** Multi-output support
-*** STRT Background issues on overlapping outputs
 *** TODO Background per output
 *** TODO Overview per output
 

@@ -101,7 +101,7 @@ class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
             x -= (new_w - w)/2.
             w = new_w
 
-        result.box = (x + self._workspace.pos_x, y + self._workspace.pos_y, w, h)
+        result.box = (x + self._output.pos[0], y + self._output.pos[1], w, h)
         return result
 
     def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
