@@ -14,7 +14,7 @@ try:
     conf_throw_ps = configured_value('grid.throw_ps', [1, 5, 15])
     conf_min_dist = configured_value('grid.min_dist', .05)
 
-    conf_gridlog = configured_value('grid.log', False)
+    conf_griddebug = configured_value('grid.debug', False)
 except:
     pass
 
@@ -113,7 +113,7 @@ class Grid:
             self.last_x_output = xp
             self.last_t = t
 
-        if not silent and conf_gridlog():
+        if not silent and conf_griddebug():
             logger.debug("GRID[%s]: %f, %f, %f, %f, %f",
                          self.name, time.time(), x, xp,
                          self.last_p if self.last_p is not None else 0,
@@ -170,7 +170,7 @@ class Grid:
         if compare_t < dt:
             dt = compare_t
 
-        if conf_gridlog():
+        if conf_griddebug():
             xb = self.at(self.last_x_output, silent=True)
             t0 = time.time()
             for i in range(2):

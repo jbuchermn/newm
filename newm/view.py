@@ -41,6 +41,8 @@ conf_panel_notifiers_w = configured_value('panels.notifiers.w', 0.2)
 
 conf_anim_t = configured_value('anim_time', .3)
 
+conf_debug_scaling = configured_value('view.debug_scaling', False)
+
 class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
@@ -53,6 +55,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         self._mapped = False
 
         self.panel: Optional[str] = None
+
+        self._debug_scaling = conf_debug_scaling()
 
     def __str__(self) -> str:
         if self.up_state is None:
@@ -413,15 +417,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         ox, oy = up_state.offset
         result.mask = (-10*ox, -10*oy, width + 20*ox, height + 20*oy)
 
-        if result.size[0] > 0 and result.size[1] > 0:
-            if 0.99 < result.box[2] / result.size[0] < 1.01:
-                if result.box[2] != result.size[0]:
-                    logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
-            if 0.99 < result.box[3] / result.size[1] < 1.01:
-                if result.box[3] != result.size[1]:
-                    logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
-
-
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
 
@@ -608,14 +603,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if use_mask_for_offset is not None:
             result.mask = (use_mask_for_offset[0], use_mask_for_offset[1], w, h)
-
-        if result.size[0] > 0 and result.size[1] > 0:
-            if 0.99 < result.box[2] / result.size[0] < 1.01:
-                if result.box[2] != result.size[0]:
-                    logger.debug("Potential scaling issue (%s): w = %f != %d", self.app_id, result.box[2], result.size[0])
-            if 0.99 < result.box[3] / result.size[1] < 1.01:
-                if result.box[3] != result.size[1]:
-                    logger.debug("Potential scaling issue (%s): h = %f != %d", self.app_id, result.box[3], result.size[1])
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
