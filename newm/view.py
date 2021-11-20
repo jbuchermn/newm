@@ -712,7 +712,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
             if floats:
                 if self._initial_kind != 'f':
-                    logger.debug("DDEBUGG - Changing to f")
                     logger.debug("Changing view from %s to floating" % self._initial_kind)
                     self.init()
                     return None, None
