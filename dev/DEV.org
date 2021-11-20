@@ -7,10 +7,12 @@
 *** STRT Rounding errors on workspace setup
 *** STRT Cmd-W no longer works
 *** STRT Jumpy transition between workspaces (MoveResizeOverlay)
+*** DONE Try a little harder to force size on windows (e.g. Firefox > Save As)
+*** STRT Move newly floating windows inside extent
 
 ** DONE Configurable: Set floating windows to chosen size or smallest possible
 ** STRT Stacked windows are not scaled properly
-** STRT Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
+** DONE Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
 ** DONE Layer shell
 
 ** Backgrounds

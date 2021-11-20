@@ -404,7 +404,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         x *= ws.width / ws_state.size
         y *= ws.height / ws_state.size
         result.box = (x, y, width, height)
-        result.mask = (-100000, -100000, width + 200000, height + 200000)
+
+        ox, oy = up_state.offset
+        result.mask = (-10*ox, -10*oy, width + 20*ox, height + 20*oy)
 
         if result.size[0] > 0 and result.size[1] > 0:
             if 0.99 < result.box[2] / result.size[0] < 1.01:
