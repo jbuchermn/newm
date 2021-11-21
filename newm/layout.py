@@ -55,7 +55,6 @@ from .overlay import (
 
 logger = logging.getLogger(__name__)
 
-conf_wallpaper = configured_value('wallpaper', cast(Optional[str], None))
 conf_mod = configured_value('mod', PYWM_MOD_LOGO)
 conf_pywm = configured_value('pywm', cast(dict[str, Any], {}))
 
@@ -449,9 +448,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.bottom_bars = [self.create_widget(BottomBar, o) for o in self.layout]
         self.top_bars = [self.create_widget(TopBar, o) for o in self.layout]
 
-        # TODO: Config per output
-        if (wp := conf_wallpaper()) is not None:
-            self.backgrounds = [self.create_widget(Background, o, get_workspace_for_output(o), wp) for o in self.layout]
+        self.backgrounds = [self.create_widget(Background, o, get_workspace_for_output(o)) for o in self.layout]
 
         for o in self.layout:
             self.corners += [[

@@ -12,6 +12,7 @@
 *** DONE Background issues on overlapping outputs
 *** DONE TODO: Extent on move_resize_overlay --> jumpy background
 *** TODO Misplaced popups
+*** TODO On no-anim screens wl_surface.enter(output) is not necessarily sent (see alacritty)
 
 ** DONE If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 ** TODO Regularly remove orphaned view states
@@ -24,13 +25,12 @@
 *** DONE Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
 *** DONE Backgrounds when moving window between workspaces (issue with move_origin) / switching windows from tiled to floating
 *** STRT Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
-*** STRT Respect no_anim outputs
-*** STRT Configurable time scale
-*** STRT Configurable w0, h0
-*** STRT Hacky on enter overlay
+*** DONE Respect no_anim outputs
+*** DONE Configurable time scale
+*** STRT Configurable w0, h0 and per output background
+*** DONE Hacky on enter overlay
 
 ** Multi-output support
-*** TODO Background per output
 *** TODO Overview per output
 
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
