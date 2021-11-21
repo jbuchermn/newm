@@ -54,14 +54,38 @@ class MoveResizeFloatingOverlay(Overlay):
         self.i += dx * self.ws_state.size
         self.j += dy * self.ws_state.size
 
-        self.layout.state.update_view_state(self.view, float_pos=(self.i, self.j))
+        workspace, i, j, w, h = self.view.transform_to_closest_ws(self.workspace, self.i, self.j, self.w, self.h)
+
+        if workspace != self.workspace:
+            logger.debug("Move floating - switching workspace %d -> %d" % (self.workspace._handle, workspace._handle))
+            self.layout.state.move_view_state(self.view, self.workspace, workspace)
+            self.workspace = workspace
+
+        self.i = i
+        self.j = j
+        self.w = round(w) # pixels
+        self.h = round(h) # pixels
+
+        self.layout.state.update_view_state(self.view, float_pos=(self.i, self.j), float_size=(self.w, self.h))
         self.layout.damage()
 
     def resize(self, dx: float, dy: float) -> None:
         self.w += round(dx * self.workspace.width)
         self.h += round(dy * self.workspace.height)
 
-        self.layout.state.update_view_state(self.view, float_size=(self.w, self.h))
+        workspace, i, j, w, h = self.view.transform_to_closest_ws(self.workspace, self.i, self.j, self.w, self.h)
+
+        if workspace != self.workspace:
+            logger.debug("Move floating - switching workspace %d -> %d" % (self.workspace._handle, workspace._handle))
+            self.layout.state.move_view_state(self.view, self.workspace, workspace)
+            self.workspace = workspace
+
+        self.i = i
+        self.j = j
+        self.w = round(w) # pixels
+        self.h = round(h) # pixels
+
+        self.layout.state.update_view_state(self.view, float_pos=(self.i, self.j), float_size=(self.w, self.h))
         self.layout.damage()
 
     def gesture_move(self, values: dict[str, float]) -> None:

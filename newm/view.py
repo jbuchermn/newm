@@ -791,43 +791,72 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return ws, i0, j0, w0, h0
 
         ws_state = self.wm.state.get_workspace_state(ws)
-        down = self._reducer_tiled(self.up_state, self.wm.state, ViewState(i=i0, j=j0, w=w0, h=h0), ws, ws_state)
-
-        x, y, w, h = down.box
-
-        cx = x + .5*w
-        cy = y + .5*h
-
         border_ws_switch = conf_border_ws_switch()
+        if self.is_float(self.wm.state):
+            down = self._reducer_floating(self.up_state, self.wm.state, ViewState(is_tiled=False, float_pos=(i0, j0), float_size=(w0, h0)), ws, ws_state)
 
-        if ws.pos_x - border_ws_switch <= cx <= ws.pos_x + ws.width + border_ws_switch and ws.pos_y - border_ws_switch <= cy <= ws.pos_y + ws.height + border_ws_switch:
-            return ws, i0, j0, w0, h0
+            x, y, w, h = down.box
 
-        for wsp in self.wm.workspaces:
-            if wsp.pos_x < cx < wsp.pos_x + wsp.width and wsp.pos_y < cy < wsp.pos_y + wsp.height:
-                wsp_state = self.wm.state.get_workspace_state(wsp)
-                wp: float = max(1, min(wsp_state.size, round(w * wsp_state.size / wsp.width)))
-                hp: float = max(1, min(wsp_state.size, round(h * wsp_state.size / wsp.height)))
+            cx = x + .5*w
+            cy = y + .5*h
 
-                ip, jp = 0., 0.
-                statep = self.wm.state.copy()
-                statep.move_view_state(self, ws, wsp)
-                statep.update_view_state(self, i=ip, j=jp, w=wp, h=hp)
-                for _ in range(3):
+            if ws.pos_x - border_ws_switch <= cx <= ws.pos_x + ws.width + border_ws_switch and ws.pos_y - border_ws_switch <= cy <= ws.pos_y + ws.height + border_ws_switch:
+                return ws, i0, j0, w0, h0
 
-                    statep.update_view_state(self, i=ip, j=jp)
+            for wsp in self.wm.workspaces:
+                if wsp.pos_x < cx < wsp.pos_x + wsp.width and wsp.pos_y < cy < wsp.pos_y + wsp.height:
+                    statep = self.wm.state.copy()
+                    statep.move_view_state(self, ws, wsp)
+                    statep.update_view_state(self, float_pos=(0, 0))
 
                     view_state, wsp_state, _ = statep.find_view(self)
-                    down_transformed = self._reducer_tiled(self.up_state, statep, view_state, wsp, wsp_state)
+                    down_transformed = self._reducer_floating(self.up_state, statep, view_state, wsp, wsp_state)
 
                     xp, yp, widthp, heightp = down_transformed.box
                     cxp = xp + .5 * widthp
                     cyp = yp + .5 * heightp
 
-                    ip += (cx - cxp) * wsp_state.size / wsp.width
-                    jp += (cy - cyp) * wsp_state.size / wsp.height
+                    ip = (cx - cxp) * wsp_state.size / wsp.width
+                    jp = (cy - cyp) * wsp_state.size / wsp.height
 
-                return wsp, ip, jp, wp, hp
+                    return wsp, ip, jp, w, h
+
+        else:
+            down = self._reducer_tiled(self.up_state, self.wm.state, ViewState(i=i0, j=j0, w=w0, h=h0), ws, ws_state)
+
+            x, y, w, h = down.box
+
+            cx = x + .5*w
+            cy = y + .5*h
+
+            if ws.pos_x - border_ws_switch <= cx <= ws.pos_x + ws.width + border_ws_switch and ws.pos_y - border_ws_switch <= cy <= ws.pos_y + ws.height + border_ws_switch:
+                return ws, i0, j0, w0, h0
+
+            for wsp in self.wm.workspaces:
+                if wsp.pos_x < cx < wsp.pos_x + wsp.width and wsp.pos_y < cy < wsp.pos_y + wsp.height:
+                    wsp_state = self.wm.state.get_workspace_state(wsp)
+                    wp: float = max(1, min(wsp_state.size, round(w * wsp_state.size / wsp.width)))
+                    hp: float = max(1, min(wsp_state.size, round(h * wsp_state.size / wsp.height)))
+
+                    ip, jp = 0., 0.
+                    statep = self.wm.state.copy()
+                    statep.move_view_state(self, ws, wsp)
+                    statep.update_view_state(self, i=ip, j=jp, w=wp, h=hp)
+                    for _ in range(3):
+
+                        statep.update_view_state(self, i=ip, j=jp)
+
+                        view_state, wsp_state, _ = statep.find_view(self)
+                        down_transformed = self._reducer_tiled(self.up_state, statep, view_state, wsp, wsp_state)
+
+                        xp, yp, widthp, heightp = down_transformed.box
+                        cxp = xp + .5 * widthp
+                        cyp = yp + .5 * heightp
+
+                        ip += (cx - cxp) * wsp_state.size / wsp.width
+                        jp += (cy - cyp) * wsp_state.size / wsp.height
+
+                    return wsp, ip, jp, wp, hp
 
         logger.debug("View outside of workspaces - defaulting")
         return ws, i0, j0, w0, h0

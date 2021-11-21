@@ -559,9 +559,10 @@ class LayoutState:
         for h, s in self._workspace_states.items():
             s.validate_stack_indices()
 
-    def constrain(self) -> None:
+    def constrain(self) -> LayoutState:
         for h, s in self._workspace_states.items():
             s.constrain()
+        return self
 
 
     """

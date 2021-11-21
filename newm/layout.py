@@ -1011,9 +1011,12 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             bv: int = best_view
             def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
                 self._views[bv].focus()
-                return None, state\
+                state = state\
                     .focusing_view(self._views[bv])\
-                    .without_view_state(view)
+                    .without_view_state(view)\
+                    .constrain()
+
+                return None, state
 
             self.animate_to(
                 reducer,
@@ -1022,7 +1025,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self.animate_to(
                 lambda state: (None, state
                     .copy()
-                    .without_view_state(view)),
+                    .without_view_state(view)
+                    .constrain()),
                 conf_anim_t())
 
 
