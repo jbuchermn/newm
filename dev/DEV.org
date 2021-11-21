@@ -12,7 +12,7 @@
 *** DONE Background issues on overlapping outputs
 *** DONE TODO: Extent on move_resize_overlay --> jumpy background
 *** DONE Misplaced popups
-*** TODO On no-anim screens wl_surface.enter(output) is not necessarily sent (see alacritty)
+*** TODO Bug: On no-anim screens wl_surface.enter(output) is not necessarily sent (see alacritty)
 
 ** DONE If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 ** TODO Regularly remove orphaned view states
@@ -31,7 +31,7 @@
 *** DONE Hacky on enter overlay
 
 ** Multi-output support
-*** TODO Overview per output
+*** STRT Overview per output
 
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
@@ -44,6 +44,7 @@
 - [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway
 - [ ] TODO comments
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
+- [ ] Remove any legacy config options
 - [ ] Document new config options
 
 

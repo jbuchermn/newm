@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Optional, cast
 
+import math
 import time
 import logging
 
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-conf_time_scale = configured_value('background.time_scale', 0.6)
+conf_time_scale = configured_value('background.time_scale', 0.15)
 conf_path = configured_value('background.path', cast(Optional[str], None))
 conf_path_legacy = configured_value('wallpaper', cast(Optional[str], None))
 
@@ -144,8 +145,9 @@ class BackgroundState:
     def approach(self, other: BackgroundState, time_scale: float, dt: float) -> None:
         db = other.box[0] - self.box[0], other.box[1] - self.box[1], other.box[2] - self.box[2], other.box[3] - self.box[3]
         do = other.opacity - self.opacity
-        factor = min(1, dt / time_scale)
+        factor = dt / time_scale
 
+        factor = min(1, factor)
         self.opacity += do*factor
         self.box = self.box[0] + db[0] * factor, self.box[1] + db[1] * factor, self.box[2] + db[2] * factor, self.box[3] + db[3] * factor
 
