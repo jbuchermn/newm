@@ -1,7 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 import time
+import logging
+import numpy as np
 
 from pywm import PyWMBackgroundWidget, PyWMWidgetDownstreamState, PyWMOutput
 
@@ -10,105 +12,149 @@ from ..animate import Animate
 
 if TYPE_CHECKING:
     from ..state import LayoutState
-    from ..layout import Layout, Workspace
+    from ..layout import Layout, Workspace, WorkspaceState
+
+logger = logging.getLogger(__name__)
+
+class BackgroundState:
+    def __init__(self, layout_state: LayoutState, ws_state: WorkspaceState) -> None:
+        x1, y1, x2, y2 = ws_state.get_extent()
+        x2 += 1
+        y2 += 1
+
+        vx1, vy1, vx2, vy2 = ws_state.i, ws_state.j, ws_state.size, ws_state.size
+
+        self.extent = np.array([x1, y1, x2 - x1, y2 - y1], dtype=np.float64)
+        self.viewpoint = np.array([vx1, vy1, vx2, vy2], dtype=np.float64)
+
+        self.opacity = layout_state.background_opacity
+
+    def delta(self, other: BackgroundState) -> float:
+        return np.linalg.norm(self.extent - other.extent) + np.linalg.norm(self.viewpoint - other.viewpoint) + abs(self.opacity - other.opacity)
+
+    def approach(self, other: BackgroundState, time_scale: float, dt: float) -> None:
+        de = other.extent - self.extent
+        dv = other.viewpoint - self.viewpoint
+        do = other.opacity - self.opacity
+        factor = min(1, dt / time_scale)
+
+        self.extent += de*factor
+        self.viewpoint += dv*factor
+        self.opacity += do*factor
+
+    def __str__(self) -> str:
+        return "<BackgroundState extent=%s viewpoint=%s>" % (str(self.extent), str(self.viewpoint))
 
 
-
-class Background(PyWMBackgroundWidget, Animate[PyWMWidgetDownstreamState]):
+class Background(PyWMBackgroundWidget):
     def __init__(self, wm: Layout, output: PyWMOutput, workspace: Workspace, path: str):
         PyWMBackgroundWidget.__init__(self, wm, output, path)
-        Animate.__init__(self)
 
         self._output: PyWMOutput = output
         self._workspace: Workspace = workspace
 
-    def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
+        self._current_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace))
+        self._target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace))
+        self._last_frame: float = time.time()
+        self._anim_caught: Optional[float] = None
+
+
+    def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
+        self._anim_caught = time.time() + dt
+        self._target_state = BackgroundState(new_state, new_state.get_workspace_state(self._workspace))
+
+        self._last_frame = time.time()
+        self.damage()
+
+    def process(self) -> PyWMWidgetDownstreamState:
+        # State handling
+        t = time.time()
+
+        if self._anim_caught is not None:
+            if t > self._anim_caught:
+                self._anim_caught = None
+        else:
+            target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace))
+            if target_state.delta(self._target_state) > 0.001:
+                self._target_state = target_state
+
+        if self._current_state.delta(self._target_state) >= 0.001:
+            self._current_state.approach(self._target_state, .25, t - self._last_frame)
+            self.damage()
+
+        self._last_frame = t
+
+        # Positioning
         result = PyWMWidgetDownstreamState()
         result.z_index = -10000
-        result.opacity = wm_state.background_opacity
+        result.opacity = self._current_state.opacity
 
-        ws_state = wm_state.get_workspace_state(self._workspace)
+        # Set pos_x, pos_y, width, height of screen in coordinates of wallpaper
+        vx, vy, vw, vh = self._current_state.viewpoint
+        ex, ey, ew, eh = self._current_state.extent
 
-        min_i, min_j, max_i, max_j = ws_state.get_extent()
+        vx -= ex
+        vy -= ey
+        # ex, ey == 0, 1
 
-        """
-        Possibly extend bounds
-        """
-        min_i = min(min_i, ws_state.i)
-        min_j = min(min_j, ws_state.j)
-        max_i = max(max_i, min_i + ws_state.size - 1)
-        max_j = max(max_j, min_j + ws_state.size - 1)
+        vx /= ew
+        vy /= eh
+        vw /= ew
+        vh /= eh
+        # ew, eh == 1, 1
 
-        """
-        Box of background
-        """
-        x = min_i - 1
-        y = min_j - 1
-        w = (max_i - min_i + 3)
-        h = (max_j - min_j + 3)
-        w, h = max(w, h), max(w, h)
+        vw = min(1, vw)
+        vh = min(1, vh)
+        vx = max(0, min(1 - vw, vx))
+        vy = max(0, min(1 - vh, vy))
+        # vx, vy, vw, vh are viewport within [0, 1] x [0, 1]
 
-        """
-        Box of viewport
-        """
-        vp_x = ws_state.i
-        vp_y = ws_state.j
-        vp_w = ws_state.size
-        vp_h = ws_state.size
+        vx *= self.width
+        vy *= self.height
+        vw *= self.width
+        vh *= self.height
+        # vx, vy, vw, vh are viewport within image resolution
 
-        """
-        Enlarge box and viewport
-        """
-        factor = wm_state.background_factor
+        w0 = self.width / ew
+        h0 = self.height / eh
+        w1 = self._output.width * self._output.scale
+        h1 = self._output.height * self._output.scale
+        if abs(w0 - self.width) > 0.1 and abs(h0 - self.height) > 0.1:
+            vwp = self.width + (w1 - self.width) / (w0 - self.width) * (vw - self.width)
+            vhp = self.height + (h1 - self.height) / (h0 - self.height) * (vh - self.height)
+            # vwp, vhp are target size in same coordiantes as vx, vy, vw, vh
 
-        cx = x + w/2
-        cy = y + h/2
-        x = cx - factor/2.*w
-        y = cy - factor/2.*h
-        w = factor*w
-        h = factor*h
+            if abs(vw - vwp) < 0.1 or abs(vh - vhp) < 0.1:
+                vxp = vx
+                vyp = vy
+            else:
+                vxp = (self.width - vwp) / (self.width - vw) * vx
+                vyp = (self.height - vhp) / (self.height - vh) * vy
+            # vxp, vyp are corresponding coordinates
 
-        vp_cx = vp_x + vp_w/2
-        vp_cy = vp_y + vp_h/2
-        vp_x = vp_cx - factor/2.*vp_w
-        vp_y = vp_cy - factor/2.*vp_h
-        vp_w = factor*vp_w
-        vp_h = factor*vp_h
+        else:
+            vxp, vyp, vwp, vhp = vx, vy, vw, vh
 
-        """
-        Transform such that viewport has
-        x, y == 0; w == wm.width; h == wm.height
-        """
-        m = self._output.width / vp_w
-        b = - vp_x * m
-        x, w = (m * x + b), (m * (x + w) + b)
-        w -= x
-
-        m = self._output.height / vp_h
-        b = - vp_y * m
-        y, h = (m * y + b), (m * (y + h) + b)
-        h -= y
-
-        """
-        Fix aspect ratio
-        """
-        if w/h > self.width/self.height:
-            new_h = self.height * w/self.width
+        x, y, w, h = vxp, vyp, vwp, vhp
+        if w/h < self._output.width/self._output.height:
+            new_h = self._output.height * w/self._output.width
             y -= (new_h - h)/2.
             h = new_h
         else:
-            new_w = self.width * h/self.height
+            new_w = self._output.width * h/self._output.height
             x -= (new_w - w)/2.
             w = new_w
+        # x, y, w, h are possibly shrinked to account for aspect ratio
 
-        result.box = (x + self._output.pos[0], y + self._output.pos[1], w, h)
+        if w < w1 or h < h1:
+            logger.debug("Background scaling issue: %dx%d on %dx%d wallpaper" % (w, h, self.width, self.height))
+
+        fx, fy = -x * self._output.width / w, -y * self._output.height / h
+        fw, fh = self.width * self._output.width / w, self.height * self._output.height / h
+        # fx, fy, fw, fh are transformed to output coordinates
+
+        if self.height > 0 and abs(fw / fh - self.width / self.height) > 0.01:
+            logger.debug("Background aspect ratio issue: %dx%d on %dx%d wallpaper" % (fw, fh, self.width, self.height))
+
+        result.box = (self._output.pos[0] + fx, self._output.pos[1] + fy, fw, fh)
         return result
-
-    def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
-        cur = self.reducer(old_state)
-        nxt = self.reducer(new_state)
-
-        self._animate(WidgetDownstreamInterpolation(self.wm, self, cur, nxt), dt)
-
-    def process(self) -> PyWMWidgetDownstreamState:
-        return self._process(self.reducer(self.wm.state))

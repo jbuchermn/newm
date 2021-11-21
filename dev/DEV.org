@@ -10,6 +10,7 @@
 *** STRT Bug: Move floating window to other screen, change to tiled
 *** DONE Bug: Open Firefox on a 2x2 tile fullscreen, on every popup focus is moved back
 *** DONE Background issues on overlapping outputs
+*** DONE TODO: Extent on move_resize_overlay --> jumpy background
 
 ** DONE If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 ** TODO Regularly remove orphaned view states
@@ -19,10 +20,13 @@
 ** DONE Layer shell
 
 ** Backgrounds
-*** TODO Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
-*** TODO Backgrounds when moving window between workspaces (issue with move_origin) / switching windows from tiled to floating
-*** TODO Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
-*** TODO Respect no_anim outputs
+*** DONE Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
+*** DONE Backgrounds when moving window between workspaces (issue with move_origin) / switching windows from tiled to floating
+*** STRT Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
+*** STRT Respect no_anim outputs
+*** STRT Configurable time scale
+*** STRT Configurable w0, h0
+*** STRT Hacky on enter overlay
 
 ** Multi-output support
 *** TODO Background per output
@@ -45,6 +49,7 @@
 * v0.3
 ** Layer shell - Exclusive zones and keyboard interactivity
 ** Scale windows moving others "out of the way"
+** Ultrawide monitors --> tow workspaces on one output
 ** Improved panel
 - Useful handling of multiple workspaces
 - Bars as panels not as widgets
