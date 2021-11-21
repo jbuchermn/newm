@@ -67,15 +67,14 @@ class ViewState:
 
 
 class WorkspaceState:
-    def __init__(self, handle: int, **kwargs: Any) -> None:
-        self._handle = handle
+    def __init__(self, ws: Workspace, **kwargs: Any) -> None:
+        self._ws = ws
 
         self.i: float = kwargs['i'] if 'i' in kwargs else -0.5
         self.j: float = kwargs['j'] if 'j' in kwargs else -0.5
 
         self.size: float = kwargs['size'] if 'size' in kwargs else 2
         self.size_origin: Optional[float] = kwargs['size_origin'] if 'size_origin' in kwargs else None
-
 
         self.intermediate_rows: list[int] = kwargs['intermediate_rows'] if 'intermediate_rows' in kwargs else []
         self.intermediate_cols: list[int] = kwargs['intermediate_cols'] if 'intermediate_cols' in kwargs else []
@@ -107,7 +106,7 @@ class WorkspaceState:
     """
 
     def copy(self, **kwargs: Any) -> WorkspaceState:
-        res = WorkspaceState(self._handle, **{**self.__dict__, **kwargs})
+        res = WorkspaceState(self._ws, **{**self.__dict__, **kwargs})
         for h, s in self._view_states.items():
             res._view_states[h] = s.copy()
         return res
@@ -117,7 +116,7 @@ class WorkspaceState:
             self.__dict__[k] = v
 
     def replacing_view_state(self, view: View, **kwargs: Any) -> WorkspaceState:
-        res = WorkspaceState(self._handle, **self.__dict__)
+        res = WorkspaceState(self._ws, **self.__dict__)
         for h, s in self._view_states.items():
             res._view_states[h] = s.copy(**(kwargs if h==view._handle else {}))
         return res
@@ -405,14 +404,26 @@ class WorkspaceState:
         min_i, min_j, max_i, max_j = 1000000., 1000000., -1000000., -1000000.
 
         for _, s in self._view_states.items():
-            if not s.is_tiled:
-                continue
-            if s.w == 0 or s.h == 0:
-                continue
-            if s.move_origin is not None and s.move_origin[2]._handle != self._handle:
+            # if not s.is_tiled:
+            #     continue
+            # if s.w == 0 or s.h == 0:
+            #     continue
+
+            if s.move_origin is not None and s.move_origin[2]._handle != self._ws._handle:
                 continue
 
-            i, j, w, h = s.get_ijwh()
+            if s.is_tiled:
+                i, j, w, h = s.get_ijwh()
+
+            elif not s.is_layer:
+                i, j = s.float_pos
+                w, h = s.float_size
+
+                w *= self.size / self._ws.width
+                h *= self.size / self._ws.height
+
+            else:
+                continue
 
             min_i = min(min_i, i)
             min_j = min(min_j, j)
@@ -474,7 +485,7 @@ class LayoutState:
     def with_workspaces(self, layout: Layout) -> LayoutState:
         for w in layout.workspaces:
             if w._handle not in self._workspace_states:
-                self._workspace_states[w._handle] = WorkspaceState(w._handle)
+                self._workspace_states[w._handle] = WorkspaceState(w)
 
         orphans = []
         for k in list(self._workspace_states.keys()):

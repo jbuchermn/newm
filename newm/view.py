@@ -128,16 +128,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return PyWMViewDownstreamState()
 
     def _main_panel(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        logger.info("Main - panel: %s", self)
-        if self._mapped:
-            logger.debug("Suppressing duplicate map")
-            return None, None
-
-        logger.debug("Main: Registered panel %s: %s", self.app_id, self.panel)
+        logger.info("Main - panel: %s %s", self.panel, self)
         self.damage()
 
         # Place dummy ViewState
-        ws_state1 = ws_state.with_view_state(self, is_tiled=False)
+        ws_state1 = ws_state.with_view_state(self, is_tiled=False, is_layer=True)
         state1 = state.setting_workspace_state(ws, ws_state1)
         return state1, None
 
