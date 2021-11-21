@@ -6,11 +6,12 @@
 *** KILL Cmd-W no longer works
 *** DONE Jumpy transition between workspaces (MoveResizeOverlay) - possibly only after change workspace sizes
 *** DONE Try a little harder to force size on windows (e.g. Firefox > Save As)
-*** STRT Move newly floating windows inside extent
-*** STRT Bug: Move floating window to other screen, change to tiled
+*** TODO Move newly floating windows inside extent
+*** TODO Bug: Move floating window to other screen, change to tiled
 *** DONE Bug: Open Firefox on a 2x2 tile fullscreen, on every popup focus is moved back
 *** DONE Background issues on overlapping outputs
 *** DONE TODO: Extent on move_resize_overlay --> jumpy background
+*** TODO Misplaced popups
 
 ** DONE If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
 ** TODO Regularly remove orphaned view states
