@@ -422,6 +422,11 @@ class WorkspaceState:
                 w *= self.size / self._ws.width
                 h *= self.size / self._ws.height
 
+                i = round(i)
+                j = round(j)
+                w = max(1, round(w))
+                h = max(1, round(h))
+
             else:
                 continue
 

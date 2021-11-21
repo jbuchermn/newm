@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import logging
 
@@ -13,12 +13,16 @@ from pywm.touchpad import (
 from pywm.touchpad.gestures import Gesture
 
 from .overlay import Overlay
+from ..config import configured_value
 
 if TYPE_CHECKING:
     from ..layout import Layout
     from ..view import View
+    from ..state import LayoutState
 
 logger = logging.getLogger(__name__)
+
+conf_anim_t = configured_value("anim_time", .3)
 
 class MoveResizeFloatingOverlay(Overlay):
     def __init__(self, layout: Layout, view: View):
@@ -132,5 +136,13 @@ class MoveResizeFloatingOverlay(Overlay):
                 return True
         return False
 
-    def pre_destroy(self) -> None:
+
+    def _exit_transition(self) -> tuple[Optional[LayoutState], float]:
         self.layout.update_cursor(True)
+        try:
+            state = self.layout.state.copy()
+            state.constrain()
+            return state, conf_anim_t()
+        except Exception:
+            logger.warn("Unexpected: Error accessing view %s state", self.view)
+            return None, 0
