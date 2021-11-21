@@ -2,47 +2,24 @@
 
 * Current (v0.2)
 ** Bugs / Technical debt
-*** DONE Rounding errors on workspace setup
-*** KILL Cmd-W no longer works
-*** DONE Jumpy transition between workspaces (MoveResizeOverlay) - possibly only after change workspace sizes
-*** DONE Try a little harder to force size on windows (e.g. Firefox > Save As)
-*** DONE Move newly floating windows inside extent
-*** DONE Bug: Move floating window to other screen, change to tiled
-*** DONE Bug: Open Firefox on a 2x2 tile fullscreen, on every popup focus is moved back
-*** DONE Background issues on overlapping outputs
-*** DONE TODO: Extent on move_resize_overlay --> jumpy background
-*** DONE Misplaced popups
-*** STRT Bug: On no-anim screens wl_surface.enter(output) is not necessarily sent (see alacritty)
+*** TODO Regularly remove orphaned view states
+*** TODO Verify rounding performance on different scales at very slow anim speed
+*** TODO Bug: Stacked windows are not scaled properly
+*** TODO Bug: On no-anim screens wl_surface.enter(output) is not necessarily sent (see alacritty)
 
-** DONE If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning
-** TODO Regularly remove orphaned view states
-** DONE Configurable: Set floating windows to chosen size or smallest possible
-** TODO Stacked windows are not scaled properly
-** DONE Proper handling of mask for floating views --> Keep shadows of Firefox > Save As, keep rounded corners on alacritty
-** DONE Layer shell
-
-** Backgrounds
-*** DONE Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
-*** DONE Backgrounds when moving window between workspaces (issue with move_origin) / switching windows from tiled to floating
-*** DONE Bug 3x1 layout breaks background
-*** STRT Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
-*** DONE Respect no_anim outputs
-*** DONE Configurable time scale
-*** TODO Configurable w0, h0 and per output background
-*** DONE Hacky on enter overlay
-
-** Multi-output support
-*** TODO Overview per output
-
+** TODO Overview per output (configurable)
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
+** TODO Basic demo of layer shell top bar
 
-** TODO Test DBeaver
+** Backgrounds
+*** STRT With second scale == 1 screen open, background widgets are not rounded based on scale > 1 pixels, but on logical pixels
+*** TODO Configurable w0, h0 and per output background, as well as additional no_anim flag
+
 ** TODO Test a game
-** TODO Possibly: Enable CSD for floating windows?
 
 ** Release
-- [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway
+- [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver
 - [ ] TODO comments
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 - [ ] Remove any legacy config options
@@ -52,13 +29,11 @@
 * v0.3
 ** Layer shell - Exclusive zones and keyboard interactivity
 ** Scale windows moving others "out of the way"
-** Ultrawide monitors --> tow workspaces on one output
+** Ultrawide monitors --> two workspaces on one output
 ** Improved panel
-- Useful handling of multiple workspaces
 - Bars as panels not as widgets
-- layer-shell for bars and possibly more?
+- layer-shell
 - catapult
-- Possibly flutter-based?
 - Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
 
 ** Widgets
