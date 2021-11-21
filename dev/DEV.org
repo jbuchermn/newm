@@ -24,7 +24,7 @@
 ** Backgrounds
 *** DONE Background should (if res is sufficient) never be scaled up, no matter how many windows, movements and scaling effects should instead become smaller
 *** DONE Backgrounds when moving window between workspaces (issue with move_origin) / switching windows from tiled to floating
-*** STRT Bug 3x1 layout breaks background
+*** DONE Bug 3x1 layout breaks background
 *** STRT Open second screen, overview -> Hacky background animation (sth to do with scaling and pywm.round)
 *** DONE Respect no_anim outputs
 *** DONE Configurable time scale

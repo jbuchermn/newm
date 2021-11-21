@@ -27,11 +27,10 @@ class BackgroundState:
         x2 += 1
         y2 += 1
 
-        # Extend extent a bit
-        x1 -= 0.5
-        y1 -= 0.5
-        x2 += 0.5
-        y2 += 0.5
+        x1 -= 1
+        y1 -= 1
+        x2 += 1
+        y2 += 1
 
         vx, vy, vw, vh = ws_state.i, ws_state.j, ws_state.size, ws_state.size
 
@@ -50,25 +49,24 @@ class BackgroundState:
         viewpoint = vx, vy, vw, vh
         opacity = layout_state.background_opacity
 
-        # Set pos_x, pos_y, width, height of screen in coordinates of wallpaper
         vx, vy, vw, vh = viewpoint
         ex, ey, ew, eh = extent
 
         vx -= ex
         vy -= ey
-        # ex, ey == 0, 1
+        # 1. ex, ey == 0, 1
 
         vx /= ew
         vy /= eh
         vw /= ew
         vh /= eh
-        # ew, eh == 1, 1
+        # 2. ew, eh == 1, 1
 
         vw = min(1, vw)
         vh = min(1, vh)
         vx = max(0, min(1 - vw, vx))
         vy = max(0, min(1 - vh, vy))
-        # vx, vy, vw, vh are viewport within [0, 1] x [0, 1]
+        # 3. vx, vy, vw, vh are viewport within [0, 1] x [0, 1]
 
         width, height = wallpaper_size
         output_width, output_height = output_size
@@ -76,16 +74,19 @@ class BackgroundState:
         vy *= height
         vw *= width
         vh *= height
-        # vx, vy, vw, vh are viewport within image resolution
+        # 4. vx, vy, vw, vh are viewport within image resolution
+
+        # if vx < 0 or vx + vw > width or vy < 0 or vy + vh > height:
+        #     logger.debug("Background placement issue vx vy vw vh = %f %f %f %f (%f %f)" % (vx, vy, vw, vh, width, height))
 
         w0 = width / ew
         h0 = height / eh
         w1 = output_width * output_scale
         h1 = output_height * output_scale
-        if abs(w0 - width) > 0.1 and abs(h0 - height) > 0.1:
+        if abs(w0 - width) > 0.1 and abs(h0 - height) > 0.1 and width > w1 and height > h1:
             vwp = width + (w1 - width) / (w0 - width) * (vw - width)
             vhp = height + (h1 - height) / (h0 - height) * (vh - height)
-            # vwp, vhp are target size in same coordiantes as vx, vy, vw, vh
+            # 5a. vwp, vhp are target size in same coordiantes as vx, vy, vw, vh
 
             if abs(vw - vwp) < 0.1 or abs(vh - vhp) < 0.1:
                 vxp = vx
@@ -93,10 +94,13 @@ class BackgroundState:
             else:
                 vxp = (width - vwp) / (width - vw) * vx
                 vyp = (height - vhp) / (height - vh) * vy
-            # vxp, vyp are corresponding coordinates
+            # 5b. vxp, vyp are corresponding coordinates
 
         else:
             vxp, vyp, vwp, vhp = vx, vy, vw, vh
+
+        # if vxp < 0 or vxp + vwp > width or vyp < 0 or vyp + vhp > height:
+        #     logger.debug("Background placement issue vxp vyp vwp vhp = %f %f %f %f (%f %f)" % (vxp, vyp, vwp, vhp, width, height))
 
         x, y, w, h = vxp, vyp, vwp, vhp
         if w/h < output_width/output_height:
@@ -107,17 +111,38 @@ class BackgroundState:
             new_w = output_width * h/output_height
             x -= (new_w - w)/2.
             w = new_w
-        # x, y, w, h are possibly shrinked to account for aspect ratio
+        # 6. x, y, w, h are possibly shrinked to account for aspect ratio
 
-        if w < w1 or h < h1:
-            logger.debug("Background scaling issue: %dx%d on %dx%d wallpaper" % (w, h, width, height))
+        # If the algorithm works properly this is not be necessary
+        # scale_fac = 1.
+        # if w > width:
+        #     scale_fac = width / w
+        # if h > height:
+        #     scale_fac = min(scale_fac, height / h)
+        # w, h = scale_fac*w, scale_fac*h
+        #
+        #
+        # if x < 0:
+        #     x = 0
+        # if y < 0:
+        #     y = 0
+        # if x + w > width:
+        #     x = width - w
+        # if y + h > height:
+        #     y = height - h
+
+        # if x < 0 or x + w > width or y < 0 or y + h > height:
+        #     logger.debug("Background placement issue x y w h = %f %f %f %f (%f %f)" % (x, y, w, h, width, height))
+
+        # if w < w1 or h < h1:
+        #     logger.debug("Background scaling issue: %dx%d on %dx%d wallpaper" % (w, h, width, height))
 
         fx, fy = -x * output_width / w, -y * output_height / h
         fw, fh = width * output_width / w, height * output_height / h
-        # fx, fy, fw, fh are transformed to output coordinates
+        # 7. fx, fy, fw, fh are transformed to output coordinates
 
-        if height > 0 and fh > 0 and abs(fw / fh - width / height) > 0.01:
-            logger.debug("Background aspect ratio issue: %dx%d on %dx%d wallpaper" % (fw, fh, width, height))
+        # if height > 0 and fh > 0 and abs(fw / fh - width / height) > 0.01:
+        #     logger.debug("Background aspect ratio issue: %dx%d on %dx%d wallpaper" % (fw, fh, width, height))
 
         self.box = (fx, fy, fw, fh)
         self.opacity = opacity
