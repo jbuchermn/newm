@@ -706,8 +706,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
         return self.key_processor.on_key(state == PYWM_PRESSED,
                                          keysyms,
-                                         self.modifiers & self.mod > 0,
-                                         self.modifiers & PYWM_MOD_CTRL > 0,
+                                         self.modifiers,
+                                         self.mod,
                                          self.is_locked())
 
     def on_modifiers(self, modifiers: int) -> bool:

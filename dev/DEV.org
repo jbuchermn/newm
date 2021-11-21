@@ -11,7 +11,7 @@
 *** DONE Bug: Open Firefox on a 2x2 tile fullscreen, on every popup focus is moved back
 *** DONE Background issues on overlapping outputs
 *** DONE TODO: Extent on move_resize_overlay --> jumpy background
-*** TODO Misplaced popups
+*** DONE Misplaced popups
 *** TODO On no-anim screens wl_surface.enter(output) is not necessarily sent (see alacritty)
 
 ** DONE If width is not divisible by 3, 3x3 grid produces a lot of "Potential scaling issue"... Only false positive? In that case optimize the warning

@@ -1,8 +1,20 @@
 from __future__ import annotations
 from typing import Callable, Any
+import logging
+
+from pywm import (
+    PYWM_MOD_CTRL,
+    PYWM_MOD_ALT,
+    PYWM_MOD_MOD2,
+    PYWM_MOD_MOD3,
+    PYWM_MOD_LOGO,
+    PYWM_MOD_MOD5,
+)
+
+logger = logging.getLogger(__name__)
 
 class TKeyBinding:
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool, locked: bool) -> bool:
+    def process(self, pressed: bool, keysyms: str, mod_down: bool, logo_down: bool, ctrl_down: bool, alt_down: bool, mod1_down: bool, mod2_down: bool, mod3_down: bool, locked: bool) -> bool:
         pass
 
     def clear(self) -> None:
@@ -12,13 +24,28 @@ class TKeyBinding:
 class KeyBinding(TKeyBinding):
     def __init__(self, keys: str, action: Callable[[], Any]) -> None:
         self.mod = False
+        self.logo = False
         self.ctrl = False
+        self.alt = False
+        self.mod1 = False
+        self.mod2 = False
+        self.mod3 = False
         _keys = keys.split("-")
         for k in _keys[:-1]:
             if k == "M":
                 self.mod = True
+            if k == "L":
+                self.logo = True
             if k == "C":
                 self.ctrl = True
+            if k == "A":
+                self.alt = True
+            if k == "1":
+                self.mod1 = True
+            if k == "2":
+                self.mod2 = True
+            if k == "3":
+                self.mod3 = True
 
         self.keysym = _keys[-1]
         self.action = action
@@ -26,13 +53,18 @@ class KeyBinding(TKeyBinding):
 
         self._ready_to_fire = False
 
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool, locked: bool) -> bool:
+    def process(self, pressed: bool, keysyms: str, mod_down: bool, logo_down: bool, ctrl_down: bool, alt_down: bool, mod1_down: bool, mod2_down: bool, mod3_down: bool, locked: bool) -> bool:
         if locked and not self.lock_safe:
             return False
 
         if pressed and keysyms == self.keysym and \
                 mod_down == self.mod and \
-                ctrl_down == self.ctrl:
+                logo_down == self.logo and \
+                ctrl_down == self.ctrl and \
+                alt_down == self.alt and \
+                mod1_down == self.mod1 and \
+                mod2_down == self.mod2 and \
+                mod3_down == self.mod3:
             self._ready_to_fire = True
             return True
 
@@ -54,7 +86,7 @@ class ModPressKeyBinding(TKeyBinding):
         self.action = action
         self._ready_to_fire = False
 
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool, locked: bool) -> bool:
+    def process(self, pressed: bool, keysyms: str, mod_down: bool, logo_down: bool, ctrl_down: bool, alt_down: bool, mod1_down: bool, mod2_down: bool, mod3_down: bool, locked: bool) -> bool:
         if locked:
             return False
 
@@ -92,10 +124,18 @@ class KeyProcessor:
         for keys, action in bindings:
             self.bindings += [keybinding_factory(self, keys, action)]
 
-    def on_key(self, pressed: bool, keysyms: str, mod_down: bool, ctrl_down: bool, locked: bool) -> bool:
+    def on_key(self, pressed: bool, keysyms: str, modifiers: int, mod: int, locked: bool) -> bool:
         triggered = False
         for b in self.bindings:
-            if b.process(pressed, keysyms, mod_down, ctrl_down, locked):
+            if b.process(pressed, keysyms,
+                         bool(modifiers & mod),
+                         bool(modifiers & PYWM_MOD_LOGO) and PYWM_MOD_LOGO != mod,
+                         bool(modifiers & PYWM_MOD_CTRL) and PYWM_MOD_CTRL != mod,
+                         bool(modifiers & PYWM_MOD_ALT) and PYWM_MOD_ALT != mod,
+                         bool(modifiers & PYWM_MOD_MOD2) and PYWM_MOD_MOD2 != mod,
+                         bool(modifiers & PYWM_MOD_MOD3) and PYWM_MOD_MOD3 != mod,
+                         bool(modifiers & PYWM_MOD_MOD5) and PYWM_MOD_MOD5 != mod,
+                         locked):
                 triggered = True
 
         return triggered
