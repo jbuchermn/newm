@@ -9,7 +9,7 @@
 *** DONE Bug: virt-manager popups (second order) open on top left
 *** TODO Bug: virt-manager create new VM --> console does not open (sometimes also floating windows) / Waiting for resize
 
-** TODO To address virt-manager - possible to handle initial state negotation in process - later switch to reducers?
+** TODO To address virt-manager - possible to handle initial state negotation in process - later switch to reducers? / Drop callbacks inside process from pywm
 ** TODO Overview per output (configurable)
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition

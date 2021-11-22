@@ -4,10 +4,12 @@ from typing import Optional, cast
 from threading import Thread
 import os
 import subprocess
+import psutil # type: ignore
 import time
 import logging
 
 from .config import configured_value
+from .util import timed_function
 
 logger = logging.getLogger(__name__)
 
@@ -76,29 +78,14 @@ class PanelsLauncher(Thread):
         if pid is None:
             return None
 
-        result: Optional[str] = None
         for p in self._panels:
-            parent_pid = p.get_pid()
-            if parent_pid is None:
-                continue
-            if parent_pid == pid:
-                return p.panel
+            ppid = pid
+            while ppid is not None and ppid > 1:
+                if ppid == p.get_pid():
+                    return p.panel
+                ppid = psutil.Process(ppid).ppid()
 
-            try:
-                subprocess.check_output("pstree -aps %d | grep \",%d$\"" % (pid, parent_pid), shell=True)
-                # Successful
-                result = p.panel
-                break
-            except:
-                # Unsuccessful
-                pass
-
-        try:
-            os.kill(pid, 0)
-        except:
-            # Not running anymore
-            return None
-        return result
+        return None
 
     def run(self) -> None:
         i = 0
