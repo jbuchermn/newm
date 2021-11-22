@@ -1106,7 +1106,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                         return None, None
 
                     state = state.without_view_state(view)
-                    state0, state1 = view._main_tiled(ws_new, state, ws_state)
+                    state0, state1 = view._show_tiled(ws_new, state, ws_state)
                     return (state0, state1)
                 except:
                     return (None, state)
