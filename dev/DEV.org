@@ -5,18 +5,14 @@
 *** TODO Regularly remove orphaned view states
 *** TODO Verify rounding performance on different scales at very slow anim speed
 *** TODO Bug: Stacked windows are not scaled properly
-*** STRT Bug: On no-anim screens wl_surface.enter(output) is not necessarily sent (see alacritty) / also alacritty-launcher-panel?
+*** STRT Bug: 1x2 + 1x1 layout scale right window wover left, background rescales?
+*** STRT Background: With second scale == 1 screen open, background widgets are not rounded based on scale > 1 pixels, but on logical pixels
 
 ** TODO Overview per output (configurable)
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
 ** TODO Basic demo of layer shell top bar
-
-** Backgrounds
-*** STRT With second scale == 1 screen open, background widgets are not rounded based on scale > 1 pixels, but on logical pixels
-*** TODO Configurable w0, h0 and per output background, as well as additional no_anim flag
-
-** TODO Test a game
+** TODO Background: Configurable w0, h0 and per output background, as well as additional no_anim flag
 
 ** Release
 - [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager
