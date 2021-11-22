@@ -335,8 +335,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         elif self.parent is not None:
             try:
                 p_state = state.get_view_state(cast(View, self.parent))
-                ci = p_state.i + p_state.w / 2.
-                cj = p_state.j + p_state.h / 2.
+                if p_state.is_tiled:
+                    ci = p_state.i + p_state.w / 2.
+                    cj = p_state.j + p_state.h / 2.
+                else:
+                    ci = p_state.float_pos[0] + p_state.float_size[0] * ws_state.size / ws.width / 2.
+                    cj = p_state.float_pos[1] + p_state.float_size[1] * ws_state.size / ws.width / 2.
             except:
                 logger.warn("Unexpected: Could not access parent %s state" % self.parent)
         else:
@@ -865,11 +869,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self._block_map_until_resize is not None:
             if (width, height) == self._block_map_until_resize:
                 self._block_map_until_resize = None
-                logger.debug("Retrying map")
+                logger.debug("View changed to expected size: %dx%d" % (width, height))
                 self.on_map()
             else:
-                logger.debug("View does not provide expected size")
+                logger.debug("View does not provide expected size: %dx%d != %dx%d" % (width, height, *self._block_map_until_resize))
+                block_bu = self._block_map_until_resize
                 self.init()
+                if self._block_map_until_resize == block_bu:
+                    logger.debug("Reinit does not provide new size: Respecting client decision")
+                    self.on_map()
                 self.damage()
             return
 
