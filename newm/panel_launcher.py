@@ -9,7 +9,6 @@ import time
 import logging
 
 from .config import configured_value
-from .util import timed_function
 
 logger = logging.getLogger(__name__)
 

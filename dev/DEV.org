@@ -8,7 +8,7 @@
 *** DONE Bug: 1x2 + 1x1 layout scale right window wover left, background rescales?
 *** STRT Background: With second scale == 1 screen open, background widgets are not rounded based on scale > 1 pixels, but on logical pixels
 *** DONE Bug: Occasionally rofi opens too small
-*** STRT Bug: Occasionally slurp does not get a fixed_output in therefore never shows up
+*** DONE Bug: Occasionally slurp does not get a fixed_output in therefore never shows up
 *** DONE Bug: pos_hint goes back to (0, 0)
 
 ** TODO Overview per output (configurable)

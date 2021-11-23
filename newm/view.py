@@ -14,6 +14,7 @@ from .interpolation import ViewDownstreamInterpolation
 from .animate import Animate
 from .overlay import MoveResizeFloatingOverlay
 from .config import configured_value
+from .util import errorlogged
 
 if TYPE_CHECKING:
     from .layout import Layout, Workspace
@@ -239,7 +240,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result = PyWMViewDownstreamState()
 
         result.fixed_output = up_state.fixed_output if (up_state.fixed_output is not None) else ws.outputs[0]
-        result.size, box = self._layer_placement(result.fixed_output, up_state.size_constraints)
+        result.size, _ = self._layer_placement(result.fixed_output, up_state.size_constraints)
         return result
 
     def _reducer_layer(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
