@@ -414,7 +414,7 @@ class WorkspaceState:
                 continue
 
             if s.is_tiled:
-                i, j, w, h = s.get_ijwh()
+                i, j, w, h = s.i, s.j, s.w, s.h
 
             elif not s.is_layer:
                 i, j = s.float_pos

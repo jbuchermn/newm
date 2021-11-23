@@ -5,7 +5,7 @@
 *** TODO Regularly remove orphaned view states
 *** TODO Verify rounding performance on different scales at very slow anim speed
 *** TODO Bug: Stacked windows are not scaled properly
-*** STRT Bug: 1x2 + 1x1 layout scale right window wover left, background rescales?
+*** DONE Bug: 1x2 + 1x1 layout scale right window wover left, background rescales?
 *** STRT Background: With second scale == 1 screen open, background widgets are not rounded based on scale > 1 pixels, but on logical pixels
 *** DONE Bug: Occasionally rofi opens too small
 *** STRT Bug: Occasionally slurp does not get a fixed_output in therefore never shows up
