@@ -37,6 +37,7 @@ class ViewState:
         self.float_size: tuple[int, int] = kwargs['float_size'] if 'float_size' in kwargs else (0, 0)
 
         # - Layer views
+        self.layer_initial: bool = kwargs['layer_initial'] if 'layer_initial' in kwargs else False
 
 
     def get_ijwh(self) -> tuple[float, float, float, float]:

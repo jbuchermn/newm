@@ -192,11 +192,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Layer
     """
-    def _layer_placement(self, output: PyWMOutput, size_constraints: list[int]) -> tuple[tuple[int, int], tuple[int, int, int, int]]:
+    def _layer_placement(self, output: PyWMOutput, size_constraints: list[int], size: Optional[tuple[int, int]]=None) -> tuple[tuple[int, int], tuple[int, int, int, int]]:
         anchor = size_constraints[0]
         width = size_constraints[1]
         height = size_constraints[2]
         margin = size_constraints[5:]
+
+        if size is not None:
+            width, height = size
 
         x = 0
         y = 0
@@ -262,7 +265,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             result.z_index += 1
 
         if result.fixed_output is not None:
-            result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints)
+            result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
+
+            if self_state.layer_initial:
+                result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
+
         else:
             logger.warn("Cannot place layer view without fixed output")
         result.mask = (-100000, -100000, result.size[0] + 200000, result.size[1] + 200000)
@@ -276,11 +283,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         logger.info("Show - layer: %s", self)
 
         # Place dummy ViewState
-        ws_state1 = ws_state.with_view_state(self, is_tiled=False, is_layer=True)
-        state1 = state.setting_workspace_state(ws, ws_state1)
+        ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True, layer_initial=True)
+        ws_state2 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
 
         self.focus()
-        return state1, None
+        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
     """
     Floating

@@ -7,16 +7,20 @@
 *** TODO Bug: Stacked windows are not scaled properly
 *** STRT Bug: 1x2 + 1x1 layout scale right window wover left, background rescales?
 *** STRT Background: With second scale == 1 screen open, background widgets are not rounded based on scale > 1 pixels, but on logical pixels
+*** DONE Bug: Occasionally rofi opens too small
+*** STRT Bug: Occasionally slurp does not get a fixed_output in therefore never shows up
 
 ** TODO Overview per output (configurable)
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
 ** TODO Basic demo of layer shell top bar
 ** TODO Background: Configurable w0, h0 and per output background, as well as additional no_anim flag
+** TODO Maybe: scale padding with ws_state.size
 
 ** Release
 - [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager
 - [ ] TODO comments
+- [ ] New background
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 - [ ] Remove any legacy config options
 - [ ] Document new config options

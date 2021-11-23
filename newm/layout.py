@@ -1038,6 +1038,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
             view = self.find_focused_view()
 
+            if not view.is_tiled(state):
+                view = None
+
             if view is not None:
                 while view.parent is not None and not view.is_tiled(state):
                     view = cast(View, view.parent)
