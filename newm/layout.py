@@ -1001,7 +1001,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                     if k == view._handle:
                         continue
 
-                    sc = (s.i - state.i + s.w / 2. - state.w / 2.)**2 + (s.j - state.j + s.h / 2. - state.h / 2.)**2
+                    i, j, w, h = state.i, state.j, state.w, state.h
+                    if not state.is_tiled:
+                        i, j = state.float_pos
+                        w, h = 0, 0
+                    sc = (s.i - i + s.w / 2. - w / 2.)**2 + (s.j - j + s.h / 2. - h / 2.)**2
                     logger.debug("View (%d) has score %f", k, sc)
                     if sc < best_view_score:
                         best_view_score = sc
@@ -1038,7 +1042,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
             view = self.find_focused_view()
 
-            if not view.is_tiled(state):
+            if view is not None and not view.is_tiled(state):
                 view = None
 
             if view is not None:

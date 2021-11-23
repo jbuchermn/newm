@@ -9,6 +9,7 @@
 *** STRT Background: With second scale == 1 screen open, background widgets are not rounded based on scale > 1 pixels, but on logical pixels
 *** DONE Bug: Occasionally rofi opens too small
 *** STRT Bug: Occasionally slurp does not get a fixed_output in therefore never shows up
+*** DONE Bug: pos_hint goes back to (0, 0)
 
 ** TODO Overview per output (configurable)
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother

@@ -388,7 +388,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if pos_hint is not None:
             ci = ws_state.i + pos_hint[0] * ws_state.size
             cj = ws_state.j + pos_hint[1] * ws_state.size
-            logger.debug("Respecting position hint %f %f" % pos_hint)
+            logger.debug("Respecting position hint %f %f -> %f %f" % (*pos_hint, ci, cj))
 
         elif self.parent is not None:
             try:
