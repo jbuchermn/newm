@@ -143,8 +143,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 int(ws.height * conf_panel_notifiers_h()))
 
             result.box = (
-                ws.width * (1. - conf_panel_notifiers_w())/2.,
-                ws.height * (1. - conf_panel_notifiers_h()),
+                ws.pos_x + ws.width * (1. - conf_panel_notifiers_w())/2.,
+                ws.pos_y + ws.height * (1. - conf_panel_notifiers_h()),
                 ws.width * conf_panel_notifiers_w(),
                 ws.height * conf_panel_notifiers_h())
 
@@ -158,8 +158,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 round(ws.height * conf_panel_launcher_h()))
 
             result.box = (
-                (ws.width - result.size[0]) / 2.,
-                (ws.height - result.size[1]) / 2. + (1. - state.launcher_perc) * ws.height,
+                ws.pos_x + (ws.width - result.size[0]) / 2.,
+                ws.pos_y + (ws.height - result.size[1]) / 2. + (1. - state.launcher_perc) * ws.height,
                 result.size[0],
                 result.size[1])
 
@@ -174,8 +174,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 round(ws.height * conf_panel_lock_h()))
 
             result.box = (
-                (ws.width - result.size[0]) / 2.,
-                (ws.height - result.size[1]) / 2. + (1. - state.lock_perc) * ws.height,
+                ws.pos_x + (ws.width - result.size[0]) / 2.,
+                ws.pos_y + (ws.height - result.size[1]) / 2. + (1. - state.lock_perc) * ws.height,
                 result.size[0],
                 result.size[1])
 

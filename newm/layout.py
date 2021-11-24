@@ -1177,7 +1177,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 overview = not state.all_in_overview()
 
             focused: Optional[View] = None
-            if overview:
+            if not overview:
                 focused = self.find_focused_view()
             return None, state.with_overview_set(overview, None if not only_active_workspace else self.get_active_workspace(), focused)
         self.animate_to(reducer, conf_anim_t())
