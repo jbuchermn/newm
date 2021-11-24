@@ -31,7 +31,7 @@ conf_move_grid_m = configured_value("move.grid_m", 3)
 conf_resize_grid_ovr = configured_value("resize.grid_ovr", 0.1)
 conf_resize_grid_m = configured_value("resize.grid_m", 3)
 conf_hyst = configured_value("resize.hyst", 0.2)
-conf_gesture_factor = configured_value("move_resize.gesture_factor", 4)
+conf_gesture_factor = configured_value("move_resize.gesture_factor", 2)
 conf_anim_t = configured_value("anim_time", .3)
 
 class _Overlay:
@@ -94,7 +94,7 @@ class MoveOverlay(_Overlay):
         if self._closed:
             return
 
-        factor = conf_gesture_factor() if not self.layout.state.is_in_overview() else self.ws_state.size
+        factor = conf_gesture_factor() * self.ws_state.size
 
         self.i += factor*(values['delta_x'] - self.last_dx)
         self.j += factor*(values['delta_y'] - self.last_dy)
@@ -207,7 +207,7 @@ class ResizeOverlay(_Overlay):
         if self._closed:
             return
 
-        factor = conf_gesture_factor() if not self.layout.state.is_in_overview() else self.ws_state.size
+        factor = conf_gesture_factor() * self.ws_state.size
         dw = factor*values['delta_x']
         dh = factor*values['delta_y']
 

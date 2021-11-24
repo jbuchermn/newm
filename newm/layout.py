@@ -794,7 +794,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 self.enter_overlay(ovr)
                 return True
 
-            if not self.state.is_in_overview():
+            if not self.state.get_workspace_state(self.get_active_workspace()).is_in_overview():
                 if isinstance(gesture, HigherSwipeGesture) \
                         and gesture.n_touches == 4:
                     logger.debug("...SwipeToZoom")
@@ -1037,8 +1037,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def toggle_fullscreen(self, defined_state: Optional[bool] = None) -> None:
         active_ws = self.get_active_workspace()
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-            if state.is_in_overview():
-                state = state.with_overview_toggled()
+            if state.get_workspace_state(self.get_active_workspace()).is_in_overview():
+                state = state.with_overview_set(False, only_workspace=self.get_active_workspace())
 
             view = self.find_focused_view()
 
@@ -1169,12 +1169,17 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self._setup(fallback=False)
         self.damage()
 
-    def toggle_overview(self) -> None:
+    def toggle_overview(self, only_active_workspace: bool=False) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            if only_active_workspace:
+                overview = not state.get_workspace_state(self.get_active_workspace()).is_in_overview()
+            else:
+                overview = not state.all_in_overview()
+
             focused: Optional[View] = None
-            if state.is_in_overview():
+            if overview:
                 focused = self.find_focused_view()
-            return None, state.with_overview_toggled(focused)
+            return None, state.with_overview_set(overview, None if not only_active_workspace else self.get_active_workspace(), focused)
         self.animate_to(reducer, conf_anim_t())
 
     def enter_launcher_overlay(self) -> None:

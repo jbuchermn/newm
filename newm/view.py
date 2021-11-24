@@ -799,6 +799,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             cx = x + .5*w
             cy = y + .5*h
 
+            size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
+
             if ws.pos_x - border_ws_switch <= cx <= ws.pos_x + ws.width + border_ws_switch and ws.pos_y - border_ws_switch <= cy <= ws.pos_y + ws.height + border_ws_switch:
                 return ws, i0, j0, w0, h0
 
@@ -818,7 +820,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                     ip = (cx - cxp) * wsp_state.size / wsp.width
                     jp = (cy - cyp) * wsp_state.size / wsp.height
 
-                    return wsp, ip, jp, w, h
+                    return wsp, ip, jp, w0, h0
 
         else:
             down = self._reducer_tiled(self.up_state, self.wm.state, ViewState(i=i0, j=j0, w=w0, h=h0), ws, ws_state)
@@ -834,8 +836,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             for wsp in self.wm.workspaces:
                 if wsp.pos_x < cx < wsp.pos_x + wsp.width and wsp.pos_y < cy < wsp.pos_y + wsp.height:
                     wsp_state = self.wm.state.get_workspace_state(wsp)
-                    wp: float = max(1, min(wsp_state.size, round(w * wsp_state.size / wsp.width)))
-                    hp: float = max(1, min(wsp_state.size, round(h * wsp_state.size / wsp.height)))
+
+                    # Keep original size when moving to an overview state or leaving one
+                    if wsp_state.is_in_overview() or ws_state.is_in_overview():
+                        wp = w0
+                        hp = h0
+                    else:
+                        wp = max(1, min(wsp_state.size, round(w * wsp_state.size / wsp.width)))
+                        hp = max(1, min(wsp_state.size, round(h * wsp_state.size / wsp.height)))
 
                     ip, jp = 0., 0.
                     statep = self.wm.state.copy()

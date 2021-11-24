@@ -14,7 +14,7 @@ from ..config import configured_value
 
 if TYPE_CHECKING:
     from ..state import LayoutState
-    from ..layout import Layout
+    from ..layout import Layout, Workspace
 
 conf_bar_height = configured_value('bar.height', 20)
 conf_font_size = configured_value('bar.font_size', 12)
@@ -33,6 +33,7 @@ class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
         Animate.__init__(self)
 
         self._output: PyWMOutput = output
+        self._workspace: Workspace = [w for w in self.wm.workspaces if self._output in w.outputs][0]
 
         self.texts = ["Leftp", "Middlep", "Rightp"]
         self.font_size = output.scale * conf_font_size()
@@ -94,9 +95,11 @@ class TopBar(Bar, Thread):
 
     def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
-        result.z_index = 5
+        result.z_index = 100
 
-        dy = wm_state.top_bar_dy * conf_bar_height()
+        ws_state = wm_state.get_workspace_state(self._workspace)
+
+        dy = ws_state.top_bar_dy * conf_bar_height()
         result.box = (self._output.pos[0], self._output.pos[1] + dy - conf_bar_height(), self._output.width, conf_bar_height())
 
         return result
@@ -122,9 +125,11 @@ class BottomBar(Bar, Thread):
 
     def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
-        result.z_index = 5
+        result.z_index = 100
 
-        dy = wm_state.bottom_bar_dy * conf_bar_height()
+        ws_state = wm_state.get_workspace_state(self._workspace)
+
+        dy = ws_state.bottom_bar_dy * conf_bar_height()
         result.box = (self._output.pos[0], self._output.pos[1] + self._output.height - dy, self._output.width,
                       conf_bar_height())
 
