@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TypeVar, Generic, TYPE_CHECKING
+import logging
 
 from pywm import PyWMViewDownstreamState, PyWMWidgetDownstreamState, PyWMDownstreamState, PyWMWidget
 
@@ -7,6 +8,8 @@ from .config import configured_value
 
 if TYPE_CHECKING:
     from .layout import Layout
+
+logger = logging.getLogger(__name__)
 
 conf_size_adjustment = configured_value("interpolation.size_adjustment", .5)
 
@@ -57,12 +60,32 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
         self.anim = True
         if self.workspace is not None:
             for ws in layout.workspaces:
+                if not ws.prevent_anim:
+                    continue
                 if ws.pos_x <= self.workspace[0] <= self.workspace[0] + self.workspace[2] <= ws.pos_x + ws.width and \
                    ws.pos_y <= self.workspace[1] <= self.workspace[1] + self.workspace[3] <= ws.pos_y + ws.height:
-                    if ws.prevent_anim:
-                        self.anim = False
-                        break
+                    self.anim = False
+                    break
 
+        # If the initial window is not visible - trigger (computationally intensive) size change immediately
+        # If the final window is not visible - trigger (computationally intensive) size change only afterwards
+        self._size_adjustment = conf_size_adjustment()
+        if state0.workspace is not None:
+            x, y, w, h = state0.box
+            ws_x, ws_y, ws_w, ws_h = state0.workspace
+            if (x+w - 1. < ws_x) or \
+               (y+h - 1. < ws_y) or \
+               (ws_x+ws_w - 1. < x) or \
+               (ws_y+ws_h - 1. < y):
+                self._size_adjustment = 0.
+        if state1.workspace is not None:
+            x, y, w, h = state1.box
+            ws_x, ws_y, ws_w, ws_h = state1.workspace
+            if (x+w - 1. < ws_x) or \
+               (y+h - 1. < ws_y) or \
+               (ws_x+ws_w - 1. < x) or \
+               (ws_y+ws_h - 1. < y):
+                self._size_adjustment = 0.99
 
     def get(self, at: float) -> PyWMViewDownstreamState:
         if not self.anim:
@@ -90,11 +113,11 @@ class ViewDownstreamInterpolation(Interpolation[PyWMViewDownstreamState]):
         )
 
         res.opacity = self.opacity[0] + at * (self.opacity[1] - self.opacity[0])
-        res.size=self.size[1] if at > conf_size_adjustment() else self.size[0]
-        res.floating=self.floating[1] if at > conf_size_adjustment() else self.floating[0]
+        res.size=self.size[1] if at > self._size_adjustment else self.size[0]
+        res.floating=self.floating[1] if at > self._size_adjustment else self.floating[0]
         res.lock_enabled=self.lock_enabled
         res.workspace=self.workspace
-        res.fixed_output=self.fixed_output[1] if at > conf_size_adjustment() else self.fixed_output[0]
+        res.fixed_output=self.fixed_output[1] if at > self._size_adjustment else self.fixed_output[0]
         return res
 
 class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):
