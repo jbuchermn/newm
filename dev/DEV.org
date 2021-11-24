@@ -3,7 +3,7 @@
 * Current (v0.2)
 ** Bugs / Technical debt
 *** TODO Bug: Orphaned view states appear sometimes - regularly remove them
-*** TODO Bug: Stacked windows are not scaled properly
+*** DONE Bug: Stacked windows are not scaled properly
 *** DONE Bug: Make mako, rofi, waybar, slurp work at the same time
 
 ** TODO Background: Configurable w0, h0 and per output background, as well as additional no_anim flag
