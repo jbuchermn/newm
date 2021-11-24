@@ -659,6 +659,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 self._initial_kind = 3
                 self._initial_state = self._init_tiled(self.up_state, ws)
 
+        self.damage()
         return self._initial_state
 
     def show(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
@@ -703,13 +704,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return self._process(self.reducer(up_state, self.wm.state))
 
         self.damage()
+        self.init()
 
         # mypy
         if self._initial_state is None:
             return PyWMViewDownstreamState()
 
         state, kind = self._initial_state, self._initial_kind
-        self.init()
         if kind != self._initial_kind:
             logger.debug("View %s changed kind: %d -> %d", kind, self._initial_kind)
             return self._initial_state
@@ -733,7 +734,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         try:
             self_state, ws_state, ws_handle = state.find_view(self)
             ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
-            self._initial_state = None
         except Exception:
             logger.warn("Missing state: %s" % self)
             return PyWMViewDownstreamState()

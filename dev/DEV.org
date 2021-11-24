@@ -2,8 +2,9 @@
 
 * Current (v0.2)
 ** Bugs / Technical debt
-*** TODO BUG: Orphaned view states appear sometimes - regularly remove them
+*** TODO Bug: Orphaned view states appear sometimes - regularly remove them
 *** TODO Bug: Stacked windows are not scaled properly
+*** DONE Bug: XWayland Firefox does not map
 
 ** TODO Overview per output (configurable)
 
