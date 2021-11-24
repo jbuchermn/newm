@@ -199,7 +199,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         height = size_constraints[2]
         margin = size_constraints[5:]
 
-        if size is not None:
+        if size is not None and size[0] > 0 and size[1] > 0:
             width, height = size
 
         x = 0
@@ -233,7 +233,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         else:
             y = (output.height - height) // 2
 
-        return (width, height), (x + output.pos[0], y + output.pos[1], width, height)
+
+        target_width, target_height = size_constraints[1:3]
+        if target_width == 0:
+            target_width = width
+        if target_height == 0:
+            target_height = height
+        return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
 
 
     def _init_layer(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> PyWMViewDownstreamState:

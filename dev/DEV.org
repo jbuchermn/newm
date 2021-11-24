@@ -4,14 +4,15 @@
 ** Bugs / Technical debt
 *** TODO Bug: Orphaned view states appear sometimes - regularly remove them
 *** TODO Bug: Stacked windows are not scaled properly
+*** DONE Bug: Make mako, rofi, waybar, slurp work at the same time
 
+** TODO Background: Configurable w0, h0 and per output background, as well as additional no_anim flag
 
 ** TODO Maybe: scale padding with ws_state.size
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
 
 ** TODO Interpolation: Trigger size updates on view outside of workspace after anim has finished - this should make fullscreen enter-leave animations in situations with lots of windows a bit smoother
 ** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
-** TODO Background: Configurable w0, h0 and per output background, as well as additional no_anim flag
 ** TODO Basic demo of layer shell top bar
 
 ** Release
