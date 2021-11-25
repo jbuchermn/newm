@@ -2,7 +2,7 @@
 
 * Current (v0.2)
 ** Bugs / Technical debt
-*** TODO Bug: Orphaned view states can appear (?) - regularly remove them
+*** KILL Bug: Orphaned view states can appear (?) - regularly remove them
 *** TODO Bug: Background final jumps
 *** KILL Bug: Lock animation does not respect no_anim
 *** DONE Bug: MoveResizeFloatingOverlay on Chrome on secondary screen doesn't work
