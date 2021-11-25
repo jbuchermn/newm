@@ -7,6 +7,7 @@
 *** TODO Bug: Lock animation does not respect no_anim
 *** DONE Bug: MoveResizeFloatingOverlay on Chrome on secondary screen doesn't work
 *** TODO Bug: On an inconsistent overview state, switching from only_active=True to False does not work
+*** DONE Bug: CSD on alacritty
 
 ** TODO Background: Configurable w0, h0 and per output background, as well as additional no_anim flag
 

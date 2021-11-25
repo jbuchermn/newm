@@ -371,6 +371,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.box = (x, y, width, height)
 
         ox, oy = up_state.offset
+        ox = abs(ox)
+        oy = abs(oy)
         result.mask = (-10*ox, -10*oy, width + 20*ox, height + 20*oy)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
