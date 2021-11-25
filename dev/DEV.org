@@ -11,12 +11,9 @@
 *** DONE Bug: Open-Dialog of LibreOffice has no rounded corners
 *** TODO Bug: Issues with floating windows on secondary screen
 
-** TODO Background: Configurable w0, h0 and per output background, as well as additional no_anim flag
-
+** TODO Background: Configurable no_anim flag
 ** TODO Maybe: scale padding with ws_state.size
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
-
-** TODO Move to resize overlay: Trigger size changes on invisible windows only in finish transition
 ** TODO Basic demo of layer shell top bar
 
 ** Release
@@ -26,17 +23,19 @@
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 - [ ] Remove any legacy config options
 - [ ] Document new config options
+- [ ] Document functions on layout to be called in keybindings
 
 
 * v0.3
 ** Layer shell - Exclusive zones and keyboard interactivity
-** Scale windows moving others "out of the way"
-** Ultrawide monitors --> two workspaces on one output
 ** Improved panel
 - Bars as panels not as widgets
 - layer-shell
 - catapult
 - Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
+** Ultrawide monitors --> two workspaces on one output
+** Scale windows moving others "out of the way"
+** Move to resize overlay: Trigger size changes on invisible windows only in finish transition? Analogous to interpolate
 
 ** Widgets
 - Animated border around current window
