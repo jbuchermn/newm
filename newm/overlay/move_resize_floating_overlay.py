@@ -42,6 +42,13 @@ class MoveResizeFloatingOverlay(Overlay):
             self.workspace = [w for w in self.layout.workspaces if w._handle == ws_handle][0]
             self.i, self.j = state.float_pos
             self.w, self.h = state.float_size
+
+            self.layout.update(
+                self.layout.state.setting_workspace_state(
+                    self.workspace, self.ws_state.replacing_view_state(
+                        self.view,
+                        scale_origin=(self.w, self.h)
+                    )))
         except Exception:
             logger.warn("Unexpected: Could not access view %s state", self.view)
 
@@ -165,6 +172,7 @@ class MoveResizeFloatingOverlay(Overlay):
         self.layout.update_cursor(True)
         try:
             state = self.layout.state.copy()
+            state.update_view_state(self.view, scale_origin=None)
             state.constrain()
             return state, conf_anim_t()
         except Exception:

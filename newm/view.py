@@ -899,5 +899,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
     def on_resized(self, width: int, height: int, client_leading: bool) -> None:
         if client_leading and self.up_state is not None and self.up_state.is_floating:
-            self.wm.state.update_view_state(self, float_size=(width, height))
-            self.damage()
+            try:
+                self_state = self.wm.state.get_view_state(self)
+                if self_state.scale_origin is None:
+                    self.wm.state.update_view_state(self, float_size=(width, height))
+                    self.damage()
+            except:
+                # OK, on_resized is called before map
+                pass
