@@ -308,6 +308,8 @@ class WorkspaceState:
     """
 
     def with_overview_set(self, overview: bool, view: Optional[View]=None) -> WorkspaceState:
+        if overview == (self.state_before_overview is not None):
+            return self.copy()
         if overview:
             min_i, min_j, max_i, max_j = self.get_extent()
 
@@ -340,7 +342,9 @@ class WorkspaceState:
                     state_before_overview=None
                 )
             else:
+                logger.warn("Unexpected in WorkspaceState.with_overview_set")
                 state = self
+
             if view is not None:
                 state = state.focusing_view(view)
             return state

@@ -6,7 +6,7 @@
 *** TODO Bug: Background final jumps
 *** TODO Bug: Lock animation does not respect no_anim
 *** DONE Bug: MoveResizeFloatingOverlay on Chrome on secondary screen doesn't work
-*** TODO Bug: On an inconsistent overview state, switching from only_active=True to False does not work
+*** DONE Bug: On an inconsistent overview state, switching from only_active=True to False does not work
 *** DONE Bug: CSD on alacritty
 *** DONE Bug: Open-Dialog of LibreOffice has no rounded corners
 *** TODO Bug: Issues with floating windows on secondary screen
