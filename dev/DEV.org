@@ -4,7 +4,7 @@
 ** Bugs / Technical debt
 *** TODO Bug: Orphaned view states can appear (?) - regularly remove them
 *** TODO Bug: Background final jumps
-*** TODO Bug: Lock animation does not respect no_anim
+*** KILL Bug: Lock animation does not respect no_anim
 *** DONE Bug: MoveResizeFloatingOverlay on Chrome on secondary screen doesn't work
 *** DONE Bug: On an inconsistent overview state, switching from only_active=True to False does not work
 *** DONE Bug: CSD on alacritty
