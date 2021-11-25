@@ -459,7 +459,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result = PyWMViewDownstreamState()
         result.floating = False
         result.accepts_input = True
-        result.corner_radius = conf_corner_radius() if self.parent is None else 0
+        result.corner_radius = conf_corner_radius()
 
         if ws_state.is_fullscreen() and conf_fullscreen_padding() == 0:
             result.corner_radius = 0
@@ -517,14 +517,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         As always Chrome is ahead in this regard, rendering completely unwanted shadows
         --> If up_state.offset indicates weird CSD stuff going on, just fix the tile using masks
         """
-        use_mask_for_offset: Optional[tuple[float, float]] = None
-
+        mask_origin = (0., 0.)
         if up_state.size[0] > 0 and up_state.size[1] > 0:
             ox = up_state.offset[0] / up_state.size[0] * w
             oy = up_state.offset[1] / up_state.size[1] * h
             x -= ox
             y -= oy
-            use_mask_for_offset = ox, oy
+            mask_origin = ox, oy
 
         """
         Handle client size
@@ -578,8 +577,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.size = (width, height)
         result.box = (x, y, w, h)
 
-        if use_mask_for_offset is not None:
-            result.mask = (use_mask_for_offset[0], use_mask_for_offset[1], w, h)
+        result.mask = (mask_origin[0], mask_origin[1], w, h)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
