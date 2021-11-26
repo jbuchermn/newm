@@ -545,7 +545,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         w_for_size *= ws.width / size
         h_for_size *= ws.height / size
 
-        if self_state.scale_origin is not None or ws_state.is_in_overview():
+        if ws_state.size_origin is not None:
             w_for_size -= 2*padding
             h_for_size -= 2*padding
         else:
