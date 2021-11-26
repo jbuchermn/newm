@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 class Lock:
     def __init__(self) -> None:
-        self.state = "request_user"
-        self.users = ["test1", "test2"]
-        self.selected_user: Optional[str] = "test1"
+        self.state = "initial"
+        self.users: list[str] = []
+        self.selected_user: Optional[str] = None
         self.message = ""
         self.cred = ""
         self.pending = False
@@ -40,7 +40,14 @@ class Lock:
         _, width = self.scr.getmaxyx()
 
 
-        if self.state == "request_user":
+        if self.state == "initial":
+            texts = [
+                "",
+                "",
+                Figlet(font="big", justify="center", width=width).renderText("newm"),
+                Figlet(font="digital", justify="center", width=width).renderText("Initial state")
+            ]
+        elif self.state == "request_user":
             texts = [
                 "",
                 "",
@@ -103,6 +110,10 @@ class Lock:
 
     def process(self, message: Optional[dict[str, Any]]) -> Optional[str]:
         if message is None:
+            if self.state == "initial":
+                self.pending = False
+                self.render()
+
             if self.state == "request_cred":
                 self.pending = True
                 self.render()
@@ -120,7 +131,10 @@ class Lock:
         else:
             logger.debug("Received message: %s", message)
 
-            if message['kind'] == 'auth_request_cred':
+            if message['kind'] == 'auth_ack':
+                self.state = "initial"
+
+            elif message['kind'] == 'auth_request_cred':
                 self.state = "request_cred"
                 self.message = message['message']
                 self.cred = ""
@@ -149,15 +163,22 @@ def run(lock: Lock) -> None:
             logger.debug("Connecting...")
             async with websockets.connect(URI) as websocket:
                 logger.debug("...connected")
+
+                initial = True
+                response = None
                 while True:
                     logger.debug("Run loop...")
-                    response = lock.process(None)
-                    if response is None:
-                        response = json.dumps({ 'kind': 'auth_register' })
 
-                    logger.debug("Sending...")
-                    await asyncio.wait_for(websocket.send(response), 0.5)
-                    logger.debug("...done")
+                    if not initial:
+                        response = lock.process(None)
+                    else:
+                        response = json.dumps({ 'kind': 'auth_register' })
+                        initial = False
+
+                    if response is not None:
+                        logger.debug("Sending...")
+                        await asyncio.wait_for(websocket.send(response), 0.5)
+                        logger.debug("...done")
 
                     msg = json.loads(await websocket.recv())
                     logger.debug("...received answer")

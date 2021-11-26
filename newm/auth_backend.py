@@ -133,6 +133,7 @@ class AuthBackend:
         self._state = "wait_user"
 
         possible_users = [u for u in self._users if not u[3]]
+        logger.debug("Requesting user")
         self.layout.panel_endpoint.broadcast({
             'kind': 'auth_request_user',
             'users': [u[0] for u in possible_users]
@@ -148,14 +149,19 @@ class AuthBackend:
     Panels endpoint
     """
     def on_message(self, msg: dict[str, Any]) -> None:
-        if msg['kind'] == "auth_register" and self._state == "wait_user":
+        logger.debug("Received kind=%s" % msg['kind'])
+        if msg['kind'] == "auth_register":
             logger.debug("New auth client")
-            self.init_session()
-        elif msg['kind'] == "auth_register" and self._state == "wait_cred":
-            logger.debug("New auth client")
-            self._request_cred()
+            if self._state == "wait_user":
+                self.init_session()
+            elif self._state == "wait_cred":
+                self._request_cred()
+            else:
+                logger.debug("Acking register")
+                self.layout.panel_endpoint.broadcast({ 'kind': 'auth_ack' })
+
         elif msg['kind'] == "auth_choose_user":
-            logger.debug("Choosing user %s" % msg['user'])
+            logger.debug("Received user %s" % msg['user'])
             self._backend.init_auth(msg['user'])
         elif msg['kind'] == "auth_enter_cred":
             logger.debug("Received credentials")
@@ -172,6 +178,7 @@ class AuthBackend:
                 'message': message
             }
 
+        logger.debug("Requesting credentials")
         self.layout.panel_endpoint.broadcast(self._waiting_cred)
         self._state = "wait_cred"
 
