@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class Lock:
     def __init__(self) -> None:
         self.state = "request_user"
-        self.users = ["jonas", "root"]
-        self.selected_user: Optional[str] = "jonas"
+        self.users = ["test1", "test2"]
+        self.selected_user: Optional[str] = "test1"
         self.message = ""
         self.cred = ""
         self.pending = False

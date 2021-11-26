@@ -5,10 +5,8 @@
 *** TODO Bug: Background final jumps
 *** TODO Bug: Issues with floating windows on secondary screen
 *** TODO Bug: After moving (by dragging) a floating window - positioning of mouse events within that window is broken
-*** DONE Bug: Resize is triggered in overview and during SwipeToResizeOverview (related to padding scaling)
 
 ** TODO Background: Configurable per output background, no_anim flag
-** DONE Maybe: scale padding with ws_state.size
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
 ** TODO Basic demo of layer shell top bar
 ** TODO Remove need to use systemd-hooks to lock on hibernate (e.g. timer wrt last frame)

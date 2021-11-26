@@ -110,7 +110,7 @@ class AuthBackend:
         if len([g for g in self._users if g[3]]) == 0:
             logger.warn("Could not find greeter: %s", greeter_user)
         if len([g for g in self._users if g[1] == os.getuid()]) == 0:
-            logger.error("Fatal! Could not find current user: %s", greeter_user)
+            logger.error("Fatal! Could not find current user")
 
         """
         initial
@@ -192,4 +192,3 @@ class AuthBackend:
         else:
             logger.debug("unlocking after successful verification")
             self.layout._trusted_unlock()
-

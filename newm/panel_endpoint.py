@@ -121,9 +121,9 @@ if __name__ == '__main__':
                     msg = json.loads(bmsg)
                     print(msg)
                     if msg['kind'] == 'auth_register':
-                        await send({'kind': 'auth_request_cred', 'user': 'jonas', 'message': 'Password?'})
+                        await send({'kind': 'auth_request_cred', 'user': 'test1', 'message': 'Password?'})
                     elif msg['kind'] == 'auth_enter_cred':
-                        await send({'kind': 'auth_request_cred', 'user': 'jonas', 'message': 'Password?'})
+                        await send({'kind': 'auth_request_cred', 'user': 'test1', 'message': 'Password?'})
                 except Exception:
                     print("Received unparsable message: %s", bmsg)
 
