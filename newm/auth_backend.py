@@ -140,6 +140,7 @@ class AuthBackend:
 
     def lock(self) -> None:
         current_user = [u for u in self._users if u[1] == os.getuid()]
+        logger.debug("Locking for user %s" % current_user)
         if len(current_user) > 0 and not current_user[0][3]:
             self._backend.init_auth(current_user[0][0])
 
