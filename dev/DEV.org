@@ -2,19 +2,14 @@
 
 * Current (v0.2)
 ** Bugs / Technical debt
-*** KILL Bug: Orphaned view states can appear (?) - regularly remove them
 *** TODO Bug: Background final jumps
-*** KILL Bug: Lock animation does not respect no_anim
-*** DONE Bug: MoveResizeFloatingOverlay on Chrome on secondary screen doesn't work
-*** DONE Bug: On an inconsistent overview state, switching from only_active=True to False does not work
-*** DONE Bug: CSD on alacritty
-*** DONE Bug: Open-Dialog of LibreOffice has no rounded corners
 *** TODO Bug: Issues with floating windows on secondary screen
 
-** TODO Background: Configurable no_anim flag
-** TODO Maybe: scale padding with ws_state.size
+** TODO Background: Configurable per output background, no_anim flag
+** DONE Maybe: scale padding with ws_state.size
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
 ** TODO Basic demo of layer shell top bar
+** TODO Remove need to use systemd-hooks to lock on hibernate (e.g. timer wrt last frame)
 
 ** Release
 - [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell
@@ -24,6 +19,7 @@
 - [ ] Remove any legacy config options
 - [ ] Document new config options
 - [ ] Document functions on layout to be called in keybindings
+- [ ] Better config, see #36
 
 
 * v0.3
