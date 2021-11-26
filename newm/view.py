@@ -506,14 +506,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         padding = float(conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding())
 
-        padding /= max(1, ws_state.size / 2.)
+        padding_scaled = padding / max(1, ws_state.size / 2.)
         result.corner_radius /= max(1, ws_state.size / 2.)
 
         if w != 0 and h != 0:
-            x += padding
-            y += padding
-            w -= 2*padding
-            h -= 2*padding
+            x += padding_scaled
+            y += padding_scaled
+            w -= 2*padding_scaled
+            h -= 2*padding_scaled
 
         """
         An attempt to reduce the effect of dreadful CSD
@@ -544,8 +544,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         w_for_size *= ws.width / size
         h_for_size *= ws.height / size
-        w_for_size -= 2*padding
-        h_for_size -= 2*padding
+
+        if self_state.scale_origin is not None or ws_state.is_in_overview():
+            w_for_size -= 2*padding
+            h_for_size -= 2*padding
+        else:
+            w_for_size -= 2*padding_scaled
+            h_for_size -= 2*padding_scaled
 
         width = round(w_for_size)
         height = round(h_for_size)
