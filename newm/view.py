@@ -781,10 +781,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def is_focused(self) -> bool:
         return self.up_state is not None and self.up_state.is_focused
 
-
     def destroy(self) -> None:
         self.wm.destroy_view(self)
-
 
     def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> tuple[ViewState, ViewState]:
         padding = conf_padding() if not ws_state.is_fullscreen() else 0
@@ -915,3 +913,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             except:
                 # OK, on_resized is called before map
                 pass
+
+    def on_focus_change(self) -> None:
+        if self.is_focused():
+            self.wm.focus_hint(self)

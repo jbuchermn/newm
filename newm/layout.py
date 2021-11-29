@@ -264,6 +264,9 @@ class Workspace:
 
         self.prevent_anim = prevent_anim
 
+        # Hint at view._handle to focus when switching to this workspace (not guaranteed to exist anymore)
+        self.focus_view_hint: Optional[int] = None
+
     def swallow(self, other: Workspace) -> bool:
         if self.pos_x + self.width <= other.pos_x:
             return False
@@ -350,6 +353,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
         self._idle_inhibit_user = False
 
+        # Workspace cursor is on, Focused workspace override by focused view
+        self._active_workspace: tuple[Workspace, Optional[Workspace]] = self.workspaces[0], None
 
     def _set_mod_sym(self) -> None:
         self.mod_sym = ""
@@ -407,7 +412,32 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             logger.debug("  %s" % str(w))
 
         self.state = self.state.with_workspaces(self)
+        self._update_active_workspace()
 
+
+    def _update_active_workspace(self) -> None:
+        # Clean
+        ws_check1, ws_check2 = self._active_workspace
+        if ws_check1._handle not in [w._handle for w in self.workspaces]:
+            ws_check1 = self.workspaces[0]
+        if ws_check2 is not None and ws_check2._handle not in [w._handle for w in self.workspaces]:
+            ws_check2 = None
+        self._active_workspace = ws_check1, ws_check2
+
+        # Find ws cursor is on
+        ws: Optional[Workspace] = None
+        for w in self.workspaces:
+            if w.pos_x <= self.cursor_pos[0] < w.pos_x + w.width and w.pos_y <= self.cursor_pos[1] < w.pos_y + w.height:
+                ws = w
+                break
+
+        # Possibly update ws after cursor move
+        if ws is None:
+            logger.warn("Workspaces do not cover whole area")
+        else:
+            ws_old, _ = self._active_workspace
+            if ws_old != ws:
+                self._active_workspace = ws, None
 
     def _setup_widgets(self) -> None:
         def get_workspace_for_output(output: PyWMOutput) -> Workspace:
@@ -704,6 +734,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         return False
 
     def on_motion(self, time_msec: int, delta_x: float, delta_y: float) -> bool:
+        self._update_active_workspace()
         if self.is_locked():
             return False
 
@@ -904,6 +935,20 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                     .constrain()),
                 conf_anim_t())
 
+
+    def focus_hint(self, view: View) -> None:
+        try:
+            _, __, ws_handle = self.state.find_view(view)
+            ws = [w for w in self.workspaces if w._handle == ws_handle][0]
+            ws.focus_view_hint = view._handle
+
+            ws_a, ws_a_old = self._active_workspace
+            self._active_workspace = ws_a, ws
+
+        except Exception:
+            logger.warn("Missing state: %s" % self)
+
+
     def command(self, cmd: str, arg: Optional[str]=None) -> Optional[str]:
         logger.debug("Received command %s", cmd)
         if cmd == "anim-lock":
@@ -943,29 +988,37 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.exit_overlay()
         os.system("%s &" % cmd)
 
+    def is_view_on_workspace(self, view: View, workspace: Optional[Workspace]) -> bool:
+        if workspace is None:
+            return True
+        try:
+            _, __, ws_handle = self.state.find_view(view)
+            return workspace._handle == ws_handle
+        except Exception:
+            logger.warn("Missing state: %s" % self)
+            return False
+
+
     """
     API to be used for configuration
     1. Getters
     """
     def get_active_workspace(self) -> Workspace:
-        for w in self.workspaces:
-            if w.pos_x <= self.cursor_pos[0] < w.pos_x + w.width and w.pos_y <= self.cursor_pos[1] < w.pos_y + w.height:
-                return w
+        if self._active_workspace[1] is not None:
+            return self._active_workspace[1]
+        return self._active_workspace[0]
 
-        logger.warn("Workspaces do not cover whole area")
-        return self.workspaces[0]
+    def tiles(self, workspace: Optional[Workspace]=None) -> list[View]:
+        return [v for _, v in self._views.items() if v.is_tiled(self.state) and self.is_view_on_workspace(v, workspace)]
 
-    def tiles(self) -> list[View]:
-        return [v for _, v in self._views.items() if v.is_tiled(self.state)]
+    def floats(self, workspace: Optional[Workspace]=None) -> list[View]:
+        return [v for _, v in self._views.items() if v.is_float(self.state) and self.is_view_on_workspace(v, workspace)]
 
-    def floats(self) -> list[View]:
-        return [v for _, v in self._views.items() if v.is_float(self.state)]
+    def panels(self, workspace: Optional[Workspace]=None) -> list[View]:
+        return [v for _, v in self._views.items() if v.is_panel() and self.is_view_on_workspace(v, workspace)]
 
-    def panels(self) -> list[View]:
-        return [v for _, v in self._views.items() if v.is_panel()]
-
-    def views(self) -> list[View]:
-        return [v for _, v in self._views.items() if not v.is_panel()]
+    def views(self, workspace: Optional[Workspace]=None) -> list[View]:
+        return [v for _, v in self._views.items() if not v.is_panel() and self.is_view_on_workspace(v, workspace)]
 
     def find_focused_view(self) -> Optional[View]:
         for _, view in self._views.items():
@@ -1134,6 +1187,34 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         if best_view is not None:
             self.focus_view(self._views[best_view])
 
+    def move_next_view(self, dv: int=1) -> None:
+        views = self.views(self.get_active_workspace())
+        focused_view = self.find_focused_view()
+
+        if focused_view is not None and focused_view in views:
+            idx = views.index(focused_view)
+            next_view = views[(idx + dv)%len(views)]
+            self.focus_view(next_view)
+        elif len(views) > 0:
+            self.focus_view(views[0])
+
+
+    def move_workspace(self, ds: int=1) -> None:
+        ws = self.get_active_workspace()
+        i, ws = [(i, w) for i, w in enumerate(self.workspaces) if w._handle == ws._handle][0]
+
+        i = (i + ds) % len(self.workspaces)
+        ws_new = self.workspaces[i]
+
+        views = self.views(ws_new)
+        if ws_new.focus_view_hint is not None:
+            view = [v for v in views if v._handle == ws_new.focus_view_hint]
+            if len(view) == 1:
+                self.focus_view(view[0])
+                return
+
+        if len(views) > 0:
+            self.focus_view(views[0])
 
     """
     5. Change focused view
@@ -1164,7 +1245,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             else:
                 return (None, state)
         self.animate_to(reducer, conf_anim_t())
-
 
     def change_focused_view_workspace(self, ds: int=1) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:

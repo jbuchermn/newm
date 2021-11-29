@@ -4,10 +4,11 @@
 ** Bugs / Technical debt
 *** TODO Bug: Background final jumps
 *** DONE Bug: After moving (by dragging) a floating window - positioning of mouse events within that window is broken
-*** STRT Bug: Fullscreen video
+*** WAIT Bug: Fullscreen video opens stacked
+*** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
 
-** STRT Alt-Tab functionality (in current workspace or overall)
-** STRT Switch workspace functionality
+** DONE Alt-Tab functionality (in current workspace or overall)
+** DONE Switch workspace functionality
 ** TODO Background: Configurable per output background, no_anim flag
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
 ** TODO Basic demo of layer shell top bar
