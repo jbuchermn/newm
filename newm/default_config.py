@@ -42,7 +42,7 @@ def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
         ("M-C-l", lambda: layout.resize_focused_view(1, 0)),
 
         ("M-Return", lambda: os.system("alacritty &")),
-        ("M-q", lambda: layout.close_view()),
+        ("M-q", lambda: layout.close_focused_view()),
 
         ("M-p", lambda: layout.ensure_locked(dim=True)),
         ("M-P", lambda: layout.terminate()),

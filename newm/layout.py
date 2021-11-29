@@ -408,14 +408,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
         self.state = self.state.with_workspaces(self)
 
-    def get_active_workspace(self) -> Workspace:
-        for w in self.workspaces:
-            if w.pos_x <= self.cursor_pos[0] < w.pos_x + w.width and w.pos_y <= self.cursor_pos[1] < w.pos_y + w.height:
-                return w
-
-        logger.warn("Workspaces do not cover whole area")
-        return self.workspaces[0]
-
 
     def _setup_widgets(self) -> None:
         def get_workspace_for_output(output: PyWMOutput) -> Workspace:
@@ -626,12 +618,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             res += "%2d: %s on workspace %d\n      %s\n" % (i, v, ws_handle, s)
         return res
 
-    def tiles(self) -> list[View]:
-        return [v for _, v in self._views.items() if v.is_tiled(self.state)]
-
-    def panels(self) -> list[View]:
-        return [v for _, v in self._views.items() if v.is_panel()]
-
     def find_focused_box(self) -> tuple[Workspace, float, float, float, float]:
         try:
             view = self.find_focused_view()
@@ -642,13 +628,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             return ws, view_state.i, view_state.j, view_state.w, view_state.h
         except Exception:
             return self.workspaces[0], 0, 0, 1, 1
-
-    def find_focused_view(self) -> Optional[View]:
-        for _, view in self._views.items():
-            if view.is_focused():
-                return view
-
-        return None
 
 
     def place_initial(self, workspace: Workspace, w: int, h: int) -> tuple[int, int]:
@@ -682,15 +661,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         logger.debug("Found initial placement at %d, %d", place_i, place_j)
         return place_i, place_j
 
-
-    """
-    Callbacks
-    """
-
     def on_layout_change(self) -> None:
         self._setup_workspaces()
         self._setup_widgets()
-
 
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
         # BEGIN DEBUG
@@ -830,16 +803,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         elif len(conf_power_times()) > 0 and elapsed > conf_power_times()[0]:
             self.sys_backend.idle_state(1)
 
-
-    """
-    Actions
-    """
-
-    def terminate(self) -> None:
-        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-            return state.copy(final=True), state.copy(final=True, background_opacity=0.)
-        self.animate_to(reducer, conf_blend_t(), self._terminate)
-
     def enter_overlay(self, overlay: Overlay) -> None:
         self.thread.push(overlay)
 
@@ -861,24 +824,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self.overlay = None
     # END DEBUG
 
-    def ensure_locked(self, anim: bool=True, dim: bool=False) -> None:
-        def focus_lock() -> None:
-            lock_screen = [v for v in self.panels() if v.panel == "lock"]
-            if len(lock_screen) > 0:
-                lock_screen[0].focus()
-            else:
-                logger.exception("Locking without lock panel - not a good idea")
-
-        self.auth_backend.lock()
-
-        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
-            return None if anim else state.copy(lock_perc=1., background_opacity=.5), state.copy(lock_perc=1., background_opacity=.5)
-        self.animate_to(
-            reducer,
-            conf_anim_t(), focus_lock)
-
-        if dim:
-            self.sys_backend.idle_state(1)
 
     def exit_overlay(self) -> None:
         logger.debug("Going to exit overlay...")
@@ -897,80 +842,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         logger.debug("Resetting gesture")
         self.reallow_gesture()
 
-    def move_in_stack(self, delta: int) -> None:
-        view = self.find_focused_view()
-        if view is None:
-            return
-
-        try:
-            view_state, ws_state, ws_handle = self.state.find_view(view)
-            ws = [w for w in self.workspaces if w._handle == ws_handle][0]
-            sid, idx, siz = view_state.stack_data
-            nidx = (idx+1)%siz
-            next_view = [k for k, s in ws_state._view_states.items() if s.stack_data[0] == sid and s.stack_data[1]==nidx]
-            if len(next_view) > 0 and next_view[0] != view:
-                self._views[next_view[0]].focus()
-        except:
-            logger.exception("Unexpected")
-
-    def basic_move(self, delta_i: int, delta_j: int) -> None:
-        ws = self.get_active_workspace()
-        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
-            ws_state = state.get_workspace_state(ws)
-            return None, state.replacing_workspace_state(ws, i=ws_state.i+delta_i, j=ws_state.j+delta_j)
-        self.animate_to(reducer, conf_anim_t())
-
-    def basic_scale(self, delta_s: int) -> None:
-        ws = self.get_active_workspace()
-        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
-            ws_state = state.get_workspace_state(ws)
-            return None, state.replacing_workspace_state(ws, size=max(1, ws_state.size+delta_s))
-        self.animate_to(reducer, conf_anim_t())
-
-    def move(self, delta_i: int, delta_j: int) -> None:
-        ws, i, j, w, h = self.find_focused_box()
-        ws_state = self.state.get_workspace_state(ws)
-
-        if ((i + w > ws_state.i + ws_state.size and delta_i > 0) or
-                (i < ws_state.i and delta_i < 0) or
-                (j + h > ws_state.j + ws_state.size and delta_j > 0) or
-                (j < ws_state.j and delta_j < 0)):
-
-            vf = self.find_focused_view()
-            if vf is not None:
-                self.focus_view(vf)
-                return
-
-
-        best_view = None
-        best_view_score = 1000.
-
-        for k, s in ws_state._view_states.items():
-            if not s.is_tiled:
-                continue
-
-            sc = _score(i, j, w, h, delta_i, delta_j, s.i, s.j, s.w, s.h)
-            if sc < best_view_score:
-                best_view_score = sc
-                best_view = k
-
-        if best_view is not None:
-            self.focus_view(self._views[best_view])
-
-
-    def close_view(self) -> None:
-        view = [v for _, v in self._views.items() if v.is_focused()]
-        if len(view) == 0:
-            return
-
-        view[0].close()
-
-
-    def focus_view(self, view: View) -> None:
-        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
-            view.focus()
-            return None, state.focusing_view(view)
-        self.animate_to(reducer, conf_anim_t())
 
     def destroy_view(self, view: View) -> None:
         logger.info("Destroying view %s", view)
@@ -1033,6 +904,125 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                     .constrain()),
                 conf_anim_t())
 
+    def command(self, cmd: str, arg: Optional[str]=None) -> Optional[str]:
+        logger.debug("Received command %s", cmd)
+        if cmd == "anim-lock":
+            self.ensure_locked()
+        elif cmd == "lock":
+            self.ensure_locked()
+        elif cmd == "lock-pre":
+            self.ensure_locked(anim=False)
+        elif cmd == "lock-post":
+            self._update_idle(True)
+            self.ensure_locked(anim=False)
+        elif cmd == "config":
+            return print_config()
+        elif cmd == "debug":
+            return self.debug_str()
+        elif cmd == "inhibit-idle":
+            self._idle_inhibit_user = True
+        elif cmd == "finish-inhibit-idle":
+            self._idle_inhibit_user = False
+        elif cmd == "close-launcher":
+            if isinstance(self.overlay, LauncherOverlay):
+                self.exit_overlay()
+        elif cmd == "open-virtual-output" and arg is not None:
+            self.open_virtual_output(arg)
+        elif cmd == "close-virtual-output" and arg is not None:
+            self.close_virtual_output(arg)
+        else:
+            return "Unknown command: %s" % cmd
+
+
+        return None
+
+    def launch_app(self, cmd: str) -> None:
+        """
+        Should be LauncherOverlay
+        """
+        self.exit_overlay()
+        os.system("%s &" % cmd)
+
+    """
+    API to be used for configuration
+    1. Getters
+    """
+    def get_active_workspace(self) -> Workspace:
+        for w in self.workspaces:
+            if w.pos_x <= self.cursor_pos[0] < w.pos_x + w.width and w.pos_y <= self.cursor_pos[1] < w.pos_y + w.height:
+                return w
+
+        logger.warn("Workspaces do not cover whole area")
+        return self.workspaces[0]
+
+    def tiles(self) -> list[View]:
+        return [v for _, v in self._views.items() if v.is_tiled(self.state)]
+
+    def floats(self) -> list[View]:
+        return [v for _, v in self._views.items() if v.is_float(self.state)]
+
+    def panels(self) -> list[View]:
+        return [v for _, v in self._views.items() if v.is_panel()]
+
+    def views(self) -> list[View]:
+        return [v for _, v in self._views.items() if not v.is_panel()]
+
+    def find_focused_view(self) -> Optional[View]:
+        for _, view in self._views.items():
+            if view.is_focused():
+                return view
+
+        return None
+
+    """
+    2. General purpose methods
+    """
+    def update_config(self) -> None:
+        self._setup(fallback=False)
+        self.damage()
+
+    def ensure_locked(self, anim: bool=True, dim: bool=False) -> None:
+        def focus_lock() -> None:
+            lock_screen = [v for v in self.panels() if v.panel == "lock"]
+            if len(lock_screen) > 0:
+                lock_screen[0].focus()
+            else:
+                logger.exception("Locking without lock panel - not a good idea")
+
+        self.auth_backend.lock()
+
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+            return None if anim else state.copy(lock_perc=1., background_opacity=.5), state.copy(lock_perc=1., background_opacity=.5)
+        self.animate_to(
+            reducer,
+            conf_anim_t(), focus_lock)
+
+        if dim:
+            self.sys_backend.idle_state(1)
+
+    def terminate(self) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            return state.copy(final=True), state.copy(final=True, background_opacity=0.)
+        self.animate_to(reducer, conf_blend_t(), self._terminate)
+
+    """
+    3. Change global or workspace state / move viewpoint
+    """
+    def enter_launcher_overlay(self) -> None:
+        self.enter_overlay(LauncherOverlay(self))
+
+    def toggle_overview(self, only_active_workspace: bool=False) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            if only_active_workspace:
+                overview = not state.get_workspace_state(self.get_active_workspace()).is_in_overview()
+            else:
+                overview = not state.all_in_overview()
+
+            focused: Optional[View] = None
+            if not overview:
+                focused = self.find_focused_view()
+            return None, state.with_overview_set(overview, None if not only_active_workspace else self.get_active_workspace(), focused)
+        self.animate_to(reducer, conf_anim_t())
 
     def toggle_fullscreen(self, defined_state: Optional[bool] = None) -> None:
         active_ws = self.get_active_workspace()
@@ -1074,6 +1064,87 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 return None, None
         self.animate_to(reducer, conf_anim_t())
 
+    def basic_move(self, delta_i: int, delta_j: int) -> None:
+        ws = self.get_active_workspace()
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+            ws_state = state.get_workspace_state(ws)
+            return None, state.replacing_workspace_state(ws, i=ws_state.i+delta_i, j=ws_state.j+delta_j)
+        self.animate_to(reducer, conf_anim_t())
+
+    def basic_scale(self, delta_s: int) -> None:
+        ws = self.get_active_workspace()
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+            ws_state = state.get_workspace_state(ws)
+            return None, state.replacing_workspace_state(ws, size=max(1, ws_state.size+delta_s))
+        self.animate_to(reducer, conf_anim_t())
+
+    """
+    4. Change focus
+    """
+    def focus_view(self, view: View) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+            view.focus()
+            return None, state.focusing_view(view)
+        self.animate_to(reducer, conf_anim_t())
+
+    def move_in_stack(self, delta: int) -> None:
+        view = self.find_focused_view()
+        if view is None:
+            return
+
+        try:
+            view_state, ws_state, ws_handle = self.state.find_view(view)
+            ws = [w for w in self.workspaces if w._handle == ws_handle][0]
+            sid, idx, siz = view_state.stack_data
+            nidx = (idx+1)%siz
+            next_view = [k for k, s in ws_state._view_states.items() if s.stack_data[0] == sid and s.stack_data[1]==nidx]
+            if len(next_view) > 0 and next_view[0] != view:
+                self._views[next_view[0]].focus()
+        except:
+            logger.exception("Unexpected")
+
+
+    def move(self, delta_i: int, delta_j: int) -> None:
+        ws, i, j, w, h = self.find_focused_box()
+        ws_state = self.state.get_workspace_state(ws)
+
+        if ((i + w > ws_state.i + ws_state.size and delta_i > 0) or
+                (i < ws_state.i and delta_i < 0) or
+                (j + h > ws_state.j + ws_state.size and delta_j > 0) or
+                (j < ws_state.j and delta_j < 0)):
+
+            vf = self.find_focused_view()
+            if vf is not None:
+                self.focus_view(vf)
+                return
+
+
+        best_view = None
+        best_view_score = 1000.
+
+        for k, s in ws_state._view_states.items():
+            if not s.is_tiled:
+                continue
+
+            sc = _score(i, j, w, h, delta_i, delta_j, s.i, s.j, s.w, s.h)
+            if sc < best_view_score:
+                best_view_score = sc
+                best_view = k
+
+        if best_view is not None:
+            self.focus_view(self._views[best_view])
+
+
+    """
+    5. Change focused view
+    """
+    def close_focused_view(self) -> None:
+        view = [v for _, v in self._views.items() if v.is_focused()]
+        if len(view) == 0:
+            return
+
+        view[0].close()
+
     def toggle_focused_view_floating(self) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
             view = self.find_focused_view()
@@ -1093,6 +1164,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             else:
                 return (None, state)
         self.animate_to(reducer, conf_anim_t())
+
 
     def change_focused_view_workspace(self, ds: int=1) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
@@ -1120,7 +1192,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             else:
                 return (None, state)
         self.animate_to(reducer, conf_anim_t())
-
 
     def move_focused_view(self, di: int, dj: int) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
@@ -1165,61 +1236,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 return (None, state)
         self.animate_to(reducer, conf_anim_t())
 
-    def update_config(self) -> None:
-        self._setup(fallback=False)
-        self.damage()
 
-    def toggle_overview(self, only_active_workspace: bool=False) -> None:
-        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-            if only_active_workspace:
-                overview = not state.get_workspace_state(self.get_active_workspace()).is_in_overview()
-            else:
-                overview = not state.all_in_overview()
-
-            focused: Optional[View] = None
-            if not overview:
-                focused = self.find_focused_view()
-            return None, state.with_overview_set(overview, None if not only_active_workspace else self.get_active_workspace(), focused)
-        self.animate_to(reducer, conf_anim_t())
-
-    def enter_launcher_overlay(self) -> None:
-        self.enter_overlay(LauncherOverlay(self))
-
-    def command(self, cmd: str, arg: Optional[str]=None) -> Optional[str]:
-        logger.debug("Received command %s", cmd)
-        if cmd == "anim-lock":
-            self.ensure_locked()
-        elif cmd == "lock":
-            self.ensure_locked()
-        elif cmd == "lock-pre":
-            self.ensure_locked(anim=False)
-        elif cmd == "lock-post":
-            self._update_idle(True)
-            self.ensure_locked(anim=False)
-        elif cmd == "config":
-            return print_config()
-        elif cmd == "debug":
-            return self.debug_str()
-        elif cmd == "inhibit-idle":
-            self._idle_inhibit_user = True
-        elif cmd == "finish-inhibit-idle":
-            self._idle_inhibit_user = False
-        elif cmd == "close-launcher":
-            if isinstance(self.overlay, LauncherOverlay):
-                self.exit_overlay()
-        elif cmd == "open-virtual-output" and arg is not None:
-            self.open_virtual_output(arg)
-        elif cmd == "close-virtual-output" and arg is not None:
-            self.close_virtual_output(arg)
-        else:
-            return "Unknown command: %s" % cmd
-
-
-        return None
-
-    def launch_app(self, cmd: str) -> None:
-        """
-        Should be LauncherOverlay
-        """
-        self.exit_overlay()
-        os.system("%s &" % cmd)
+    """
+    6. Legacy
+    """
+    def close_view(self) -> None:
+        self.close_focused_view()
