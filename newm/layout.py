@@ -1187,8 +1187,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         if best_view is not None:
             self.focus_view(self._views[best_view])
 
-    def move_next_view(self, dv: int=1) -> None:
-        views = self.views(self.get_active_workspace())
+    def move_next_view(self, dv: int=1, active_workspace: bool=True) -> None:
+        views = self.views(self.get_active_workspace() if active_workspace else None)
         focused_view = self.find_focused_view()
 
         if focused_view is not None and focused_view in views:
@@ -1197,7 +1197,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self.focus_view(next_view)
         elif len(views) > 0:
             self.focus_view(views[0])
-
 
     def move_workspace(self, ds: int=1) -> None:
         ws = self.get_active_workspace()
