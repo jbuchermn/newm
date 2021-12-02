@@ -82,6 +82,7 @@ conf_power_times = configured_value('power_times', [120, 300, 600])
 conf_suspend_command = configured_value('suspend_command', "systemctl suspend")
 
 conf_on_startup = configured_value('on_startup', lambda: None)
+conf_lock_on_wakeup = configured_value('lock_on_wakeup', True)
 
 
 def _score(i1: float, j1: float, w1: float, h1: float,
@@ -833,6 +834,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self.ensure_locked()
         elif len(conf_power_times()) > 0 and elapsed > conf_power_times()[0]:
             self.sys_backend.idle_state(1)
+
+    def on_wakeup(self) -> None:
+        if conf_lock_on_wakeup():
+            self.ensure_locked()
 
     def enter_overlay(self, overlay: Overlay) -> None:
         self.thread.push(overlay)
