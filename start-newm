@@ -8,8 +8,6 @@ else
     DIR="$DIR/.cache"
 fi;
 
-echo "Directory is: $DIR"
-
 mkdir -p $DIR
 cd $DIR
 if [ -e newm_log_bu1 ]
@@ -20,4 +18,9 @@ if [ -e newm_log ]
 fi
 cd $HOME
 
-exec python -u -c "from newm import run; run()" > $DIR/newm_log 2>&1
+debug="False"
+if [ "$1" = "-d" ]; then
+    debug="True"
+fi
+
+exec python -u -c "from newm import run; run($debug)" > $DIR/newm_log 2>&1

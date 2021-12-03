@@ -6,11 +6,11 @@ from .layout import Layout
 
 logger = logging.getLogger(__name__)
 
-def run() -> None:
+def run(debug: bool=False) -> None:
     handler = logging.StreamHandler()
     formatter = logging.Formatter('[%(levelname)s] %(filename)s:%(lineno)s %(asctime)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-    handler.setLevel(logging.DEBUG)
+    handler.setLevel(logging.DEBUG if debug else logging.INFO)
     handler.setFormatter(formatter)
 
     for l in ["newm", "pywm"]:
@@ -18,7 +18,7 @@ def run() -> None:
         log.setLevel(logging.DEBUG)
         log.addHandler(handler)
 
-    wm = Layout()
+    wm = Layout(debug=debug)
 
     try:
         wm.run()

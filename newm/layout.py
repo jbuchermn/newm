@@ -322,10 +322,10 @@ class Workspace:
 
 
 class Layout(PyWM[View], Animate[PyWMDownstreamState]):
-    def __init__(self) -> None:
+    def __init__(self, debug: bool=False) -> None:
         load_config()
 
-        PyWM.__init__(self, View, **conf_pywm(), outputs=conf_outputs())
+        PyWM.__init__(self, View, **conf_pywm(), outputs=conf_outputs(), debug=debug)
         Animate.__init__(self)
 
         self.mod = conf_mod()

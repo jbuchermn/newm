@@ -15,6 +15,7 @@
 - [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 - [ ] Remove any legacy config options
 - [ ] Document new config options
+- [ ] Document start-newm -d
 - [ ] Document functions on layout to be called in keybindings
 - [ ] Better config, see #36
 
