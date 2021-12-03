@@ -3,7 +3,7 @@
 * Current (v0.2)
 ** Bugs / Technical debt
 *** TODO Bug: Background final jumps
-*** WAIT Bug: Fullscreen video opens stacked
+*** WAIT Bug: Fullscreen video opens stacked (only in second window)
 *** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
 
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
