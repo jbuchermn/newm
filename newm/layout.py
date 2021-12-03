@@ -938,7 +938,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                     .constrain()),
                 conf_anim_t())
 
-
     def focus_hint(self, view: View) -> None:
         try:
             _, __, ws_handle = self.state.find_view(view)
@@ -951,7 +950,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         except Exception:
             logger.warn("Missing state: %s" % self)
 
-    def command(self, cmd: str, arg: Optional[str] = None) -> Optional[str]:
+    def command(self, cmd: str, arg: Optional[str]=None) -> Optional[str]:
         generic_msg = f'command: {cmd}'
         logger.debug("Received " + generic_msg)
 
@@ -959,23 +958,21 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self._idle_inhibit_user = status
 
         cmd_options = {
-            "anim-lock": self.ensure_locked,
             "lock": self.ensure_locked,
             "lock-pre": lambda: self.ensure_locked(anim=False),
             "lock-post": lambda: [
                 self._update_idle(True),
                 self.ensure_locked(anim=False)
             ],
-            "close-launcher": lambda: self.exit_overlay() if isinstance(self.overlay, LauncherOverlay) else False,
-            "open-virtual-output": lambda: self.open_virtual_output(arg) if arg is not None else False,
-            "close-virtual-output": lambda: self.close_virtual_output(arg) if arg is not None else False,
             "config": print_config,
             "debug": self.debug_str,
             "inhibit-idle": lambda: toggle_inhibit_idle(True),
-            "finish-inhibit-idle": lambda: toggle_inhibit_idle(False)
+            "finish-inhibit-idle": lambda: toggle_inhibit_idle(False),
+            "close-launcher": lambda: self.exit_overlay() if isinstance(self.overlay, LauncherOverlay) else False,
+            "open-virtual-output": lambda: self.open_virtual_output(arg) if arg is not None else False,
+            "close-virtual-output": lambda: self.close_virtual_output(arg) if arg is not None else False,
         }
-
-        return cmd_options.get(cmd, "Unknown " + generic_msg)
+        return cmd_options.get(cmd, lambda: "Unknown " + generic_msg)()
 
     def launch_app(self, cmd: str) -> None:
         """
