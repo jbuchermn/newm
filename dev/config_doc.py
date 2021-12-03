@@ -7,7 +7,9 @@ r_error = re.compile(r'.*configured_value\(\s*$')
 
 keys = []
 
-for file in glob.iglob(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "**", "*.py"), recursive=True):
+for file in glob.iglob(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "newm", "**", "*.py"), recursive=True):
+    if '__pycache__' in file:
+        continue
     for line in open(file, 'r'):
         m = r.match(line)
         if m is not None:

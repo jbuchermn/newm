@@ -3,27 +3,23 @@
 * Current (v0.2)
 ** Bugs / Technical debt
 *** TODO Bug: Background final jumps
-*** WAIT Bug: Fullscreen video opens stacked
+*** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
+*** WAIT Bug: Occasional random locks
 *** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
+*** DONE Bug: Place 2x2 tiles, one small floating window - extent is distorted to the right
+*** DONE Bug: Overwiew, move window wildly out of extent -> background bug
+*** WAIT Bug: Occasiaonally orphan states do appear (last time GIMP-2.99)
 
-** TODO Basic demo of layer shell top bar
-** TODO Background: Configurable per output background, no_anim flag
-** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
-** DONE Remove need to use systemd-hooks to lock on hibernate (e.g. timer wrt last frame)
-
-** Release
-- [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell
-- [ ] TODO comments
-- [ ] New background
-- [ ] Document newm-cmd open/close-virtual-output - link to newm-sidecar
-- [ ] Remove any legacy config options
-- [ ] Document new config options
-- [ ] Document functions on layout to be called in keybindings
-- [ ] Better config, see #36
+** STRT MoveResizeOverlay TODO comment
+** STRT README TODO comments
+** TODO TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell / Add newm as greeter
+** TODO New background
+** TODO New video + video on newm-sidecar
 
 
 * v0.3
 ** Layer shell - Exclusive zones and keyboard interactivity
+** Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
 ** Window swallowing
 ** Improved panel
 - Bars as panels not as widgets

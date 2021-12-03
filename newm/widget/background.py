@@ -17,9 +17,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+conf_outputs = configured_value('outputs', cast(list[dict[str, Any]], []))
 conf_time_scale = configured_value('background.time_scale', 0.15)
-conf_path = configured_value('background.path', cast(Optional[str], None))
-conf_path_legacy = configured_value('wallpaper', cast(Optional[str], None))
+conf_path_default = configured_value('background.path', cast(Optional[str], None))
+conf_anim_default = configured_value('background.anim', True)
 
 class BackgroundState:
     def __init__(self, layout_state: LayoutState, ws_state: WorkspaceState, wallpaper_size: tuple[int, int], output_size: tuple[float, float], output_scale: float) -> None:
@@ -113,23 +114,23 @@ class BackgroundState:
             w = new_w
         # 6. x, y, w, h are possibly shrinked to account for aspect ratio
 
-        # If the algorithm works properly this is not be necessary
-        # scale_fac = 1.
-        # if w > width:
-        #     scale_fac = width / w
-        # if h > height:
-        #     scale_fac = min(scale_fac, height / h)
-        # w, h = scale_fac*w, scale_fac*h
-        #
-        #
-        # if x < 0:
-        #     x = 0
-        # if y < 0:
-        #     y = 0
-        # if x + w > width:
-        #     x = width - w
-        # if y + h > height:
-        #     y = height - h
+        # Safety net - should not be necessary
+        scale_fac = 1.
+        if w > width:
+            scale_fac = width / w
+        if h > height:
+            scale_fac = min(scale_fac, height / h)
+        w, h = scale_fac*w, scale_fac*h
+
+
+        if x < 0:
+            x = 0
+        if y < 0:
+            y = 0
+        if x + w > width:
+            x = width - w
+        if y + h > height:
+            y = height - h
 
         # if x < 0 or x + w > width or y < 0 or y + h > height:
         #     logger.debug("Background placement issue x y w h = %f %f %f %f (%f %f)" % (x, y, w, h, width, height))
@@ -182,25 +183,39 @@ class BackgroundState:
 
 class Background(PyWMBackgroundWidget):
     def __init__(self, wm: Layout, output: PyWMOutput, workspace: Workspace):
-        path = conf_path()
-        if path is None:
-            path = conf_path_legacy()
-        PyWMBackgroundWidget.__init__(self, wm, output, path)
 
         self._output: PyWMOutput = output
         self._workspace: Workspace = workspace
+
+        self._prevent_anim = not conf_anim_default()
+        if self._workspace.prevent_anim:
+            self._prevent_anim = True
+
+        path = None
+        for o in conf_outputs():
+            if o['name'] == output.name:
+                if 'background' in o:
+                    if 'path' in o['background']:
+                        path = o['background']['path']
+                    if 'anim' in o['background'] and not o['background']['anim']:
+                        self._prevent_anim = True
+
+        if path is None:
+            path = conf_path_default()
+
+        PyWMBackgroundWidget.__init__(self, wm, output, path)
 
         self._current_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
         self._target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
         self._last_frame: float = time.time()
         self._anim_caught: Optional[float] = None
 
-        if self._workspace.prevent_anim:
+        if self._prevent_anim:
             self._current_state.set_max((self.width, self.height), (self._output.width, self._output.height))
 
 
     def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
-        if self._workspace.prevent_anim:
+        if self._prevent_anim:
             return
 
         self._anim_caught = time.time() + dt
@@ -210,7 +225,7 @@ class Background(PyWMBackgroundWidget):
         self.damage()
 
     def process(self) -> PyWMWidgetDownstreamState:
-        if not self._workspace.prevent_anim:
+        if not self._prevent_anim:
             # State handling
             t = time.time()
 

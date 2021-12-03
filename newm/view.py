@@ -58,6 +58,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         self._initial_state: Optional[PyWMViewDownstreamState] = None
 
         self.panel: Optional[str] = None
+        self.layer_panel: Optional[str] = None
 
         self._debug_scaling = conf_debug_scaling()
 
@@ -235,10 +236,17 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
 
         target_width, target_height = size_constraints[1:3]
+
         if target_width == 0:
             target_width = width
         if target_height == 0:
             target_height = height
+
+        if anchored_top and ((anchored_left and anchored_right) or target_width == width) and not anchored_bottom and target_height < 0.2*output.height:
+            self.layer_panel = "top_bar"
+        elif anchored_bottom and ((anchored_left and anchored_right) or target_width == width) and not anchored_top and target_height < 0.2*output.height:
+            self.layer_panel = "bottom_bar"
+
         return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
 
 
@@ -273,6 +281,17 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if result.fixed_output is not None:
             result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
+
+            if self.layer_panel == "top_bar":
+                x, y, w, h = 0., 0., 0., 0. # mypy
+                x, y, w, h = result.box
+                y -= h * (1. - ws_state.top_bar_dy)
+                result.box = x, y, w, h
+            elif self.layer_panel == "bottom_bar":
+                x, y, w, h = 0., 0., 0., 0. # mypy
+                x, y, w, h = result.box
+                y += h * (1. - ws_state.bottom_bar_dy)
+                result.box = x, y, w, h
 
             if self_state.layer_initial:
                 result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
@@ -334,6 +353,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.floating = True
         result.accepts_input = True
         result.corner_radius = conf_corner_radius() if self.parent is None else 0
+
+        result.corner_radius /= max(1, ws_state.size / 2.)
 
         # z_index based on hierarchy
         depth = 0
@@ -504,10 +525,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         w *= ws.width / ws_state.size
         h *= ws.height / ws_state.size
 
-        padding = float(conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding())
-
-        padding_scaled = padding / max(1, ws_state.size / 2.)
         result.corner_radius /= max(1, ws_state.size / 2.)
+
+        padding = float(conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding())
+        padding_scaled = padding / max(1, ws_state.size / 2.)
+
+        padding_for_size = padding_scaled
+        if ws_state.size_origin is not None:
+            padding_for_size = padding / max(1, ws_state.size_origin / 2.)
 
         if w != 0 and h != 0:
             x += padding_scaled
@@ -545,12 +570,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         w_for_size *= ws.width / size
         h_for_size *= ws.height / size
 
-        if ws_state.size_origin is not None:
-            w_for_size -= 2*padding
-            h_for_size -= 2*padding
-        else:
-            w_for_size -= 2*padding_scaled
-            h_for_size -= 2*padding_scaled
+        w_for_size -= 2*padding_for_size
+        h_for_size -= 2*padding_for_size
 
         width = round(w_for_size)
         height = round(h_for_size)
@@ -733,7 +754,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             logger.debug("View %s changed kind: %d -> %d", kind, self._initial_kind)
             return self._initial_state
 
-        if up_state.size != self._initial_state.size and self._initial_state.size[0] > 0 and self._initial_state.size[1] > 0:
+        if up_state.size != self._initial_state.size and self._initial_state.size[0] > 0 and self._initial_state.size[1] > 0 and up_state.size[0] > 0 and up_state.size[1] > 0:
             if time.time() - self._initial_time < 0.3:
                 return self._initial_state
             else:
