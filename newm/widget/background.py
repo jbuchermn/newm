@@ -114,23 +114,23 @@ class BackgroundState:
             w = new_w
         # 6. x, y, w, h are possibly shrinked to account for aspect ratio
 
-        # If the algorithm works properly this is not be necessary
-        # scale_fac = 1.
-        # if w > width:
-        #     scale_fac = width / w
-        # if h > height:
-        #     scale_fac = min(scale_fac, height / h)
-        # w, h = scale_fac*w, scale_fac*h
-        #
-        #
-        # if x < 0:
-        #     x = 0
-        # if y < 0:
-        #     y = 0
-        # if x + w > width:
-        #     x = width - w
-        # if y + h > height:
-        #     y = height - h
+        # Safety net - should not be necessary
+        scale_fac = 1.
+        if w > width:
+            scale_fac = width / w
+        if h > height:
+            scale_fac = min(scale_fac, height / h)
+        w, h = scale_fac*w, scale_fac*h
+
+
+        if x < 0:
+            x = 0
+        if y < 0:
+            y = 0
+        if x + w > width:
+            x = width - w
+        if y + h > height:
+            y = height - h
 
         # if x < 0 or x + w > width or y < 0 or y + h > height:
         #     logger.debug("Background placement issue x y w h = %f %f %f %f (%f %f)" % (x, y, w, h, width, height))
