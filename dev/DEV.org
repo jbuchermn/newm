@@ -5,11 +5,11 @@
 *** TODO Bug: Background final jumps
 *** WAIT Bug: Fullscreen video opens stacked
 *** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
+*** DONE Bug: size=3 going to overview means resize ?!
 
-** TODO Basic demo of layer shell top bar
-** TODO Background: Configurable per output background, no_anim flag
+** STRT Basic demo of layer shell top bar
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
-** DONE Remove need to use systemd-hooks to lock on hibernate (e.g. timer wrt last frame)
+** TODO Background: Configurable per output background, no_anim flag
 
 ** Release
 - [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell
@@ -24,6 +24,7 @@
 
 * v0.3
 ** Layer shell - Exclusive zones and keyboard interactivity
+** Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
 ** Window swallowing
 ** Improved panel
 - Bars as panels not as widgets

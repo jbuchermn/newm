@@ -504,10 +504,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         w *= ws.width / ws_state.size
         h *= ws.height / ws_state.size
 
-        padding = float(conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding())
-
-        padding_scaled = padding / max(1, ws_state.size / 2.)
         result.corner_radius /= max(1, ws_state.size / 2.)
+
+        padding = float(conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding())
+        padding_scaled = padding / max(1, ws_state.size / 2.)
+
+        padding_for_size = padding_scaled
+        if ws_state.size_origin is not None:
+            padding_for_size = padding / max(1, ws_state.size_origin / 2.)
 
         if w != 0 and h != 0:
             x += padding_scaled
@@ -545,12 +549,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         w_for_size *= ws.width / size
         h_for_size *= ws.height / size
 
-        if ws_state.size_origin is not None:
-            w_for_size -= 2*padding
-            h_for_size -= 2*padding
-        else:
-            w_for_size -= 2*padding_scaled
-            h_for_size -= 2*padding_scaled
+        w_for_size -= 2*padding_for_size
+        h_for_size -= 2*padding_for_size
 
         width = round(w_for_size)
         height = round(h_for_size)
