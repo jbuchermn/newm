@@ -9,18 +9,12 @@
 
 ** STRT MoveResizeOverlay TODO comment
 ** STRT Update documentation
-- [ ] Document new config options
-- [X] Document start-newm -d
 - [ ] Document functions on layout to be called in keybindings
-- [ ] Document and remove any legacy config options
-    - wallpaper
-
-- [X] Document newm-cmd open/close-virtual-output - link to newm-sidecar
 - [ ] Document panels as deprecated
 - [ ] TODO comments
 ** TODO TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell / Add newm as greeter
 ** TODO New background
-** TODO New video and update changelog
+** TODO New video
 
 
 * v0.3

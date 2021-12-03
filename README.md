@@ -187,7 +187,7 @@ Some basic appearence and animation related configuration:
 
 | Configuration key               | Default value | Description                                                                                                                                                                |
 |---------------------------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `background.path`               |               | String: Path to background image                                                                                                                                                   |
+| `background.path`               |               | String: Path to background image (replaces obsolete `wallpaper`)                                                                                                                                                  |
 | `background.time_scale`         | `0.15`        | Number: Time scale of background movement                                                                                                                                          |
 | `background.anim`               | `True`        | Bool: Prevent (`False`) background movement                                                                                                                                      |
 | `blend_time`                    | `1.`          | Number: Time in seconds to blend in and out (at startup and shutdown)                                                                                                              |
@@ -202,18 +202,25 @@ Some basic appearence and animation related configuration:
 
 The most important configuration options with regard to behaviour are `mod` and `key_bindings`; see below for them and some more detailed ones.
 
-| Configuration key                       | Default value       | Description                                                                                                                                                     |
-|-----------------------------------------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `mod`                                   | `PYWM_MOD_LOGO`     | Modifier key, either `PYWM_MOD_ALT` or `PYWM_MOD_LOGO`                                                                                                          |
-| `key_bindings`                          | `lambda layout: []` | Key bindings as array, see `default_config.py`, `layout.py` and [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py)) |
-| `view.send_fullscreen`                  | `True`              | Let clients know when they are set to fullscreen (which leads to them adjusting, e.g. YouTube fullscreen)                                                       |
-| `power_times`                           | `[120, 300, 600]`   | Times in seconds after which to dim the screen, turn it off and hibernate (in seconds)                                                                          |
-| `sys_backend_endpoints`                 | `[]`                | Endpoint functions for things like audio, backlight, ... (see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py)))  |
-| `greeter_user`                          | `'greeter'`         | Relevant if newm is run as login display manager, username used for `greetd`                                                                                    |
-| `on_startup`                            | `lambda: None`      | Function called when the compositor has started, use to run certain things using `os.system("... &")`                                                           |
+| Configuration key        | Default value         | Description                                                                                                                                                                                                                                    |
+|--------------------------|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `mod`                    | `PYWM_MOD_LOGO`       | Modifier key, either `PYWM_MOD_ALT` or `PYWM_MOD_LOGO`                                                                                                                                                                                         |
+| `key_bindings`           | `lambda layout: []`   | Key bindings as array, see `default_config.py`, `layout.py` and [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py))                                                                                |
+| `view.send_fullscreen`   | `True`                | Let clients know when they are set to fullscreen (which leads to them adjusting, e.g. YouTube fullscreen)                                                                                                                                      |
+| `view.should_float`      | `lambda view: None`   | If a function is provided, it is called on every new view to determine if the view should float. The function can return a boolean (e.g. `True`) plus additionally one or two hints for size and position (e.g. `True, (500, 400), (0.5,0.5)`) |
+| `view.floating_min_size` | `True`                | Try to open floating views in their minimal size instead of their preferred one. This doesn't always work as not all view report minimal size                                                                                                  |
+| `view.border_ws_switch`  | `10.`                 | Amount of pixels a view, which is currently being moved, has to reach into a new output to be switched over to this new output                                                                                                                 |
+| `power_times`            | `[120, 300, 600]`     | Times in seconds after which to dim the screen, turn it off and hibernate (in seconds)                                                                                                                                                         |
+| `lock_on_wakeup`         | `True`                | Lock screen after wake up is detected (does not work as well as locking on systemd sleep)                                                                                                                                                      |
+| `suspend_command`        | `"systemctl suspend"` | Command to use to hibernate (see `power_times`)                                                                                                                                                                                                |
+| `sys_backend_endpoints`  | `[]`                  | Endpoint functions for things like audio, backlight, ... (see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py)))                                                                                 |
+| `greeter_user`           | `'greeter'`           | Relevant if newm is run as login display manager, username used for `greetd`                                                                                                                                                                   |
+| `on_startup`             | `lambda: None`        | Function called when the compositor has started, use to run certain things using `os.system("... &")`                                                                                                                                          |
+| `view.debug_scaling`     | `False`               | Debug sclaing of views - if you think, views look blurry, this outputs potential issues where logical size and size on the display do not match                                                                                                |
 
 Gestures are configured by a lot of numeric parameters; these are structured by the different gesture kinds (swipe to move, swipe to zoom, move, resize)
-as well as some general ones (`gestures` and `grid`). The best way is to experiment with these and hot-reload the configuration (by default `M-C`).
+as well as some general ones (`gestures` and `grid`). The best way is to experiment with these and hot-reload the configuration (by default `M-C`). Also `grid.py` acts as a 
+plot script when (`grid.debug`) is enabled.
 
 | Configuration key              | Default value |
 |--------------------------------|---------------|
@@ -221,6 +228,7 @@ as well as some general ones (`gestures` and `grid`). The best way is to experim
 | `gestures.lp_inertia`          | `.8`          |
 | `gestures.two_finger_min_dist` | `.1`          |
 | `gestures.validate_threshold`  | `.02`         |
+| `grid.debug`                   | `False`       |
 | `grid.min_dist`                | `.05`         |
 | `grid.throw_ps`                | `[1, 5, 15]`  |
 | `grid.time_scale`              | `.3`          |
@@ -247,13 +255,14 @@ TODO - more details
 
 The top and bottom bars are visible during the zoom-out ("Overview") mode. Configure font and texts (for an example see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py))
 
-| Configuration key  | Default value                     | Description                                       |
-|--------------------|-----------------------------------|---------------------------------------------------|
-| `bar.font`         | `'Source Code Pro for Powerline'` | Font name used in both bars                       |
-| `bar.font_size`    | `12`                              | Font size used in both bars                       |
-| `bar.height`       | `20`                              | Pixel height of both bars                         |
-| `bar.top_texts`    | `lambda: ["1", "2", "3"]`         | Function called each time top bar is rendered     |
-| `bar.bottom_texts` | `lambda: ["4", "5", "6"]`         | Function called each time bottom bar is rendererd |
+| Configuration key  | Default value                     | Description                                            |
+|--------------------|-----------------------------------|--------------------------------------------------------|
+| `bar.enabled`      | `True`                            | Show newm bars (set to `False` in order to use waybar) |
+| `bar.font`         | `'Source Code Pro for Powerline'` | Font name used in both bars                            |
+| `bar.font_size`    | `12`                              | Font size used in both bars                            |
+| `bar.height`       | `20`                              | Pixel height of both bars                              |
+| `bar.top_texts`    | `lambda: ["1", "2", "3"]`         | Function called each time top bar is rendered          |
+| `bar.bottom_texts` | `lambda: ["4", "5", "6"]`         | Function called each time bottom bar is rendererd      |
 
 #### Config: Panels
 
