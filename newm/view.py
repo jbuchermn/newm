@@ -242,8 +242,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if target_height == 0:
             target_height = height
 
-        if anchored_top and ((anchored_left and anchored_right) or target_width == width):
+        if anchored_top and ((anchored_left and anchored_right) or target_width == width) and not anchored_bottom and target_height < 0.2*output.height:
             self.layer_panel = "top_bar"
+        elif anchored_bottom and ((anchored_left and anchored_right) or target_width == width) and not anchored_top and target_height < 0.2*output.height:
+            self.layer_panel = "bottom_bar"
 
         return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
 
@@ -284,6 +286,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 x, y, w, h = 0., 0., 0., 0. # mypy
                 x, y, w, h = result.box
                 y -= h * (1. - ws_state.top_bar_dy)
+                result.box = x, y, w, h
+            elif self.layer_panel == "bottom_bar":
+                x, y, w, h = 0., 0., 0., 0. # mypy
+                x, y, w, h = result.box
+                y += h * (1. - ws_state.bottom_bar_dy)
                 result.box = x, y, w, h
 
             if self_state.layer_initial:
@@ -346,6 +353,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.floating = True
         result.accepts_input = True
         result.corner_radius = conf_corner_radius() if self.parent is None else 0
+
+        result.corner_radius /= max(1, ws_state.size / 2.)
 
         # z_index based on hierarchy
         depth = 0

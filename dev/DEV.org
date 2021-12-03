@@ -5,11 +5,8 @@
 *** TODO Bug: Background final jumps
 *** WAIT Bug: Fullscreen video opens stacked
 *** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
-*** DONE Bug: size=3 going to overview means resize ?!
 
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
-** DONE Basic demo of layer shell top bar
-** DONE Background: Configurable per output background, no_anim flag
 
 ** Release
 - [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell
