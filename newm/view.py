@@ -58,6 +58,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         self._initial_state: Optional[PyWMViewDownstreamState] = None
 
         self.panel: Optional[str] = None
+        self.layer_panel: Optional[str] = None
 
         self._debug_scaling = conf_debug_scaling()
 
@@ -235,10 +236,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
 
         target_width, target_height = size_constraints[1:3]
+
         if target_width == 0:
             target_width = width
         if target_height == 0:
             target_height = height
+
+        if anchored_top and ((anchored_left and anchored_right) or target_width == width):
+            self.layer_panel = "top_bar"
+
         return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
 
 
@@ -273,6 +279,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if result.fixed_output is not None:
             result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
+
+            if self.layer_panel == "top_bar":
+                x, y, w, h = 0., 0., 0., 0. # mypy
+                x, y, w, h = result.box
+                y -= h * (1. - ws_state.top_bar_dy)
+                result.box = x, y, w, h
 
             if self_state.layer_initial:
                 result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0

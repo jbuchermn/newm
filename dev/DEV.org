@@ -7,7 +7,7 @@
 *** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
 *** DONE Bug: size=3 going to overview means resize ?!
 
-** STRT Basic demo of layer shell top bar
+** DONE Basic demo of layer shell top bar
 ** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
 ** TODO Background: Configurable per output background, no_anim flag
 
