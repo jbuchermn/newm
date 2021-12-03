@@ -6,7 +6,7 @@
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasional random locks
 *** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
-*** TODO Bug: Place 2x2 tiles, one small floating window - extent is distorted to the right
+*** DONE Bug: Place 2x2 tiles, one small floating window - extent is distorted to the right
 *** DONE Bug: Overwiew, move window wildly out of extent -> background bug
 *** WAIT Bug: Occasiaonally orphan states do appear (last time GIMP-2.99)
 
