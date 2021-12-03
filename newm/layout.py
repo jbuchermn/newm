@@ -189,6 +189,7 @@ class Animation:
     def __str__(self) -> str:
         return "%s -> %s (%f%s)" % (self._initial_state, self._final_state, self.duration, ", then" if self.then is not None else "")
 
+
 class LayoutThread(Thread):
     def __init__(self, layout: Layout) -> None:
         super().__init__()
@@ -221,7 +222,6 @@ class LayoutThread(Thread):
             else:
                 logger.debug("Queuing animation")
                 self._pending += [nxt]
-
 
     def on_overlay_destroyed(self) -> None:
         logger.debug("Thread: Finishing overlay...")
@@ -308,7 +308,6 @@ class Workspace:
             return 0
 
         return w*h / (self.width * self.height)
-
 
     def __str__(self) -> str:
         return "Workspace[%d] at %d, %d --> %d, %d" % (
@@ -447,7 +446,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                     return w
             logger.warn("Workspaces do not cover whole area")
             return self.workspaces[0]
-
 
         for b in self.bottom_bars:
             b.stop()
@@ -953,9 +951,13 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         except Exception:
             logger.warn("Missing state: %s" % self)
 
+    def command(self, cmd: str, arg: Optional[str] = None) -> Optional[str]:
+        generic_msg = f'command: {cmd}'
+        logger.debug("Received " + generic_msg)
 
-    def command(self, cmd: str, arg: Optional[str]=None) -> Optional[str]:
-        logger.debug("Received command %s", cmd)
+        def toggle_inhibit_idle(status: bool):
+            self._idle_inhibit_user = status
+
         cmd_options = {
             "anim-lock": self.ensure_locked,
             "lock": self.ensure_locked,
@@ -966,24 +968,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             ],
             "close-launcher": lambda: self.exit_overlay() if isinstance(self.overlay, LauncherOverlay) else False,
             "open-virtual-output": lambda: self.open_virtual_output(arg) if arg is not None else False,
-            "close-virtual-output": lambda: self.close_virtual_output(arg) if arg is not None else False
-        }
-
-        cmd_returned_options = {
+            "close-virtual-output": lambda: self.close_virtual_output(arg) if arg is not None else False,
             "config": print_config,
-            "debug": self.debug_str
+            "debug": self.debug_str,
+            "inhibit-idle": lambda: toggle_inhibit_idle(True),
+            "finish-inhibit-idle": lambda: toggle_inhibit_idle(False)
         }
 
-        if cmd in cmd_options:
-            cmd_options[cmd]()
-        elif cmd in cmd_returned_options:
-            return cmd_returned_options[cmd]()
-        elif cmd == "inhibit-idle":
-            self._idle_inhibit_user = True
-        elif cmd == "finish-inhibit-idle":
-            self._idle_inhibit_user = False
-        else:
-            return f"Unknown command: {cmd}"
+        return cmd_options.get(cmd, "Unknown " + generic_msg)
 
     def launch_app(self, cmd: str) -> None:
         """
