@@ -961,9 +961,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
     def command(self, cmd: str, arg: Optional[str]=None) -> Optional[str]:
         logger.debug("Received command %s", cmd)
-        if cmd == "anim-lock":
-            self.ensure_locked()
-        elif cmd == "lock":
+        if cmd == "lock":
             self.ensure_locked()
         elif cmd == "lock-pre":
             self.ensure_locked(anim=False)

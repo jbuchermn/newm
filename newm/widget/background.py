@@ -21,7 +21,6 @@ conf_outputs = configured_value('outputs', cast(list[dict[str, Any]], []))
 conf_time_scale = configured_value('background.time_scale', 0.15)
 conf_path_default = configured_value('background.path', cast(Optional[str], None))
 conf_anim_default = configured_value('background.anim', True)
-conf_path_legacy = configured_value('wallpaper', cast(Optional[str], None))
 
 class BackgroundState:
     def __init__(self, layout_state: LayoutState, ws_state: WorkspaceState, wallpaper_size: tuple[int, int], output_size: tuple[float, float], output_scale: float) -> None:
@@ -203,8 +202,6 @@ class Background(PyWMBackgroundWidget):
 
         if path is None:
             path = conf_path_default()
-        if path is None:
-            path = conf_path_legacy()
 
         PyWMBackgroundWidget.__init__(self, wm, output, path)
 

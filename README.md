@@ -29,6 +29,19 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 - `Logo-f`: Toggle a fullscreen view of the focused window (possibly resizing it)
 - ...
 
+## newm v0.2
+
+TODO v0.2 is almost ready to be merged into master.
+
+Changes include
+- Support for multi-monitor setups
+- Basic support for layer shell (waybar, rofi, ...)
+- Many small improvements concerning window behaviour
+- Virtual output support (see [newm-sidecar](https://github.com/jbuchermn/newm-sidecar))
+- More configuration possibilities, as e.g. defining which windows should float
+- Improved background
+- Possibility to switch windows between tiled and floating
+
 
 ## Installing
 
@@ -59,8 +72,10 @@ Installing newm this way means it cannot be used as a login manager, as it can o
 Start newm using
 
 ``` sh
-start-newm
+start-newm -d
 ```
+
+`-d` is the debug flag and gives more output to `$HOME/.cache/newm_log`.
 
 Open a terminal window (default `alacritty`) using `Logo+Enter` (default config). Check if the touchpad works by pressing `Logo` and resizing the window using two-finger touch. If the touchpad does not work (and you intend to use it), check that your user has access by either command:
 
@@ -96,9 +111,14 @@ from pywm import (
 )
 
 mod = PYWM_MOD_ALT
-wallpaper = os.environ['HOME'] + '/wallpaper.jpg'
 
-output_scale = 2.0
+background = {
+    'path': os.environ['HOME'] + '/wallpaper.jpg'
+}
+
+outputs = [
+    { 'name': 'eDP-1', 'scale': 2. }
+]
 
 def on_startup():
     os.system("alacritty &")
@@ -127,25 +147,39 @@ The configuration can be dynamically updated (apart from a couple of fixed keys)
 
 These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and configure basic behaviour needed c-side.
 
-| Configuration key                    | Default value | Description                                                                                                                                                                                                         |
-|--------------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `output_scale`                       | `1.0`         | Number: HiDPI scale of output. Passed to pywm; therefore not subject to dynamic reloading.                                                                                                                          |
-| `pywm`                               |               | Dictionary: [pywm](https://github.com/jbuchermn/pywm) config, see possible keys below (is not updated on `Layout.update_config`)                                                                                    |
-| `pywm.round_scale`                   | `1.0`         | Number: Round positions and widths finer than logical pixels on HiDPI screens (i.e. if set equal to `output_scale`, windows will be positioned according to actual pixels, if set to 1 according to logical pixels) |
-| `pywm.xkb_model`                     |               | String: Keyboard model (`xkb`)                                                                                                                                                                                      |
-| `pywm.xkb_layout`                    | `us`          | String: Keyboard layout (`xkb`)                                                                                                                                                                                     |
-| `pywm.xkb_options`                   |               | String: Keyboard options (`xkb`)                                                                                                                                                                                    |
-| `pywm.output_name`                   | `""`          | String: If not "", pick the output (remember, only one supported at the moment) based on its name                                                                                                                   |
-| `pywm.output_width`                  | `0`           | Integer: Output configuration, width (or zero to use preferred)                                                                                                                                                     |
-| `pywm.output_height`                 | `0`           | Integer: Output configuration, height (or zero to use preferred)                                                                                                                                                    |
-| `pywm.output_mHz`                    | `0`           | Integer: Output configuration, refresh rate in milli Hertz (or zero to use preferred)                                                                                                                               |
-| `pywm.enable_xwayland`               | `False `      | Boolean: Start `XWayland`                                                                                                                                                                                           |
-| `pywm.enable_output_manager`         | `True`        | Boolean: Enable the wayland protocol `xdg_output_manager_v1`                                                                                                                                                        |
-| `pywm.xcursor_theme`                 |               | String: `XCursor` theme                                                                                                                                                                                             |
-| `pywm.xcursor_size`                  | `24`          | Integer: `XCursor` size                                                                                                                                                                                             |
-| `pywm.focus_follows_mouse`           | `True`        | Boolean: `Focus` window upon mouse enter                                                                                                                                                                            |
-| `pywm.contstrain_popups_to_toplevel` | `False`       | Boolean: Try to keep popups contrained within their window                                                                                                                                                          |
-| `pywm.encourage_csd`                 | `True`        | Boolean: Encourage clients to show client-side-decorations (see `wlr_server_decoration_manager`)                                                                                                                    |
+| Configuration key                    | Default value | Description                                                                                          |
+|--------------------------------------|---------------|------------------------------------------------------------------------------------------------------|
+| `outputs`                            |               | List of dictionaries: Output configuration (see next lines)                                          |
+| `output.name`                        | `""`          | String: Name of output to attach config to actual output                                             |
+| `output.scale`                       | `1.0`         | Number: HiDPI scale of output                                                                        |
+| `output.width`                       | `0`           | Integer: Output width (or zero to use preferred)                                                     |
+| `output.height`                      | `0`           | Integer: Output height (or zero to use preferred)                                                    |
+| `output.mHz`                         | `0`           | Integer: Output refresh rate in milli Hertz (or zero to use preferred)                               |
+| `output.pos_x`                       | `None`        | Integer: Output position x in layout (or None to be placed automatically)                            |
+| `output.pos_y`                       | `None`        | Integer: Output position y in layout (or None to be placed automatically)                            |
+| `output.anim`                        | `True`        | Bool: Enable or disable most animations on this output (useful for virtual outputs)                  |
+| `output.background.path`             |               | String: Optionally specify wallpaper for this output (overrides `background.path`)                   |
+| `output.background.anim`             | `True`        | Bool: Optionally disable movements of the background (overrides `output.anim` and `background.anim`) |
+| `pywm`                               |               | Dictionary: [pywm](https://github.com/jbuchermn/pywm) config, see possible keys below                |
+| `pywm.enable_xwayland`               | `False`       | Boolean: Start `XWayland`                                                                            |
+| `pywm.xkb_model`                     |               | String: Keyboard model (`xkb`)                                                                       |
+| `pywm.xkb_layout`                    |               | String: Keyboard layout (`xkb`)                                                                      |
+| `pywm.xkb_options`                   |               | String: Keyboard options (`xkb`)                                                                     |
+| `pywm.outputs`                       |               | List of dicts: Output configuration (see next lines)                                                 |
+| `pywm.output.name`                   | `""`          | String: Name of output to attach config to actual output                                             |
+| `pywm.output.scale`                  | `1.0`         | Number: HiDPI scale of output                                                                        |
+| `pywm.output.width`                  | `0`           | Integer: Output width (or zero to use preferred)                                                     |
+| `pywm.output.height`                 | `0`           | Integer: Output height (or zero to use preferred)                                                    |
+| `pywm.output.mHz`                    | `0`           | Integer: Output refresh rate in milli Hertz (or zero to use preferred)                               |
+| `pywm.output.pos_x`                  | `None`        | Integer: Output position x in layout (or None to be placed automatically)                            |
+| `pywm.output.pos_y`                  | `None`        | Integer: Output position y in layout (or None to be placed automatically)                            |
+| `pywm.xcursor_theme`                 |               | String: `XCursor` theme (if not set, read from; if set, exported to `XCURSOR_THEME`)                 |
+| `pywm.xcursor_size`                  | `24`          | Integer: `XCursor` size  (if not set, read from; if set, exported to `XCURSOR_SIZE`)                 |
+| `pywm.tap_to_click`                  | `True`        | Boolean: On tocuhpads use tap for click enter                                                        |
+| `pywm.natural_scroll`                | `True`        | Boolean: On touchpads use natural scrolling enter                                                    |
+| `pywm.focus_follows_mouse`           | `True`        | Boolean: `Focus` window upon mouse enter                                                             |
+| `pywm.contstrain_popups_to_toplevel` | `False`       | Boolean: Try to keep popups contrained within their window                                           |
+| `pywm.encourage_csd`                 | `True`        | Boolean: Encourage clients to show client-side-decorations (see `wlr_server_decoration_manager`)     |
 
 #### Config: General appearance
 
@@ -153,14 +187,16 @@ Some basic appearence and animation related configuration:
 
 | Configuration key               | Default value | Description                                                                                                                                                                |
 |---------------------------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `wallpaper`                     |               | Path to wallpaper image                                                                                                                                                    |
-| `blend_time`                    | `1.`          | Time in seconds to blend in and out (at startup and shutdown)                                                                                                              |
-| `anim_time`                     | `.3`          | Timescale of all animations in seconds                                                                                                                                     |
-| `corner_radius`                 | `17.5`        | Radius of blacked out corners of display (0 to disable)                                                                                                                    |
-| `view.corner_radius`            | `12.5`        | Corner radius of views (0 to disable)                                                                                                                                      |
-| `view.padding`                  | `8`           | Padding around windows in normal mode (pixels)                                                                                                                             |
-| `view.fullscreen_padding`       | `0`           | Padding around windows when they are in fullscreen (pixels)                                                                                                                         |
-| `interpolation.size_adjustment` | `.5`          | When window size adjustments of windows (slow) happen during gestures and animations, let them take place at the middle (`.5`) or closer to start / end (`.1` / `.9` e.g.) |
+| `background.path`               |               | String: Path to background image                                                                                                                                                   |
+| `background.time_scale`         | `0.15`        | Number: Time scale of background movement                                                                                                                                          |
+| `background.anim`               | `True`        | Bool: Prevent (`False`) background movement                                                                                                                                      |
+| `blend_time`                    | `1.`          | Number: Time in seconds to blend in and out (at startup and shutdown)                                                                                                              |
+| `anim_time`                     | `.3`          | Number: Timescale of all animations in seconds                                                                                                                                     |
+| `corner_radius`                 | `17.5`        | Number: Radius of blacked out corners of display (0 to disable)                                                                                                                    |
+| `view.corner_radius`            | `12.5`        | Number: Corner radius of views (0 to disable)                                                                                                                                      |
+| `view.padding`                  | `8`           | Number: Padding around windows in normal mode (pixels)                                                                                                                             |
+| `view.fullscreen_padding`       | `0`           | Number: Padding around windows when they are in fullscreen (pixels)                                                                                                                |
+| `interpolation.size_adjustment` | `.5`          | Number: When window size adjustments of windows (slow) happen during gestures and animations, let them take place at the middle (`.5`) or closer to start / end (`.1` / `.9` e.g.) |
 
 #### Config: Behaviour, keys and gestures
 
@@ -171,7 +207,6 @@ The most important configuration options with regard to behaviour are `mod` and 
 | `mod`                                   | `PYWM_MOD_LOGO`     | Modifier key, either `PYWM_MOD_ALT` or `PYWM_MOD_LOGO`                                                                                                          |
 | `key_bindings`                          | `lambda layout: []` | Key bindings as array, see `default_config.py`, `layout.py` and [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py)) |
 | `view.send_fullscreen`                  | `True`              | Let clients know when they are set to fullscreen (which leads to them adjusting, e.g. YouTube fullscreen)                                                       |
-| `view.xwayland_handle_scale_clientside` | `False`             | Assume `XWayland` clients handle HiDPI scale (this does not work if `xdg_output_manager_v1` is running)                                                         |
 | `power_times`                           | `[120, 300, 600]`   | Times in seconds after which to dim the screen, turn it off and hibernate (in seconds)                                                                          |
 | `sys_backend_endpoints`                 | `[]`                | Endpoint functions for things like audio, backlight, ... (see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py)))  |
 | `greeter_user`                          | `'greeter'`         | Relevant if newm is run as login display manager, username used for `greetd`                                                                                    |
@@ -200,9 +235,13 @@ as well as some general ones (`gestures` and `grid`). The best way is to experim
 | `swipe_zoom.grid_m`            | `1`           |
 | `swipe_zoom.grid_ovr`          | `0.2`         |
 | `swipe_zoom.hyst`              | `0.2`         |
-| `move.grid_m`                  | `2`           |
+| `move.grid_m`                  | `3`           |
 | `move.grid_ovr`                | `0.2`         |
-| `move_resize.gesture_factor`   | `4`           |
+| `move_resize.gesture_factor`   | `2`           |
+
+Configurable actions on keybindings can be any function calls on `layout`. Check the class `Layout` for details
+
+TODO - more details
 
 #### Config: Top and bottom bars
 
@@ -269,6 +308,9 @@ provides ways to start chromium and alacritty either by typing their names, or b
 - `newm-cmd inhibit-idle` prevents newm from going into idle states (dimming the screen)
 - `newm-cmd config` reloads the configuration
 - `newm-cmd lock` locks the screen
+- `newm-cmd open-virtual-output <name>` opens a new virtual output (see [newm-sidecar](https://github.com/jbcuhermn/newm-sidecar))
+- `newm-cmd close-virtual-output <name>` close a virtual output
+- `newm-cmd debug` prints out some debug info on the current state of views
 
 
 The last command can be used to achieve locking on hibernate in order to have the computer restart in a locked state by placing the following in e.g. `/lib/systemd/system-sleep/00-lock.sh`
