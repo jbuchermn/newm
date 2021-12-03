@@ -756,7 +756,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def on_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> bool:
         if self.is_locked():
             return False
-        
+
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_axis(time_msec, source, orientation,
                                         delta, delta_discrete)
@@ -956,35 +956,34 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
     def command(self, cmd: str, arg: Optional[str]=None) -> Optional[str]:
         logger.debug("Received command %s", cmd)
-        if cmd == "anim-lock":
-            self.ensure_locked()
-        elif cmd == "lock":
-            self.ensure_locked()
-        elif cmd == "lock-pre":
-            self.ensure_locked(anim=False)
-        elif cmd == "lock-post":
-            self._update_idle(True)
-            self.ensure_locked(anim=False)
-        elif cmd == "config":
-            return print_config()
-        elif cmd == "debug":
-            return self.debug_str()
+        cmd_options = {
+            "anim-lock": self.ensure_locked,
+            "lock": self.ensure_locked,
+            "lock-pre": lambda: self.ensure_locked(anim=False),
+            "lock-post": lambda: [
+                self._update_idle(True),
+                self.ensure_locked(anim=False)
+            ],
+            "close-launcher": lambda: self.exit_overlay() if isinstance(self.overlay, LauncherOverlay) else False,
+            "open-virtual-output": lambda: self.open_virtual_output(arg) if arg is not None else False,
+            "close-virtual-output": lambda: self.close_virtual_output(arg) if arg is not None else False
+        }
+
+        cmd_returned_options = {
+            "config": print_config,
+            "debug": self.debug_str
+        }
+
+        if cmd in cmd_options:
+            cmd_options[cmd]()
+        elif cmd in cmd_returned_options:
+            return cmd_returned_options[cmd]()
         elif cmd == "inhibit-idle":
             self._idle_inhibit_user = True
         elif cmd == "finish-inhibit-idle":
             self._idle_inhibit_user = False
-        elif cmd == "close-launcher":
-            if isinstance(self.overlay, LauncherOverlay):
-                self.exit_overlay()
-        elif cmd == "open-virtual-output" and arg is not None:
-            self.open_virtual_output(arg)
-        elif cmd == "close-virtual-output" and arg is not None:
-            self.close_virtual_output(arg)
         else:
-            return "Unknown command: %s" % cmd
-
-
-        return None
+            return f"Unknown command: {cmd}"
 
     def launch_app(self, cmd: str) -> None:
         """
