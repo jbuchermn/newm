@@ -3,15 +3,12 @@
 * Current (v0.2)
 ** Bugs / Technical debt
 *** TODO Bug: Background final jumps
-*** TODO Bug: Fullscreen video opens stacked (only in second window)
+*** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasional random locks
 *** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
 
 ** STRT MoveResizeOverlay TODO comment
-** STRT Update documentation
-- [ ] Document functions on layout to be called in keybindings
-- [ ] Document panels as deprecated
-- [ ] TODO comments
+** STRT README TODO comment
 ** TODO TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell / Add newm as greeter
 ** TODO New background
 ** TODO New video

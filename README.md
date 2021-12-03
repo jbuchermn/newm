@@ -266,6 +266,8 @@ The top and bottom bars are visible during the zoom-out ("Overview") mode. Confi
 
 #### Config: Panels
 
+**Warning - This functionality is going to need a rewrite in v0.3 - websocket connection is not here to stay and layer shell makes much of this config unnecessary**
+
 Panels in this context means the UI elements you interact with to
 - Launch an application from a menu (launcher)
 - Unlock the screen (locker)
@@ -352,15 +354,3 @@ command = "start-newm"
 ```
 
 in `/etc/greetd/config.toml`.
-
-
-## Status and limitations
-
-This is the first release of newm. Therefore a lot of configurable behaviour, quality of documentation and the like is still missing. However the basic building blocks have been in use on my machine from the beginning (2018) continuously.
-
-The most relevant functional limitation at the moment is missing support for multi-monitor setups. Apart from that see [pywm](https://github.com/jbuchermn/pywm) for known issues concerning certain applications.
-
-
-## Other panel implementations
-
-See [newm-panel-nwjs](https://github.com/jbuchermn/newm-panel-nwjs) for a different panel implementation (launcher, locker, notifiers) based on NW.js.
