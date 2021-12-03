@@ -3,10 +3,9 @@
 * Current (v0.2)
 ** Bugs / Technical debt
 *** TODO Bug: Background final jumps
-*** WAIT Bug: Fullscreen video opens stacked (only in second window)
+*** TODO Bug: Fullscreen video opens stacked (only in second window)
+*** TODO Bug: Occasional random locks
 *** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
-
-** TODO When moving in MoveResizeOverlay or MoveResizeFloatingOverlay, cursor position should be updated
 
 ** Release
 - [ ] TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell

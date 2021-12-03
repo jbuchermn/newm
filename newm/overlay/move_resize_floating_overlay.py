@@ -30,6 +30,7 @@ class MoveResizeFloatingOverlay(Overlay):
 
 
         self.layout.update_cursor(False)
+        self._cursor = self.layout.cursor_pos
 
         self.view = view
         self.i = 0.
@@ -60,6 +61,8 @@ class MoveResizeFloatingOverlay(Overlay):
     def move(self, dx: float, dy: float) -> None:
         self.i += dx * self.ws_state.size
         self.j += dy * self.ws_state.size
+
+        self._cursor = self._cursor[0] + dx*self.workspace.width, self._cursor[1] + dy*self.workspace.height
 
         workspace, i, j, w, h = self.view.transform_to_closest_ws(self.workspace, self.i, self.j, self.w, self.h)
 
@@ -169,7 +172,7 @@ class MoveResizeFloatingOverlay(Overlay):
 
 
     def _exit_transition(self) -> tuple[Optional[LayoutState], float]:
-        self.layout.update_cursor(True)
+        self.layout.update_cursor(True, (int(self._cursor[0]), int(self._cursor[1])))
         try:
             state = self.layout.state.copy()
             state.update_view_state(self.view, scale_origin=None)
