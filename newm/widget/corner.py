@@ -30,7 +30,7 @@ class Corner(PyWMCairoWidget):
 
     def process(self) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
-        result.z_index = 100
+        result.z_index = 100000
         result.box = ((0 if self.left else self._output.width - self.r) + self._output.pos[0],
                       (0 if self.top else self._output.height - self.r) + self._output.pos[1],
                       self.r, self.r)

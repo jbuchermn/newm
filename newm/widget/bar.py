@@ -95,7 +95,7 @@ class TopBar(Bar, Thread):
 
     def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
-        result.z_index = 100
+        result.z_index = 1000
 
         ws_state = wm_state.get_workspace_state(self._workspace)
 
@@ -125,7 +125,7 @@ class BottomBar(Bar, Thread):
 
     def reducer(self, wm_state: LayoutState) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
-        result.z_index = 100
+        result.z_index = 1000
 
         ws_state = wm_state.get_workspace_state(self._workspace)
 

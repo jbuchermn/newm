@@ -84,6 +84,7 @@ conf_suspend_command = configured_value('suspend_command', "systemctl suspend")
 conf_on_startup = configured_value('on_startup', lambda: None)
 conf_lock_on_wakeup = configured_value('lock_on_wakeup', True)
 
+conf_bar_enabled = configured_value('bar.enabled', True)
 
 def _score(i1: float, j1: float, w1: float, h1: float,
            im: int, jm: int,
@@ -468,8 +469,12 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 c2.destroy()
         self.corners = []
 
-        self.bottom_bars = [self.create_widget(BottomBar, o) for o in self.layout]
-        self.top_bars = [self.create_widget(TopBar, o) for o in self.layout]
+        if conf_bar_enabled():
+            self.bottom_bars = [self.create_widget(BottomBar, o) for o in self.layout]
+            self.top_bars = [self.create_widget(TopBar, o) for o in self.layout]
+        else:
+            self.bottom_bars = []
+            self.top_bars = []
 
         self.backgrounds = [self.create_widget(Background, o, get_workspace_for_output(o)) for o in self.layout]
 
