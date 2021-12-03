@@ -754,7 +754,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             logger.debug("View %s changed kind: %d -> %d", kind, self._initial_kind)
             return self._initial_state
 
-        if up_state.size != self._initial_state.size and self._initial_state.size[0] > 0 and self._initial_state.size[1] > 0:
+        if up_state.size != self._initial_state.size and self._initial_state.size[0] > 0 and self._initial_state.size[1] > 0 and up_state.size[0] > 0 and up_state.size[1] > 0:
             if time.time() - self._initial_time < 0.3:
                 return self._initial_state
             else:
