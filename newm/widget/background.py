@@ -166,7 +166,7 @@ class BackgroundState:
             abs(self.box[1] - other.box[1]) + \
             abs(self.box[2] - other.box[2]) + \
             abs(self.box[3] - other.box[3]) + \
-            abs(self.opacity - other.opacity)
+            1000 * abs(self.opacity - other.opacity)
 
     def approach(self, other: BackgroundState, time_scale: float, dt: float) -> None:
         db = other.box[0] - self.box[0], other.box[1] - self.box[1], other.box[2] - self.box[2], other.box[3] - self.box[3]
@@ -234,13 +234,15 @@ class Background(PyWMBackgroundWidget):
                     self._anim_caught = None
             else:
                 target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
-                if target_state.delta(self._target_state) > 0.001:
+                if target_state.delta(self._target_state) > 1:
                     self._target_state = target_state
 
-            if self._current_state.delta(self._target_state) >= 0.001:
+            if self._current_state.delta(self._target_state) > 1:
                 self._current_state.approach(self._target_state, conf_time_scale(), t - self._last_frame)
                 self.damage()
-
+            elif self._current_state != self._target_state:
+                self._current_state = self._target_state
+                self.damage()
 
             self._last_frame = t
 

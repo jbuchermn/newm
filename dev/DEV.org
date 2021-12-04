@@ -2,11 +2,10 @@
 
 * Current (v0.2)
 ** Bugs / Technical debt
-*** TODO Bug: Background final jumps
+*** TODO Bug: Occasiaonally orphan states do appear (last time GIMP-2.99) - at least add them on newm-cmd debug
+*** TODO Bug: Open a couple of windows, move to right, open rofi, close it - leftmost window is selected
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasionally Chromium opens with twice the size
-*** WAIT Bug: Occasiaonally orphan states do appear (last time GIMP-2.99)
-*** TODO Bug: Open a couple of windows, move to right, open rofi, close it - leftmost window is selected
 
 ** STRT MoveResizeOverlay TODO comment
 ** STRT README TODO comments
