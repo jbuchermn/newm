@@ -15,6 +15,7 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install mypy
+      pip install git+https://github.com/jbuchermn/pywm@v0.2
     - name: mypy
       run: |
         mypy newm
