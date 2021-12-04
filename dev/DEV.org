@@ -4,12 +4,13 @@
 ** Bugs / Technical debt
 *** TODO Bug: Background final jumps
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
-*** WAIT Bug: newm-sidecar on --> Chromium opens in incorrect size
+*** WAIT Bug: Occasionally Chromium opens with twice the size
 *** WAIT Bug: Occasiaonally orphan states do appear (last time GIMP-2.99)
+*** TODO Bug: Open a couple of windows, move to right, open rofi, close it - leftmost window is selected
 
 ** STRT MoveResizeOverlay TODO comment
 ** STRT README TODO comments
-** TODO TESTS: Move here from pywm / compare with weston, where things don't work on sway / Add DBeaver / Add virt-manager / Add layer-shell / Add newm as greeter
+** TODO TESTS: Finish tests and verify on weston
 ** TODO New background
 ** TODO New video + video on newm-sidecar
 

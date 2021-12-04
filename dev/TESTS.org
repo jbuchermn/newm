@@ -44,21 +44,22 @@ No issues
 - [X] Open the menus, go to bookmark (repeat this multiple times, different window sizes)
 - [X] Drag tab from one browser instance to create new one
 - [X] Drag bookmark to empty space (or terminal)
+- [X] Share screen
 ** Wayland-native (run with --enable-features=UseOzonePlatform --ozone-platform=wayland)
-*** WAIT Dragging into empty space breaks UI (happens with sway as well - weston?)
+*** WAIT Dragging into empty space breaks UI (happens with sway as well - doesn't happen with weston)
 
 * Firefox
 ** Steps
-- [ ] Open
-- [ ] Go to YT, start video, toggle fullscreen
-- [ ] Copy and paste text
-- [ ] Search for an image, right-click, save as -> anywhere
-- [ ] Ctrl-F search
-- [ ] Open github, use drag-n-drop to rearrange repos
-- [ ] Open DevTools
-- [ ] Open the menus, go to bookmark (repeat this multiple times, different window sizes)
+- [X] Open
+- [X] Go to YT, start video, toggle fullscreen
+- [X] Copy and paste text
+- [X] Search for an image, right-click, save as -> anywhere
+- [X] Ctrl-F search
+- [X] Open github, use drag-n-drop to rearrange repos
+- [X] Open DevTools
+- [X] Open the menus, go to bookmark (repeat this multiple times, different window sizes)
 ** Wayland-native (Run with MOZ_ENABLE_WAYLAND=1)
-*** WAIT Occasional damaging bugs (popups); this seems to stem from a quite weird way of handling this Firefox-side and is an issue on sway as well
+No issues
 
 * Matplotlib
 ** Steps
@@ -80,67 +81,66 @@ No issues
 
 * Nemo
 ** Steps
-- [ ] Open
-- [ ] Open preferences
-- [ ] Move around / open files
-- [ ] Drag'n'drop within nemo
-- [ ] Drag'n'drop from / into chromium
-- [ ] Copy / paste / delete
-- [ ] Search
+- [X] Open
+- [X] Open preferences
+- [X] Move around / open files
+- [X] Drag'n'drop within nemo
+- [X] Drag'n'drop from / into chromium
+- [X] Copy / paste / delete
+- [X] Search
 ** Wayland-native
 No issues
 
 * Nautilus
 ** Steps
-- [ ] Open
-- [ ] Open preferences
-- [ ] Move around / open files
-- [ ] Drag'n'drop within nemo
-- [ ] Drag'n'drop from / into chromium
-- [ ] Copy / paste / delete
-- [ ] Search
+- [X] Open
+- [X] Open preferences
+- [X] Move around / open files
+- [X] Drag'n'drop within nemo
+- [X] Drag'n'drop from / into chromium
+- [X] Copy / paste / delete
+- [X] Search
 ** Wayland-native
 No issues
 
 * masm11/Emacs
 ** Steps
-- [ ] Daily use without menu bar
+- [X] Daily use without menu bar
 ** Wayland-native
 No issues
 
 * Zoom
 ** Steps
-- [ ] Login
-- [ ] Adjust settings
-- [ ] Join video call
-- [ ] Chat
+- [X] Login
+- [X] Adjust settings
+- [X] Join video call
+- [X] Chat
 ** Wayland-native
-*** WAIT Works very poorly, but this is true for sway as well - Zoom's just shitty software
-** XWayland
+Not exactly nice - but usable
 
 * LibreOffice
 ** Steps
-- [ ] Open
-- [ ] Select new worksheet
-- [ ] Enter a couple of values, drag-to-complete
-- [ ] Copy and paste
-- [ ] Change formatting
-- [ ] Save as / open again
-- [ ] Open new wiriter document
-- [ ] Write some text / change formatting
-- [ ] Open print preview
-- [ ] Save as / open again
+- [X] Open
+- [X] Select new worksheet
+- [X] Enter a couple of values, drag-to-complete
+- [X] Copy and paste
+- [X] Change formatting
+- [X] Save as / open again
+- [X] Open new wiriter document
+- [X] Write some text / change formatting
+- [X] Open print preview
+- [X] Save as / open again
 ** Wayland-native
 No issues
 
 * OpenSCAD
 ** Steps
-- [ ] Open
-- [ ] Create new
-- [ ] Open example
-- [ ] Update preview
-- [ ] Save as
-- [ ] Copy / paste
+- [X] Open
+- [X] Create new
+- [X] Open example
+- [X] Update preview
+- [X] Save as
+- [X] Copy / paste
 ** Wayland-native
 No issues
 
@@ -273,4 +273,4 @@ Start with QT_QPA_PLATFORM=xcb and possibly QT_SCALE_FACTOR=2
 
 
 * newm as greeter
-* other cases... ?
+* other cases / config... ?
