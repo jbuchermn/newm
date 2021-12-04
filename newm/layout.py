@@ -912,9 +912,13 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                         continue
 
                     i, j, w, h = state.i, state.j, state.w, state.h
-                    if not state.is_tiled:
+                    if state.is_layer:
+                        i, j = ws_state.i + .5*ws_state.size, ws_state.j + .5*ws_state.size
+                        w, h = 0, 0
+                    elif not state.is_tiled:
                         i, j = state.float_pos
                         w, h = 0, 0
+
                     sc = (s.i - i + s.w / 2. - w / 2.)**2 + (s.j - j + s.h / 2. - h / 2.)**2
                     logger.debug("View (%d) has score %f", k, sc)
                     if sc < best_view_score:
