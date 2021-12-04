@@ -1,0 +1,276 @@
+#+TITLE: PyWM Test Cases
+
+* Termite
+** Steps
+- [X] Open
+- [X] Execute some commands
+- [X] Copy and paste text with S-C-x/v
+** Wayland-native
+No issues
+
+* Alacritty
+** Steps
+- [X] Open
+- [X] Execute some commands
+- [X] Copy and paste text with S-C-x/v
+** Wayland-native
+No issues
+
+* imv
+** Steps
+- [X] Open from terminal
+- [X] Zoom in/out / move
+** Wayland-native
+No issues
+
+* mpv
+** Steps
+- [X] Open from terminal
+- [X] Start / stop
+- [X] Switch fullscreen
+- [X] Ensure idle is inhibited
+** Wayland-native
+No issues
+
+* Chromium
+** Steps
+- [X] Open
+- [X] Go to YT, start video, toggle fullscreen
+- [X] Copy and paste text
+- [X] Search for an image, right-click, save as -> anywhere
+- [X] Ctrl-F search
+- [X] Open github, use drag-n-drop to rearrange repos
+- [X] Open DevTools
+- [X] Open the menus, go to bookmark (repeat this multiple times, different window sizes)
+- [X] Drag tab from one browser instance to create new one
+- [X] Drag bookmark to empty space (or terminal)
+** Wayland-native (run with --enable-features=UseOzonePlatform --ozone-platform=wayland)
+*** WAIT Dragging into empty space breaks UI (happens with sway as well - weston?)
+
+* Firefox
+** Steps
+- [ ] Open
+- [ ] Go to YT, start video, toggle fullscreen
+- [ ] Copy and paste text
+- [ ] Search for an image, right-click, save as -> anywhere
+- [ ] Ctrl-F search
+- [ ] Open github, use drag-n-drop to rearrange repos
+- [ ] Open DevTools
+- [ ] Open the menus, go to bookmark (repeat this multiple times, different window sizes)
+** Wayland-native (Run with MOZ_ENABLE_WAYLAND=1)
+*** WAIT Occasional damaging bugs (popups); this seems to stem from a quite weird way of handling this Firefox-side and is an issue on sway as well
+
+* Matplotlib
+** Steps
+- [X] Open plot (e.g. =ngp= with =env.sh= setup)
+- [X] Zoom in / Move around
+- [X] Save as
+** Wayland-native (Qt5 backend, be sure to set DISPLAY=":0")
+No issues
+
+* GIMP-2.99
+** Steps
+- [X] Open
+- [X] File > New -> Open advanced Options
+- [X] Drag background color
+- [X] Colors > Hue / Saturation or similar
+- [X] Save as
+** Wayland-native
+No issues
+
+* Nemo
+** Steps
+- [ ] Open
+- [ ] Open preferences
+- [ ] Move around / open files
+- [ ] Drag'n'drop within nemo
+- [ ] Drag'n'drop from / into chromium
+- [ ] Copy / paste / delete
+- [ ] Search
+** Wayland-native
+No issues
+
+* Nautilus
+** Steps
+- [ ] Open
+- [ ] Open preferences
+- [ ] Move around / open files
+- [ ] Drag'n'drop within nemo
+- [ ] Drag'n'drop from / into chromium
+- [ ] Copy / paste / delete
+- [ ] Search
+** Wayland-native
+No issues
+
+* masm11/Emacs
+** Steps
+- [ ] Daily use without menu bar
+** Wayland-native
+No issues
+
+* Zoom
+** Steps
+- [ ] Login
+- [ ] Adjust settings
+- [ ] Join video call
+- [ ] Chat
+** Wayland-native
+*** WAIT Works very poorly, but this is true for sway as well - Zoom's just shitty software
+** XWayland
+
+* LibreOffice
+** Steps
+- [ ] Open
+- [ ] Select new worksheet
+- [ ] Enter a couple of values, drag-to-complete
+- [ ] Copy and paste
+- [ ] Change formatting
+- [ ] Save as / open again
+- [ ] Open new wiriter document
+- [ ] Write some text / change formatting
+- [ ] Open print preview
+- [ ] Save as / open again
+** Wayland-native
+No issues
+
+* OpenSCAD
+** Steps
+- [ ] Open
+- [ ] Create new
+- [ ] Open example
+- [ ] Update preview
+- [ ] Save as
+- [ ] Copy / paste
+** Wayland-native
+No issues
+
+* Spotify
+** Steps
+- [ ] Open
+- [ ] Navigate / play music
+- [ ] Stream to device
+- [ ] Open account
+** XWayland
+No issues
+** Wayland-native (Use --enable-features=UseOzonePlatform --ozone-platfom=wayland, be sure DISPLAY is set)
+*** WAIT Opens second black screen - same for sway --> probably Spotify bug
+
+* VLC
+** Steps
+- [ ] Open
+- [ ] Open video
+- [ ] Start playback / pause / jump around
+- [ ] Fullscreen view
+** Wayland-native (Be sure to unset DISPLAY before)
+*** WAIT Playback is not working (damage not received) - same for sway --> probably VLC bug
+** XWayland
+No issues / however useless as scaled-up videos do not make sense
+
+* FreeCAD
+** Steps
+- [ ] Open
+- [ ] Open example
+- [ ] Move around / open some dialogs
+- [ ] Save as
+** Wayland-native
+No issues
+
+* Flutter basic app
+** Steps
+- [ ] Open
+- [ ] Increment a couple of times
+** Wayland-native
+No issues
+
+* Atom
+** Steps
+- [ ] Open
+- [ ] Open file
+- [ ] Edit
+- [ ] Save file
+** XWayland
+No issues
+
+* VSCodium
+** Steps
+- [ ] Open
+- [ ] Open file
+- [ ] Edit
+- [ ] Save file
+** XWayland
+No issues
+** Wayland-native (--enable-features=UseOzonePlatform --ozone-platform=wayland)
+*** WAIT Crashes immediately (also on sway) --> probably VSCodium bug
+
+* Oregano
+** Steps
+- [ ] Open
+- [ ] Place RC lowpass circuit
+- [ ] Save
+- [ ] Simulate
+** Wayland-native
+No apparent issues
+
+* CURA
+** Steps
+- [ ] Open STL / Place
+- [ ] Change Config incl. start G-Code
+- [ ] Slice and save
+** XWayland
+Start with QT_QPA_PLATFORM=xcb and possibly QT_SCALE_FACTOR=2
+** Wayland-native
+*** WAIT Menu bar issues (same for sway) - not yet supported
+
+* qemu
+** Steps
+- [ ] Start VM and get display output (virtio-vga) / keyboard mouse input
+- [ ] Open menus / change screens
+- [ ] Change size of display
+** Wayland-native
+*** TODO Changing size using virtio-vga does not work
+
+* KiCAD
+** Steps
+- [ ] Open
+- [ ] Draw RC lowpass circuit
+- [ ] Save
+- [ ] PCB design
+- [ ] Export
+** XWayland
+*** WAIT All windows are wrongly recognized as floating (won't fix)
+** Wayland-native
+*** WAIT Not yet supported
+
+* Arduino IDE
+** Steps
+- [ ] Open file
+- [ ] Edit some code
+- [ ] Open new file
+- [ ] Change some preferences
+- [ ] Burn bootloader
+** XWayland (set _JAVA_AWT_WM_NONREPARENTING=1, possibly adjust interface scale in preferences)
+*** WAIT All windows are wrongly recognized as floating (won't fix)
+** Wayland-native
+*** WAIT Not yet supported
+
+* IntelliJ
+** XWayland (set _JAVA_AWT_WM_NONREPARENTING=1)
+*** WAIT All windows are wrongly recognized as floating (won't fix)
+** Wayland-native
+*** WAIT Not yet supported
+
+* VirtualBox
+** XWayland
+*** WAIT Not usable
+** Wayland-native
+*** WAIT Not yet supported
+
+* DBeaver
+* virt-manager
+* rofi
+* waybar
+* slurp
+
+
+* newm as greeter
+* other cases... ?
