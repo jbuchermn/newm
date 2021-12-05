@@ -86,9 +86,9 @@ evtest
 
 More details about this can be found on the troubleshooting page of [pywm](https://github.com/jbuchermn/pywm).
 
-### Configuration
+## Configuration
 
-#### Setting up the config file and first example
+### Setting up the config file and first example
 
 Configuring is handled via Python and read from either `$HOME/.config/newm/config.py` or (lower precedence) `/etc/newm/config.py`. Take `default_config.py` as a basis; details on the possible keys are provided below.
 
@@ -112,6 +112,13 @@ from pywm import (
 
 mod = PYWM_MOD_ALT
 
+def on_startup():
+    os.system("waybar &")
+
+bar = {
+    'enabled': False,
+}
+
 background = {
     'path': os.environ['HOME'] + '/wallpaper.jpg'
 }
@@ -120,9 +127,6 @@ outputs = [
     { 'name': 'eDP-1', 'scale': 2. }
 ]
 
-def on_startup():
-    os.system("alacritty &")
-
 pywm = {
     'xkb_model': "macintosh",
     'xkb_layout': "de,de",
@@ -130,7 +134,7 @@ pywm = {
 }
 ```
 
-#### Configuring
+### Configuring
 
 The configuration works by evaluating the python config file and extracting the variables which the file exports. So basically you can do whatever you please to provide the configuration values, this is why certain config elements are callbacks. Some elements are hierarchical, to set these use PYthon dicts - e.g. for `x.y`:
 
@@ -143,7 +147,7 @@ x = {
 
 The configuration can be dynamically updated (apart from a couple of fixed keys) using `Layout.update_config` (by default bound to `Mod+C`).
 
-#### Config: Basic
+### Config: Basic
 
 These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and configure basic behaviour needed c-side.
 
@@ -181,7 +185,7 @@ These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and 
 | `pywm.contstrain_popups_to_toplevel` | `False`       | Boolean: Try to keep popups contrained within their window                                           |
 | `pywm.encourage_csd`                 | `True`        | Boolean: Encourage clients to show client-side-decorations (see `wlr_server_decoration_manager`)     |
 
-#### Config: General appearance
+### Config: General appearance
 
 Some basic appearence and animation related configuration:
 
@@ -198,7 +202,7 @@ Some basic appearence and animation related configuration:
 | `view.fullscreen_padding`       | `0`           | Number: Padding around windows when they are in fullscreen (pixels)                                                                                                                |
 | `interpolation.size_adjustment` | `.5`          | Number: When window size adjustments of windows (slow) happen during gestures and animations, let them take place at the middle (`.5`) or closer to start / end (`.1` / `.9` e.g.) |
 
-#### Config: Behaviour, keys and gestures
+### Config: Behaviour, keys and gestures
 
 The most important configuration options with regard to behaviour are `mod` and `key_bindings`; see below for them and some more detailed ones.
 
@@ -251,7 +255,7 @@ Configurable actions on keybindings can be any function calls on `layout`. Check
 
 TODO - more details
 
-#### Config: Top and bottom bars
+### Config: Top and bottom bars
 
 The top and bottom bars are visible during the zoom-out ("Overview") mode. Configure font and texts (for an example see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py))
 
@@ -264,7 +268,7 @@ The top and bottom bars are visible during the zoom-out ("Overview") mode. Confi
 | `bar.top_texts`    | `lambda: ["1", "2", "3"]`         | Function called each time top bar is rendered          |
 | `bar.bottom_texts` | `lambda: ["4", "5", "6"]`         | Function called each time bottom bar is rendererd      |
 
-#### Config: Panels
+### Config: Panels
 
 **Warning - This functionality is going to need a rewrite in v0.3 - websocket connection is not here to stay and layer shell makes much of this config unnecessary**
 
@@ -313,7 +317,13 @@ shortcuts = {
 
 provides ways to start chromium and alacritty either by typing their names, or by using the keys 1 and 2 when the launcher is open.
 
-#### Using newm-cmd, configuring lock on hibernate
+## Tips and tricks
+
+[Link](./doc/tips_and_tricks.md)
+[Link](./doc/env_wayland.md)
+[Link](./doc/systemd.md)
+
+## Using newm-cmd
 
 `newm-cmd` provides a way to interact with a running newm instance from command line:
 - `newm-cmd inhibit-idle` prevents newm from going into idle states (dimming the screen)
@@ -321,24 +331,10 @@ provides ways to start chromium and alacritty either by typing their names, or b
 - `newm-cmd lock` locks the screen
 - `newm-cmd open-virtual-output <name>` opens a new virtual output (see [newm-sidecar](https://github.com/jbcuhermn/newm-sidecar))
 - `newm-cmd close-virtual-output <name>` close a virtual output
+- `newm-cmd clean` removes orphaned states, which can happen, but shouldn't (if you encounter the need for this, please file a bug)
 - `newm-cmd debug` prints out some debug info on the current state of views
 
-
-The last command can be used to achieve locking on hibernate in order to have the computer restart in a locked state by placing the following in e.g. `/lib/systemd/system-sleep/00-lock.sh`
-
-``` sh
-#!/bin/sh
-/usr/[local/]/bin/newm-cmd lock-$1
-```
-
-Depending on installation process this might not work right ahead, as`systemd` runs these scripts in a clean environment as `root`. To check:
-
-``` sh
-su root
-env -i /usr/[local/]bin/newm-cmd lock-pre
-```
-
-### Using newm for login
+## Using newm for login
 
 This setup depends on [greetd](https://git.sr.ht/~kennylevinsen/greetd). Make sure to install newm as well as pywm and a newm panel in a way in which the greeter-user has access, i.e. either form the AUR, or e.g.:
 
@@ -355,9 +351,3 @@ command = "start-newm"
 
 in `/etc/greetd/config.toml`.
 
-
-Alternatively, you can read [ENV_WAYLAND](./ENV_WAYLAND.md) and [SYSTEMD](./SYSTEMD.md) for better integration of applications
-
-
-# Check out these tips and tricks
-[here](./TIPS_AND_TRICKS.md)
