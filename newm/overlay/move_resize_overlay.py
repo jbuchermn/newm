@@ -266,7 +266,6 @@ class MoveResizeOverlay(Overlay, Thread):
 
         self.layout.update_cursor(False)
 
-        # TODO: Clean this up a bit (code duplicated -> _Overlay)
         self.view = view
         self.workspace = layout.workspaces[0]
         self.ws_state = self.layout.state.get_workspace_state(self.workspace)

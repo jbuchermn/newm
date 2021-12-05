@@ -7,9 +7,6 @@
 *** WAIT Bug: Occasionally Chromium opens with twice the size (happens more when newm-sidecar is running)
 *** STRT Bug: Some animations are triggered before blend-in delaying startup time
 
-** DONE Implement newm-cmd clean to remove orphan states
-** DONE Close overview before opening window
-** STRT MoveResizeOverlay TODO comment
 ** STRT README TODO comments, restructure and merge PR - extended config incl. waybar, add newm-cmd clean
 ** STRT TESTS: Finish tests and verify on weston
 ** TODO New background
