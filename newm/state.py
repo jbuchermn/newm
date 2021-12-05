@@ -307,6 +307,19 @@ class WorkspaceState:
 
         return i_stolen, j_stolen
 
+    def clean(self, view_handles: list[int]) -> None:
+        new_view_states: dict[int, ViewState] = {}
+        for h, s in self._view_states.items():
+            if h not in view_handles:
+                logger.info("Detected orphan state: %d - %s" % (h, s))
+            else:
+                new_view_states[h] = s
+        self._view_states = new_view_states
+        self.constrain()
+        self.validate_fullscreen()
+        self.validate_stack_indices()
+
+
     """
     Reducers
     """
@@ -566,6 +579,11 @@ class LayoutState:
     def constrain(self) -> LayoutState:
         for h, s in self._workspace_states.items():
             s.constrain()
+        return self
+
+    def clean(self, view_handles: list[int]) -> LayoutState:
+        for h, s in self._workspace_states.items():
+            s.clean(view_handles)
         return self
 
 

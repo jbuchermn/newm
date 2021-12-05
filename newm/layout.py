@@ -967,6 +967,12 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self._update_idle(True)
             self.ensure_locked(anim=False)
 
+        def clean() -> None:
+            def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
+                new_state = state.copy().clean(list(self._views.keys()))
+                return None, new_state
+            self.animate_to(reducer, conf_anim_t())
+
         cmds: dict[str, Callable[[], Optional[str]]] = {
             "lock": self.ensure_locked,
             "lock-pre": lambda: self.ensure_locked(anim=False),
@@ -978,6 +984,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             "close-launcher": lambda: self.exit_overlay() if isinstance(self.overlay, LauncherOverlay) else None,
             "open-virtual-output": lambda: self.open_virtual_output(arg) if arg is not None else None,
             "close-virtual-output": lambda: self.close_virtual_output(arg) if arg is not None else None,
+            "clean": clean
         }
         return cmds.get(cmd, lambda: f"Unknown command {cmd}")()
 
