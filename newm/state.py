@@ -205,6 +205,10 @@ class WorkspaceState:
 
     def constrain(self) -> None:
         min_i, min_j, max_i, max_j = self.get_extent()
+        min_i = math.floor(min_i)
+        min_j = math.floor(min_j)
+        max_i = math.ceil(max_i)
+        max_j = math.ceil(max_j)
         i_size = max_i - min_i + 1
         j_size = max_j - min_j + 1
 

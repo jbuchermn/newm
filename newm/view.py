@@ -78,10 +78,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.up_state is None:
             return "<View %d>" % self._handle
 
-        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s>" % (
+        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
              self.title, self.app_id, self.role, self.pid,
-             self.is_xwayland, self.up_state.is_floating)
+             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused)
 
     def is_float(self, state: LayoutState) -> bool:
         if self.is_panel():
@@ -424,31 +424,41 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self._initial_state is None:
             return None, None
 
+        reference_state = state
+        if state.all_in_overview():
+            reference_state = state.with_overview_set(False)
+        elif ws_state.is_in_overview():
+            reference_state = state.with_overview_set(False, only_workspace=ws)
+        else:
+            reference_state = state.copy()
+        reference_ws_state = reference_state.get_workspace_state(ws)
+
+
         width, height = self._initial_state.size
         w, h = width, height
 
         if pos_hint is not None:
-            ci = ws_state.i + pos_hint[0] * ws_state.size
-            cj = ws_state.j + pos_hint[1] * ws_state.size
+            ci = reference_ws_state.i + pos_hint[0] * reference_ws_state.size
+            cj = reference_ws_state.j + pos_hint[1] * reference_ws_state.size
             logger.debug("Respecting position hint %f %f -> %f %f" % (*pos_hint, ci, cj))
 
         elif self.parent is not None:
             try:
-                p_state = state.get_view_state(cast(View, self.parent))
+                p_state = reference_state.get_view_state(cast(View, self.parent))
                 if p_state.is_tiled:
                     ci = p_state.i + p_state.w / 2.
                     cj = p_state.j + p_state.h / 2.
                 else:
-                    ci = p_state.float_pos[0] + p_state.float_size[0] * ws_state.size / ws.width / 2.
-                    cj = p_state.float_pos[1] + p_state.float_size[1] * ws_state.size / ws.width / 2.
+                    ci = p_state.float_pos[0] + p_state.float_size[0] * reference_ws_state.size / ws.width / 2.
+                    cj = p_state.float_pos[1] + p_state.float_size[1] * reference_ws_state.size / ws.width / 2.
             except:
                 logger.warn("Unexpected: Could not access parent %s state" % self.parent)
         else:
-            ci = ws_state.i + ws_state.size / 2.
-            cj = ws_state.j + ws_state.size / 2.
+            ci = reference_ws_state.i + reference_ws_state.size / 2.
+            cj = reference_ws_state.j + reference_ws_state.size / 2.
 
 
-        wt, ht = w / ws.width * ws_state.size, h / ws.height * ws_state.size
+        wt, ht = w / ws.width * reference_ws_state.size, h / ws.height * reference_ws_state.size
         i = ci - wt / 2.
         j = cj - ht / 2.
 
@@ -460,7 +470,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             stack_idx=self._handle,
         )
 
-        ws_state2 = ws_state1.replacing_view_state(
+        ws_state2 = reference_ws_state.with_view_state(
             self,
             is_tiled=False,
             float_pos=(i, j),
@@ -469,7 +479,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         )
 
         self.focus()
-        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
+        return state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
 
 
     """
@@ -635,15 +645,27 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def _show_tiled(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.debug("Show - tiled: %s" % self)
         min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
-        min_w *= ws_state.size / ws.width
-        min_h *= ws_state.size / ws.height
+        size = ws_state.size
+        if ws_state.size_origin is not None:
+            size = ws_state.size_origin
+        min_w *= size / ws.width
+        min_h *= size / ws.height
 
         w = max(math.ceil(min_w), 1)
         h = max(math.ceil(min_h), 1)
 
+        reference_state = state
+        if state.all_in_overview():
+            reference_state = state.with_overview_set(False)
+        elif ws_state.is_in_overview():
+            reference_state = state.with_overview_set(False, only_workspace=ws)
+        else:
+            reference_state = state.copy()
+        reference_ws_state = reference_state.get_workspace_state(ws)
+
         i: float = 0.
         j: float = 0.
-        i, j = self.wm.place_initial(ws, w, h)
+        i, j = self.wm.place_initial(ws, reference_ws_state, w, h)
 
         second_state = (i, j, w, h)
 
@@ -662,13 +684,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             stack_idx=self._handle,
         )
 
-        ws_state2 = ws_state1.replacing_view_state(
+        ws_state2 = reference_ws_state.with_view_state(
             self,
-            i=i1, j=j1, w=w1, h=h1, scale_origin=None, move_origin=None
+            is_tiled=True, i=i1, j=j1, w=w1, h=h1,
+            scale_origin=None, move_origin=None,
+            stack_idx=self._handle,
         ).focusing_view(self)
 
         self.focus()
-        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
+        return state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
 
     """
     Init and map

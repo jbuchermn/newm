@@ -2,14 +2,15 @@
 
 * Current (v0.2)
 ** Bugs / Technical debt
-*** TODO Bug: Occasiaonally orphan states do appear (last time GIMP-2.99, alacritty -e nmtui without nm running) - at least add them on newm-cmd debug and provide newm-cmd clean
-*** DONE Bug: xdg-positioner on layer shell (secondary output and nm-applet)
+*** WAIT Bug: Occasionally orphan states do appear (last time GIMP-2.99, alacritty -e nmtui without nm running)
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasionally Chromium opens with twice the size (happens more when newm-sidecar is running)
 
+** TODO Implement newm-cmd clean to remove orphan states
+** DONE Close overview before opening window
 ** STRT MoveResizeOverlay TODO comment
-** STRT README TODO comments
-** TODO TESTS: Finish tests and verify on weston
+** STRT README TODO comments, restructure and merge PR - extended config incl. waybar
+** STRT TESTS: Finish tests and verify on weston
 ** TODO New background
 ** TODO New video + video on newm-sidecar
 

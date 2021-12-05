@@ -664,11 +664,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             return self.workspaces[0], 0, 0, 1, 1
 
 
-    def place_initial(self, workspace: Workspace, w: int, h: int) -> tuple[int, int]:
+    def place_initial(self, workspace: Workspace, ws_state: WorkspaceState, w: int, h: int) -> tuple[int, int]:
         place_i = 0
         place_j = 0
-
-        ws_state = self.state.get_workspace_state(workspace)
 
         i, j = ws_state.i, ws_state.j
         # Special case of centered window if extent < size
