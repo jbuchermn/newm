@@ -6,10 +6,10 @@ in the on_startup function:
 
 ``` python
 def on_startup():
-		os.system("systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
-		os.system("hash dbus-update-activation-environment 2>/dev/null && \
-				dbus-update-activation-environment --systemd DISPLAY \
-				WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+    os.system("systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+    os.system("hash dbus-update-activation-environment 2>/dev/null && \
+        dbus-update-activation-environment --systemd DISPLAY \
+        WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
 ```
 
 With this, systemd and newm are seamlessly integrated.
