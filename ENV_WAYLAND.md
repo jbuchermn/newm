@@ -110,4 +110,4 @@ systemd-cat --identifier=sway sway $@
  ```
 
 
-# [Using newm with systemd](https://github.com/jbuchermn/newm/blob/v0.2/SYSTEMD.md)
+# [Using newm with systemd](./SYSTEMD.md)

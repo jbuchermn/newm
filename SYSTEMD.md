@@ -14,4 +14,4 @@ def on_startup():
 
 With this, systemd and newm are seamlessly integrated.
 
-note: if you did not follow the [env_wayland](https://github.com/jbuchermn/newm/blob/v0.2/SYSTEMD.md) add =wlroots to `XDG_CURRENT_DESKTOP`
+note: if you did not follow the [env_wayland](./SYSTEMD.md) add =wlroots to `XDG_CURRENT_DESKTOP`

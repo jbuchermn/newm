@@ -356,4 +356,8 @@ command = "start-newm"
 in `/etc/greetd/config.toml`.
 
 
-Alternatively, you can read [ENV_WAYLAND](https://github.com/jbuchermn/newm/blob/v0.2/ENV_WAYLAND.md) and [SYSTEMD](https://github.com/jbuchermn/newm/blob/v0.2/SYSTEMD.md) for better integration of applications
+Alternatively, you can read [ENV_WAYLAND](./ENV_WAYLAND.md) and [SYSTEMD](./SYSTEMD.md) for better integration of applications
+
+
+# Check out these tips and tricks
+[here](./TIPS_AND_TRICKS.md)
