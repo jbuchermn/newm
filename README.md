@@ -219,7 +219,7 @@ The most important configuration options with regard to behaviour are `mod` and 
 | `view.debug_scaling`     | `False`               | Debug sclaing of views - if you think, views look blurry, this outputs potential issues where logical size and size on the display do not match                                                                                                |
 
 Gestures are configured by a lot of numeric parameters; these are structured by the different gesture kinds (swipe to move, swipe to zoom, move, resize)
-as well as some general ones (`gestures` and `grid`). The best way is to experiment with these and hot-reload the configuration (by default `M-C`). Also `grid.py` acts as a 
+as well as some general ones (`gestures` and `grid`). The best way is to experiment with these and hot-reload the configuration (by default `M-C`). Also `grid.py` acts as a
 plot script when (`grid.debug`) is enabled.
 
 | Configuration key              | Default value |
@@ -328,7 +328,7 @@ The last command can be used to achieve locking on hibernate in order to have th
 
 ``` sh
 #!/bin/sh
-/usr/[local/]/bin/newm-cmd lock-$1 
+/usr/[local/]/bin/newm-cmd lock-$1
 ```
 
 Depending on installation process this might not work right ahead, as`systemd` runs these scripts in a clean environment as `root`. To check:
@@ -354,3 +354,10 @@ command = "start-newm"
 ```
 
 in `/etc/greetd/config.toml`.
+
+
+Alternatively, you can read [ENV_WAYLAND](./ENV_WAYLAND.md) and [SYSTEMD](./SYSTEMD.md) for better integration of applications
+
+
+# Check out these tips and tricks
+[here](./TIPS_AND_TRICKS.md)
