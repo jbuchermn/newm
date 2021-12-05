@@ -15,7 +15,7 @@ In case you use another wm or other wm's besides newm, maybe this bash script wi
 # GTK environment
 #
 
-#export GDK_BACKEND=wayland # May cause problems with some wayland applications
+#export GDK_BACKEND=wayland # May cause problems with some xorg applications
 export TDESKTOP_DISABLE_GTK_INTEGRATION=1
 export CLUTTER_BACKEND=wayland
 export BEMENU_BACKEND=wayland
