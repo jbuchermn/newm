@@ -45,6 +45,18 @@ conf_anim_t = configured_value('anim_time', .3)
 
 conf_debug_scaling = configured_value('view.debug_scaling', False)
 
+"""
+Wait this long before accepting that view won't accept our requested size
+Set high to debug (as this situation should be avoided - possibly there are newm bugs
+leading to invalid size requests)
+
+However, in some cases, expiring RESIZE_PATIENCE is a client-side bug (Firefox and pavucontrol e.g.)
+After toplevel_configure these windows never repsond with a surface_configure event (before map)
+
+In production .3 or similar should be okay
+"""
+RESIZE_PATIENCE = .3
+
 class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
@@ -755,7 +767,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return self._initial_state
 
         if up_state.size != self._initial_state.size and self._initial_state.size[0] > 0 and self._initial_state.size[1] > 0 and up_state.size[0] > 0 and up_state.size[1] > 0:
-            if time.time() - self._initial_time < 0.3:
+            if time.time() - self._initial_time < RESIZE_PATIENCE:
+                self.force_size()
                 return self._initial_state
             else:
                 logger.debug("Allowing view custom size %dx%d (instead of %dx%d)" % (*up_state.size,
