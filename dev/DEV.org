@@ -5,7 +5,6 @@
 *** WAIT Bug: Occasionally orphan states do appear (last time GIMP-2.99, alacritty -e nmtui without nm running)
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasionally Chromium opens with twice the size (happens more when newm-sidecar is running)
-*** STRT Bug: Some animations are triggered before blend-in delaying startup time
 
 ** STRT README TODO comments, restructure and merge PR - extended config incl. waybar, add newm-cmd clean
 ** STRT TESTS: Finish tests and verify on weston

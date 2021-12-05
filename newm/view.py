@@ -78,10 +78,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.up_state is None:
             return "<View %d>" % self._handle
 
-        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s>" % (
+        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s, panel=%s, layer_panel=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
              self.title, self.app_id, self.role, self.pid,
-             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused)
+             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused, self.panel, self.layer_panel)
 
     def is_float(self, state: LayoutState) -> bool:
         if self.is_panel():
@@ -320,12 +320,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def _show_layer(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Show - layer: %s", self)
 
-        # Place dummy ViewState
-        ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True, layer_initial=True)
-        ws_state2 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
+        if self.layer_panel is None:
+            ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True, layer_initial=True)
+            ws_state2 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
 
-        self.focus()
-        return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
+            self.focus()
+            return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
+        else:
+            ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
+            return state.setting_workspace_state(ws, ws_state1), None
 
     """
     Floating
