@@ -151,11 +151,9 @@ See [config](./doc/config.md) for a documentation on all configurable values.
 
 ## Next steps
 
-### Tips and tricks, setting up environment and systemd integration
-
-[Link](./doc/tips_and_tricks.md)
-[Link](./doc/env_wayland.md)
-[Link](./doc/systemd.md)
+- [Tips and tricks](./doc/tips_and_tricks.md)
+- [Environment setup](./doc/env_wayland.md)
+- [Systemd integration](./doc/systemd.md)
 
 ### Using newm-cmd
 
@@ -163,7 +161,7 @@ See [config](./doc/config.md) for a documentation on all configurable values.
 - `newm-cmd inhibit-idle` prevents newm from going into idle states (dimming the screen)
 - `newm-cmd config` reloads the configuration
 - `newm-cmd lock` locks the screen
-- `newm-cmd open-virtual-output <name>` opens a new virtual output (see [newm-sidecar](https://github.com/jbcuhermn/newm-sidecar))
+- `newm-cmd open-virtual-output <name>` opens a new virtual output (see [newm-sidecar](https://github.com/jbuchermn/newm-sidecar))
 - `newm-cmd close-virtual-output <name>` close a virtual output
 - `newm-cmd clean` removes orphaned states, which can happen, but shouldn't (if you encounter the need for this, please file a bug)
 - `newm-cmd debug` prints out some debug info on the current state of views

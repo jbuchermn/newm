@@ -1,4 +1,4 @@
-# Setting environment variables for a wayland session
+### Setting environment variables for a wayland session
 
 It is very likely that you want to have newm configured as well as possible and that it is not the only wm you have installed. In this context it is helpful to have perfectly assigned environment variables for wayland integration with applications.
 
@@ -57,7 +57,7 @@ export DBUS_SESSION_BUS_PID
  You can add more variables related to wayland integration with applications. If you do not know any of these variables you can search for information individually by variable name.
 
 
-# Starting newm with environment variables
+### Starting newm with environment variables
 
 For this purpose it is necessary to add some variables related to the session,
 then we will create the following script `/usr/local/bin/newm-run.sh`
@@ -81,7 +81,7 @@ start-newm
 
  will now use this script to start newm(remember to give it execution permissions).
 
-## Use with greetd and tuigreet
+#### Use with greetd and tuigreet
 
 Change `command` to the following line in your greetd config
 
@@ -89,9 +89,9 @@ Change `command` to the following line in your greetd config
 command = "newm-run.sh"
 ```
 
-# Reusing variables with another wm
+### Reusing variables with another wm
 
-## sway example
+#### sway example
 
  ``` bash
 #!/bin/sh
@@ -110,6 +110,6 @@ systemd-cat --identifier=sway sway $@
  ```
 
 
-# Using newm with systemd
+### Using newm with systemd
 
 [Link](./systemd.md)

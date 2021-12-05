@@ -34,7 +34,7 @@ for k, d in keys:
     r_check = re.compile(r'\|\s*(%s)\s*\|\s*(%s).*' % (re.escape("`%s`" % k), re.escape("" if d is None or d.strip() == "None" else "`%s`" % d)))
     r_check_weak = re.compile(r'\|\s*(%s).*' % (re.escape("`%s`" % k)))
     weak_m = None
-    for l in open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "README.md"), 'r'):
+    for l in open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "doc", "config.md"), 'r'):
         if r_check.match(l) is not None:
             break
         if r_check_weak.match(l) is not None:

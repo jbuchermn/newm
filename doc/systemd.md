@@ -1,4 +1,4 @@
-# Integration with systemd
+### Integration with systemd
 
 It is likely that you are a systemd user, and you want newm to integrate with
 it. For this purpose you should add the following in your configuration file,

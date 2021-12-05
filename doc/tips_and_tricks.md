@@ -1,9 +1,9 @@
-# Tips and Tricks
+### Tips and Tricks
 
 This section lists some tips and tricks you can use to make your day-to-day work with newm and wayland easier. If you know of any other useful tips and tricks open a pr.
 
 
-## Open any electron application natively with wayland
+#### Open any electron application natively with wayland
 
 This trick consists of simply creating a script that passes the necessary flags to it so that it opens natively with wayland.
 The script is as follows `/usr/loacal/open-wl`:
