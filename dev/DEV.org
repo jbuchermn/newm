@@ -5,12 +5,9 @@
 *** WAIT Bug: Occasionally orphan states do appear (last time GIMP-2.99, alacritty -e nmtui without nm running)
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasionally Chromium opens with twice the size (happens more when newm-sidecar is running)
-*** DONE Bug: Occasionally waybar does not open on startup
 
-** STRT TESTS: Finish tests and verify on weston
-** TODO New background / screenshot
-** TODO New video + video on newm-sidecar
-** TODO Release: README TODO comment / AUR update
+** STRT TESTS: Do all tests, find bugs, ...
+** TODO Video on newm-sidecar
 
 * v0.3
 ** More detailed config on Layout class
@@ -23,6 +20,9 @@
 - Bars as panels not as widgets
 - layer-shell
 - catapult
+- rofi
+- wob
+- mako
 - Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
 ** Ultrawide monitors --> two workspaces on one output
 ** Scale windows moving others "out of the way"

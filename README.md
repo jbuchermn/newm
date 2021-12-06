@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/github/license/jbuchermn/newm)](LICENSE)
 [![AUR](https://img.shields.io/aur/version/newm-git)](https://aur.archlinux.org/packages/newm-git)
 
-[![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/otMEC03ie0g)
+[![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/Qvyt4XynlYI)
 
 ## Idea
 
@@ -31,9 +31,7 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 
 ## newm v0.2
 
-TODO v0.2 is almost ready to be merged into master.
-
-Changes include
+v0.2 introduces some breaking changes and many little improvements. Changes include
 - Support for multi-monitor setups
 - Basic support for layer shell (waybar, rofi, ...)
 - Many small improvements concerning window behaviour
