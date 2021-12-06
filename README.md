@@ -14,11 +14,11 @@ The basic commands therefore are navigation (left, right, top, bottom) and zoom-
 - Use three fingers to move around the wall
 - Use four fingers to zoom out (move them upward) or in (downward)
 
-To be able to arange the windows in a useful manner, use
+To be able to arrange the windows in a useful manner, use
 - `Logo` (unless configured otherwise) plus one finger on the touchpad to move windows
 - `Logo` (unless configured otherwise) plus two fingers on the touchpad to change the extent of a window
 
-To get a quick overview of all windows, just hit the Logo (unless configured otherwise) key.
+To get a quick overview of all windows, just hit the `Logo` (unless configured otherwise) key.
 Additionally with a quick 5-finger swipe a launcher panel can be opened.
 
 These behaviours can (partly) be configured (see below for setup). By default (check [default_config.py](newm/default_config.py)), the following key bindings (among others) are in place
