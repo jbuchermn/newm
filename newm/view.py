@@ -814,6 +814,16 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             self_state, ws_state, ws_handle = state.find_view(self)
             ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
         except Exception:
+            """
+            This is perfectly valid: One animation is queued, after which the show animation of
+            this view is queued. Upon start of the first animation we're here.
+            """
+            if self._initial_state is not None:
+                return self._initial_state
+
+            """
+            This however shouldn't happen
+            """
             logger.warn("Missing state: %s" % self)
             return PyWMViewDownstreamState(up_state=up_state)
 
