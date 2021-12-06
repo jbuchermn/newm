@@ -798,8 +798,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 self.force_size()
                 return self._initial_state
             else:
-                logger.debug("Allowing view custom size %dx%d (instead of %dx%d)" % (*up_state.size,
-                                                                                     *self._initial_state.size))
+                logger.info("Size negotiation failed - Allowing view custom size %dx%d (instead of %dx%d)" % (*up_state.size,
+                                                                                                              *self._initial_state.size))
 
         if up_state.is_mapped:
             self.wm.animate_to(self.show, conf_anim_t(), None)
@@ -815,7 +815,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
         except Exception:
             logger.warn("Missing state: %s" % self)
-            return PyWMViewDownstreamState()
+            return PyWMViewDownstreamState(up_state=up_state)
 
         if self.panel is not None:
             return self._reducer_panel(up_state, state, self_state, ws, ws_state)
