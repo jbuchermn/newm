@@ -13,6 +13,8 @@ try:
     conf_time_scale = configured_value('grid.time_scale', .3)
     conf_throw_ps = configured_value('grid.throw_ps', [1, 5, 15])
     conf_min_dist = configured_value('grid.min_dist', .05)
+
+    conf_griddebug = configured_value('grid.debug', False)
 except:
     pass
 
@@ -111,13 +113,11 @@ class Grid:
             self.last_x_output = xp
             self.last_t = t
 
-        # BEGIN DEBUG
-        if not silent:
+        if not silent and conf_griddebug():
             logger.debug("GRID[%s]: %f, %f, %f, %f, %f",
                          self.name, time.time(), x, xp,
                          self.last_p if self.last_p is not None else 0,
                          self.last_p_output if self.last_p_output is not None else 0)
-        # END DEBUG
         return xp
 
     def final(self, throw_dist_max: Optional[float]=None) -> tuple[int, float]:
@@ -170,18 +170,17 @@ class Grid:
         if compare_t < dt:
             dt = compare_t
 
-        # BEGIN DEBUG
-        xb = self.at(self.last_x_output, silent=True)
-        t0 = time.time()
-        for i in range(2):
-            logger.debug("GRID[%s]: %f, %f, %f, %f, %f",
-                         self.name,
-                         t0 + i * dt,
-                         0,
-                         xb + i * (xf-xb),
-                         0,
-                         0 if dt == 0. else dx/dt if xf>xb else -dx/dt)
-        # END DEBUG
+        if conf_griddebug():
+            xb = self.at(self.last_x_output, silent=True)
+            t0 = time.time()
+            for i in range(2):
+                logger.debug("GRID[%s]: %f, %f, %f, %f, %f",
+                            self.name,
+                            t0 + i * dt,
+                            0,
+                            xb + i * (xf-xb),
+                            0,
+                            0 if dt == 0. else dx/dt if xf>xb else -dx/dt)
 
         return xf, dt
 

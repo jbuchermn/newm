@@ -129,11 +129,9 @@ def configured_value(path: str, default: Optional[T]=None) -> Callable[[], T]:
 
 
 if __name__ == '__main__':
-    scale = configured_value('output_scale', 1.0)
     pywm = configured_value('pywm', cast(dict[str, Any], {}))
 
     while True:
-        print("Scale is %f" % scale())
         print("PyWM is %s" % pywm())
         input("Update? ")
         load_config()

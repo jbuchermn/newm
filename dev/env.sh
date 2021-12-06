@@ -4,4 +4,4 @@ SCRIPTPATH=$(dirname "$SCRIPT")
 
 alias nlc="tail -f $HOME/.cache/newm_log"
 alias nplc="tail -f $HOME/.cache/newm_panel_log"
-alias ngp="DISPLAY=\":0\" python3 $SCRIPTPATH/newm/grid.py $HOME/.cache/newm_log"
+alias ngp="DISPLAY=\":0\" python3 $SCRIPTPATH/../newm/grid.py $HOME/.cache/newm_log"

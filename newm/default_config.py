@@ -18,7 +18,15 @@ from pywm import (
 )
 
 mod = PYWM_MOD_LOGO
-wallpaper = os.path.dirname(os.path.realpath(__file__)) + '/resources/wallpaper.jpg'
+background = {
+    'path': os.path.dirname(os.path.realpath(__file__)) + '/resources/wallpaper.jpg',
+    'anim': True
+}
+
+outputs = [
+    { 'name': 'eDP-1' },
+    # { 'name': 'virt-1', 'pos_x': -1280, 'pos_y': 0, 'width': 1280, 'height': 720 }
+]
 
 
 def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
@@ -42,7 +50,7 @@ def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
         ("M-C-l", lambda: layout.resize_focused_view(1, 0)),
 
         ("M-Return", lambda: os.system("alacritty &")),
-        ("M-q", lambda: layout.close_view()),
+        ("M-q", lambda: layout.close_focused_view()),
 
         ("M-p", lambda: layout.ensure_locked(dim=True)),
         ("M-P", lambda: layout.terminate()),

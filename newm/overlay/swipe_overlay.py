@@ -24,10 +24,12 @@ class SwipeOverlay(Overlay):
         super().__init__(layout)
 
         self.layout = layout
+        self.workspace = layout.get_active_workspace()
+        self.ws_state = layout.state.get_workspace_state(self.workspace)
 
-        self.size = self.layout.state.size
-        self.i = self.layout.state.i
-        self.j = self.layout.state.j
+        self.size = self.ws_state.size
+        self.i = self.ws_state.i
+        self.j = self.ws_state.j
 
         self.locked_x: Optional[bool] = None
 
@@ -44,7 +46,7 @@ class SwipeOverlay(Overlay):
         """
         Grids
         """
-        min_i, min_j, max_i, max_j = self.extent = [round(r) for r in self.layout.state.get_extent()]
+        min_i, min_j, max_i, max_j = self.extent = [round(r) for r in self.ws_state.get_extent()]
 
         max_i -= round(self.size) - 1
         max_j -= round(self.size) - 1
@@ -80,13 +82,13 @@ class SwipeOverlay(Overlay):
                 i = round(self.initial_x)
                 t = tj
 
-        return self.layout.state.copy(i=i, j=j), t
+        return self.layout.state.replacing_workspace_state(self.workspace, i=i, j=j), t
 
     def _set_state(self) -> None:
         if not self._invalid[0]:
-            self.layout.state.i = self.i_grid.at(self.i)
+            self.ws_state.i = self.i_grid.at(self.i)
         if not self._invalid[1]:
-            self.layout.state.j = self.j_grid.at(self.j)
+            self.ws_state.j = self.j_grid.at(self.j)
         self.layout.damage()
 
 
