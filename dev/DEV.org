@@ -1,42 +1,46 @@
 #+TITLE: newm developer information
 
-* Current (v0.2)
+* Current (v0.3)
 ** Bugs / Technical debt
 *** WAIT Bug: Occasionally orphan states do appear (last time GIMP-2.99, alacritty -e nmtui without nm running)
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasionally Chromium opens with twice the size (happens more when newm-sidecar is running)
+*** STRT TESTS: Do all tests, find bugs, ...
 
-** STRT TESTS: Do all tests, find bugs, ...
-** TODO Video on newm-sidecar
+** TODO Github action mypy (needs pywm stubs)
 
-* v0.3
-** More detailed config on Layout class
-** Github action mypy (needs pywm stubs)
-** Ability to increase size of rows or cols (e.g. in 1x2 | 1x2)
-** Layer shell - Exclusive zones and keyboard interactivity
-** Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
-** Window swallowing
 ** Improved panel
-- Bars as panels not as widgets
-- layer-shell
+*** TODO Get rid of sys_backend maybe some default config instead
+*** TODO dbus endpoint for newm-cmd (?), plus e.g. waybar - get rid of websockets
+*** TODO Incorporate
 - catapult
 - rofi
 - wob
 - mako
-- Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
-** Ultrawide monitors --> two workspaces on one output
-** Scale windows moving others "out of the way"
-** Move to resize overlay: Trigger size changes on invisible windows only in finish transition? Analogous to interpolate
+*** TODO Get rid of newm-panel-nwjs but keep newm_panel_basic
 
 ** Widgets
-- Animated border around current window
-- Titles during OverviewOverlay
+*** TODO Animated border around current window
+*** TODO Titles during Overview
+*** TODO SSD on certain windows (mostly floating)
 
-* Backlog / Ideas
-** Dynamic background
+** TODO Video on newm-sidecar
+
+** Improvements
+*** TODO Layer shell - Exclusive zones and keyboard interactivity
+*** TODO Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
+*** TODO Scale windows moving others "out of the way"
+
+* v0.3
+** More detailed config on Layout class
+** Ability to increase size of rows or cols (e.g. in 1x2 | 1x2)
+** Window swallowing
+** Ultrawide monitors --> two workspaces on one output
+** Move to resize overlay: Trigger size changes on invisible windows only in finish transition? Analogous to interpolate
 ** Move tiles from workspace to another -> animate size change instead of jump
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
+** Dynamic background
 
 
 * Setup clean arch chroot / qemu for testing
