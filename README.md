@@ -112,6 +112,9 @@ mod = PYWM_MOD_ALT
 
 def on_startup():
     os.system("waybar &")
+    
+def on_reconfigure():
+    os.system("notify-send newm \"Reloaded configuration\" &")
 
 bar = {
     'enabled': False,
@@ -146,6 +149,8 @@ x = {
 The configuration can be dynamically updated (apart from a couple of fixed keys) using `Layout.update_config` (by default bound to `Mod+C`).
 
 See [config](./doc/config.md) for a documentation on all configurable values.
+
+Be aware that functions (as in keybindings, `on_startup`, ...) are run synchronously in the compositor thread. Blocking there will block the whole system.
 
 ## Next steps
 

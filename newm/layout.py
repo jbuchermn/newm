@@ -82,6 +82,7 @@ conf_power_times = configured_value('power_times', [120, 300, 600])
 conf_suspend_command = configured_value('suspend_command', "systemctl suspend")
 
 conf_on_startup = configured_value('on_startup', lambda: None)
+conf_on_reconfigure = configured_value('on_reconfigure', lambda: None)
 conf_lock_on_wakeup = configured_value('lock_on_wakeup', True)
 
 conf_bar_enabled = configured_value('bar.enabled', True)
@@ -1040,6 +1041,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def update_config(self) -> None:
         self._setup(fallback=False)
         self.damage()
+
+        conf_on_reconfigure()()
 
     def ensure_locked(self, anim: bool=True, dim: bool=False) -> None:
         def focus_lock() -> None:

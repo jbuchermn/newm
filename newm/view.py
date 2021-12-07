@@ -254,9 +254,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if target_height == 0:
             target_height = height
 
-        if anchored_top and ((anchored_left and anchored_right) or target_width == width) and not anchored_bottom and target_height < 0.2*output.height:
+        if anchored_top and ((anchored_left and anchored_right) or target_width == output.width) and not anchored_bottom and target_height < 0.2*output.height:
             self.layer_panel = "top_bar"
-        elif anchored_bottom and ((anchored_left and anchored_right) or target_width == width) and not anchored_top and target_height < 0.2*output.height:
+        elif anchored_bottom and ((anchored_left and anchored_right) or target_width == output.width) and not anchored_top and target_height < 0.2*output.height:
             self.layer_panel = "bottom_bar"
 
         return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
