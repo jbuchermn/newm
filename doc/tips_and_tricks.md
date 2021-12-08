@@ -21,7 +21,7 @@ usage:
 $ open-wl brave
 ```
 
-personally I like to add other additional banners to enhance the experience.
+personally I like to add other additional flags to enhance the experience.
 Below is my script:
 
 ``` bash
