@@ -63,6 +63,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         Animate.__init__(self)
 
         self._mapped = False
+        self._destroyed = False
 
         # Initial state while waiting for map
         self._initial_time: float = time.time()
@@ -309,7 +310,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
 
         else:
-            logger.warn("Cannot place layer view without fixed output")
+            logger.warn("Cannot place layer view without fixed output: %s" % self)
         result.mask = (-100000, -100000, result.size[0] + 200000, result.size[1] + 200000)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
@@ -743,6 +744,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def show(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Show: %s", self)
 
+        if self._destroyed:
+            logger.debug("Preventing show of destroyed view")
+            return None, None
+
         if self._mapped:
             logger.debug("Duplicate show")
             return None, None
@@ -853,6 +858,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return self.up_state is not None and self.up_state.is_focused
 
     def destroy(self) -> None:
+        self._destroyed = True
         self.wm.destroy_view(self)
 
     def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> tuple[ViewState, ViewState]:

@@ -2,11 +2,12 @@
 
 * Current (v0.2)
 ** Bugs / Technical debt
-*** STRT Bug: Occasionally orphan states do appear (last time GIMP-2.99, alacritty -e nmtui without nm running)
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasionally Chromium opens with twice the size (happens more when newm-sidecar is running)
 *** WAIT Bug: Flickering issues
-*** STRT Bug: obs-studio popups if output not placed at 0, 0
+*** WAIT Bug: obs-studio issues - not reproducible
+*** DONE Bug: Occasionally orphan states do appear (last time GIMP-2.99, alacritty -e nmtui without nm running) - newm-cmd clean works, should not be necessary though
+*** STRT Bug: Open virtual screen / send mako notification / close virtual screen / send make notification - issues with missing fixed_output
 
 ** STRT TESTS: Do all tests, find bugs, ...
 ** TODO Video on newm-sidecar
