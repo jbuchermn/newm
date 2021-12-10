@@ -297,12 +297,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             if self.layer_panel == "top_bar":
                 x, y, w, h = 0., 0., 0., 0. # mypy
                 x, y, w, h = result.box
-                y -= h * (1. - ws_state.top_bar_dy)
+                y -= h * 1.2 * (1. - ws_state.top_bar_dy)
                 result.box = x, y, w, h
             elif self.layer_panel == "bottom_bar":
                 x, y, w, h = 0., 0., 0., 0. # mypy
                 x, y, w, h = result.box
-                y += h * (1. - ws_state.bottom_bar_dy)
+                y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
                 result.box = x, y, w, h
 
             if self_state.layer_initial:

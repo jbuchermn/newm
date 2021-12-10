@@ -325,6 +325,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def __init__(self, debug: bool=False) -> None:
         load_config()
 
+        self._debug = debug
         PyWM.__init__(self, View, **conf_pywm(), outputs=conf_outputs(), debug=debug)
         Animate.__init__(self)
 
@@ -513,7 +514,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.sys_backend.register_xf86_keybindings()
 
         if reconfigure:
-            self.reconfigure(dict(**conf_pywm(), outputs=conf_outputs()))
+            self.reconfigure(dict(**conf_pywm(), outputs=conf_outputs(), debug=self._debug))
 
     def reducer(self, state: LayoutState) -> PyWMDownstreamState:
         return PyWMDownstreamState(state.lock_perc)
