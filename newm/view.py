@@ -292,25 +292,26 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.is_focused():
             result.z_index += 1
 
-        if result.fixed_output is not None:
-            result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
+        if result.fixed_output is None:
+            result.fixed_output = self.wm.layout[0]
+            logger.debug("Manually assigning fixed output: %s" % self.wm.layout[0])
 
-            if self.layer_panel == "top_bar":
-                x, y, w, h = 0., 0., 0., 0. # mypy
-                x, y, w, h = result.box
-                y -= h * 1.2 * (1. - ws_state.top_bar_dy)
-                result.box = x, y, w, h
-            elif self.layer_panel == "bottom_bar":
-                x, y, w, h = 0., 0., 0., 0. # mypy
-                x, y, w, h = result.box
-                y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
-                result.box = x, y, w, h
+        result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
 
-            if self_state.layer_initial:
-                result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
+        if self.layer_panel == "top_bar":
+            x, y, w, h = 0., 0., 0., 0. # mypy
+            x, y, w, h = result.box
+            y -= h * 1.2 * (1. - ws_state.top_bar_dy)
+            result.box = x, y, w, h
+        elif self.layer_panel == "bottom_bar":
+            x, y, w, h = 0., 0., 0., 0. # mypy
+            x, y, w, h = result.box
+            y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
+            result.box = x, y, w, h
 
-        else:
-            logger.warn("Cannot place layer view without fixed output: %s" % self)
+        if self_state.layer_initial:
+            result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
+
         result.mask = (-100000, -100000, result.size[0] + 200000, result.size[1] + 200000)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
