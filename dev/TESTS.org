@@ -272,6 +272,7 @@ Start with QT_QPA_PLATFORM=xcb and possibly QT_SCALE_FACTOR=2
 * rofi
 * waybar
 * slurp
+* OBS
 
 
 * newm as greeter
