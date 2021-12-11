@@ -370,7 +370,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.floating = True
         result.accepts_input = True
         result.corner_radius = conf_corner_radius()
-
         result.corner_radius /= max(1, ws_state.size / 2.)
 
         # z_index based on hierarchy
@@ -409,17 +408,21 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.box = (x, y, width, height)
 
         """
-        Assume CSD-views will use offset
-        TODO - Can be handled via xdg-decorations
-        """
-        csd = up_state.offset != (0, 0)
-        if self.app_id == "catapult":
-            csd = True
+        Two options
+        - CSD or no decoration necessary: No masking and we're good
+        - SSD: For now, use masking and corner_radius
 
-        if csd:
-            result.mask = (-ws.width, -ws.height, width + 2 * ws.width, height + 2 * ws.height)
-        else:
+        For now heuristic to decide / needs special info for catapult
+        """
+        ssd = up_state.offset == (0, 0)
+        if self.app_id == "catapult":
+            ssd = False
+
+        if ssd:
             result.mask = (0, 0, width, height)
+        else:
+
+            result.mask = (-ws.width, -ws.height, width + 2 * ws.width, height + 2 * ws.height)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])

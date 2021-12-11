@@ -11,10 +11,8 @@
 - [X] Flicker on resize
 *** STRT Every size negotiation with LibreOffice fails
 
-** TODO Pass xdg-decoration info from c and use in _Reducer_floating
-
-** TODO TESTS: Do all tests, find bugs, ...
 ** TODO Github action mypy (needs pywm stubs)
+** TODO TESTS: Do all tests, find bugs, ...
 
 * v0.3
 ** More detailed config on Layout class
