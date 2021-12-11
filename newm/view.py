@@ -576,18 +576,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             h -= 2*padding_scaled
 
         """
-        Use masking to cut off unwanted CSD. Chromium uses a larger root xdg_surface than its toplevel
-        to render shadows (even though being asked not to). This masks the root surface to toplevel dimensions
-        """
-        mask_origin = (0., 0.)
-        if up_state.size[0] > 0 and up_state.size[1] > 0:
-            ox = up_state.offset[0] / up_state.size[0] * w
-            oy = up_state.offset[1] / up_state.size[1] * h
-            x -= ox
-            y -= oy
-            mask_origin = ox, oy
-
-        """
         Handle client size
         """
         if self_state.scale_origin is not None:
@@ -637,10 +625,21 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 # new width is smaller - would appear scaled up horizontally
                 w *= old_ar / new_ar
 
+        """
+        Use masking to cut off unwanted CSD. Chromium uses a larger root xdg_surface than its toplevel
+        to render shadows (even though being asked not to). This masks the root surface to toplevel dimensions
+        """
+        mask_origin = (0., 0.)
+        if up_state.size[0] > 0 and up_state.size[1] > 0:
+            ox = up_state.offset[0] / up_state.size[0] * w
+            oy = up_state.offset[1] / up_state.size[1] * h
+            x -= ox
+            y -= oy
+            mask_origin = ox, oy
+        result.mask = (mask_origin[0], mask_origin[1], w, h)
+
         result.size = (width, height)
         result.box = (x, y, w, h)
-
-        result.mask = (mask_origin[0], mask_origin[1], w, h)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
