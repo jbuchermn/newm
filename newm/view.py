@@ -369,7 +369,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result = PyWMViewDownstreamState()
         result.floating = True
         result.accepts_input = True
-        result.corner_radius = conf_corner_radius() if self.parent is None else 0
+        result.corner_radius = conf_corner_radius()
 
         result.corner_radius /= max(1, ws_state.size / 2.)
 
@@ -408,10 +408,18 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         y *= ws.height / ws_state.size
         result.box = (x, y, width, height)
 
-        ox, oy = up_state.offset
-        ox = abs(ox)
-        oy = abs(oy)
-        result.mask = (-10*ox, -10*oy, width + 20*ox, height + 20*oy)
+        """
+        Assume CSD-views will use offset
+        TODO - Can be handled via xdg-decorations
+        """
+        csd = up_state.offset != (0, 0)
+        if self.app_id == "catapult":
+            csd = True
+
+        if csd:
+            result.mask = (-ws.width, -ws.height, width + 2 * ws.width, height + 2 * ws.height)
+        else:
+            result.mask = (0, 0, width, height)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
@@ -568,9 +576,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             h -= 2*padding_scaled
 
         """
-        An attempt to reduce the effect of dreadful CSD
-        As always Chrome is ahead in this regard, rendering completely unwanted shadows
-        --> If up_state.offset indicates weird CSD stuff going on, just fix the tile using masks
+        Use masking to cut off unwanted CSD. Chromium uses a larger root xdg_surface than its toplevel
+        to render shadows (even though being asked not to). This masks the root surface to toplevel dimensions
         """
         mask_origin = (0., 0.)
         if up_state.size[0] > 0 and up_state.size[1] > 0:
