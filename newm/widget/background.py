@@ -145,7 +145,7 @@ class BackgroundState:
         # if height > 0 and fh > 0 and abs(fw / fh - width / height) > 0.01:
         #     logger.debug("Background aspect ratio issue: %dx%d on %dx%d wallpaper" % (fw, fh, width, height))
 
-        self.box = (fx, fy, fw, fh)
+        self.box = (fx, fy, math.ceil(fw), math.ceil(fh))
         self.opacity = opacity
 
     def set_max(self, wallpaper_size: tuple[int, int], output_size: tuple[float, float]) -> None:
@@ -159,7 +159,7 @@ class BackgroundState:
             new_w = wallpaper_size[0] * h/wallpaper_size[1]
             x -= (new_w - w)/2.
             w = new_w
-        self.box = (x, y, w, h)
+        self.box = (x, y, math.ceil(w), math.ceil(h))
 
     def delta(self, other: BackgroundState) -> float:
         return abs(self.box[0] - other.box[0]) + \

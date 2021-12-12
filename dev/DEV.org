@@ -9,11 +9,9 @@
 - [ ] Misplaced popups when output isn't placed at 0, 0
 - [ ] Large scale (?)
 *** STRT DBeaver crash seems to be able to create orphan states
-*** STRT Every size negotiation with LibreOffice fails
-*** STRT Background rounding - prevent single row or col of missed pixels
+*** TODO Every size negotiation with LibreOffice fails
 
 ** TODO Reduce number of Init / Show calls (or at least log messages)
-** TODO Github action mypy (needs pywm stubs)
 ** TODO TESTS: Do all tests, find bugs, ...
 
 * v0.3
