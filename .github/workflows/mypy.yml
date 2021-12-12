@@ -8,13 +8,13 @@ jobs:
     name: Mypy
     steps:
     - uses: actions/checkout@v1
+    - uses: actions/checkout@v1
+      with:
+        repository: jbuchermn/pywm
     - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
-    - uses: actions/checkout@v1
-      with:
-        name: jbuchermn/pywm
     - name: Install Dependencies
       run: |
         pip install mypy
