@@ -3,15 +3,14 @@
 * Current (v0.2)
 ** Bugs / Technical debt
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
-*** WAIT Bug: Occasionally Chromium opens with twice the size (happens more when newm-sidecar is running)
+*** WAIT Bug: Occasionally Chromium opens with twice or half the size (happens more when newm-sidecar is running)
 
 *** STRT Bug: obs-studio issues
-- [ ] Misplaced popups when output isn't placed at 0, 0
+- [ ] Misplaced popups when output isn't placed at 0, 0 (happens on sway as well)
 - [ ] Large scale (?)
 *** STRT DBeaver crash seems to be able to create orphan states
 *** TODO Every size negotiation with LibreOffice fails
 
-** TODO Reduce number of Init / Show calls (or at least log messages)
 ** TODO TESTS: Do all tests, find bugs, ...
 
 * v0.3

@@ -62,8 +62,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
 
+        # State machine
         self._mapped = False
         self._destroyed = False
+        self._waiting_for_show = False
 
         # Initial state while waiting for map
         self._initial_time: float = time.time()
@@ -712,7 +714,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     Init and map
     """
     def init(self) -> PyWMViewDownstreamState:
-        logger.info("Init: %s", self)
+        if self._initial_state is None:
+            logger.info("Init: %s", self)
 
         # mypy
         if self.up_state is None:
@@ -752,15 +755,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return self._initial_state
 
     def show(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        logger.info("Show: %s", self)
-
         if self._mapped:
-            logger.debug("Duplicate show")
+            logger.warn("Unexpected - duplicate show")
             return None, None
 
         if self._destroyed:
             logger.debug("Preventing show of destroyed view")
             return None, None
+
+        logger.info("Show: %s", self)
 
         ws = self.wm.get_active_workspace()
         if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
@@ -797,13 +800,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return self._process(self.reducer(up_state, self.wm.state))
 
         self.damage()
+
+        _, kind = self._initial_state, self._initial_kind
         self.init()
 
         # mypy
         if self._initial_state is None:
             return PyWMViewDownstreamState()
 
-        state, kind = self._initial_state, self._initial_kind
         if kind != self._initial_kind:
             logger.debug("View %s changed kind: %d -> %d", kind, self._initial_kind)
             return self._initial_state
@@ -816,8 +820,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 logger.info("Size negotiation failed - Allowing view custom size %dx%d (instead of %dx%d)" % (*up_state.size,
                                                                                                               *self._initial_state.size))
 
-        if up_state.is_mapped:
+        if up_state.is_mapped and not self._waiting_for_show:
             self.wm.animate_to(self.show, conf_anim_t(), None)
+            self._waiting_for_show = True
         return self._initial_state
 
 
