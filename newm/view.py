@@ -754,12 +754,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def show(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Show: %s", self)
 
-        if self._destroyed:
-            logger.debug("Preventing show of destroyed view")
-            return None, None
-
         if self._mapped:
             logger.debug("Duplicate show")
+            return None, None
+
+        if self._destroyed:
+            logger.debug("Preventing show of destroyed view")
             return None, None
 
         ws = self.wm.get_active_workspace()

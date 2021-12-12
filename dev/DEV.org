@@ -4,13 +4,15 @@
 ** Bugs / Technical debt
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasionally Chromium opens with twice the size (happens more when newm-sidecar is running)
-*** WAIT Bug: Flickering issues
-*** STRT Bug: obs-studio issues
-- [ ] Misplaced popups depending on output position
-- [X] Setup obs 2x2, next to it 1x1 windows, scale into 1x1 window -> obs explodes (stops as soon as surface enter output is sent)
-- [X] Flicker on resize
-*** STRT Every size negotiation with LibreOffice fails
 
+*** STRT Bug: obs-studio issues
+- [ ] Misplaced popups when output isn't placed at 0, 0
+- [ ] Large scale (?)
+*** STRT DBeaver crash seems to be able to create orphan states
+*** STRT Every size negotiation with LibreOffice fails
+*** STRT Background rounding - prevent single row or col of missed pixels
+
+** TODO Reduce number of Init / Show calls (or at least log messages)
 ** TODO Github action mypy (needs pywm stubs)
 ** TODO TESTS: Do all tests, find bugs, ...
 
