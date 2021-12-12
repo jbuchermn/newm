@@ -1,4 +1,5 @@
 from __future__ import annotations
+from newm.widget.focus_border import FocusBorder
 from typing import Optional, Callable, TYPE_CHECKING, TypeVar, Union, Any, cast
 
 import time
@@ -18,6 +19,7 @@ from pywm import (
     PYWM_MOD_ALT,
     PYWM_MOD_LOGO
 )
+from pywm.pywm_widget import PyWMWidget
 
 from pywm.touchpad import (
     TwoFingerSwipePinchGesture,
@@ -325,6 +327,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
     def __init__(self, debug: bool=False) -> None:
         load_config()
 
+        self._debug = debug
         PyWM.__init__(self, View, **conf_pywm(), outputs=conf_outputs(), debug=debug)
         Animate.__init__(self)
 
@@ -348,6 +351,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.top_bars: list[TopBar] = []
         self.bottom_bars: list[BottomBar] = []
         self.corners: list[list[Corner]] = []
+        self.focus_borders: list[FocusBorder] = []
 
         self.thread = LayoutThread(self)
 
@@ -485,6 +489,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 self.create_widget(Corner, o, False, False)
             ]]
 
+
+        for b in self.focus_borders:
+            b.destroy()
+        self.focus_borders = []
+
+        for o in self.layout:
+            self.focus_borders += [self.create_widget(FocusBorder, o)]
+
         self.damage()
 
     def _setup(self, fallback: bool=True, reconfigure: bool=True) -> None:
@@ -513,7 +525,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.sys_backend.register_xf86_keybindings()
 
         if reconfigure:
-            self.reconfigure(dict(**conf_pywm(), outputs=conf_outputs()))
+            self.reconfigure(dict(**conf_pywm(), outputs=conf_outputs(), debug=self._debug))
 
     def reducer(self, state: LayoutState) -> PyWMDownstreamState:
         return PyWMDownstreamState(state.lock_perc)
