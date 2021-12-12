@@ -1,0 +1,25 @@
+name: Mypy
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Mypy
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install Dependencies
+      run: |
+        pip install mypy
+        pip install -r requirements_mypy.txt
+        git clone https://github.com/jbuchermn/pywm
+        cd pywm
+        stubgen
+        MYPYPATH=$MYPYPATH:$(pwd)/out/
+    - name: mypy
+      run: |
+        mypy newm
