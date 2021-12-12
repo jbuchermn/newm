@@ -7,15 +7,21 @@ jobs:
     runs-on: ubuntu-latest
     name: Mypy
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/checkout@v1
+    - name: Checkout newm
+      uses: actions/checkout@v2
+      with:
+        path: newm
+    - name: Checkout pywm
+      uses: actions/checkout@v2
       with:
         repository: jbuchermn/pywm
-    - name: Set up Python 3.8
+        path: pywm
+        ref: master
+    - name: Setup python 3.8
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
-    - name: Install Dependencies
+    - name: Install dependencies
       run: |
         pip install mypy
         pip install -r requirements_mypy.txt
@@ -23,6 +29,6 @@ jobs:
       run: |
         cd pywm
         stubgen -o ../pywm-stubs
-    - name: mypy
+    - name: Run mypy
       run: |
         MYPYPATH=$MYPYPATH:$GITHUB_WORKSPACE mypy newm
