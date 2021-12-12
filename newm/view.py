@@ -62,7 +62,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
 
+        # State machine
         self._mapped = False
+        self._destroyed = False
+        self._waiting_for_show = False
 
         # Initial state while waiting for map
         self._initial_time: float = time.time()
@@ -291,25 +294,26 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.is_focused():
             result.z_index += 1
 
-        if result.fixed_output is not None:
-            result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
+        if result.fixed_output is None:
+            result.fixed_output = self.wm.layout[0]
+            logger.debug("Manually assigning fixed output: %s" % self.wm.layout[0])
 
-            if self.layer_panel == "top_bar":
-                x, y, w, h = 0., 0., 0., 0. # mypy
-                x, y, w, h = result.box
-                y -= h * (1. - ws_state.top_bar_dy)
-                result.box = x, y, w, h
-            elif self.layer_panel == "bottom_bar":
-                x, y, w, h = 0., 0., 0., 0. # mypy
-                x, y, w, h = result.box
-                y += h * (1. - ws_state.bottom_bar_dy)
-                result.box = x, y, w, h
+        result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
 
-            if self_state.layer_initial:
-                result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
+        if self.layer_panel == "top_bar":
+            x, y, w, h = 0., 0., 0., 0. # mypy
+            x, y, w, h = result.box
+            y -= h * 1.2 * (1. - ws_state.top_bar_dy)
+            result.box = x, y, w, h
+        elif self.layer_panel == "bottom_bar":
+            x, y, w, h = 0., 0., 0., 0. # mypy
+            x, y, w, h = result.box
+            y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
+            result.box = x, y, w, h
 
-        else:
-            logger.warn("Cannot place layer view without fixed output")
+        if self_state.layer_initial:
+            result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
+
         result.mask = (-100000, -100000, result.size[0] + 200000, result.size[1] + 200000)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
@@ -367,8 +371,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result = PyWMViewDownstreamState()
         result.floating = True
         result.accepts_input = True
-        result.corner_radius = conf_corner_radius() if self.parent is None else 0
-
+        result.corner_radius = conf_corner_radius()
         result.corner_radius /= max(1, ws_state.size / 2.)
 
         # z_index based on hierarchy
@@ -406,10 +409,22 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         y *= ws.height / ws_state.size
         result.box = (x, y, width, height)
 
-        ox, oy = up_state.offset
-        ox = abs(ox)
-        oy = abs(oy)
-        result.mask = (-10*ox, -10*oy, width + 20*ox, height + 20*oy)
+        """
+        Two options
+        - CSD or no decoration necessary: No masking and we're good
+        - SSD: For now, use masking and corner_radius
+
+        For now heuristic to decide / needs special info for catapult
+        """
+        ssd = up_state.offset == (0, 0)
+        if self.app_id == "catapult":
+            ssd = False
+
+        if ssd:
+            result.mask = (0, 0, width, height)
+        else:
+
+            result.mask = (-ws.width, -ws.height, width + 2 * ws.width, height + 2 * ws.height)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
@@ -566,19 +581,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             h -= 2*padding_scaled
 
         """
-        An attempt to reduce the effect of dreadful CSD
-        As always Chrome is ahead in this regard, rendering completely unwanted shadows
-        --> If up_state.offset indicates weird CSD stuff going on, just fix the tile using masks
-        """
-        mask_origin = (0., 0.)
-        if up_state.size[0] > 0 and up_state.size[1] > 0:
-            ox = up_state.offset[0] / up_state.size[0] * w
-            oy = up_state.offset[1] / up_state.size[1] * h
-            x -= ox
-            y -= oy
-            mask_origin = ox, oy
-
-        """
         Handle client size
         """
         if self_state.scale_origin is not None:
@@ -628,10 +630,21 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 # new width is smaller - would appear scaled up horizontally
                 w *= old_ar / new_ar
 
+        """
+        Use masking to cut off unwanted CSD. Chromium uses a larger root xdg_surface than its toplevel
+        to render shadows (even though being asked not to). This masks the root surface to toplevel dimensions
+        """
+        mask_origin = (0., 0.)
+        if up_state.size[0] > 0 and up_state.size[1] > 0:
+            ox = up_state.offset[0] / up_state.size[0] * w
+            oy = up_state.offset[1] / up_state.size[1] * h
+            x -= ox
+            y -= oy
+            mask_origin = ox, oy
+        result.mask = (mask_origin[0], mask_origin[1], w, h)
+
         result.size = (width, height)
         result.box = (x, y, w, h)
-
-        result.mask = (mask_origin[0], mask_origin[1], w, h)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
@@ -701,7 +714,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     Init and map
     """
     def init(self) -> PyWMViewDownstreamState:
-        logger.info("Init: %s", self)
+        if self._initial_state is None:
+            logger.info("Init: %s", self)
 
         # mypy
         if self.up_state is None:
@@ -741,11 +755,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return self._initial_state
 
     def show(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
-        logger.info("Show: %s", self)
-
         if self._mapped:
-            logger.debug("Duplicate show")
+            logger.warn("Unexpected - duplicate show")
             return None, None
+
+        if self._destroyed:
+            logger.debug("Preventing show of destroyed view")
+            return None, None
+
+        logger.info("Show: %s", self)
 
         ws = self.wm.get_active_workspace()
         if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
@@ -782,13 +800,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return self._process(self.reducer(up_state, self.wm.state))
 
         self.damage()
+
+        _, kind = self._initial_state, self._initial_kind
         self.init()
 
         # mypy
         if self._initial_state is None:
             return PyWMViewDownstreamState()
 
-        state, kind = self._initial_state, self._initial_kind
         if kind != self._initial_kind:
             logger.debug("View %s changed kind: %d -> %d", kind, self._initial_kind)
             return self._initial_state
@@ -797,12 +816,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             if time.time() - self._initial_time < RESIZE_PATIENCE:
                 self.force_size()
                 return self._initial_state
-            else:
+            elif not self._waiting_for_show:
                 logger.info("Size negotiation failed - Allowing view custom size %dx%d (instead of %dx%d)" % (*up_state.size,
                                                                                                               *self._initial_state.size))
 
-        if up_state.is_mapped:
+        if up_state.is_mapped and not self._waiting_for_show:
             self.wm.animate_to(self.show, conf_anim_t(), None)
+            self._waiting_for_show = True
         return self._initial_state
 
 
@@ -853,6 +873,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return self.up_state is not None and self.up_state.is_focused
 
     def destroy(self) -> None:
+        self._destroyed = True
         self.wm.destroy_view(self)
 
     def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> tuple[ViewState, ViewState]:

@@ -81,7 +81,7 @@ start-newm
 
  will now use this script to start newm(remember to give it execution permissions).
 
-#### Use with greetd and tuigreet
+#### Use with greetd
 
 Change `command` to the following line in your greetd config
 

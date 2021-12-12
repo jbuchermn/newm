@@ -266,10 +266,13 @@ Start with QT_QPA_PLATFORM=xcb and possibly QT_SCALE_FACTOR=2
 *** WAIT Not yet supported
 
 * DBeaver
+** Wayland-native
+*** WAIT Does not work properly on HiDPI screens (same on sway)
 * virt-manager
 * rofi
 * waybar
 * slurp
+* OBS
 
 
 * newm as greeter

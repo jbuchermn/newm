@@ -490,8 +490,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             ]]
 
 
-        for b in self.focus_borders:
-            b.destroy()
+        for f in self.focus_borders:
+            f.destroy()
         self.focus_borders = []
 
         for o in self.layout:
@@ -900,7 +900,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         try:
             state, ws_state, ws_handle = self.state.find_view(view)
         except:
-            logger.warn("Unexpected: View %s state not found", view)
+            """
+            This can happen if the view has not been mapped (view.show) when it is destroyed
+            """
             return
 
         best_view: Optional[int] = None

@@ -1,0 +1,32 @@
+name: Mypy
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Mypy
+    steps:
+    - name: Checkout newm
+      uses: actions/checkout@v2
+      with:
+        path: newm
+    - name: Checkout pywm
+      uses: actions/checkout@v2
+      with:
+        repository: jbuchermn/pywm
+        path: pywm
+        ref: v0.3
+    - name: Setup python 3.9
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        pip install mypy
+        pip install -r newm/requirements_mypy.txt
+        pip install -r pywm/requirements_mypy.txt
+    - name: Run mypy
+      working-directory: newm
+      run: |
+        MYPYPATH=$MYPYPATH:$GITHUB_WORKSPACE/pywm mypy newm

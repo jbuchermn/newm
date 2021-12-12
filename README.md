@@ -112,7 +112,7 @@ mod = PYWM_MOD_ALT
 
 def on_startup():
     os.system("waybar &")
-    
+
 def on_reconfigure():
     os.system("notify-send newm \"Reloaded configuration\" &")
 
@@ -157,6 +157,7 @@ Be aware that functions (as in keybindings, `on_startup`, ...) are run synchrono
 - [Tips and tricks](./doc/tips_and_tricks.md)
 - [Environment setup](./doc/env_wayland.md)
 - [Systemd integration](./doc/systemd.md)
+- [Look and feel](./doc/look_and_feel.md)
 
 ### Using newm-cmd
 
