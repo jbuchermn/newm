@@ -816,7 +816,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             if time.time() - self._initial_time < RESIZE_PATIENCE:
                 self.force_size()
                 return self._initial_state
-            else:
+            elif not self._waiting_for_show:
                 logger.info("Size negotiation failed - Allowing view custom size %dx%d (instead of %dx%d)" % (*up_state.size,
                                                                                                               *self._initial_state.size))
 
