@@ -25,11 +25,7 @@ jobs:
       run: |
         pip install mypy
         pip install -r newm/requirements_mypy.txt
-    - name: Generate pywm stubs
-      working-directory: pywm
-      run: |
-        stubgen -o ../pywm-stubs
     - name: Run mypy
       working-directory: newm
       run: |
-        MYPYPATH=$MYPYPATH:$GITHUB_WORKSPACE mypy newm
+        MYPYPATH=$MYPYPATH:$GITHUB_WORKSPACE/pywm mypy newm
