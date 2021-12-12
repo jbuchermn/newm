@@ -12,14 +12,16 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
+    - uses: actions/checkout@v1
+      with:
+        name: jbuchermn/pywm
     - name: Install Dependencies
       run: |
         pip install mypy
         pip install -r requirements_mypy.txt
-        git clone https://github.com/jbuchermn/pywm
+    - name: Generate pywm stubs
         cd pywm
-        stubgen
-        MYPYPATH=$MYPYPATH:$(pwd)/out/
+        stubgen -o ../pywm-stubs
     - name: mypy
       run: |
-        mypy newm
+        MYPYPATH=$MYPYPATH:$GITHUB_WORKSPACE mypy newm
