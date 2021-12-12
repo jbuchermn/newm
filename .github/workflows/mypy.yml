@@ -24,11 +24,12 @@ jobs:
     - name: Install dependencies
       run: |
         pip install mypy
-        pip install -r requirements_mypy.txt
+        pip install -r newm/requirements_mypy.txt
     - name: Generate pywm stubs
+      working-directory: pywm
       run: |
-        cd pywm
         stubgen -o ../pywm-stubs
     - name: Run mypy
+      working-directory: newm
       run: |
         MYPYPATH=$MYPYPATH:$GITHUB_WORKSPACE mypy newm
