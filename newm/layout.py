@@ -667,30 +667,57 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
 
     def place_initial(self, workspace: Workspace, ws_state: WorkspaceState, w: int, h: int) -> tuple[int, int]:
+        """
+        Strategy
+        - If viewpoint > extent:
+            - If first view: Place at 0, 0
+            - Otherwise: Enlarge to the top right (if space) or bottom left
+        - Else
+            - Start at top right visible tile and move to right (alternatively traverse in spiral) to find closest unused tile
+        """
+
         place_i = 0
         place_j = 0
 
-        i, j = ws_state.i, ws_state.j
-        # Special case of centered window if extent < size
-        i, j = math.ceil(i), math.ceil(j)
-        for j, i in product(range(math.floor(j),
-                                  math.ceil(j + ws_state.size)),
-                            range(math.floor(i),
-                                  math.ceil(i + ws_state.size))):
-            for jp, ip in product(range(j, j + h), range(i, i + w)):
-                if not ws_state.is_tile_free(ip, jp):
+        min_i, min_j, max_i, max_j = ws_state.get_extent()
+        min_i = math.floor(min_i)
+        min_j = math.floor(min_j)
+        max_i = math.floor(max_i)
+        max_j = math.floor(max_j)
+
+        view_min_i, view_min_j = ws_state.i, ws_state.j
+        view_max_i, view_max_j = ws_state.i + ws_state.size - 1, ws_state.j + ws_state.size - 1
+        view_min_i = math.floor(view_min_i)
+        view_min_j = math.floor(view_min_j)
+        view_max_i = math.ceil(view_max_i)
+        view_max_j = math.ceil(view_max_j)
+
+        if len(self.tiles(workspace)) == 0:
+            place_i, place_j = 0, 0
+        elif (view_max_i - view_min_i) > (max_i - min_i):
+            place_i, place_j = max_i + 1, max(min_j, view_min_j)
+        elif (view_max_j - view_min_j) > (max_j - min_j):
+            place_i, place_j = max(min_i, view_min_i), max_j + 1
+        else:
+            i, j = ws_state.i, ws_state.j
+            for j, i in product(range(math.floor(j),
+                                    math.ceil(j + ws_state.size)),
+                                range(math.floor(i),
+                                    math.ceil(i + ws_state.size))):
+                for jp, ip in product(range(j, j + h), range(i, i + w)):
+                    if not ws_state.is_tile_free(ip, jp):
+                        break
+                else:
+                    place_i, place_j = i, j
                     break
             else:
-                place_i, place_j = i, j
-                break
-        else:
-            ws_, i_, j_, w_, h_ = self.find_focused_box()
-            if ws_._handle != workspace._handle:
-                i_, j_, w_, h_ = 0, 0, 1, 1
+                ws_, i_, j_, w_, h_ = self.find_focused_box()
+                if ws_._handle != workspace._handle:
+                    i_, j_, w_, h_ = 0, 0, 1, 1
 
-            place_i, place_j = round(i_ + w_), round(j_)
-            while not ws_state.is_tile_free(place_i, place_j):
-                place_i += 1
+                place_i, place_j = round(i_ + w_), round(j_)
+                while not ws_state.is_tile_free(place_i, place_j):
+                    place_i += 1
 
         logger.debug("Found initial placement at %d, %d", place_i, place_j)
         return place_i, place_j

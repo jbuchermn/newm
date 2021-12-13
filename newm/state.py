@@ -43,13 +43,9 @@ class ViewState:
     def get_ijwh(self) -> tuple[float, float, float, float]:
         i, j, w, h = self.i, self.j, self.w, self.h
         if self.move_origin is not None:
-            i = self.move_origin[0]
-        if self.move_origin is not None:
-            j = self.move_origin[1]
+            i, j = self.move_origin[:2]
         if self.scale_origin is not None:
-            w = self.scale_origin[0]
-        if self.scale_origin is not None:
-            h = self.scale_origin[1]
+            w, h = self.scale_origin
 
         return i, j, w, h
 
@@ -433,11 +429,6 @@ class WorkspaceState:
         min_i, min_j, max_i, max_j = 1000000., 1000000., -1000000., -1000000.
 
         for _, s in self._view_states.items():
-            # if not s.is_tiled:
-            #     continue
-            # if s.w == 0 or s.h == 0:
-            #     continue
-
             if s.move_origin is not None and s.move_origin[2]._handle != self._ws._handle:
                 continue
 

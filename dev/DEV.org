@@ -3,15 +3,20 @@
 * Current (v0.2)
 ** Bugs / Technical debt
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
-*** WAIT Bug: Occasionally Chromium opens with twice or half the size (happens more when newm-sidecar is running)
+*** WAIT Bug: Occasionally Chromium opens with twice or half the size (happens more when newm-sidecar is running) - possibly relies rather on xdg_surface than xdg_toplevel size (see pywm - wm_view_xdg.possibly_update_size)
+*** WAIT Bug: DBeaver crash seems to be able to create orphan states
 
-*** STRT Bug: obs-studio issues
-- [ ] Misplaced popups when output isn't placed at 0, 0 (happens on sway as well)
-- [ ] Large scale (?)
-*** STRT DBeaver crash seems to be able to create orphan states
-*** TODO Every size negotiation with LibreOffice fails
+*** STRT Not on biggest scale => Every size negotiation with LibreOffice fails
+- This is related to a 1x1 tile always being too small
+- _init_tiled uses the reducer with w=h=1
+- If min size reported is correct, maybe _init_tiled could be improved to use it and infer w and h > 1
+*** DONE Zoom out, open new (first) window - animation is offset
 
-** TODO TESTS: Do all tests, find bugs, ...
+** TODO TESTS
+- [ ] Redo all tests
+- [ ] Write more tests concerning newm as opposed to client-side behaviour
+    - No rescale on overview and similar
+- [ ] OBS: Misplaced popups when output isn't placed at 0, 0 (happens on sway as well) - check with weston
 
 * v0.3
 ** More detailed config on Layout class
