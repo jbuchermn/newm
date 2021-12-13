@@ -24,8 +24,8 @@ else:
 
 logger = logging.getLogger(__name__)
 
-conf_corner_radius = configured_value('view.corner_radius', 12.5)
-conf_padding = configured_value('view.padding', 8)
+conf_corner_radius = configured_value('view.corner_radius', 12)
+conf_padding = configured_value('view.padding', 6)
 conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0)
 conf_border_ws_switch = configured_value('view.border_ws_switch', 10.)
 

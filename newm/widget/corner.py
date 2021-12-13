@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from newm.layout import Layout
 
 
-conf_corner_radius = configured_value('corner_radius', 17.5)
+conf_corner_radius = configured_value('corner_radius', 18)
 
 
 class Corner(PyWMCairoWidget):
