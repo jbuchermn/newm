@@ -1,51 +1,22 @@
 #+TITLE: newm developer information
 
 * Current (v0.2)
-** Bugs / Technical debt
+** Bugs: currently not reproducible (possibly fixed by other changes)
 *** WAIT Bug: Occasionally fullscreen video opens stacked (in second window)
 *** WAIT Bug: Occasionally Chromium opens with twice or half the size (happens more when newm-sidecar is running) - possibly relies rather on xdg_surface than xdg_toplevel size (see pywm - wm_view_xdg.possibly_update_size)
 *** WAIT Bug: DBeaver crash seems to be able to create orphan states
 
+** Bugs: reproducible
 *** STRT Not on biggest scale => Every size negotiation with LibreOffice fails
 - This is related to a 1x1 tile always being too small
 - _init_tiled uses the reducer with w=h=1
 - If min size reported is correct, maybe _init_tiled could be improved to use it and infer w and h > 1
-*** DONE Zoom out, open new (first) window - animation is offset
 
 ** TODO TESTS
 - [ ] Redo all tests
 - [ ] Write more tests concerning newm as opposed to client-side behaviour
     - No rescale on overview and similar
 - [ ] OBS: Misplaced popups when output isn't placed at 0, 0 (happens on sway as well) - check with weston
-
-* v0.3
-** More detailed config on Layout class
-** Ability to increase size of rows or cols (e.g. in 1x2 | 1x2)
-** Layer shell - Exclusive zones and keyboard interactivity
-** Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
-** Window swallowing
-** Improved panel
-- Bars as panels not as widgets
-- layer-shell
-- catapult
-- rofi
-- wob
-- mako
-- Drop websockets and with that newm-panel-nwjs but keep newm_panel_basic
-** Ultrawide monitors --> two workspaces on one output
-** Scale windows moving others "out of the way"
-** Move to resize overlay: Trigger size changes on invisible windows only in finish transition? Analogous to interpolate
-
-** Widgets
-- Animated border around current window
-- Titles during OverviewOverlay
-
-* Backlog / Ideas
-** Video on newm-sidecar
-** Dynamic background
-** Move tiles from workspace to another -> animate size change instead of jump
-** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
-** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 
 
 * Setup clean arch chroot / qemu for testing

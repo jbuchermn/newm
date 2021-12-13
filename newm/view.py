@@ -661,6 +661,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def _show_tiled(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.debug("Show - tiled: %s" % self)
         min_w, _, min_h, _ = self.up_state.size_constraints if self.up_state is not None else (0., 0., 0., 0.)
+        logger.debug("Show - tiled - size constraints: min %dx%d" % (min_w, min_h))
         size = ws_state.size
         if ws_state.size_origin is not None:
             size = ws_state.size_origin
