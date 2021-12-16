@@ -16,7 +16,13 @@ class FocusBorder(PyWMWidget):
         self._output = output
         super().__init__(wm, output)
 
-        self.set_primitive("rounded_corners_border", [], [48./255., 213./255., 200./255., 0.7, 12.5 * self._output.scale, 3. * self._output.scale])
+        self.set_primitive("rounded_corners_border", [], [
+            # Color
+            48./255., 213./255., 200./255., 0.7,
+            # Corner radius
+            16.5 * self._output.scale,
+            # Width
+            1. * self._output.scale])
 
     def process(self) -> PyWMWidgetDownstreamState:
-        return PyWMWidgetDownstreamState(10, (5, 5, self._output.width - 10, self._output.height - 10))
+        return PyWMWidgetDownstreamState(10, (1, 1, self._output.width - 2, self._output.height - 2))
