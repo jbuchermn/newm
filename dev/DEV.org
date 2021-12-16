@@ -16,22 +16,26 @@
 - [ ] How to handle the state?
 *** STRT SSD on certain windows (mostly floating)
 - [ ] How to associate the widget to the view and handle state / reuse reducer?
-*** TODO Corners as priitive widgets
+*** TODO Corners as primitive widgets
 
+** Window swallowing (based on PID)
+*** TODO Swallow on shortcut if child view exists
+*** TODO Enable swallowing instead of closing on Cmd-q (possibly exclusively via config - layout.swallow -> bool)
+*** TODO Enable automatic swallowing for e.g. alacritty based on config
 
-** Improvements
+** Improvements / Idea
 *** TODO Fullscreen floating windows --> first make them tiled
-*** TODO SwipeToZoom overlay - adress shakiness when not moving fingers
-*** TODO Layer shell - Exclusive zones and keyboard interactivity
-*** TODO Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
+*** TODO SwipeToZoom overlay - address shakiness when not moving fingers
 *** TODO Scale windows moving others "out of the way"
+*** TODO Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
 
 * Backlog
+** Don't have double padding between windows
+** Layer shell - Exclusive zones and keyboard interactivity
 ** Video on newm-sidecar
 ** Titles during Overview
 ** More detailed config on Layout class
 ** Ability to increase size of rows or cols (e.g. in 1x2 | 1x2)
-** Window swallowing
 ** Ultrawide monitors --> two workspaces on one output
 ** Move to resize overlay: Trigger size changes on invisible windows only in finish transition? Analogous to interpolate
 ** Move tiles from workspace to another -> animate size change instead of jump
@@ -41,7 +45,6 @@
 
 
 * Setup clean arch chroot / qemu for testing
-
 ** Setup chroot
 
 Following https://www.collabora.com/news-and-blog/blog/2019/03/20/bootstraping-a-minimal-arch-linux-image/

@@ -29,16 +29,19 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 - `Logo-f`: Toggle a fullscreen view of the focused window (possibly resizing it)
 - ...
 
-## newm v0.2
+## Roadmap
 
-v0.2 introduces some breaking changes and many little improvements. Changes include
-- Support for multi-monitor setups
-- Basic support for layer shell (waybar, rofi, ...)
-- Many small improvements concerning window behaviour
-- Virtual output support (see [newm-sidecar](https://github.com/jbuchermn/newm-sidecar))
-- More configuration possibilities, as e.g. defining which windows should float
-- Improved background
-- Possibility to switch windows between tiled and floating
+Development on v0.3 has just started following the goals:
+- Improve panel functionality
+  - Get rid of `sys_backend`
+  - Get rid of websocket-communication
+  - Better integrate rofi (launcher), waybar (bar), mako / wob (notifications) and lock screen
+  - Possibly provide dbus endpoint
+- Borders
+  - Draw borders around some floating windows (quite ugly floating windows on v0.2)
+  - Possibly highlight focused window using a border
+- Enable window swallowing
+- Some minor imporivements here and there
 
 
 ## Installing
