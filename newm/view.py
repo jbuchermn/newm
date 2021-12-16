@@ -414,16 +414,22 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         - CSD or no decoration necessary: No masking and we're good
         - SSD: For now, use masking and corner_radius
 
-        For now heuristic to decide / needs special info for catapult
+        Heuristic to decide based on decoration protocols and offset
+        - Needs special info for catapult (Could be moved to config)
         """
-        ssd = up_state.offset == (0, 0)
+        ssd = True
+        if up_state.shows_csd:
+            ssd = False
+        if up_state.offset != (0, 0):
+            # Assume some CSD
+            ssd = False
+
         if self.app_id == "catapult":
             ssd = False
 
         if ssd:
             result.mask = (0, 0, width, height)
         else:
-
             result.mask = (-ws.width, -ws.height, width + 2 * ws.width, height + 2 * ws.height)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
