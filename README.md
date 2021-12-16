@@ -29,7 +29,7 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 - `Logo-f`: Toggle a fullscreen view of the focused window (possibly resizing it)
 - ...
 
-## newm v0.2
+## Changelog / Updates
 
 v0.2 introduces some breaking changes and many little improvements. Changes include
 - Support for multi-monitor setups
@@ -39,6 +39,8 @@ v0.2 introduces some breaking changes and many little improvements. Changes incl
 - More configuration possibilities, as e.g. defining which windows should float
 - Improved background
 - Possibility to switch windows between tiled and floating
+
+If you're interested in current development, check out [newm v0.3](https://github.com/jbuchermn/newm/tree/v0.3).
 
 
 ## Installing
