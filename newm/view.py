@@ -510,13 +510,26 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         which means they might be detected as floating in on_map
         """
         ws_state = self.wm.state.get_workspace_state(ws)
-        result = self._reducer_tiled(up_state, self.wm.state, ViewState(w=1, h=1), ws, ws_state)
+
+        min_w, min_h = 0, 0
+        if len(up_state.size_constraints) == 4:
+            min_w = up_state.size_constraints[0]
+            min_h = up_state.size_constraints[2]
+
+        w, h = 1, 1
+        for _ in range(3):
+            result = self._reducer_tiled(up_state, self.wm.state, ViewState(w=w, h=h), ws, ws_state, ignore_min_size=True)
+            if result.size[0] < min_w:
+                w += 1
+            if result.size[1] < min_h:
+                h += 1
+
         result.box = (0, 0, 0, 0)
         result.floating = None
         return result
 
 
-    def _reducer_tiled(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
+    def _reducer_tiled(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState, ignore_min_size: bool=False) -> PyWMViewDownstreamState:
         result = PyWMViewDownstreamState()
         result.floating = False
         result.accepts_input = True
@@ -608,27 +621,28 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         """
         Override: Keep aspect-ratio of windows
         """
-        min_w, max_w, min_h, max_h = up_state.size_constraints
+        if not ignore_min_size:
+            min_w, max_w, min_h, max_h = up_state.size_constraints
 
-        if width < min_w and min_w > 0:
-            width = min_w
-        if width > max_w and max_w > 0:
-            width = max_w
-        if height < min_h and min_h > 0:
-            height = min_h
-        if height > max_h and max_h > 0:
-            width = min_w
+            if width < min_w and min_w > 0:
+                width = min_w
+            if width > max_w and max_w > 0:
+                width = max_w
+            if height < min_h and min_h > 0:
+                height = min_h
+            if height > max_h and max_h > 0:
+                width = min_w
 
-        old_ar = result.size[1] / result.size[0] if result.size[0] > 0 else 1.
-        new_ar = height / width if width > 0 else 1.
+            old_ar = result.size[1] / result.size[0] if result.size[0] > 0 else 1.
+            new_ar = height / width if width > 0 else 1.
 
-        if abs(old_ar - new_ar) > 0.001:
-            if new_ar < old_ar:
-                # new width is larger - would appear scaled up vertically
-                h *= new_ar / old_ar
-            else:
-                # new width is smaller - would appear scaled up horizontally
-                w *= old_ar / new_ar
+            if abs(old_ar - new_ar) > 0.001:
+                if new_ar < old_ar:
+                    # new width is larger - would appear scaled up vertically
+                    h *= new_ar / old_ar
+                else:
+                    # new width is smaller - would appear scaled up horizontally
+                    w *= old_ar / new_ar
 
         """
         Use masking to cut off unwanted CSD. Chromium uses a larger root xdg_surface than its toplevel

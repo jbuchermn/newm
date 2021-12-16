@@ -6,7 +6,7 @@
 
 ** Bugs: reproducible
 *** DONE Bug: DBeaver crash seems to be able to create orphan states - see .cache/newm_log_orphan
-*** STRT Not on biggest scale => Every size negotiation with LibreOffice fails
+*** DONE Not on biggest scale => Every size negotiation with LibreOffice fails
 - This is related to a 1x1 tile always being too small
 - _init_tiled uses the reducer with w=h=1
 - If min size reported is correct, maybe _init_tiled could be improved to use it and infer w and h > 1
