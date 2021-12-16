@@ -5,7 +5,7 @@
 *** WAIT Bug: Occasionally Chromium / Brave size changes are not handled properly (e.g. appears twice the size initially / doesn't fill the screen after fullscreen) - possibly relies rather on xdg_surface than xdg_toplevel size (see pywm - wm_view_xdg.possibly_update_size)
 
 ** Bugs: reproducible
-*** STRT Bug: DBeaver crash seems to be able to create orphan states - see .cache/newm_log_orphan
+*** DONE Bug: DBeaver crash seems to be able to create orphan states - see .cache/newm_log_orphan
 *** STRT Not on biggest scale => Every size negotiation with LibreOffice fails
 - This is related to a 1x1 tile always being too small
 - _init_tiled uses the reducer with w=h=1

@@ -170,10 +170,7 @@ class Animation:
         try:
             self._initial_state, self._final_state = self.reducer(self.layout.state)
         except:
-            """
-            An animation may decide it does not want to be executed anymore
-            """
-            logger.debug("Animation decided not to take place")
+            logger.exception("During animation reducer")
             self._initial_state, self._final_state = None, None
 
         if self._initial_state is not None:
@@ -187,6 +184,8 @@ class Animation:
             self._final_state.validate_stack_indices()
 
             self.layout._animate_to(self._final_state, self.duration)
+        else:
+            logger.debug("Animation decided not to take place anymore")
 
     def __str__(self) -> str:
         return "%s -> %s (%f%s)" % (self._initial_state, self._final_state, self.duration, ", then" if self.then is not None else "")
@@ -955,13 +954,23 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                         best_view = k
 
         if best_view is not None and best_view in self._views:
+            logger.debug("Found view to focus: %s" % self._views[best_view])
             bv: int = best_view
             def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
-                self._views[bv].focus()
-                state = state\
-                    .focusing_view(self._views[bv])\
-                    .without_view_state(view)\
-                    .constrain()
+                try:
+                    self._views[bv].focus()
+                    state = state\
+                        .focusing_view(self._views[bv])\
+                        .without_view_state(view)\
+                        .constrain()
+                except:
+                    """
+                    View might not exist anymore
+                    """
+                    state = state\
+                        .copy()\
+                        .without_view_state(view)\
+                        .constrain()
 
                 return None, state
 
@@ -969,6 +978,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 reducer,
                 conf_anim_t())
         else:
+            logger.debug("Not focusing a view")
             self.animate_to(
                 lambda state: (None, state
                     .copy()
