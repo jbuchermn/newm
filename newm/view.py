@@ -1046,6 +1046,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 # OK, on_resized is called before map
                 pass
 
+        self.wm.focus_borders.damage()
+
     def on_focus_change(self) -> None:
         if self.is_focused():
             self.wm.focus_hint(self)

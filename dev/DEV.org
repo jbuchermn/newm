@@ -14,9 +14,9 @@
 ** Widgets
 *** DONE Animated border around current window (configurable)
 *** STRT Prevent focusing of notifications or similar
-*** STRT Bug: With brave and similar (views that set offset) - focus_border does not play nice
-*** STRT Bug: Does not play nice with CSD (floating brave e.g.)
-*** STRT Bug: floating - laggy during resize
+*** DONE Bug: With brave and similar (views that set offset) - focus_border does not play nice
+*** DONE Bug: Does not play nice with CSD (floating brave e.g.)
+*** DONE Bug: floating - laggy during resize
 *** STRT SSD on certain windows (mostly floating)
 *** TODO FocusBorder - configurable
 *** TODO Corners as primitive widgets
