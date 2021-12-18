@@ -12,10 +12,11 @@
 *** TODO Get rid of newm-panel-nwjs but keep newm_panel_basic
 
 ** Widgets
-*** STRT Animated border around current window (configurable)
-- [ ] How to handle the state?
+*** DONE Animated border around current window (configurable)
+*** STRT Prevent focusing of notifications or similar
+*** STRT Bug: With brave and similar (views that set offset) - focus_border does not play nice
 *** STRT SSD on certain windows (mostly floating)
-- [ ] How to associate the widget to the view and handle state / reuse reducer?
+*** TODO FocusBorder - configurable
 *** TODO Corners as primitive widgets
 
 ** Window swallowing (based on PID)
@@ -24,6 +25,7 @@
 *** TODO Enable automatic swallowing for e.g. alacritty based on config
 
 ** Improvements / Idea
+*** TODO Make request_fullscreen and request_nofullscreen configurable
 *** TODO Fullscreen floating windows --> first make them tiled
 *** TODO SwipeToZoom overlay - address shakiness when not moving fingers
 *** TODO Scale windows moving others "out of the way"

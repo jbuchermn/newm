@@ -1,5 +1,4 @@
 from __future__ import annotations
-from newm.widget.focus_border import FocusBorder
 from typing import Optional, Callable, TYPE_CHECKING, TypeVar, Union, Any, cast
 
 import time
@@ -44,7 +43,8 @@ from .widget import (
     TopBar,
     BottomBar,
     Background,
-    Corner
+    Corner,
+    FocusBorders
 )
 from .overlay import (
     Overlay,
@@ -350,7 +350,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.top_bars: list[TopBar] = []
         self.bottom_bars: list[BottomBar] = []
         self.corners: list[list[Corner]] = []
-        self.focus_borders: list[FocusBorder] = []
+        self.focus_borders: FocusBorders = FocusBorders(self)
 
         self.thread = LayoutThread(self)
 
@@ -488,13 +488,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 self.create_widget(Corner, o, False, False)
             ]]
 
-
-        for f in self.focus_borders:
-            f.destroy()
-        self.focus_borders = []
-
-        for o in self.layout:
-            self.focus_borders += [self.create_widget(FocusBorder, o)]
+        self.focus_borders.update()
 
         self.damage()
 
@@ -612,6 +606,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         for b in self.bottom_bars:
             b.damage()
 
+        self.focus_borders.damage()
+
 
     def update(self, new_state: LayoutState) -> None:
         self.state = new_state
@@ -631,6 +627,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
         for b in self.bottom_bars:
             b.animate(self.state, new_state, duration)
+
+        self.focus_borders.animate(self.state, new_state, duration)
 
 
     def _trusted_unlock(self) -> None:
@@ -969,11 +967,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             bv: int = best_view
             def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
                 try:
-                    self._views[bv].focus()
                     state = state\
                         .focusing_view(self._views[bv])\
                         .without_view_state(view)\
                         .constrain()
+
+                    self.focus_borders.update_focus(self._views[bv], present_states=(None, state))
+                    self._views[bv].focus()
+
                 except:
                     """
                     View might not exist anymore
@@ -983,13 +984,16 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                         .without_view_state(view)\
                         .constrain()
 
+                    self.focus_borders.unfocus()
+
                 return None, state
 
             self.animate_to(
                 reducer,
                 conf_anim_t())
         else:
-            logger.debug("Not focusing a view")
+            if view.is_focused():
+                self.focus_borders.unfocus()
             self.animate_to(
                 lambda state: (None, state
                     .copy()

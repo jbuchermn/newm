@@ -327,9 +327,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.layer_panel is None:
             ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True, layer_initial=True)
             ws_state2 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
+            state1, state2 = state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
             self.focus()
-            return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
+            self.wm.focus_borders.update_focus(self, (state1, state2))
+
+            return state1, state2
         else:
             ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
             return state.setting_workspace_state(ws, ws_state1), None
@@ -501,9 +504,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             float_size=(w, h),
             stack_idx=self._handle,
         )
+        state1, state2 = state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
 
         self.focus()
-        return state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
+        self.wm.focus_borders.update_focus(self, (state1, state2))
+
+        return state1, state2
 
 
     """
@@ -727,9 +733,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             scale_origin=None, move_origin=None,
             stack_idx=self._handle,
         ).focusing_view(self)
+        state1, state2 = state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
 
         self.focus()
-        return state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
+        self.wm.focus_borders.update_focus(self, (state1, state2))
+
+        return state1, state2
 
     """
     Init and map
@@ -1030,3 +1039,4 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def on_focus_change(self) -> None:
         if self.is_focused():
             self.wm.focus_hint(self)
+            self.wm.focus_borders.update_focus(self)
