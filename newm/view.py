@@ -665,7 +665,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                     # new width is smaller - would appear scaled up horizontally
                     w *= old_ar / new_ar
 
-        result.logical_box = (x, y, w, h)
+        result.logical_box = (x + ws.pos_x, y + ws.pos_y, w, h)
         """
         Use masking to cut off unwanted CSD. Chromium uses a larger root xdg_surface than its toplevel
         to render shadows (even though being asked not to). This masks the root surface to toplevel dimensions
