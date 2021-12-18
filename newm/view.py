@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING, cast, TypeVar
+from typing import Optional, TYPE_CHECKING, cast, TypeVar, Any
 
 import math
 import logging
@@ -57,6 +57,11 @@ In production .3 or similar should be okay
 """
 RESIZE_PATIENCE = .3
 
+class CustomDownstreamState(PyWMViewDownstreamState):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.logical_box: tuple[float, float, float, float] = kwargs['logical_box'] if 'logical_box' in kwargs else self.box
+
 class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
@@ -70,7 +75,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         # Initial state while waiting for map
         self._initial_time: float = time.time()
         self._initial_kind: int = 0 # 0: panel, 1: layer, 2: float, 3: tiled
-        self._initial_state: Optional[PyWMViewDownstreamState] = None
+        self._initial_state: Optional[CustomDownstreamState] = None
 
         self.panel: Optional[str] = None
         self.layer_panel: Optional[str] = None
@@ -143,11 +148,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Panel
     """
-    def _init_panel(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> PyWMViewDownstreamState:
-        return PyWMViewDownstreamState()
+    def _init_panel(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> CustomDownstreamState:
+        return CustomDownstreamState()
 
-    def _reducer_panel(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _reducer_panel(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> CustomDownstreamState:
+        result = CustomDownstreamState()
+        result.logical_box = (0, 0, 0, 0)
 
         if self.panel == "notifiers":
             result.z_index = 2000
@@ -265,15 +271,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
 
 
-    def _init_layer(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _init_layer(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> CustomDownstreamState:
+        result = CustomDownstreamState()
 
         result.fixed_output = up_state.fixed_output if (up_state.fixed_output is not None) else ws.outputs[0]
         result.size, _ = self._layer_placement(result.fixed_output, up_state.size_constraints)
         return result
 
-    def _reducer_layer(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _reducer_layer(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> CustomDownstreamState:
+        result = CustomDownstreamState()
         result.floating = True
         result.accepts_input = True
         result.corner_radius = 0
@@ -299,6 +305,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             logger.debug("Manually assigning fixed output: %s" % self.wm.layout[0])
 
         result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
+        result.logical_box = result.box
 
         if self.layer_panel == "top_bar":
             x, y, w, h = 0., 0., 0., 0. # mypy
@@ -340,11 +347,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Floating
     """
-    def _init_floating(self, up_state: PyWMViewUpstreamState, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> PyWMViewDownstreamState:
+    def _init_floating(self, up_state: PyWMViewUpstreamState, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> CustomDownstreamState:
         """
         Set floating attributes on init if it is clear the window will float
         """
-        result = PyWMViewDownstreamState()
+        result = CustomDownstreamState()
 
         width, height = up_state.size
         if size_hint is not None:
@@ -370,8 +377,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return result
 
 
-    def _reducer_floating(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _reducer_floating(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> CustomDownstreamState:
+        result = CustomDownstreamState()
         result.floating = True
         result.accepts_input = True
         result.corner_radius = conf_corner_radius()
@@ -433,10 +440,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if ssd:
             result.mask = (0, 0, width, height)
         else:
+            result.corner_radius = 0
             result.mask = (-ws.width, -ws.height, width + 2 * ws.width, height + 2 * ws.height)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
+        result.logical_box = result.box[0] + up_state.offset[0] * size / ws_state.size, result.box[1] + up_state.offset[1] * size / ws_state.size, result.box[2], result.box[3]
 
         # Workspaces don't really matter for floating windows, just leave them attached to initial workspace
         result.workspace = None
@@ -515,7 +524,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Tiled
     """
-    def _init_tiled(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> PyWMViewDownstreamState:
+    def _init_tiled(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> CustomDownstreamState:
         """
         Make a best-guess assumption w=h=1 and workspace size unchanged to ask the view to open with correct size
         Note that we can't be sure the view is going to be tiled at this stage - views do change min / max sizes later on
@@ -541,8 +550,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return result
 
 
-    def _reducer_tiled(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState, ignore_min_size: bool=False) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _reducer_tiled(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState, ignore_min_size: bool=False) -> CustomDownstreamState:
+        result = CustomDownstreamState()
         result.floating = False
         result.accepts_input = True
         result.corner_radius = conf_corner_radius()
@@ -656,6 +665,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                     # new width is smaller - would appear scaled up horizontally
                     w *= old_ar / new_ar
 
+        result.logical_box = (x, y, w, h)
         """
         Use masking to cut off unwanted CSD. Chromium uses a larger root xdg_surface than its toplevel
         to render shadows (even though being asked not to). This masks the root surface to toplevel dimensions
@@ -743,13 +753,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Init and map
     """
-    def init(self) -> PyWMViewDownstreamState:
+    def init(self) -> CustomDownstreamState:
         if self._initial_state is None:
             logger.info("Init: %s", self)
 
         # mypy
         if self.up_state is None:
-            return PyWMViewDownstreamState()
+            return CustomDownstreamState()
 
         ws = self.wm.get_active_workspace()
         if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
@@ -836,7 +846,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         # mypy
         if self._initial_state is None:
-            return PyWMViewDownstreamState()
+            return CustomDownstreamState()
 
         if kind != self._initial_kind:
             logger.debug("View %s changed kind: %d -> %d", kind, self._initial_kind)
@@ -859,7 +869,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Animation logic
     """
-    def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> PyWMViewDownstreamState:
+    def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> CustomDownstreamState:
         try:
             self_state, ws_state, ws_handle = state.find_view(self)
             ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
@@ -875,7 +885,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             This however shouldn't happen
             """
             logger.warn("Missing state: %s" % self)
-            return PyWMViewDownstreamState(up_state=up_state)
+            return CustomDownstreamState(up_state=up_state)
 
         if self.panel is not None:
             return self._reducer_panel(up_state, state, self_state, ws, ws_state)
