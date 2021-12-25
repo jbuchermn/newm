@@ -44,7 +44,7 @@ class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
             # Width
             conf_focus_w() * self._output.scale])
 
-    def reducer(self, box: tuple[int, float, float, float, float]) -> PyWMWidgetDownstreamState:
+    def reducer(self, box: tuple[float, float, float, float, float]) -> PyWMWidgetDownstreamState:
         if box[2] == 0 or box[3] == 0:
             return PyWMWidgetDownstreamState(0, (self._output.pos[0] - conf_focus_d() - self._corner_radius,
                                                  self._output.pos[1] - conf_focus_d() - self._corner_radius,
@@ -53,7 +53,7 @@ class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
         else:
             return PyWMWidgetDownstreamState(box[0], (box[1] - conf_focus_d(), box[2] - conf_focus_d(), box[3] + 2*conf_focus_d(), box[4] + 2*conf_focus_d()))
 
-    def animate(self, old_box: tuple[int, float, float, float, float], new_box: tuple[int, float, float, float, float], dt: float) -> None:
+    def animate(self, old_box: tuple[float, float, float, float, float], new_box: tuple[float, float, float, float, float], dt: float) -> None:
         cur = self.reducer(old_box)
         nxt = self.reducer(new_box)
 
@@ -70,7 +70,7 @@ class FocusBorders:
         self._skip_next_animate: bool = False
 
         self.current_view: Optional[View] = None
-        self.current_box: tuple[int, float, float, float, float] = -999, 0, 0, 0, 0
+        self.current_box: tuple[float, float, float, float, float] = -999, 0, 0, 0, 0
 
     def update(self) -> None:
         for b in self.borders:
@@ -83,7 +83,7 @@ class FocusBorders:
 
         if self.current_view is not None and self.current_view.up_state is not None:
             view_down_state = self.current_view.reducer(self.current_view.up_state, layout_state)
-            self.current_box = view_down_state.z_index - 1, *view_down_state.logical_box
+            self.current_box = view_down_state.z_index - 0.01, *view_down_state.logical_box
             for b in self.borders:
                 b.set_corner_radius(view_down_state.corner_radius + conf_focus_d())
         else:
@@ -130,8 +130,8 @@ class FocusBorders:
             view_old_down_state = self.current_view.reducer(self.current_view.up_state, old_state)
             view_new_down_state = self.current_view.reducer(self.current_view.up_state, new_state)
 
-            old_box = view_old_down_state.z_index - 1, *view_old_down_state.logical_box
-            new_box = view_new_down_state.z_index - 1, *view_new_down_state.logical_box
+            old_box = view_old_down_state.z_index - 0.01, *view_old_down_state.logical_box
+            new_box = view_new_down_state.z_index - 0.01, *view_new_down_state.logical_box
 
             self.current_box = new_box
             for b in self.borders:

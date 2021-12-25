@@ -12,17 +12,16 @@
 *** TODO Get rid of newm-panel-nwjs but keep newm_panel_basic
 
 ** Widgets
-*** DONE Animated border around current window (configurable)
-*** STRT Prevent focusing of notifications or similar
-*** DONE Bug: With brave and similar (views that set offset) - focus_border does not play nice
-*** DONE Bug: Does not play nice with CSD (floating brave e.g.)
-*** DONE Bug: floating - laggy during resize
 *** STRT SSD on certain windows (mostly floating)
+*** STRT FocusBorder - Respect lock opacity
+*** DONE FocusBorder - Handle stacked windows properly (pywm z-index float)
+*** STRT Prevent focusing of notifications or similar
 *** TODO FocusBorder - configurable
 *** TODO Corners as primitive widgets
 
 ** Window swallowing (based on PID)
 *** TODO Swallow on shortcut if child view exists
+*** TODO Enable swalloing via newm-cmd swallow ... (newm-cmd should be able to get parent PID and instruct newm to run command and mark parent PID as swallowed by resulting view)
 *** TODO Enable swallowing instead of closing on Cmd-q (possibly exclusively via config - layout.swallow -> bool)
 *** TODO Enable automatic swallowing for e.g. alacritty based on config
 
