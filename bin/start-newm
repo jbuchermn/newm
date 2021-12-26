@@ -18,5 +18,12 @@ if [ -e newm_log ]
 fi
 cd $HOME
 
-SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+SOURCE=${BASH_SOURCE[0]}
+while [ -h "$SOURCE" ]; do
+  CDIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  SOURCE=$(readlink "$SOURCE")
+  [[ $SOURCE != /* ]] && SOURCE=$CDIR/$SOURCE
+done
+SCRIPTDIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+
 exec $SCRIPTDIR/.start-newm "$1" > $DIR/newm_log 2>&1
