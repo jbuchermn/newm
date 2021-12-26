@@ -1,6 +1,26 @@
-# { lib, fetchFromGitHub, python3Packages, file, less, highlight
-# , imagePreviewSupport ? true, w3m }:
-with import <nixpkgs> {};
+{ lib,
+fetchFromGitHub,
+python3Packages,
+meson_0_60,
+ninja,
+pkg-config,
+wayland-scanner,
+glslang,
+libGL,
+wayland,
+wayland-protocols,
+libinput,
+libxkbcommon,
+mesa,
+pixman,
+seatd,
+vulkan-loader,
+xorg,
+libpng,
+libcap,
+ffmpeg,
+xwayland
+}:
 
 python3Packages.buildPythonPackage rec {
   pname = "pywm";
@@ -30,22 +50,28 @@ python3Packages.buildPythonPackage rec {
     wayland-protocols
     libinput
     libxkbcommon
-    mesa
     pixman
-    seatd
-    vulkan-loader
     xorg.xcbutilwm
     xorg.xcbutilrenderutil
     xorg.xcbutilerrors
+    xorg.xcbutilimage
+    xorg.libX11
+    mesa
+    seatd
     xwayland
+    vulkan-loader
+
+    libpng
+    ffmpeg
+    libcap
   ];
 
   propagatedBuildInputs = [
-    python3.pkgs.imageio
-    python3.pkgs.numpy
-    python3.pkgs.pycairo
-    python3.pkgs.evdev
-    python3.pkgs.matplotlib
+    python3Packages.imageio
+    python3Packages.numpy
+    python3Packages.pycairo
+    python3Packages.evdev
+    python3Packages.matplotlib
   ];
 
   LC_ALL = "en_US.UTF-8";

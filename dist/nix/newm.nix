@@ -1,29 +1,29 @@
-# { lib, fetchFromGitHub, python3Packages, file, less, highlight
-# , imagePreviewSupport ? true, w3m }:
-with import <nixpkgs> {};
-let 
-  pywm = import ./pywm.nix;
-in
+{ lib,
+fetchFromGitHub,
+python3Packages,
+bash,
+pywm,
+}:
 
-python3Packages.buildPythonPackage rec {
+python3Packages.buildPythonApplication rec {
   pname = "newm";
   version = "0.2";
 
   src = fetchFromGitHub {
     owner = "jbuchermn";
     repo = "newm";
-    rev = "4932747";
-    sha256 = "sha256-esqz+bQVzSPHrwMCPBCIP0CCSATzixGhoCzNIGGrBJA=";
+    rev = "b6ef102";
+    sha256 = "sha256-0nAjQxcZIuenFddpXqfatEvekwTnGIQUzAyhziMJLR4=";
   };
 
-  buildInputs = [
+  propagatedBuildInputs = with python3Packages; [
     pywm
-    python3.pkgs.pycairo
-    python3.pkgs.psutil
-    python3.pkgs.websockets
-    python3.pkgs.python-pam
-    python3.pkgs.pyfiglet
-    python3.pkgs.fuzzywuzzy
+    pycairo
+    psutil
+    websockets
+    python-pam
+    pyfiglet
+    fuzzywuzzy
   ];
 
   # Skip this as it tries to start the compositor
