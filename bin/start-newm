@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 DIR=$HOME
 if [ "$DIR" = "/" ]; then 
@@ -18,9 +18,5 @@ if [ -e newm_log ]
 fi
 cd $HOME
 
-debug="False"
-if [ "$1" = "-d" ]; then
-    debug="True"
-fi
-
-exec python -u -c "from newm import run; run($debug)" > $DIR/newm_log 2>&1
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+exec $SCRIPTDIR/.start-newm "$1" > $DIR/newm_log 2>&1

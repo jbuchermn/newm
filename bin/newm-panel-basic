@@ -1,0 +1,6 @@
+#!/bin/env python3
+import sys
+from newm_panel_basic import panel
+
+if len(sys.argv) > 1:
+    panel(sys.argv[1])
