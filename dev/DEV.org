@@ -4,6 +4,8 @@
 ** Bugs
 *** WAIT Bug: Occasionally Chromium / Brave size changes are not handled properly (e.g. appears twice the size initially / doesn't fill the screen after fullscreen) - possibly relies rather on xdg_surface than xdg_toplevel size (see pywm - wm_view_xdg.possibly_update_size)
 
+** STRT Nixpkgs distribution: Get it merged, add to README with reference to nixGL
+
 ** TODO TESTS
 - [ ] Write more tests concerning newm as opposed to client-side behaviour
   - No rescale on overview and swipe-to-zoom up-to size=5
