@@ -42,7 +42,7 @@ python3Packages.buildPythonPackage rec {
     glslang
   ];
 
-  dontUseMesonConfigure = true;
+  preBuild = "cd ..";
 
   buildInputs = [
     libGL
@@ -81,5 +81,6 @@ python3Packages.buildPythonPackage rec {
     homepage = "https://github.com/jbuchermn/pywm";
     license = licenses.mit;
     platforms = platforms.linux;
+    # TODO Maintainer, reference to nixGL
   };
 }
