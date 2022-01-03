@@ -26,4 +26,5 @@ while [ -h "$SOURCE" ]; do
 done
 SCRIPTDIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
-exec $SCRIPTDIR/.start-newm "$1" > $DIR/newm_log 2>&1
+echo "newm - script dir is $SCRIPTDIR, log dir is $DIR, arguments are $@"
+exec $SCRIPTDIR/.start-newm "$@" > $DIR/newm_log 2>&1
