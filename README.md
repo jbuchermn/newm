@@ -57,6 +57,9 @@ clone both newm and pywm and install via `dev/nix` files:
 ```sh
 git clone https://github.com/jbuchermn/pywm
 git clone https://github.com/jbuchermn/newm
+cd pywm
+git submodule update --init --recursive
+cd ..
 cd newm/dev/nix
 ./install.sh ../../../pywm
 ```
