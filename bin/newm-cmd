@@ -1,0 +1,5 @@
+#!/bin/env python3
+import sys
+from newm import cmd
+if len(sys.argv) > 1:
+    cmd(*sys.argv[1:])

@@ -50,6 +50,21 @@ Development on v0.3 has just started following the goals:
 
 For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, see below for pip installation.
 
+### NixOS (work in progress)
+
+A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. So long
+clone both newm and pywm and install via `dev/nix` files:
+
+```sh
+git clone https://github.com/jbuchermn/pywm
+git clone https://github.com/jbuchermn/newm
+cd pywm
+git submodule update --init --recursive
+cd ..
+cd newm/dev/nix
+./install.sh ../../../pywm
+```
+
 ### Installing with pip
 
 [pywm](https://github.com/jbuchermn/pywm) is the abstraction layer for and main dependency of newm. If all prerequisites are installed, the command:
