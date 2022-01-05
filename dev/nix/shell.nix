@@ -11,16 +11,9 @@ let
     fuzzywuzzy
   ]);
 in
-pkgs.python3.pkgs.buildPythonApplication rec {
-  pname = "newm";
-  version = "0.2";
-
+with pkgs;
+mkShell {
   buildInputs = [
     python-with-my-packages
   ];
-
-  src = ../..;
-
-  # Skip this as it tries to start the compositor
-  setuptoolsCheckPhase = "true";
 }
