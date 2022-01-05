@@ -4,7 +4,10 @@
 ** Bugs
 *** WAIT Bug: Occasionally Chromium / Brave size changes are not handled properly (e.g. appears twice the size initially / doesn't fill the screen after fullscreen) - possibly relies rather on xdg_surface than xdg_toplevel size (see pywm - wm_view_xdg.possibly_update_size)
 
-** STRT Nixpkgs distribution: get it merged, add to README with reference to nixGL and pam not working outside nixOS
+** STRT nixOS
+- [ ] Get it merged to nixpkgs
+- [ ] Fix flakes for v0.2 and v0.3 / Adjust README
+- [ ] Reference to nixGL and pam not working outside nixOS
 
 ** TODO TESTS
 - [ ] Write more tests concerning newm as opposed to client-side behaviour
