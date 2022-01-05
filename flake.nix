@@ -2,7 +2,7 @@
   description = "newm - Wayland compositor";
 
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.pywm.url = "path:/home/jonas/newmv2-dev/pywm";
+  inputs.pywm.url = "github:jbuchermn/pywm";
 
   outputs = { self, nixpkgs, pywm, flake-utils }:
   flake-utils.lib.eachDefaultSystem (
