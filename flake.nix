@@ -1,8 +1,12 @@
 {
   description = "newm - Wayland compositor";
 
-  inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.pywm.url = "github:jbuchermn/pywm";
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    pywm.url = "github:jbuchermn/pywm";
+    pywm.inputs.nixpkgs.follows = "nixpkgs";
+  };
 
   outputs = { self, nixpkgs, pywm, flake-utils }:
   flake-utils.lib.eachDefaultSystem (
