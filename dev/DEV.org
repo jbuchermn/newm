@@ -6,8 +6,8 @@
 
 ** STRT nixOS
 - [ ] Get it merged to nixpkgs
-- [ ] Fix flakes for v0.2 and v0.3 / Adjust README
-- [ ] Reference to nixGL and pam not working outside nixOS
+- [X] Fix flakes for v0.2 and v0.3 / Adjust README
+- [X] Reference to nixGL and pam not working outside nixOS
 
 ** TODO TESTS
 - [ ] Write more tests concerning newm as opposed to client-side behaviour

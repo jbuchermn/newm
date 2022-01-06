@@ -51,18 +51,17 @@ For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, see 
 
 ### NixOS (work in progress)
 
-A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. So long
-clone both newm and pywm and install via `dev/nix` files:
+A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. A flkaes based installation should work however and is preferred (see also [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)):
 
-```sh
-git clone https://github.com/jbuchermn/pywm
-git clone https://github.com/jbuchermn/newm
-cd pywm
-git submodule update --init --recursive
-cd ..
-cd newm/dev/nix
-./install.sh ../../../pywm
-```
+``
+nix build "github:jbuchermn/newm#newm" --no-write-lock-file
+./result/bin/start-newm -d
+``
+
+Note that this probably does not work outside nixOS. To fix OpenGL issues on other
+linux distros using nix as a (secondary) package manager, see
+[nixGL](https://github.com/guibou/nixGL). Additionally, PAM authentication appears
+to be broken in this setup.
 
 ### Installing with pip
 
