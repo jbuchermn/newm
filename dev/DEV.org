@@ -15,7 +15,7 @@
 *** STRT SSD on certain windows (mostly floating)
 *** STRT FocusBorder - Respect lock opacity
 *** TODO Prevent focusing of notifications or similar
-*** TODO FocusBorder - configurable
+*** DONE FocusBorder - configurable
 *** TODO Corners as primitive widgets
 
 ** Window swallowing (based on PID)

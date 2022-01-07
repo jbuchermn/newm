@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from ..state import LayoutState
     from ..view import View
-    from ..layout import Layout, Workspace, WorkspaceState
+    from ..layout import Layout
 
 import logging
 
@@ -13,6 +13,7 @@ from pywm import PyWMWidget, PyWMWidgetDownstreamState, PyWMOutput
 from ..animate import Animate
 from ..interpolation import WidgetDownstreamInterpolation
 from ..config import configured_value
+from ..util import get_color
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,8 @@ conf_focus_d = configured_value('focus.distance', 4)
 conf_focus_w = configured_value('focus.width', 2)
 conf_anim_time = configured_value('focus.anim_time', 0.3)
 conf_animate_on_change = configured_value('focus.animate_on_change', False)
+conf_enabled = configured_value('focus.enabled', True)
+conf_color = configured_value('focus.color', '#19CEEB55')
 
 class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
     def __init__(self, wm: Layout, output: PyWMOutput, parent: FocusBorders):
@@ -38,7 +41,7 @@ class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
         self._corner_radius = radius
         self.set_primitive("rounded_corners_border", [], [
             # Color
-            48./255., 213./255., 200./255., 0.6,
+            *get_color(conf_color()),
             # Corner radius
             self._corner_radius * self._output.scale,
             # Width
@@ -75,7 +78,8 @@ class FocusBorders:
     def update(self) -> None:
         for b in self.borders:
             b.destroy()
-        self.borders = [self.wm.create_widget(FocusBorder, o, self) for o in self.wm.layout]
+        if conf_enabled():
+            self.borders = [self.wm.create_widget(FocusBorder, o, self) for o in self.wm.layout]
 
     def _set_box_and_radius(self, layout_state: Optional[LayoutState]=None) -> None:
         if layout_state is None:
