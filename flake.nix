@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    pywm.url = "github:jbuchermn/pywm/v0.3";
+    pywm.url = "github:jbuchermn/pywm/0cca4a8";
     pywm.inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -35,6 +35,26 @@
 
           setuptoolsCheckPhase = "true";
         };
-      }
-      );
+
+      devShell = let
+        my-python = pkgs.python3;
+        python-with-my-packages = my-python.withPackages (ps: with ps; [
+          pywmpkg.pywm
+          pycairo
+          psutil
+          websockets
+          python-pam
+          pyfiglet
+          fuzzywuzzy
+
+          python-lsp-server
+          pylsp-mypy
+          mypy
+        ]);
+      in
+        pkgs.mkShell {
+          buildInputs = [ python-with-my-packages ];
+        };
     }
+  );
+}
