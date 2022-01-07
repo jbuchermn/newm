@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
 import sys
+import argparse
+
 from newm import run
 
 print("newm python - args are %s" % str(sys.argv), flush=True)
-run(len(sys.argv) > 1 and sys.argv[1] == "-d")
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--debug", action="store_true")
+parser.add_argument("-c", "--config-file", type=str, default=None)
+
+args = parser.parse_args()
+
+print(args)
+
+run(args.debug, args.config_file)

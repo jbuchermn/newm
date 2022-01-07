@@ -323,8 +323,9 @@ class Workspace:
 
 
 class Layout(PyWM[View], Animate[PyWMDownstreamState]):
-    def __init__(self, debug: bool=False) -> None:
-        load_config()
+    def __init__(self, debug: bool=False, config_file: Optional[str]=None) -> None:
+        self._config_file = config_file
+        load_config(path_str=self._config_file)
 
         self._debug = debug
         PyWM.__init__(self, View, **conf_pywm(), outputs=conf_outputs(), debug=debug)
@@ -494,7 +495,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
     def _setup(self, fallback: bool=True, reconfigure: bool=True) -> None:
         if reconfigure:
-            load_config(fallback=fallback)
+            load_config(fallback=fallback, path_str=self._config_file)
 
         self.mod = conf_mod()
         self._set_mod_sym()

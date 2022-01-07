@@ -54,12 +54,15 @@ def print_config(at_c: Optional[dict[str, Any]]=None) -> str:
             logger.warn("Config: Unexpected")
             return ""
 
-def load_config(fallback: bool=True) -> None:
+def load_config(fallback: bool=True, path_str: Optional[str]=None) -> None:
     global _provider
 
     home = os.environ['HOME'] if 'HOME' in os.environ else '/'
     path = pathlib.Path(home) / '.config' / 'newm' / 'config.py'
     path_default = pathlib.Path(__file__).parent.absolute() / 'default_config.py'
+
+    if path_str is not None:
+        path = pathlib.Path(path_str)
 
     if not path.is_file():
         path = pathlib.Path('/etc') / 'newm' / 'config.py'
