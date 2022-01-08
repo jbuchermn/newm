@@ -13,7 +13,7 @@
 
 ** Widgets
 *** DONE FocusBorder - configurable
-*** STRT FocusBorder - Respect lock opacity
+*** DONE FocusBorder - Respect lock opacity
 *** TODO SSD on certain windows (mostly floating)
 *** TODO Prevent focusing of notifications or similar
 *** TODO Corners as primitive widgets

@@ -47,23 +47,23 @@ class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
             # Width
             conf_focus_w() * self._output.scale])
 
-    def reducer(self, box: tuple[float, float, float, float, float]) -> PyWMWidgetDownstreamState:
+    def reducer(self, box: tuple[float, float, float, float, float], opacity: float) -> PyWMWidgetDownstreamState:
         if box[2] == 0 or box[3] == 0:
             return PyWMWidgetDownstreamState(0, (self._output.pos[0] - conf_focus_d() - self._corner_radius,
                                                  self._output.pos[1] - conf_focus_d() - self._corner_radius,
                                                  self._output.width + 2*conf_focus_d() + 2*self._corner_radius,
-                                                 self._output.height + 2*conf_focus_d() + 2*self._corner_radius))
+                                                 self._output.height + 2*conf_focus_d() + 2*self._corner_radius), lock_enabled=False, opacity=opacity)
         else:
-            return PyWMWidgetDownstreamState(box[0], (box[1] - conf_focus_d(), box[2] - conf_focus_d(), box[3] + 2*conf_focus_d(), box[4] + 2*conf_focus_d()))
+            return PyWMWidgetDownstreamState(box[0], (box[1] - conf_focus_d(), box[2] - conf_focus_d(), box[3] + 2*conf_focus_d(), box[4] + 2*conf_focus_d()), lock_enabled=False, opacity=opacity)
 
-    def animate(self, old_box: tuple[float, float, float, float, float], new_box: tuple[float, float, float, float, float], dt: float) -> None:
-        cur = self.reducer(old_box)
-        nxt = self.reducer(new_box)
+    def animate(self, old_box: tuple[float, float, float, float, float], old_opacity: float, new_box: tuple[float, float, float, float, float], new_opacity: float, dt: float) -> None:
+        cur = self.reducer(old_box, old_opacity)
+        nxt = self.reducer(new_box, new_opacity)
 
         self._animate(WidgetDownstreamInterpolation(self.wm, self, cur, nxt), dt)
 
     def process(self) -> PyWMWidgetDownstreamState:
-        return self._process(self.reducer(self._parent.current_box))
+        return self._process(self.reducer(self._parent.current_box, 1.))
 
 class FocusBorders:
     def __init__(self, wm: Layout):
@@ -111,7 +111,7 @@ class FocusBorders:
 
         if animate:
             for b in self.borders:
-                b.animate(old_box, new_box, conf_anim_time())
+                b.animate(old_box, 1., new_box, 1., conf_anim_time())
         else:
             self.damage()
 
@@ -123,7 +123,7 @@ class FocusBorders:
         new_box = self.current_box
 
         for b in self.borders:
-            b.animate(old_box, new_box, conf_anim_time())
+            b.animate(old_box, 1., new_box, 1., conf_anim_time())
 
     def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
         if self._skip_next_animate:
@@ -134,12 +134,15 @@ class FocusBorders:
             view_old_down_state = self.current_view.reducer(self.current_view.up_state, old_state)
             view_new_down_state = self.current_view.reducer(self.current_view.up_state, new_state)
 
+            old_opacity = old_state.background_opacity
+            new_opacity = new_state.background_opacity
+
             old_box = view_old_down_state.z_index - 0.01, *view_old_down_state.logical_box
             new_box = view_new_down_state.z_index - 0.01, *view_new_down_state.logical_box
 
             self.current_box = new_box
             for b in self.borders:
-                b.animate(old_box, new_box, dt)
+                b.animate(old_box, old_opacity, new_box, new_opacity, dt)
 
     def damage(self) -> None:
         self._set_box_and_radius()
