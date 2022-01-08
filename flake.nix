@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    pywm.url = "github:jbuchermn/pywm/0cca4a8";
+    pywm.url = "github:jbuchermn/pywm/v0.3";
     pywm.inputs.nixpkgs.follows = "nixpkgs";
   };
 
