@@ -2,7 +2,7 @@
 
 * Current (v0.3)
 ** Improved panel
-*** TODO Get rid of sys_backend maybe some default config instead
+*** TODO Get rid of sys_backend, maybe some default config instead
 *** TODO dbus endpoint for newm-cmd (?), plus e.g. waybar - get rid of websockets
 *** TODO Incorporate
 - catapult
@@ -12,10 +12,10 @@
 *** TODO Get rid of newm-panel-nwjs but keep newm_panel_basic
 
 ** Widgets
-*** STRT SSD on certain windows (mostly floating)
-*** STRT FocusBorder - Respect lock opacity
-*** TODO Prevent focusing of notifications or similar
 *** DONE FocusBorder - configurable
+*** STRT FocusBorder - Respect lock opacity
+*** TODO SSD on certain windows (mostly floating)
+*** TODO Prevent focusing of notifications or similar
 *** TODO Corners as primitive widgets
 
 ** Window swallowing (based on PID)

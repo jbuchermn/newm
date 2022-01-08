@@ -52,7 +52,7 @@ For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, see 
 
 ### NixOS (work in progress)
 
-A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. A flkaes based installation should work however and is preferred (see also [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)):
+A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. A flakes based installation should work however and is preferred (see also [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)):
 
 ``
 nix build "github:jbuchermn/newm/v0.3#newm" --no-write-lock-file
