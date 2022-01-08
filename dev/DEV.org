@@ -2,8 +2,8 @@
 
 * Current (v0.3)
 ** Improved panel
-*** STRT Get rid of sys_backend, maybe some default config instead
-*** TODO dbus endpoint for newm-cmd (?), plus e.g. waybar - get rid of websockets
+*** DONE Get rid of sys_backend, maybe some default config instead
+*** STRT Get rid of websockets: dbus endpoint for newm-cmd and newm-panel-basic (?), plus e.g. waybar
 *** TODO Incorporate
 - catapult
 - rofi

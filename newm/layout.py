@@ -18,8 +18,6 @@ from pywm import (
     PYWM_MOD_ALT,
     PYWM_MOD_LOGO
 )
-from pywm.pywm_widget import PyWMWidget
-
 from pywm.touchpad import (
     TwoFingerSwipePinchGesture,
     HigherSwipeGesture,
@@ -36,7 +34,6 @@ from .config import configured_value, load_config, print_config
 from .key_processor import KeyProcessor
 from .panel_endpoint import PanelEndpoint
 from .panel_launcher import PanelsLauncher
-from .sys_backend import SysBackend, SysBackendEndpoint
 from .auth_backend import AuthBackend
 
 from .widget import (
@@ -70,7 +67,6 @@ else:
     TKeyBindings = TypeVar('TKeyBindings')
 
 conf_key_bindings = configured_value('key_bindings', cast(TKeyBindings, lambda layout: []))
-conf_sys_backend_endpoints = configured_value('sys_backend_endpoints', cast(list[SysBackendEndpoint], []))
 
 conf_lp_freq = configured_value('gestures.lp_freq', 60.)
 conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
@@ -80,8 +76,16 @@ conf_validate_threshold = configured_value('gestures.validate_threshold', .02)
 conf_anim_t = configured_value('anim_time', .3)
 conf_blend_t = configured_value('blend_time', 1.)
 
-conf_power_times = configured_value('power_times', [120, 300, 600])
-conf_suspend_command = configured_value('suspend_command', "systemctl suspend")
+conf_idle_times = configured_value('energy.idle_times', [120, 300, 600])
+conf_suspend_command = configured_value('energy.suspend_command', "systemctl suspend")
+"""
+code == 'lock': Called on lock - idea is to dim the screen now
+code == 'idle': Called after idle_times[0] has passed
+code == 'idle-lock': Called after idle_times[1] has passed - the screen is locked additionally
+code == 'idle-suspend': Called after idle_times[2] has passed - the computer is suspended additionally
+code == 'active': Called on activity after idle
+"""
+conf_idle_callback = configured_value('energy.idle_callback', lambda code: None)
 
 conf_on_startup = configured_value('on_startup', lambda: None)
 conf_on_reconfigure = configured_value('on_reconfigure', lambda: None)
@@ -336,7 +340,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self._set_mod_sym()
 
         self.key_processor = KeyProcessor(self.mod_sym)
-        self.sys_backend = SysBackend(self)
         self.auth_backend = AuthBackend(self)
         self.panel_launcher = PanelsLauncher()
         self.panel_endpoint = PanelEndpoint(self)
@@ -513,10 +516,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             self.key_processor.register_bindings(
                 *kb(self)
             )
-        self.sys_backend.set_endpoints(
-            *conf_sys_backend_endpoints()
-        )
-        self.sys_backend.register_xf86_keybindings()
 
         if reconfigure:
             self.reconfigure(dict(**conf_pywm(), outputs=conf_outputs(), debug=self._debug))
@@ -578,8 +577,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             t.stop()
         for b in self.bottom_bars:
             b.stop()
-        if self.sys_backend is not None:
-            self.sys_backend.stop()
         if self.thread is not None:
             self.thread.stop()
 
@@ -865,14 +862,15 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             return
 
         if elapsed == 0:
-            self.sys_backend.idle_state(0)
-        elif len(conf_power_times()) > 2 and elapsed > conf_power_times()[2]:
+            conf_idle_callback()("active")
+        elif len(conf_idle_times()) > 2 and elapsed > conf_idle_times()[2]:
+            conf_idle_callback()("idle-suspend")
             os.system(conf_suspend_command())
-        elif len(conf_power_times()) > 1 and elapsed > conf_power_times()[1]:
-            self.sys_backend.idle_state(2)
+        elif len(conf_idle_times()) > 1 and elapsed > conf_idle_times()[1]:
+            conf_idle_callback()("idle-lock")
             self.ensure_locked()
-        elif len(conf_power_times()) > 0 and elapsed > conf_power_times()[0]:
-            self.sys_backend.idle_state(1)
+        elif len(conf_idle_times()) > 0 and elapsed > conf_idle_times()[0]:
+            conf_idle_callback()("idle")
 
     def on_wakeup(self) -> None:
         if conf_lock_on_wakeup():
@@ -1117,7 +1115,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             conf_anim_t(), focus_lock)
 
         if dim:
-            self.sys_backend.idle_state(1)
+            conf_idle_callback()("lock")
 
     def terminate(self) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
