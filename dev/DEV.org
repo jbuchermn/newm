@@ -4,12 +4,14 @@
 ** Improved panel
 *** DONE Get rid of sys_backend, maybe some default config instead
 *** STRT Get rid of websockets: dbus endpoint for newm-cmd and newm-panel-basic (?), plus e.g. waybar
+*** STRT Complete default keybindings for sound and kbdlight
 *** TODO Incorporate
 - catapult
 - rofi
 - wob
 - mako
-*** TODO Get rid of newm-panel-nwjs but keep newm_panel_basic
+*** TODO Get rid of newm-panel-nwjs but keep newm_panel_basic - let newm-panel-basic launcher use newm-cmd launcher ...
+*** STRT newm-panel-basic lock and initially wrong characters
 
 ** Widgets
 *** STRT SSD on certain windows (mostly floating)
@@ -30,6 +32,7 @@
 *** TODO Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
 
 * Backlog
+** Support swaylock
 ** Don't have double padding between windows
 ** Layer shell - Exclusive zones and keyboard interactivity
 ** Video on newm-sidecar

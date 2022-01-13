@@ -32,7 +32,7 @@ from .view import View
 from .config import configured_value, load_config, print_config
 
 from .key_processor import KeyProcessor
-from .panel_endpoint import PanelEndpoint
+from .dbus import DBusEndpoint
 from .panel_launcher import PanelsLauncher
 from .auth_backend import AuthBackend
 
@@ -342,7 +342,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.key_processor = KeyProcessor(self.mod_sym)
         self.auth_backend = AuthBackend(self)
         self.panel_launcher = PanelsLauncher()
-        self.panel_endpoint = PanelEndpoint(self)
+        self.dbus_endpoint = DBusEndpoint(self)
 
         self.workspaces: list[Workspace] = [Workspace(PyWMOutput("dummy", -1, 1., 1280, 720, (0, 0)), 0, 0, 1280, 720)]
 
@@ -538,7 +538,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self._setup(reconfigure=False)
 
         self.thread.start()
-        self.panel_endpoint.start()
+        self.dbus_endpoint.start()
         self.panel_launcher.start()
 
         # Initially display cursor
@@ -570,7 +570,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
 
     def _terminate(self) -> None:
         super().terminate()
-        self.panel_endpoint.stop()
+        self.dbus_endpoint.stop()
         self.panel_launcher.stop()
 
         for t in self.top_bars:

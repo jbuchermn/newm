@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import time
 
-from .panel_endpoint import msg
+from .dbus import send_dbus_command
 
 def cmd(command: str, *args: str) -> None:
     if command == "inhibit-idle":
         try:
-            msg({'kind': 'cmd', 'cmd': "inhibit-idle"})
+            send_dbus_command({'cmd': "inhibit-idle"})
             while True:
                 time.sleep(10)
         except:
             pass
         finally:
-            msg({'kind': 'cmd', 'cmd': "finish-inhibit-idle"})
+            send_dbus_command({'cmd': "finish-inhibit-idle"})
     elif command == "launcher":
-        msg({'kind': 'launch_app', 'app': " ".join(args)})
+        send_dbus_command({'cmd': 'launcher', 'app': " ".join(args)})
     else:
-        msg({'kind': 'cmd', 'cmd': command, 'arg': " ".join(args)})
+        send_dbus_command({'cmd': command, 'arg': " ".join(args)})

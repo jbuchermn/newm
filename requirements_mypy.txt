@@ -1,6 +1,5 @@
 pycairo
 psutil
-websockets
 python-pam
 pyfiglet
 fuzzywuzzy
