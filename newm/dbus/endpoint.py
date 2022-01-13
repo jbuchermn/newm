@@ -25,6 +25,10 @@ class DBusEndpoint(Thread):
         super().__init__()
         self.layout = layout
 
+    def stop(self) -> None:
+        self.loop.quit()
+
+    def run(self) -> None:
         self.bus = SessionMessageBus()
         self.bus.publish_object("/org/newm/Command", Command(self.layout))
         self.bus.register_service("org.newm.Command")
@@ -38,10 +42,6 @@ class DBusEndpoint(Thread):
 
         self.loop = EventLoop()
 
-    def stop(self) -> None:
-        self.loop.quit()
-
-    def run(self) -> None:
         self.loop.run()
 
     def publish_auth_request(self, req: AuthRequest) -> None:

@@ -4,14 +4,12 @@ from typing import Any, Optional
 from pyfiglet import Figlet
 import os
 import curses
-import websockets
 import json
 import asyncio
 import time
 import logging
 
-from newm import SOCKET_PORT
-URI = "ws://127.0.0.1:%d" % SOCKET_PORT
+from newm import connect_to_auth
 
 logger = logging.getLogger(__name__)
 
@@ -108,85 +106,34 @@ class Lock:
                 break
 
 
-    def process(self, message: Optional[dict[str, Any]]) -> Optional[str]:
-        if message is None:
-            if self.state == "initial":
-                self.pending = False
-                self.render()
+    def __call__(self, message: dict[str, Any]) -> dict[str, Any]:
+        if message['kind'] == 'auth_request_cred':
+            self.state = "request_cred"
+            self.message = message['message']
+            self.cred = ""
+            self.pending = False
 
-            if self.state == "request_cred":
-                self.pending = True
-                self.render()
+            self.enter_cred()
 
-                return json.dumps({
-                    'kind': 'auth_enter_cred',
-                    'cred': self.cred})
-            elif self.state == "request_user":
-                self.pending = True
-                self.render()
+            return {'kind': 'auth_enter_cred',
+                    'cred': self.cred}
 
-                return json.dumps({
-                    'kind': 'auth_choose_user',
-                    'user': self.selected_user})
+
+        elif message['kind'] == 'auth_request_user':
+            self.state = "request_user"
+            self.users = message['users']
+            self.selected_user = self.users[0] if len(self.users) > 0 else None
+            self.pending = False
+
+            self.enter_user()
+
+            return {'kind': 'auth_choose_user',
+                    'user': self.selected_user}
+
         else:
-            logger.debug("Received message: %s", message)
+            logger.warn("Unsupported message %s" % message)
+            return { 'error': 'Unsupported' }
 
-            if message['kind'] == 'auth_ack':
-                self.state = "initial"
-
-            elif message['kind'] == 'auth_request_cred':
-                self.state = "request_cred"
-                self.message = message['message']
-                self.cred = ""
-                self.pending = False
-
-                self.enter_cred()
-
-
-            elif message['kind'] == 'auth_request_user':
-                self.state = "request_user"
-                self.users = message['users']
-                self.selected_user = self.users[0] if len(self.users) > 0 else None
-                self.pending = False
-
-                self.enter_user()
-
-            logger.debug("...done processing message")
-
-
-        return None
-
-def run(lock: Lock) -> None:
-    async def _run() -> None:
-        try:
-            lock.reset()
-            logger.debug("Connecting...")
-            async with websockets.connect(URI) as websocket:
-                logger.debug("...connected")
-
-                initial = True
-                response = None
-                while True:
-                    logger.debug("Run loop...")
-
-                    if not initial:
-                        response = lock.process(None)
-                    else:
-                        response = json.dumps({ 'kind': 'auth_register' })
-                        initial = False
-
-                    if response is not None:
-                        logger.debug("Sending...")
-                        await asyncio.wait_for(websocket.send(response), 0.5)
-                        logger.debug("...done")
-
-                    msg = json.loads(await websocket.recv())
-                    logger.debug("...received answer")
-                    lock.process(msg)
-        except:
-            logger.exception("Exception in run")
-
-    asyncio.get_event_loop().run_until_complete(_run())
 
 
 def lock() -> None:
@@ -195,7 +142,8 @@ def lock() -> None:
         while True:
             logger.debug("Main loop...")
             try:
-                run(l)
+                l.reset()
+                connect_to_auth(l)
             except:
                 logger.exception("Excpetion in main loop")
             time.sleep(.1)

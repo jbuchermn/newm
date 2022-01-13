@@ -37,7 +37,7 @@
             python-pam
             pyfiglet
             fuzzywuzzy
-            dasbuspkg.dasbus1
+            dasbuspkg.dasbus
           ];
 
           setuptoolsCheckPhase = "true";

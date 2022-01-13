@@ -17,4 +17,6 @@ def cmd(command: str, *args: str) -> None:
     elif command == "launcher":
         send_dbus_command({'cmd': 'launcher', 'app': " ".join(args)})
     else:
-        send_dbus_command({'cmd': command, 'arg': " ".join(args)})
+        result = send_dbus_command({'cmd': command, 'arg': " ".join(args)})
+        if result is not None and 'msg' in result:
+            print(result['msg'])
