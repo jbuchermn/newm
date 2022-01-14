@@ -11,7 +11,7 @@
 - wob
 - mako
 *** TODO Get rid of newm-panel-nwjs but keep newm_panel_basic - let newm-panel-basic launcher use newm-cmd launcher ...
-*** STRT newm-panel-basic lock and initially wrong characters
+*** DONE newm-panel-basic lock and initially wrong characters
 
 ** Widgets
 *** STRT SSD on certain windows (mostly floating)

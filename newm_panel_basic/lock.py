@@ -79,6 +79,8 @@ class Lock:
         while True:
             self.render()
             ch = self.scr.getch()
+            if ch == curses.ERR or ch == 410:  # 410 is returned on resize
+                continue
             if ch == curses.KEY_BACKSPACE:
                 self.cred = self.cred[:-1] if len(self.cred) > 0 else ""
             elif ch == 10:

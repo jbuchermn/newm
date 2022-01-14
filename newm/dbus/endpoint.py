@@ -45,7 +45,9 @@ class DBusEndpoint(Thread):
         self.loop.run()
 
     def publish_auth_request(self, req: AuthRequest) -> None:
-        self.auth.request(self.auth_container.to_object_path(req))
+        key = self.auth_container.to_object_path(req)
+        self.auth.request(key)
+        self.auth.latest = key
 
 
 def msg(args: dict[str, Any]) -> Optional[dict[str, Any]]:

@@ -1,15 +1,14 @@
 from __future__ import annotations
-from typing import Any, Optional, Generator
+from typing import Any, Optional
 
 import os
 import sys
-import time
 import curses
 import logging
 import pathlib
 import importlib
-from pyfiglet import Figlet
-from fuzzywuzzy import process
+from pyfiglet import Figlet  # type: ignore
+from fuzzywuzzy import process  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +84,8 @@ def _launcher() -> None:
             while True:
                 render(scr, search)
                 ch = scr.getch()
+                if ch == curses.ERR or ch == 410:  # 410 is returned on resize
+                    continue
                 if ch == curses.KEY_BACKSPACE:
                     search = search[:-1] if len(search) > 0 else ""
                 elif ch == 10:
