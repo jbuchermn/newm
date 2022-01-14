@@ -93,6 +93,8 @@ conf_lock_on_wakeup = configured_value('lock_on_wakeup', True)
 
 conf_bar_enabled = configured_value('bar.enabled', True)
 
+conf_synchronous_update = configured_value('synchronous_update', lambda: None)
+
 def _score(i1: float, j1: float, w1: float, h1: float,
            im: int, jm: int,
            i2: float, j2: float, w2: float, h2: float) -> float:
@@ -258,6 +260,7 @@ class LayoutThread(Thread):
                 logger.exception("Unexpected during LayoutThread")
 
             time.sleep(1. / 120.)
+            conf_synchronous_update()()
 
 
 class Workspace:

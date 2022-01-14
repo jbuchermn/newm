@@ -5,6 +5,7 @@
 *** DONE Get rid of sys_backend, maybe some default config instead
 *** DONE Get rid of websockets: dbus endpoint for newm-cmd and newm-panel-basic
 *** STRT Complete default keybindings for sound and kbdlight
+*** DONE smooth light changes
 *** TODO Incorporate
 - catapult
 - rofi
@@ -12,6 +13,7 @@
 - mako
 *** TODO Get rid of newm-panel-nwjs but keep newm_panel_basic - let newm-panel-basic launcher use newm-cmd launcher ...
 *** DONE newm-panel-basic lock and initially wrong characters
+
 
 ** Widgets
 *** STRT SSD on certain windows (mostly floating)

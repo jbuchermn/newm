@@ -4,22 +4,17 @@ from typing import Callable, Any
 import os
 import pwd
 import time
-import subprocess
 import logging
 
 from newm.layout import Layout
+from newm.helper import BacklightManager
 
 from pywm import (
     PYWM_MOD_LOGO,
-    # PYWM_MOD_ALT
+    PYWM_MOD_ALT
 )
 
 logger = logging.getLogger(__name__)
-
-def execute(command: str) -> str:
-    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-    return proc.stdout.read().decode() if proc.stdout is not None else ""
-
 
 mod = PYWM_MOD_LOGO
 background = {
@@ -32,40 +27,9 @@ outputs = [
     { 'name': 'virt-1', 'pos_x': -1280, 'pos_y': 0, 'width': 1280, 'height': 720 }
 ]
 
-class BacklightManager:
-    def __init__(self) -> None:
-        self._current = 0
-        self._max = 1
-        self._enabled = True
-        try:
-            self._current = int(execute("brightnessctl g"))
-            self._max = int(execute("brightnessctl m"))
-        except Exception:
-            logger.exception("Disabling BacklightManager")
-            self._enabled = False
-
-        self._predim = self._current
-
-    def callback(self, code: str) -> None:
-        if code in ["lock", "idle-lock"]:
-            self._current = int(self._predim / 2)
-            execute("brightnessctl s %d" % self._current)
-        elif code == "idle":
-            self._current = int(self._predim / 1.5)
-            execute("brightnessctl s %d" % self._current)
-        elif code == "active":
-            self._current = self._predim
-            execute("brightnessctl s %d" % self._current)
-
-    def adjust(self, factor: float) -> None:
-        if self._predim < .3*self._max and factor > 1.:
-            self._predim += int(.1*self._max)
-        else:
-            self._predim = max(0, min(self._max, int(self._predim * factor)))
-        self._current = self._predim
-        execute("brightnessctl s %d" % self._current)
-
 backlight_manager = BacklightManager()
+def synchronous_update() -> None:
+    backlight_manager.update()
 
 def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
     return [
