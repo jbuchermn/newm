@@ -38,26 +38,35 @@ class BacklightManager:
             self._current = self._next
             self._anim_ts = 0., 0.
         else:
-            self._current = int(self._current + (self._next - self._current)/(self._anim_ts[1] - self._anim_ts[0])*(t - self._anim_ts[0]))
+            self._current = round(self._current + (self._next - self._current)/(self._anim_ts[1] - self._anim_ts[0])*(t - self._anim_ts[0]))
         execute(self._commands[2](self._current) + " &")
 
     def callback(self, code: str) -> None:
-        if code in ["lock", "idle-lock"]:
-            self._next = int(self._predim * self._dim_factors[0])
+        if code == "sleep":
+            self._current = 1 # If set to zero, systemd will resume with 100%
+            self._next = 1
+            execute(self._commands[2](self._current) + " &")
+            return
+
+        if code == "wakeup":
+            self._next = self._predim
+        elif code in ["lock", "idle-lock"]:
+            self._next = round(self._predim * self._dim_factors[0])
         elif code == "idle":
-            self._next = int(self._predim * self._dim_factors[1])
+            self._next = round(self._predim * self._dim_factors[1])
         elif code == "idle-presuspend":
             self._next = 0
         elif code == "active":
             self._next = self._predim
 
-        self._anim_ts = time.time(), time.time() + self._anim_time
+        if self._anim_ts[0] == 0.:
+            self._anim_ts = time.time(), time.time() + self._anim_time
 
     def adjust(self, factor: float) -> None:
         if self._predim < .3*self._max and factor > 1.:
-            self._predim += int(.1*self._max)
+            self._predim += round(.1*self._max)
         else:
-            self._predim = max(0, min(self._max, int(self._predim * factor)))
+            self._predim = max(0, min(self._max, round(self._predim * factor)))
         self._next = self._predim
 
         self._anim_ts = time.time(), time.time() + self._anim_time

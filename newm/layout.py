@@ -85,6 +85,8 @@ code == 'idle-lock': Called after idle_times[1] has passed - the screen is locke
 code == 'idle-presuspend': Called after idle_times[2]-5sec has passed - the computer is going to suspend
 code == 'idle-suspend': Called after idle_times[2] has passed - the computer is suspended additionally
 code == 'active': Called on activity after idle
+code == 'sleep': Called on sleep - maybe set backlight to zero
+code == 'wakeup': Called on wakeup - maybe blend backlight in (may be called twice)
 """
 conf_idle_callback = configured_value('energy.idle_callback', lambda code: None)
 
@@ -879,10 +881,12 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             conf_idle_callback()("idle")
 
     def on_sleep(self) -> None:
+        conf_idle_callback()("sleep")
         if conf_lock_on_wakeup():
             self.ensure_locked(anim=False)
 
     def on_wakeup(self) -> None:
+        conf_idle_callback()("wakeup")
         if conf_lock_on_wakeup():
             self.ensure_locked()
 

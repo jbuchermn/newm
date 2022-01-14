@@ -6,6 +6,7 @@
 *** DONE Get rid of websockets: dbus endpoint for newm-cmd and newm-panel-basic
 *** STRT Complete default keybindings for sound and kbdlight
 *** DONE smooth light changes
+*** DONE Smooth blend-up after suspend
 *** TODO Incorporate
 - catapult
 - rofi
