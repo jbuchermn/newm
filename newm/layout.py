@@ -82,6 +82,7 @@ conf_suspend_command = configured_value('energy.suspend_command', "systemctl sus
 code == 'lock': Called on lock - idea is to dim the screen now
 code == 'idle': Called after idle_times[0] has passed
 code == 'idle-lock': Called after idle_times[1] has passed - the screen is locked additionally
+code == 'idle-presuspend': Called after idle_times[2]-5sec has passed - the computer is going to suspend
 code == 'idle-suspend': Called after idle_times[2] has passed - the computer is suspended additionally
 code == 'active': Called on activity after idle
 """
@@ -869,6 +870,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         elif len(conf_idle_times()) > 2 and elapsed > conf_idle_times()[2]:
             conf_idle_callback()("idle-suspend")
             os.system(conf_suspend_command())
+        elif len(conf_idle_times()) > 2 and elapsed > conf_idle_times()[2] - 5.:
+            conf_idle_callback()("idle-presuspend")
         elif len(conf_idle_times()) > 1 and elapsed > conf_idle_times()[1]:
             conf_idle_callback()("idle-lock")
             self.ensure_locked()

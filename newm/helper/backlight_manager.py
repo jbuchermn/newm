@@ -46,6 +46,8 @@ class BacklightManager:
             self._next = int(self._predim * self._dim_factors[0])
         elif code == "idle":
             self._next = int(self._predim * self._dim_factors[1])
+        elif code == "idle-presuspend":
+            self._next = 0
         elif code == "active":
             self._next = self._predim
 
