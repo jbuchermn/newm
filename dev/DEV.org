@@ -3,7 +3,7 @@
 * Current (v0.3)
 ** Improved panel
 *** DONE Get rid of sys_backend, maybe some default config instead
-*** DONE Get rid of websockets: dbus endpoint for newm-cmd and newm-panel-basic (?), plus e.g. waybar
+*** DONE Get rid of websockets: dbus endpoint for newm-cmd and newm-panel-basic
 *** STRT Complete default keybindings for sound and kbdlight
 *** TODO Incorporate
 - catapult

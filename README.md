@@ -54,10 +54,10 @@ For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, see 
 
 A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. A flakes based installation should work however and is preferred (see also [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)):
 
-``
-nix build "github:jbuchermn/newm/v0.3#newm" --no-write-lock-file
+```sh
+nix build "github:jbuchermn/newm/v0.3#newm"
 ./result/bin/start-newm -d
-``
+```
 
 Note that this probably does not work outside nixOS. To fix OpenGL issues on other
 linux distros using nix as a (secondary) package manager, see
