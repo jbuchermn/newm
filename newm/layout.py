@@ -875,6 +875,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         elif len(conf_idle_times()) > 0 and elapsed > conf_idle_times()[0]:
             conf_idle_callback()("idle")
 
+    def on_sleep(self) -> None:
+        if conf_lock_on_wakeup():
+            self.ensure_locked(anim=False)
+
     def on_wakeup(self) -> None:
         if conf_lock_on_wakeup():
             self.ensure_locked()

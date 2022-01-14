@@ -5,7 +5,7 @@ import json
 import logging
 from threading import Thread
 from dasbus.loop import EventLoop  # type: ignore
-from dasbus.connection import SessionMessageBus  # type: ignore
+from dasbus.connection import SessionMessageBus, SystemMessageBus  # type: ignore
 from dasbus.server.container import DBusContainer  # type: ignore
 
 try:
@@ -29,19 +29,28 @@ class DBusEndpoint(Thread):
         self.loop.quit()
 
     def run(self) -> None:
-        self.bus = SessionMessageBus()
-        self.bus.publish_object("/org/newm/Command", Command(self.layout))
-        self.bus.register_service("org.newm.Command")
+        bus = SessionMessageBus()
+        bus.publish_object("/org/newm/Command", Command(self.layout))
+        bus.register_service("org.newm.Command")
 
         self.auth = Auth()
-        self.bus.publish_object("/org/newm/Auth", self.auth.for_publication())
-        self.bus.register_service("org.newm.Auth")
-        self.bus.register_service("org.newm.Auth.Request")
+        bus.publish_object("/org/newm/Auth", self.auth.for_publication())
+        bus.register_service("org.newm.Auth")
+        bus.register_service("org.newm.Auth.Request")
 
-        self.auth_container = DBusContainer(self.bus, ("org", "newm", "Auth", "Request"))
+        self.auth_container = DBusContainer(bus, ("org", "newm", "Auth", "Request"))
+
+        bus = SystemMessageBus()
+        proxy = bus.get_proxy("org.freedesktop.login1", "/org/freedesktop/login1")
+
+        def handle_prepare_for_sleep(sleep: bool) -> None:
+            if sleep:
+                self.layout.on_sleep()
+            else:
+                self.layout.on_wakeup()
+        proxy.PrepareForSleep.connect(handle_prepare_for_sleep)
 
         self.loop = EventLoop()
-
         self.loop.run()
 
     def publish_auth_request(self, req: AuthRequest) -> None:
