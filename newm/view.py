@@ -4,7 +4,7 @@ from typing import Optional, TYPE_CHECKING, cast, TypeVar, Any
 import math
 import logging
 import time
-import psutil
+import psutil  # type: ignore
 
 from pywm import PyWMView, PyWMViewDownstreamState, PyWMOutput
 from pywm.pywm_view import PyWMViewUpstreamState
