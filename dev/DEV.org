@@ -24,6 +24,7 @@
 
 ** Improvements / Idea
 *** STRT Make request_fullscreen and request_nofullscreen configurable
+*** STRT Bring down idle CPU
 *** TODO Fullscreen floating windows --> first make them tiled
 *** TODO SwipeToZoom overlay - address shakiness when not moving fingers
 *** TODO Scale windows moving others "out of the way"

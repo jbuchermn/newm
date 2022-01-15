@@ -86,10 +86,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.up_state is None:
             return "<View %d>" % self._handle
 
-        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s, panel=%s, layer_panel=%s>" % (
+        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s, panel=%s, layer_panel=%s, size_constraints=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
              self.title, self.app_id, self.role, self.pid,
-             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused, self.panel, self.layer_panel)
+             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused, self.panel, self.layer_panel, self.up_state.size_constraints)
 
     def is_float(self, state: LayoutState) -> bool:
         if self.is_panel():
@@ -336,8 +336,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             ws_state2 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
             state1, state2 = state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
-            self.focus()
-            self.wm.focus_borders.update_focus(self, (state1, state2))
+            if self.up_state is not None and self.up_state.size_constraints[9] != 0: # != ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_NONE
+                self.focus()
+                self.wm.focus_borders.update_focus(self, (state1, state2))
 
             return state1, state2
         else:
