@@ -2,8 +2,6 @@
 
 * Current (v0.3)
 ** Bugs
-*** TODO FocusBorder on final animation
-*** DONE Replace dasbus flake by simpler variant
 
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight
@@ -24,7 +22,7 @@
 *** TODO Corners as primitive widgets
 
 ** Window swallowing (based on PID)
-*** TODO Swallow on shortcut if child view exists
+*** DONE Swallow on shortcut if child view exists
 *** TODO Enable swalloing via newm-cmd swallow ... (newm-cmd should be able to get parent PID and instruct newm to run command and mark parent PID as swallowed by resulting view)
 *** TODO Enable swallowing instead of closing on Cmd-q (possibly exclusively via config - layout.swallow -> bool)
 *** TODO Enable automatic swallowing for e.g. alacritty based on config
@@ -32,6 +30,7 @@
 ** Improvements / Idea
 *** STRT Make request_fullscreen and request_nofullscreen configurable
 *** STRT Bring down idle CPU
+*** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Fullscreen floating windows --> first make them tiled
 *** TODO SwipeToZoom overlay - address shakiness when not moving fingers
 *** TODO Scale windows moving others "out of the way"

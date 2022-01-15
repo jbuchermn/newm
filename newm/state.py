@@ -15,6 +15,8 @@ class ViewState:
         self.is_tiled: bool = kwargs['is_tiled'] if 'is_tiled' in kwargs else True
         self.is_layer: bool = kwargs['is_layer'] if 'is_layer' in kwargs else False
 
+        self.swallowed: Optional[int] = kwargs['swallowed'] if 'swallowed' in kwargs else None
+
         # - Tiled views
         self.i: float = kwargs['i'] if 'i' in kwargs else 0
         self.j: float = kwargs['j'] if 'j' in kwargs else 0
@@ -162,7 +164,7 @@ class WorkspaceState:
                         return True
             return False
 
-        stacks: list[list[tuple[int, ViewState]]] = [[(v, s)] for v, s in self._view_states.items() if s.is_tiled]
+        stacks: list[list[tuple[int, ViewState]]] = [[(v, s)] for v, s in self._view_states.items() if s.is_tiled and s.swallowed is None]
         change = True
         while change:
             change = False
@@ -432,6 +434,9 @@ class WorkspaceState:
             if s.move_origin is not None and s.move_origin[2]._handle != self._ws._handle:
                 continue
 
+            if s.swallowed is not None:
+                continue
+
             if s.is_tiled:
                 i, j, w, h = s.i, s.j, s.w, s.h
 
@@ -458,6 +463,8 @@ class WorkspaceState:
     def is_tile_free(self, i: int, j: int) -> bool:
         for _, s in self._view_states.items():
             if not s.is_tiled:
+                continue
+            if s.swallowed is not None:
                 continue
 
             if math.floor(s.i) <= i <= math.ceil(s.i + s.w - 1) \
@@ -594,6 +601,14 @@ class LayoutState:
         res = self.copy()
         for h, s in self._workspace_states.items():
             res._workspace_states[h] = s.focusing_view(view)
+        return res
+
+    def unswallowing(self, view: View) -> LayoutState:
+        res = self.copy()
+        for h, s in res._workspace_states.items():
+            for k, vs in s._view_states.items():
+                if vs.swallowed == view._handle:
+                    vs.swallowed = None
         return res
 
 

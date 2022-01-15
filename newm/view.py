@@ -4,9 +4,9 @@ from typing import Optional, TYPE_CHECKING, cast, TypeVar, Any
 import math
 import logging
 import time
+import psutil
 
 from pywm import PyWMView, PyWMViewDownstreamState, PyWMOutput
-from pywm.pywm import PyWMDownstreamState
 from pywm.pywm_view import PyWMViewUpstreamState
 
 from .state import ViewState, LayoutState, WorkspaceState
@@ -448,6 +448,11 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
         result.logical_box = result.box[0] + up_state.offset[0] * size / ws_state.size, result.box[1] + up_state.offset[1] * size / ws_state.size, result.box[2], result.box[3]
 
+        if self_state.swallowed is not None:
+            x, y, w, h = result.box
+            result.box = (x + 0.5*w, y + 0.5*h, 0., 0.)
+            result.logical_box = (x + 0.5*w, y + 0.5*h, 0., 0.)
+
         # Workspaces don't really matter for floating windows, just leave them attached to initial workspace
         result.workspace = None
 
@@ -686,6 +691,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
 
+        if self_state.swallowed is not None:
+            x, y, w, h = result.box
+            result.mask = (0, 0, 0, 0)
+            result.box = (x + 0.5*w, y + 0.5*h, 0., 0.)
+            result.logical_box = (x + 0.5*w, y + 0.5*h, 0., 0.)
+
         if self_state.move_origin is not None and self_state.scale_origin is None:
             # No fixed output during a move
             result.workspace = None
@@ -917,6 +928,38 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         self._destroyed = True
         self.wm.destroy_view(self)
 
+    def find_swallower(self) -> Optional[View]:
+        res: list[View] = []
+        for k, v in self.wm._views.items():
+            if id(v) == id(self):
+                continue
+
+            ppid = v.pid
+            while ppid is not None and ppid > 1:
+                if ppid == self.pid:
+                    res += [v]
+                ppid = psutil.Process(ppid).ppid()
+
+        if len(res) == 0:
+            return None
+        elif len(res) == 1:
+            return res[0]
+        else:
+            pids = set([v.pid for v in res])
+            remove: list[View] = []
+            for v in res:
+                ppid = psutil.Process(v.pid).ppid()
+                while ppid is not None and ppid > 1:
+                    if ppid in pids:
+                        remove += [v]
+                    ppid = psutil.Process(ppid).ppid()
+            for r in remove:
+                res.remove(r)
+            if len(res) == 0:
+                logger.debug("Unexpected")
+                return None
+            return res[0]
+
     def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> tuple[ViewState, ViewState]:
         padding = conf_padding() if not ws_state.is_fullscreen() else 0
         if state.is_tiled:
@@ -947,8 +990,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
             cx = x + .5*w
             cy = y + .5*h
-
-            size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
 
             if ws.pos_x - border_ws_switch <= cx <= ws.pos_x + ws.width + border_ws_switch and ws.pos_y - border_ws_switch <= cy <= ws.pos_y + ws.height + border_ws_switch:
                 return ws, i0, j0, w0, h0

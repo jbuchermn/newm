@@ -981,6 +981,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
             def reducer(state: LayoutState) -> tuple[Optional[LayoutState], LayoutState]:
                 try:
                     state = state\
+                        .unswallowing(view)\
                         .focusing_view(self._views[bv])\
                         .without_view_state(view)\
                         .constrain()
@@ -993,7 +994,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                     View might not exist anymore
                     """
                     state = state\
-                        .copy()\
+                        .unswallowing(view)\
                         .without_view_state(view)\
                         .constrain()
 
@@ -1009,7 +1010,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 self.focus_borders.unfocus()
             self.animate_to(
                 lambda state: (None, state
-                    .copy()
+                    .unswallowing(view)\
                     .without_view_state(view)
                     .constrain()),
                 conf_anim_t())
@@ -1393,6 +1394,34 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
                 return (None, state)
         self.animate_to(reducer, conf_anim_t())
 
+    def swallow_focused_view(self) -> None:
+        def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
+            view = self.find_focused_view()
+            if view is None:
+                return None, None
+            if not (view.is_tiled(state) or view.is_float(state)):
+                return None, None
+
+            by_view = view.find_swallower()
+            if by_view is None:
+                return None, None
+
+            new_state = state.focusing_view(by_view)
+
+            if view.is_tiled(state):
+                v_state = state.get_view_state(view)
+                by_state = state.get_view_state(by_view)
+                new_state.update_view_state(view, swallowed=by_view._handle, i=by_state.i, j=by_state.j, w=by_state.w, h=by_state.h)
+            else:
+                new_state.update_view_state(view, swallowed=by_view._handle)
+            new_state.constrain()
+
+            self.focus_borders.update_focus(by_view, present_states=(None, new_state))
+            by_view.focus()
+
+            return None, new_state
+
+        self.animate_to(reducer, conf_anim_t())
 
     """
     6. Legacy
