@@ -4,11 +4,11 @@
 ** Improved panel
 *** STRT Complete default keybindings for sound and kbdlight
 *** STRT Get rid of newm-panel-nwjs but keep newm_panel_basic - let newm-panel-basic launcher use newm-cmd launcher ...
-*** TODO Incorporate
-- catapult
-- rofi
-- wob
-- mako
+*** STRT Incorporate
+[ ] catapult
+[ ] rofi
+[X] wob
+[X] mako
 *** TODO Clearer definition of what panels are - drop notifiers (or handle anim), add bar (?)
 
 ** Widgets

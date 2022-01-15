@@ -1,28 +1,27 @@
 from __future__ import annotations
-from typing import Callable
+from typing import Optional
 
 import logging
 import time
 import os
 
 from .execute import execute
+from .wob_runner import WobRunner
 
 logger = logging.getLogger(__name__)
 
 class BacklightManager:
-    def __init__(self, commands: tuple[str, str, Callable[[int], str]]=("brightnessctl m", "brightnessctl g", lambda v: "brightnessctl s %d" % v),
-            dim_factors: tuple[float, float]=(0.5, 0.33),
-            anim_time: float=0.3) -> None:
-        self._commands = commands
+    def __init__(self, dim_factors: tuple[float, float]=(0.5, 0.33), anim_time: float=0.3, wob_runner: Optional[WobRunner]=None) -> None:
         self._dim_factors = dim_factors
         self._anim_time = anim_time
+        self._wob_runner = wob_runner
 
         self._current = 0
         self._max = 1
         self._enabled = True
         try:
-            self._current = int(execute(self._commands[1]))
-            self._max = int(execute(self._commands[0]))
+            self._current = self._get_current()
+            self._max = self._get_max()
         except Exception:
             logger.exception("Disabling BacklightManager")
             self._enabled = False
@@ -48,13 +47,13 @@ class BacklightManager:
             self._anim_ts = -1., -1., -1.
         else:
             self._current = round(self._current + (self._next - self._current)/(self._anim_ts[1] - self._anim_ts[0])*(t - self._anim_ts[0]))
-        os.system(self._commands[2](self._current) + " &")
+        self._set(self._current)
 
     def callback(self, code: str) -> None:
         if code == "sleep":
             self._current = 1 # If set to zero, systemd will resume with 100%
             self._next = 1
-            execute(self._commands[2](self._current))
+            self._set(self._current)
             return
 
         next = self._next
@@ -72,13 +71,31 @@ class BacklightManager:
         if abs(next - self._next) > 0.5 and self._anim_ts[0] < 0:
             t = time.time()
             self._anim_ts = t, t + self._anim_time, 0.
+
+            if self._wob_runner is not None:
+                self._wob_runner.display(next / self._max)
         self._next = next
 
-    def adjust(self, factor: float) -> None:
-        if self._predim < .3*self._max and factor > 1.:
-            self._predim += round(.1*self._max)
-        else:
-            self._predim = max(0, min(self._max, round(self._predim * factor)))
+    def get(self) -> float:
+        return self._predim / self._max
+
+    def set(self, value: float) -> None:
+        self._predim = max(0, min(self._max, int(self._max * value)))
         self._next = self._predim
 
         self._anim_ts = time.time(), time.time() + self._anim_time, 0
+
+        if self._wob_runner is not None:
+            self._wob_runner.display(self._next / self._max)
+
+    """
+    Override these to configure command and device
+    """
+    def _get_max(self) -> int:
+        return int(execute("brightnessctl m"))
+
+    def _get_current(self) -> int:
+        return int(execute("brightnessctl g"))
+
+    def _set(self, val: int) -> None:
+        os.system("brightnessctl s %d > /dev/null &" % self._current)
