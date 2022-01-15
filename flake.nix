@@ -8,19 +8,30 @@
 
     pywm.url = "github:jbuchermn/pywm/v0.3";
     pywm.inputs.nixpkgs.follows = "nixpkgs";
-
-    dasbus.url = "path:dist/nixos/dasbus";
-    dasbus.inputs.nixpkgs.follows = "nixpkgs";
-    dasbus.inputs.flake-utils.follows = "flake-utils";
   };
 
-  outputs = { self, nixpkgs, pywm, flake-utils, dasbus }:
+  outputs = { self, nixpkgs, pywm, flake-utils }:
   flake-utils.lib.eachDefaultSystem (
     system:
     let
       pkgs = nixpkgs.legacyPackages.${system}; 
       pywmpkg = pywm.packages.${system};
-      dasbuspkg = dasbus.packages.${system};
+      dasbuspkg = {
+        dasbus = pkgs.python3.pkgs.buildPythonPackage rec {
+          pname = "dasbus";
+          version = "1.6";
+
+          src = pkgs.python3.pkgs.fetchPypi {
+            inherit pname version;
+            sha256 = "sha256-FJrY/Iw9KYMhq1AVm1R6soNImaieR+IcbULyyS5W6U0=";
+          };
+
+          setuptoolsCheckPhase = "true";
+
+          propagatedBuildInputs = with pkgs.python3Packages; [ pygobject3 ];
+        };
+
+      };
     in
     {
       packages.newm =

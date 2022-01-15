@@ -1,16 +1,22 @@
 #+TITLE: newm developer information
 
 * Current (v0.3)
+** Bugs
+*** TODO FocusBorder on final animation
+*** DONE Replace dasbus flake by simpler variant
+
 ** Improved panel
-*** STRT Complete default keybindings for sound and kbdlight
-*** STRT Get rid of newm-panel-nwjs but keep newm_panel_basic - let newm-panel-basic launcher use newm-cmd launcher ...
-*** STRT Incorporate
+*** DONE Complete default keybindings for sound and kbdlight
+*** Panel implementation in view
+**** STRT Get rid of newm-panel-nwjs (in documentation)
+**** STRT Unify layer_panel and panel
+**** STRT Possibility to start waybar as a panel (i.e. with auto restart)
+**** STRT Drop panel == "notifier" --> wob and mako are the better solution
+*** STRT Incorporate and update default config accordingly
 [ ] catapult
 [ ] rofi
 [X] wob
 [X] mako
-*** TODO Update default_config accordingly
-*** TODO Clearer definition of what panels are - drop notifiers (or handle anim), add bar (?)
 
 ** Widgets
 *** STRT SSD on certain windows (mostly floating)

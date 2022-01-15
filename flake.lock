@@ -1,24 +1,5 @@
 {
   "nodes": {
-    "dasbus": {
-      "inputs": {
-        "flake-utils": [
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "narHash": "sha256-Xpjmhn8Gxh16FeZuUZMsTf82avJ/zouDSi30kp23tec=",
-        "path": "dist/nixos/dasbus",
-        "type": "path"
-      },
-      "original": {
-        "path": "dist/nixos/dasbus",
-        "type": "path"
-      }
-    },
     "flake-utils": {
       "locked": {
         "lastModified": 1638122382,
@@ -89,7 +70,6 @@
     },
     "root": {
       "inputs": {
-        "dasbus": "dasbus",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
         "pywm": "pywm"
