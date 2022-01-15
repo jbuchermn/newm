@@ -6,15 +6,15 @@ import time
 import os
 
 from .execute import execute
-from .wob_runner import WobRunner
+from .bar_display import BarDisplay
 
 logger = logging.getLogger(__name__)
 
 class BacklightManager:
-    def __init__(self, dim_factors: tuple[float, float]=(0.5, 0.33), anim_time: float=0.3, wob_runner: Optional[WobRunner]=None) -> None:
+    def __init__(self, dim_factors: tuple[float, float]=(0.5, 0.33), anim_time: float=0.3, display: Optional[BarDisplay]=None) -> None:
         self._dim_factors = dim_factors
         self._anim_time = anim_time
-        self._wob_runner = wob_runner
+        self._display = display
 
         self._current = 0
         self._max = 1
@@ -72,8 +72,8 @@ class BacklightManager:
             t = time.time()
             self._anim_ts = t, t + self._anim_time, 0.
 
-            if self._wob_runner is not None:
-                self._wob_runner.display(next / self._max)
+            if self._display is not None:
+                self._display.display(next / self._max)
         self._next = next
 
     def get(self) -> float:
@@ -85,8 +85,8 @@ class BacklightManager:
 
         self._anim_ts = time.time(), time.time() + self._anim_time, 0
 
-        if self._wob_runner is not None:
-            self._wob_runner.display(self._next / self._max)
+        if self._display is not None:
+            self._display.display(self._next / self._max)
 
     """
     Override these to configure command and device

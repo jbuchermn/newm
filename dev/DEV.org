@@ -9,6 +9,7 @@
 [ ] rofi
 [X] wob
 [X] mako
+*** TODO Update default_config accordingly
 *** TODO Clearer definition of what panels are - drop notifiers (or handle anim), add bar (?)
 
 ** Widgets

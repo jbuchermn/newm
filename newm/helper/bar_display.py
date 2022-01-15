@@ -1,11 +1,19 @@
 from __future__ import annotations
 from typing import Optional
+
+from abc import abstractmethod
+
 from subprocess import Popen, PIPE, STDOUT
 import logging
 
 logger = logging.getLogger(__name__)
 
-class WobRunner:
+class BarDisplay:
+    @abstractmethod
+    def display(self, value: float) -> None:
+        pass
+
+class WobRunner(BarDisplay):
     def __init__(self, command: str="wob") -> None:
         self._command = command
         self._wob: Optional[Popen] = None
