@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class PaCtl:
-    def __init__(self, sink: int=0, display: Optional[BarDisplay]=None) -> None:
+    def __init__(self, sink: int=0, bar_display: Optional[BarDisplay]=None) -> None:
         self._sink = sink
-        self._display = display
+        self._display = bar_display
         self._matcher = re.compile(r".*?(\d+)%.*")
 
     def mute(self) -> None:

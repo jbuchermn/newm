@@ -11,10 +11,11 @@ from .bar_display import BarDisplay
 logger = logging.getLogger(__name__)
 
 class BacklightManager:
-    def __init__(self, dim_factors: tuple[float, float]=(0.5, 0.33), anim_time: float=0.3, display: Optional[BarDisplay]=None) -> None:
+    def __init__(self, args: str="", dim_factors: tuple[float, float]=(0.5, 0.33), anim_time: float=0.3, bar_display: Optional[BarDisplay]=None) -> None:
+        self._args = args
         self._dim_factors = dim_factors
         self._anim_time = anim_time
-        self._display = display
+        self._display = bar_display
 
         self._current = 0
         self._max = 1
@@ -92,10 +93,11 @@ class BacklightManager:
     Override these to configure command and device
     """
     def _get_max(self) -> int:
-        return int(execute("brightnessctl m"))
+        return int(execute("brightnessctl %s m" % self._args))
 
     def _get_current(self) -> int:
-        return int(execute("brightnessctl g"))
+        return int(execute("brightnessctl %s g" % self._args))
 
     def _set(self, val: int) -> None:
-        os.system("brightnessctl s %d > /dev/null &" % self._current)
+        logger.debug("DDEBUGG %s %d" % (self._args, self._current))
+        os.system("brightnessctl %s s %d > /dev/null &" % (self._args, self._current))

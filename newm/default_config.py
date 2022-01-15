@@ -7,7 +7,7 @@ import time
 import logging
 
 from newm.layout import Layout
-from newm.helper import BacklightManager
+from newm.helper import BacklightManager, WobRunner, PaCtl
 
 from pywm import (
     PYWM_MOD_LOGO,
@@ -27,9 +27,14 @@ outputs = [
     { 'name': 'virt-1', 'pos_x': -1280, 'pos_y': 0, 'width': 1280, 'height': 720 }
 ]
 
-backlight_manager = BacklightManager()
+wob_runner = WobRunner("wob -a bottom -M 100")
+backlight_manager = BacklightManager(anim_time=1., bar_display=wob_runner)
+kbdlight_manager = BacklightManager(args="--device='*::kbd_backlight'", anim_time=1., bar_display=wob_runner)
 def synchronous_update() -> None:
     backlight_manager.update()
+    kbdlight_manager.update()
+
+pactl = PaCtl(0, wob_runner)
 
 def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
     return [
@@ -62,8 +67,13 @@ def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
 
         ("ModPress", lambda: layout.toggle_overview()),
 
-        ("XF86MonBrightnessUp", lambda: backlight_manager.adjust(1.1)),
-        ("XF86MonBrightnessDown", lambda: backlight_manager.adjust(0.9)),
+        ("XF86MonBrightnessUp", lambda: backlight_manager.set(backlight_manager.get() + 0.1)),
+        ("XF86MonBrightnessDown", lambda: backlight_manager.set(backlight_manager.get() - 0.1)),
+        ("XF86KbdBrightnessUp", lambda: kbdlight_manager.set(kbdlight_manager.get() + 0.1)),
+        ("XF86KbdBrightnessDown", lambda: kbdlight_manager.set(kbdlight_manager.get() - 0.1)),
+        ("XF86AudioRaiseVolume", lambda: pactl.volume_adj(5)),
+        ("XF86AudioLowerVolume", lambda: pactl.volume_adj(-5)),
+        ("XF86AudioMute", lambda: pactl.mute()),
     ]
 
 panels = {
