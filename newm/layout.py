@@ -262,7 +262,7 @@ class LayoutThread(Thread):
             except Exception:
                 logger.exception("Unexpected during LayoutThread")
 
-            time.sleep(1. / 120.)
+            time.sleep(1. / 30.)
             conf_synchronous_update()()
 
 

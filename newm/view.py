@@ -32,6 +32,8 @@ conf_border_ws_switch = configured_value('view.border_ws_switch', 10.)
 conf_float_callback = configured_value('view.should_float', lambda view: None)
 conf_floating_min_size = configured_value('view.floating_min_size', True)
 
+conf_accept_fullscreen_from_views = configured_value('view.accept_fullscreen', True)
+
 conf_panel_lock_h = configured_value('panels.lock.h', 0.6)
 conf_panel_lock_w = configured_value('panels.lock.w', 0.7)
 conf_panel_lock_corner_radius = configured_value('panels.lock.corner_radius', 50)
@@ -1068,12 +1070,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                     MoveResizeFloatingOverlay(self.wm, self))
         elif event == "request_fullscreen":
             logger.debug("Client requested fullscreen - following")
-            if self.is_focused():
+            if self.is_focused() and conf_accept_fullscreen_from_views():
                 self.wm.toggle_fullscreen(True)
             self.set_fullscreen(True)
         elif event == "request_nofullscreen":
             logger.debug("Client requests to leave fullscreen - following")
-            if self.is_focused():
+            if self.is_focused() and conf_accept_fullscreen_from_views():
                 self.wm.toggle_fullscreen(False)
             self.set_fullscreen(False)
 

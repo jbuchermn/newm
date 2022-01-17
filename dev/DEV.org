@@ -11,30 +11,27 @@
 **** STRT Possibility to start waybar as a panel (i.e. with auto restart)
 **** STRT Drop panel == "notifier" --> wob and mako are the better solution
 *** STRT Incorporate and update default config accordingly
-[ ] catapult
-[ ] rofi
-[X] wob
-[X] mako
+- [ ] catapult
+- [ ] rofi
+- [X] wob
+- [X] mako
+
 
 ** Widgets
 *** STRT SSD on certain windows (mostly floating)
 *** TODO Prevent focusing of notifications or similar
 *** TODO Corners as primitive widgets
 
-** Window swallowing (based on PID)
-*** DONE Swallow on shortcut if child view exists
-*** KILL Enable swallowing via newm-cmd swallow ... (newm-cmd should be able to get parent PID and instruct newm to run command and mark parent PID as swallowed by resulting view)
-*** KILL Enable swallowing instead of closing on Cmd-q (possibly exclusively via config - layout.swallow -> bool)
-*** KILL Enable automatic swallowing for e.g. alacritty based on config
 
 ** Improvements / Idea
-*** STRT Make request_fullscreen and request_nofullscreen configurable
+*** DONE Make request_fullscreen and request_nofullscreen configurable
 *** STRT Bring down idle CPU
-*** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
+*** STRT Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Fullscreen floating windows --> first make them tiled
 *** TODO SwipeToZoom overlay - address shakiness when not moving fingers
 *** TODO Scale windows moving others "out of the way"
 *** TODO Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
+
 
 * Backlog
 ** dbus endpoint for waybar etc
