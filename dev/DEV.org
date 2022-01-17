@@ -23,9 +23,9 @@
 
 ** Window swallowing (based on PID)
 *** DONE Swallow on shortcut if child view exists
-*** TODO Enable swallowing via newm-cmd swallow ... (newm-cmd should be able to get parent PID and instruct newm to run command and mark parent PID as swallowed by resulting view)
-*** TODO Enable swallowing instead of closing on Cmd-q (possibly exclusively via config - layout.swallow -> bool)
-*** TODO Enable automatic swallowing for e.g. alacritty based on config
+*** KILL Enable swallowing via newm-cmd swallow ... (newm-cmd should be able to get parent PID and instruct newm to run command and mark parent PID as swallowed by resulting view)
+*** KILL Enable swallowing instead of closing on Cmd-q (possibly exclusively via config - layout.swallow -> bool)
+*** KILL Enable automatic swallowing for e.g. alacritty based on config
 
 ** Improvements / Idea
 *** STRT Make request_fullscreen and request_nofullscreen configurable
