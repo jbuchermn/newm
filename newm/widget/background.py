@@ -7,8 +7,7 @@ import logging
 
 from pywm import PyWMBackgroundWidget, PyWMWidgetDownstreamState, PyWMOutput
 
-from ..interpolation import WidgetDownstreamInterpolation
-from ..animate import Animate
+from ..animate import Animatable
 from ..config import configured_value
 
 if TYPE_CHECKING:
@@ -181,7 +180,7 @@ class BackgroundState:
         return "<BackgroundState box=%s opacity=%f>" % (str(self.box), self.opacity)
 
 
-class Background(PyWMBackgroundWidget):
+class Background(PyWMBackgroundWidget, Animatable):
     def __init__(self, wm: Layout, output: PyWMOutput, workspace: Workspace):
 
         self._output: PyWMOutput = output
@@ -224,15 +223,15 @@ class Background(PyWMBackgroundWidget):
         self._last_frame = time.time()
         self.damage()
 
+    def flush_animation(self) -> None:
+        self._anim_caught = None
+
     def process(self) -> PyWMWidgetDownstreamState:
         if not self._prevent_anim:
             # State handling
             t = time.time()
 
-            if self._anim_caught is not None:
-                if t > self._anim_caught:
-                    self._anim_caught = None
-            else:
+            if self._anim_caught is None:
                 target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
                 if target_state.delta(self._target_state) > 1:
                     self._target_state = target_state

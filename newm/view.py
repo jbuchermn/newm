@@ -11,7 +11,7 @@ from pywm.pywm_view import PyWMViewUpstreamState
 
 from .state import ViewState, LayoutState, WorkspaceState
 from .interpolation import ViewDownstreamInterpolation
-from .animate import Animate
+from .animate import Animate, Animatable
 from .overlay import MoveResizeFloatingOverlay
 from .config import configured_value
 from .util import errorlogged
@@ -64,7 +64,7 @@ class CustomDownstreamState(PyWMViewDownstreamState):
         super().__init__(*args, **kwargs)
         self.logical_box: tuple[float, float, float, float] = kwargs['logical_box'] if 'logical_box' in kwargs else self.box
 
-class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
+class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)

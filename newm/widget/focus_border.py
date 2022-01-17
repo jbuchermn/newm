@@ -10,7 +10,7 @@ import logging
 
 from pywm import PyWMWidget, PyWMWidgetDownstreamState, PyWMOutput
 
-from ..animate import Animate
+from ..animate import Animate, Animatable
 from ..interpolation import WidgetDownstreamInterpolation
 from ..config import configured_value
 from ..util import get_color
@@ -65,7 +65,7 @@ class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
     def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self._parent.current_box, 1.))
 
-class FocusBorders:
+class FocusBorders(Animatable):
     def __init__(self, wm: Layout):
         self.wm = wm
         self.borders: list[FocusBorder] = []
@@ -143,6 +143,10 @@ class FocusBorders:
             self.current_box = new_box
             for b in self.borders:
                 b.animate(old_box, old_opacity, new_box, new_opacity, dt)
+
+    def flush_animation(self) -> None:
+        for b in self.borders:
+            b.flush_animation()
 
     def damage(self) -> None:
         self._set_box_and_radius()

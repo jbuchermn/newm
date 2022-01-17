@@ -27,7 +27,7 @@ from pywm.touchpad.gestures import Gesture
 
 from .state import LayoutState, WorkspaceState
 from .interpolation import LayoutDownstreamInterpolation
-from .animate import Animate
+from .animate import Animate, Animatable
 from .view import View
 from .config import configured_value, load_config, print_config
 
@@ -166,6 +166,7 @@ class Animation:
 
     def check_finished(self) -> bool:
         if self._started is not None and self._final_state is None:
+            self.layout.do_flush_animation()
             return True
 
         if self._started is not None and time.time() > self._started + self.duration:
@@ -173,6 +174,8 @@ class Animation:
                 self.layout.update(self._final_state)
             if callable(self.then):
                 self.then()
+
+            self.layout.do_flush_animation()
             return True
 
         return False
@@ -259,11 +262,11 @@ class LayoutThread(Thread):
                         logger.debug("Thread: Finishing animation...")
                         self._current_anim = None
 
+                conf_synchronous_update()()
             except Exception:
                 logger.exception("Unexpected during LayoutThread")
 
             time.sleep(1. / 30.)
-            conf_synchronous_update()()
 
 
 class Workspace:
@@ -332,7 +335,7 @@ class Workspace:
         )
 
 
-class Layout(PyWM[View], Animate[PyWMDownstreamState]):
+class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     def __init__(self, debug: bool=False, config_file: Optional[str]=None) -> None:
         self._config_file = config_file
         load_config(path_str=self._config_file)
@@ -617,23 +620,22 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState]):
         self.state = new_state
         self.damage()
 
+    def _all_animates(self) -> list[Animatable]:
+        return [self,
+                *self._views.values(),
+                *self.backgrounds,
+                *self.top_bars,
+                *self.bottom_bars,
+                self.focus_borders
+                ]
+
+    def do_flush_animation(self) -> None:
+        for a in self._all_animates():
+            a.flush_animation()
+
     def _animate_to(self, new_state: LayoutState, duration: float) -> None:
-        self.animate(self.state, new_state, duration)
-
-        for _, v in self._views.items():
-            v.animate(self.state, new_state, duration)
-
-        for bg in self.backgrounds:
-            bg.animate(self.state, new_state, duration)
-
-        for t in self.top_bars:
-            t.animate(self.state, new_state, duration)
-
-        for b in self.bottom_bars:
-            b.animate(self.state, new_state, duration)
-
-        self.focus_borders.animate(self.state, new_state, duration)
-
+        for a in self._all_animates():
+            a.animate(self.state, new_state, duration)
 
     def _trusted_unlock(self) -> None:
         if self.is_locked():

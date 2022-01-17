@@ -9,7 +9,7 @@ import cairo
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState, PyWMOutput
 
 from ..interpolation import WidgetDownstreamInterpolation
-from ..animate import Animate
+from ..animate import Animate, Animatable
 from ..config import configured_value
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ conf_bottom_bar_text = configured_value('bar.bottom_texts', lambda: ["4", "5", "
 conf_font = configured_value('bar.font', 'Source Code Pro for Powerline')
 
 
-class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
+class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState], Animatable):
     def __init__(self, wm: Layout, output: PyWMOutput):
         PyWMCairoWidget.__init__(
             self, wm, output,

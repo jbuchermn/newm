@@ -3,6 +3,7 @@
 * Current (v0.3)
 ** Bugs
 
+
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight
 *** Panel implementation in view

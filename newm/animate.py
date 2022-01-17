@@ -6,10 +6,21 @@ import logging
 import time
 
 from .interpolation import Interpolation
+from .state import LayoutState
+
+
 
 logger = logging.getLogger(__name__)
 
 StateT = TypeVar('StateT')
+
+class Animatable:
+    @abstractmethod
+    def flush_animation(self) -> None:
+        pass
+    @abstractmethod
+    def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
+        pass
 
 class Animate(Generic[StateT]):
     def __init__(self) -> None:
@@ -25,13 +36,13 @@ class Animate(Generic[StateT]):
 
             perc = min((ts - s) / d, 1.0)
 
-            if perc >= 0.99999:
-                self._animation = None
-
             self.damage()
             return interpolation.get(perc)
         else:
             return default_state
+
+    def flush_animation(self) -> None:
+        self._animation = None
 
     def _animate(self, interp: Interpolation[StateT], dt: float) -> None:
         self._animation = (interp, time.time(), dt, time.time())
