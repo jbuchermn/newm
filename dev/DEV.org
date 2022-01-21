@@ -17,16 +17,13 @@
 - [X] wob
 - [X] mako
 
-
 ** Widgets
 *** DONE SSD on certain windows (mostly floating)
 *** DONE Prevent focusing of notifications or similar
-*** TODO SSD on fade out
+*** DONE SSD on fade out
 *** TODO Corners as primitive widgets
 
-
 ** Improvements / Idea
-*** DONE Make request_fullscreen and request_nofullscreen configurable
 *** STRT Bring down idle CPU
 *** STRT Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO SwipeToZoom overlay - address shakiness when not moving fingers

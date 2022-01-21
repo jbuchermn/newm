@@ -44,13 +44,13 @@ class SSD(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
             # Width
             conf_ssd_w() * self._output.scale])
 
-    def reducer(self, state: CustomDownstreamState) -> PyWMWidgetDownstreamState:
+    def reducer(self, state: CustomDownstreamState, opacity: float) -> PyWMWidgetDownstreamState:
         self.set_corner_radius(state.corner_radius)
-        return PyWMWidgetDownstreamState(state.z_index + 0.1, state.logical_box, lock_enabled=False)
+        return PyWMWidgetDownstreamState(state.z_index + 0.1, state.logical_box, lock_enabled=False, opacity=opacity)
 
-    def animate(self, old_state: CustomDownstreamState, new_state: CustomDownstreamState, dt: float) -> None:
-        cur = self.reducer(old_state)
-        nxt = self.reducer(new_state)
+    def animate(self, old_state: CustomDownstreamState, old_opacity: float, new_state: CustomDownstreamState, new_opacity: float, dt: float) -> None:
+        cur = self.reducer(old_state, old_opacity)
+        nxt = self.reducer(new_state, new_opacity)
 
         self._animate(WidgetDownstreamInterpolation(self.wm, self, cur, nxt), dt)
 
@@ -58,13 +58,14 @@ class SSD(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
         if self._parent.view_state is None:
             return PyWMWidgetDownstreamState()
         else:
-            return self._process(self.reducer(self._parent.view_state))
+            return self._process(self.reducer(self._parent.view_state, self._parent.opacity))
 
 class SSDs(Animatable):
     def __init__(self, wm: Layout, view: View):
         self.wm = wm
         self.view = view
         self.view_state: Optional[CustomDownstreamState] = None
+        self.opacity = 1.
 
         self.ssds: list[SSD] = []
 
@@ -85,10 +86,14 @@ class SSDs(Animatable):
             view_old_down_state = self.view.reducer(self.view.up_state, old_state)
             view_new_down_state = self.view.reducer(self.view.up_state, new_state)
 
+            old_opacity = old_state.background_opacity
+            new_opacity = new_state.background_opacity
+
             self.view_state = view_new_down_state
+            self.opacity = new_opacity
 
             for b in self.ssds:
-                b.animate(view_old_down_state, view_new_down_state, dt)
+                b.animate(view_old_down_state, old_opacity, view_new_down_state, new_opacity, dt)
 
     def flush_animation(self) -> None:
         for b in self.ssds:
@@ -97,5 +102,6 @@ class SSDs(Animatable):
     def damage(self) -> None:
         if self.view.up_state is not None:
             self.view_state = self.view.reducer(self.view.up_state, self.wm.state)
+            self.opacity = self.wm.state.background_opacity
         for b in self.ssds:
             b.damage()
