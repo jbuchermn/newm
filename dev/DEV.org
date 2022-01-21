@@ -1,35 +1,25 @@
 #+TITLE: newm developer information
 
 * Current (v0.3)
-** Bugs
+** Improvements
+*** TODO Bring down idle CPU
+*** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
+*** TODO SwipeToZoom overlay - address shakiness when not moving fingers (possibly c gestures?)
+*** TODO Scale windows moving others "out of the way"
 
 
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight
 *** Panel implementation in view
-**** STRT Get rid of newm-panel-nwjs (in documentation)
-**** STRT Unify layer_panel and panel
-**** STRT Possibility to start waybar as a panel (i.e. with auto restart)
-**** STRT Drop panel == "notifier" --> wob and mako are the better solution
-*** STRT Incorporate and update default config accordingly
+**** TODO Get rid of newm-panel-nwjs (in documentation)
+**** TODO Unify layer_panel and panel
+**** TODO Possibility to start waybar as a panel (i.e. with auto restart)
+**** TODO Drop panel == "notifier" --> wob and mako are the better solution
+*** TODO Incorporate and update default config accordingly
 - [ ] catapult
 - [ ] rofi
 - [X] wob
 - [X] mako
-
-** Widgets
-*** DONE SSD on certain windows (mostly floating)
-*** DONE Prevent focusing of notifications or similar
-*** DONE SSD on fade out
-*** DONE Corners as primitive widgets
-
-** Improvements / Idea
-*** STRT Bring down idle CPU
-*** STRT Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
-*** TODO SwipeToZoom overlay - address shakiness when not moving fingers
-*** TODO Scale windows moving others "out of the way"
-*** TODO Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
-
 
 * Backlog
 ** dbus endpoint for waybar etc
@@ -46,6 +36,7 @@
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 ** Dynamic background
+** Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
 
 
 * Setup clean arch chroot / qemu for testing
