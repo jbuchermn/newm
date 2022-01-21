@@ -19,8 +19,9 @@
 
 
 ** Widgets
-*** STRT SSD on certain windows (mostly floating)
-*** TODO Prevent focusing of notifications or similar
+*** DONE SSD on certain windows (mostly floating)
+*** DONE Prevent focusing of notifications or similar
+*** TODO SSD on fade out
 *** TODO Corners as primitive widgets
 
 
@@ -28,7 +29,6 @@
 *** DONE Make request_fullscreen and request_nofullscreen configurable
 *** STRT Bring down idle CPU
 *** STRT Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
-*** TODO Fullscreen floating windows --> first make them tiled
 *** TODO SwipeToZoom overlay - address shakiness when not moving fingers
 *** TODO Scale windows moving others "out of the way"
 *** TODO Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?

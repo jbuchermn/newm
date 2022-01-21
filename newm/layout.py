@@ -529,6 +529,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         if reconfigure:
             self.reconfigure(dict(**conf_pywm(), outputs=conf_outputs(), debug=self._debug))
 
+            for v in self._views.values():
+                v.update()
+
     def reducer(self, state: LayoutState) -> PyWMDownstreamState:
         return PyWMDownstreamState(state.lock_perc)
 
@@ -1411,7 +1414,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             new_state = state.focusing_view(by_view)
 
             if view.is_tiled(state):
-                v_state = state.get_view_state(view)
                 by_state = state.get_view_state(by_view)
                 new_state.update_view_state(view, swallowed=by_view._handle, i=by_state.i, j=by_state.j, w=by_state.w, h=by_state.h)
             else:

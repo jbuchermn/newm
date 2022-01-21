@@ -99,5 +99,4 @@ class BacklightManager:
         return int(execute("brightnessctl %s g" % self._args))
 
     def _set(self, val: int) -> None:
-        logger.debug("DDEBUGG %s %d" % (self._args, self._current))
         os.system("brightnessctl %s s %d > /dev/null &" % (self._args, self._current))

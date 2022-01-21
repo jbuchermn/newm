@@ -14,7 +14,7 @@ from .interpolation import ViewDownstreamInterpolation
 from .animate import Animate, Animatable
 from .overlay import MoveResizeFloatingOverlay
 from .config import configured_value
-from .util import errorlogged
+from .widget import SSDs
 
 if TYPE_CHECKING:
     from .layout import Layout, Workspace
@@ -68,6 +68,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
+
+        self._ssd: Optional[SSDs] = None
 
         # State machine
         self._mapped = False
@@ -350,6 +352,27 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     """
     Floating
     """
+    def _needs_ssd(self, up_state: PyWMViewUpstreamState) -> bool:
+        """
+        Two options
+        - CSD or no decoration necessary: No masking and we're good
+        - SSD: For now, use masking and corner_radius
+
+        Heuristic to decide based on decoration protocols and offset
+        - Needs special info for catapult (Could be moved to config)
+        """
+        ssd = True
+        if up_state.shows_csd:
+            ssd = False
+        if up_state.offset != (0, 0):
+            # Assume some CSD
+            ssd = False
+
+        if self.app_id == "catapult":
+            ssd = False
+        return ssd
+
+
     def _init_floating(self, up_state: PyWMViewUpstreamState, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> CustomDownstreamState:
         """
         Set floating attributes on init if it is clear the window will float
@@ -422,25 +445,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         y *= ws.height / ws_state.size
         result.box = (x, y, width, height)
 
-        """
-        Two options
-        - CSD or no decoration necessary: No masking and we're good
-        - SSD: For now, use masking and corner_radius
-
-        Heuristic to decide based on decoration protocols and offset
-        - Needs special info for catapult (Could be moved to config)
-        """
-        ssd = True
-        if up_state.shows_csd:
-            ssd = False
-        if up_state.offset != (0, 0):
-            # Assume some CSD
-            ssd = False
-
-        if self.app_id == "catapult":
-            ssd = False
-
-        if ssd:
+        if self._needs_ssd(up_state):
             result.mask = (0, 0, width, height)
         else:
             result.corner_radius = 0
@@ -846,6 +851,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         if result != (None, None):
             self._mapped = True
 
+        self.validate_ssd(override_float=self._initial_kind == 2)
+
         return result
 
 
@@ -920,6 +927,19 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
 
         self._animate(ViewDownstreamInterpolation(self.wm, cur, nxt), dt)
 
+        if self._ssd is not None:
+            self._ssd.animate(old_state, new_state, dt)
+
+    def damage(self) -> None:
+        PyWMView.damage(self)
+        if self._ssd is not None:
+            self._ssd.damage()
+
+    def flush_animation(self) -> None:
+        Animate.flush_animation(self)
+        if self._ssd is not None:
+            self._ssd.flush_animation()
+
     """
     Public API
     """
@@ -928,6 +948,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
 
     def destroy(self) -> None:
         self._destroyed = True
+        if self._ssd is not None:
+            self._ssd.destroy()
+
         self.wm.destroy_view(self)
 
     def find_swallower(self) -> Optional[View]:
@@ -967,6 +990,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         if state.is_tiled:
             float_size = self.up_state.size if self.up_state is not None else (100, 100)
             float_pos = state.i + 0.1, state.j - 0.1
+
+            self.validate_ssd(override_float=True)
             return state, state.copy(is_tiled=False, float_size=float_size, float_pos=float_pos)
 
         else:
@@ -974,9 +999,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             h = max(1, round((state.float_size[1] + 2*padding) / ws.height * ws_state.size))
             i = round(state.float_pos[0])
             j = round(state.float_pos[1])
-            return state, state.copy(is_tiled=True, i=i, j=j, w=w, h=h)
 
-        return state.copy(is_tiled=not self.is_floating, i=i, j=j, w=w, h=h)
+            self.validate_ssd(override_float=False)
+            return state, state.copy(is_tiled=True, i=i, j=j, w=w, h=h)
 
 
     def transform_to_closest_ws(self, ws: Workspace, i0: float, j0: float, w0: float, h0: float) -> tuple[Workspace, float, float, float, float]:
@@ -1060,6 +1085,27 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         logger.debug("View outside of workspaces - defaulting")
         return ws, i0, j0, w0, h0
 
+    def update(self) -> None:
+        if self._ssd is not None:
+            self._ssd.update()
+
+    def validate_ssd(self, override_float: Optional[bool] = None) -> None:
+        if self.up_state is None:
+            return
+
+        floating = self.is_float(self.wm.state) if override_float is None else override_float
+        show = floating and self._needs_ssd(self.up_state)
+        logger.debug("%s: %s %s" % (self, show, self._ssd))
+        if show and self._ssd is None:
+            logger.debug("Creating SSD for %s" % self)
+            self._ssd = SSDs(self.wm, self)
+            self._ssd.damage()
+        elif not show and self._ssd is not None:
+            logger.debug("Destroying SSD for %s" % self)
+            self._ssd.destroy()
+            self._ssd = None
+
+
     """
     Callbacks
     """
@@ -1091,8 +1137,13 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
                 pass
 
         self.wm.focus_borders.damage()
+        if self._ssd is not None:
+            self._ssd.damage()
 
     def on_focus_change(self) -> None:
         if self.is_focused():
             self.wm.focus_hint(self)
             self.wm.focus_borders.update_focus(self)
+        if self._ssd is not None:
+            self._ssd.damage()
+
