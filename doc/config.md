@@ -30,7 +30,7 @@ These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and 
 | `pywm.output.pos_y`                  | `None`        | Integer: Output position y in layout (or None to be placed automatically)                            |
 | `pywm.xcursor_theme`                 |               | String: `XCursor` theme (if not set, read from; if set, exported to `XCURSOR_THEME`)                 |
 | `pywm.xcursor_size`                  | `24`          | Integer: `XCursor` size  (if not set, read from; if set, exported to `XCURSOR_SIZE`)                 |
-| `pywm.tap_to_click`                  | `True`        | Boolean: On tocuhpads use tap for click enter                                                        |
+| `pywm.tap_to_click`                  | `True`        | Boolean: On touchpads use tap for click enter                                                        |
 | `pywm.natural_scroll`                | `True`        | Boolean: On touchpads use natural scrolling enter                                                    |
 | `pywm.focus_follows_mouse`           | `True`        | Boolean: `Focus` window upon mouse enter                                                             |
 | `pywm.contstrain_popups_to_toplevel` | `False`       | Boolean: Try to keep popups contrained within their window                                           |
