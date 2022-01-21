@@ -21,7 +21,7 @@
 *** DONE SSD on certain windows (mostly floating)
 *** DONE Prevent focusing of notifications or similar
 *** DONE SSD on fade out
-*** TODO Corners as primitive widgets
+*** DONE Corners as primitive widgets
 
 ** Improvements / Idea
 *** STRT Bring down idle CPU

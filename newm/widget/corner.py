@@ -1,10 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-import cairo
-import math
-
-from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState, PyWMOutput
+from pywm import PyWMWidget, PyWMWidgetDownstreamState, PyWMOutput
 
 from ..config import configured_value
 
@@ -15,18 +12,21 @@ if TYPE_CHECKING:
 conf_corner_radius = configured_value('corner_radius', 18)
 
 
-class Corner(PyWMCairoWidget):
+class Corner(PyWMWidget):
     def __init__(self, wm: Layout, output: PyWMOutput, left: bool, top: bool):
         self.r = conf_corner_radius()
         self.radius = round(output.scale * self.r)
 
-        super().__init__(wm, output, self.radius, self.radius)
+        super().__init__(wm, output)
         self._output: PyWMOutput = output
 
         self.left = left
         self.top = top
 
-        self.render()
+        i = 2 if top else 0
+        if left:
+            i += 1
+        self.set_primitive("corner", [i], [self.radius, 0., 0., 0.])
 
     def process(self) -> PyWMWidgetDownstreamState:
         result = PyWMWidgetDownstreamState()
@@ -35,16 +35,3 @@ class Corner(PyWMCairoWidget):
                       (0 if self.top else self._output.height - self.r) + self._output.pos[1],
                       self.r, self.r)
         return result
-
-    def _render(self, surface: cairo.ImageSurface) -> None:
-        ctx = cairo.Context(surface)
-
-        ctx.set_source_rgba(.0, .0, .0, 1.)
-        ctx.rectangle(0, 0, self.radius, self.radius)
-        ctx.fill()
-
-        ctx.set_operator(cairo.OPERATOR_CLEAR)
-        ctx.arc(self.radius if self.left else 0, self.radius if self.top else 0, self.radius, 0, 2. * math.pi)
-        ctx.fill()
-
-
