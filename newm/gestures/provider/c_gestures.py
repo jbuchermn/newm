@@ -20,7 +20,7 @@ class CGestureProvider(GestureProvider):
         self._scale = 1000.
         self._reference = (0., 0.)
 
-    def on_pywm_gesture(self, kind: str, time_msec: int, args: list[Union[float, str]]) -> int:
+    def on_pywm_gesture(self, kind: str, time_msec: int, args: list[Union[float, int]]) -> int:
         if kind != "swipe":
             self._captured = None
             return 0

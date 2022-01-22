@@ -238,7 +238,7 @@ class PyEvdevGestureProvider(GestureProvider, Thread):
 
         self._captured = False
 
-    def on_pywm_gesture(self, kind: str, time_msec: int, args: list[Union[float, str]]) -> int:
+    def on_pywm_gesture(self, kind: str, time_msec: int, args: list[Union[float, int]]) -> int:
         return 1 if len(self._touchpads) > 0 else 0
 
     def on_pywm_motion(self, time_msec: int, delta_x: float, delta_y: float) -> int:

@@ -760,7 +760,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     Gestures
     """
 
-    def on_gesture(self, kind: str, time_msec: int, args: list[Union[float, str]]) -> bool:
+    def on_gesture(self, kind: str, time_msec: int, args: list[Union[float, int]]) -> bool:
         for g in self.gesture_providers:
             res = g.on_pywm_gesture(kind, time_msec, args)
             if res == 2:

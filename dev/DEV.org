@@ -8,7 +8,8 @@
 *** TODO Scale windows moving others "out of the way"
 
 ** Gestures 
-*** Configurable
+*** TODO Incorporate delta2_s in c gestures
+*** TODO Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
 
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight

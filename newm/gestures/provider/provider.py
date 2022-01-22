@@ -12,7 +12,7 @@ class GestureProvider:
     1 == False, don't let slip to next provider (client receives it)
     2 == True
     """
-    def on_pywm_gesture(self, kind: str, time_msec: int, args: list[Union[float, str]]) -> int:
+    def on_pywm_gesture(self, kind: str, time_msec: int, args: list[Union[float, int]]) -> int:
         return 0
 
     """
