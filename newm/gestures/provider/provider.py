@@ -7,14 +7,24 @@ class GestureProvider:
     def __init__(self, on_gesture: Callable[[Gesture], bool]) -> None:
         self._on_gesture = on_gesture
 
-    def on_pywm_gesture(self, kind: str, time_msec: int, args: list[Union[float, str]]) -> bool:
-        return False
+    """
+    0 == False, let slip to next provider
+    1 == False, don't let slip to next provider (client receives it)
+    2 == True
+    """
+    def on_pywm_gesture(self, kind: str, time_msec: int, args: list[Union[float, str]]) -> int:
+        return 0
 
-    def on_pywm_motion(self, time_msec: int, delta_x: float, delta_y: float) -> bool:
-        return False
+    """
+    0 == False, let slip to next provider
+    1 == False, don't let slip to next provider (client receives it)
+    2 == True
+    """
+    def on_pywm_motion(self, time_msec: int, delta_x: float, delta_y: float) -> int:
+        return 0
 
-    def on_pywm_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> bool:
-        return False
+    def on_pywm_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> int:
+        return 0
 
 
     """

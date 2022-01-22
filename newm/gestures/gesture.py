@@ -30,3 +30,6 @@ class Gesture:
     def _update(self, values: dict[str, float]) -> None:
         for l in self._listeners:
             l.update(values)
+
+    def __str__(self) -> str:
+        return "Gesture(%s)" % self.kind

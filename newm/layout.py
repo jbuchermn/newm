@@ -279,8 +279,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self.dbus_endpoint = DBusEndpoint(self)
 
         self.gesture_providers: list[GestureProvider] = [
-            # CGestureProvider(self._gesture_provider_callback)
-            PyEvdevGestureProvider(self._gesture_provider_callback)
+            PyEvdevGestureProvider(self._gesture_provider_callback),
+            CGestureProvider(self._gesture_provider_callback)
         ]
 
         self.workspaces: list[Workspace] = [Workspace(PyWMOutput("dummy", -1, 1., 1280, 720, (0, 0)), 0, 0, 1280, 720)]
@@ -719,8 +719,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             return False
 
         for g in self.gesture_providers:
-            if g.on_pywm_motion(time_msec, delta_x, delta_y):
+            res = g.on_pywm_motion(time_msec, delta_x, delta_y)
+            if res == 2:
                 return True
+            if res == 1:
+                break
 
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_motion(time_msec, delta_x, delta_y)
@@ -741,8 +744,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             return False
 
         for g in self.gesture_providers:
-            if g.on_pywm_axis(time_msec, source, orientation, delta, delta_discrete):
+            res = g.on_pywm_axis(time_msec, source, orientation, delta, delta_discrete)
+            if res == 2:
                 return True
+            if res == 1:
+                break
 
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_axis(time_msec, source, orientation,
@@ -756,8 +762,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
 
     def on_gesture(self, kind: str, time_msec: int, args: list[Union[float, str]]) -> bool:
         for g in self.gesture_providers:
-            if g.on_pywm_gesture(kind, time_msec, args):
+            res = g.on_pywm_gesture(kind, time_msec, args)
+            if res == 2:
                 return True
+            if res == 1:
+                break
 
         return False
 
