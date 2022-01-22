@@ -4,7 +4,6 @@ from typing import Optional, Callable, TYPE_CHECKING, TypeVar, Union, Any, cast
 import time
 import math
 import logging
-import subprocess
 import os
 from itertools import product
 from threading import Thread
@@ -18,13 +17,10 @@ from pywm import (
     PYWM_MOD_ALT,
     PYWM_MOD_LOGO
 )
-from pywm.touchpad import (
-    TwoFingerSwipePinchGesture,
-    HigherSwipeGesture,
-    SingleFingerMoveGesture
-)
-from pywm.touchpad.gestures import Gesture
+from .gestures import Gesture
+from .gestures.provider import GestureProvider, CGestureProvider, PyEvdevGestureProvider
 
+from .workspace import Workspace
 from .state import LayoutState, WorkspaceState
 from .interpolation import LayoutDownstreamInterpolation
 from .animate import Animate, Animatable
@@ -67,11 +63,6 @@ else:
     TKeyBindings = TypeVar('TKeyBindings')
 
 conf_key_bindings = configured_value('key_bindings', cast(TKeyBindings, lambda layout: []))
-
-conf_lp_freq = configured_value('gestures.lp_freq', 60.)
-conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
-conf_two_finger_min_dist = configured_value('gestures.two_finger_min_dist', .1)
-conf_validate_threshold = configured_value('gestures.validate_threshold', .02)
 
 conf_anim_t = configured_value('anim_time', .3)
 conf_blend_t = configured_value('blend_time', 1.)
@@ -269,72 +260,6 @@ class LayoutThread(Thread):
             time.sleep(1. / 30.)
 
 
-class Workspace:
-    def __init__(self, output: PyWMOutput, pos_x: int, pos_y: int, width: int, height: int, prevent_anim: bool=False) -> None:
-        self._handle = -1
-        self.outputs = [output]
-
-        self.pos_x = pos_x
-        self.pos_y = pos_y
-        self.width = width
-        self.height = height
-
-        self.prevent_anim = prevent_anim
-
-        # Hint at view._handle to focus when switching to this workspace (not guaranteed to exist anymore)
-        self.focus_view_hint: Optional[int] = None
-
-    def swallow(self, other: Workspace) -> bool:
-        if self.pos_x + self.width <= other.pos_x:
-            return False
-        if self.pos_y + self.height <= other.pos_y:
-            return False
-        if self.pos_x >= other.pos_x + other.width:
-            return False
-        if self.pos_y >= other.pos_y + other.height:
-            return False
-
-        pos_x = min(self.pos_x, other.pos_x)
-        pos_y = min(self.pos_y, other.pos_y)
-        width = max(self.pos_x + self.width, other.pos_x + other.width) - pos_x
-        height = max(self.pos_y + self.height, other.pos_y + other.height) - pos_y
-        self.pos_x = pos_x
-        self.pos_y = pos_y
-        self.width = width
-        self.height = height
-        self.outputs += other.outputs
-        self.prevent_anim |= other.prevent_anim
-
-        return True
-
-    def score(self, other: Workspace) -> float:
-        x, y, w, h = self.pos_x, self.pos_y, self.width, self.height
-        if other.pos_x > x:
-            w -= (other.pos_x - x)
-            x += (other.pos_x - x)
-        if other.pos_y > y:
-            h -= (other.pos_y - y)
-            y += (other.pos_y - y)
-        if x + w > other.pos_x + other.width:
-            w -= (x + w - other.pos_x - other.width)
-        if y + h > other.pos_y + other.height:
-            h -= (y + h - other.pos_y - other.height)
-
-        if w <= 0 or h <= 0:
-            return 0
-
-        return w*h / (self.width * self.height)
-
-    def __str__(self) -> str:
-        return "Workspace[%d] at %d, %d --> %d, %d" % (
-            self._handle,
-            self.pos_x,
-            self.pos_y,
-            self.width,
-            self.height,
-        )
-
-
 class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     def __init__(self, debug: bool=False, config_file: Optional[str]=None) -> None:
         self._config_file = config_file
@@ -352,6 +277,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self.auth_backend = AuthBackend(self)
         self.panel_launcher = PanelsLauncher()
         self.dbus_endpoint = DBusEndpoint(self)
+
+        self.gesture_providers: list[GestureProvider] = [
+            # CGestureProvider(self._gesture_provider_callback)
+            PyEvdevGestureProvider(self._gesture_provider_callback)
+        ]
 
         self.workspaces: list[Workspace] = [Workspace(PyWMOutput("dummy", -1, 1., 1280, 720, (0, 0)), 0, 0, 1280, 720)]
 
@@ -512,12 +442,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self.mod = conf_mod()
         self._set_mod_sym()
 
-        self.configure_gestures(
-            conf_two_finger_min_dist(),
-            conf_lp_freq(),
-            conf_lp_inertia(),
-            conf_validate_threshold())
-
         self._setup_widgets()
 
         self.key_processor.clear()
@@ -553,6 +477,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self.dbus_endpoint.start()
         self.panel_launcher.start()
 
+        for p in self.gesture_providers:
+            p.start()
+
         # Initially display cursor
         self.update_cursor()
 
@@ -584,6 +511,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         super().terminate()
         self.dbus_endpoint.stop()
         self.panel_launcher.stop()
+        for p in self.gesture_providers:
+            p.stop()
 
         for t in self.top_bars:
             t.stop()
@@ -743,6 +672,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self._setup_workspaces()
         self._setup_widgets()
 
+    """
+    Input
+    """
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
         # BEGIN DEBUG
         if self.modifiers & self.mod > 0 and keysyms == "D":
@@ -768,13 +700,13 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         if self.modifiers & self.mod > 0:
             """
             This is a special case, if a SingleFingerMoveGesture has started, then
-            Mod is pressed the MoveResize(Floating)Overlay is not triggered - we reallow a
+            Mod is pressed the MoveResize(Floating)Overlay is not triggered - we re-allow a
             gesture
 
-            If a gesture has been captured reallow_gesture is a noop
+            If a gesture has been captured reset_gesture is a noop
             """
             logger.debug("Resetting gesture")
-            self.reallow_gesture()
+            self.reset_gesture()
 
         if self.overlay is not None and self.overlay.ready():
             if self.overlay.on_modifiers(modifiers):
@@ -785,6 +717,10 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self._update_active_workspace()
         if self.is_locked():
             return False
+
+        for g in self.gesture_providers:
+            if g.on_pywm_motion(time_msec, delta_x, delta_y):
+                return True
 
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_motion(time_msec, delta_x, delta_y)
@@ -804,13 +740,32 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         if self.is_locked():
             return False
 
+        for g in self.gesture_providers:
+            if g.on_pywm_axis(time_msec, source, orientation, delta, delta_discrete):
+                return True
+
         if self.overlay is not None and self.overlay.ready():
             return self.overlay.on_axis(time_msec, source, orientation,
                                         delta, delta_discrete)
 
         return False
 
-    def on_gesture(self, gesture: Gesture) -> bool:
+    """
+    Gestures
+    """
+
+    def on_gesture(self, kind: str, time_msec: int, args: list[Union[float, str]]) -> bool:
+        for g in self.gesture_providers:
+            if g.on_pywm_gesture(kind, time_msec, args):
+                return True
+
+        return False
+
+    def reset_gesture(self) -> None:
+        for g in self.gesture_providers:
+            g.reset_gesture()
+
+    def _gesture_provider_callback(self, gesture: Gesture) -> bool:
         if self.is_locked():
             return False
 
@@ -820,8 +775,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             return self.overlay.on_gesture(gesture)
         elif self.overlay is None:
             if self.modifiers & self.mod and \
-                    (isinstance(gesture, TwoFingerSwipePinchGesture) or
-                     isinstance(gesture, SingleFingerMoveGesture)):
+                    gesture.kind in [ "move-1", "pinch-2" ]:
                 logger.debug("...MoveResize")
                 view = self.find_focused_view()
 
@@ -838,8 +792,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
                     self.enter_overlay(ovr)
                     return True
 
-            if isinstance(gesture, HigherSwipeGesture) \
-                    and gesture.n_touches == 3:
+            if gesture.kind == "swipe-3":
                 logger.debug("...Swipe")
                 ovr = SwipeOverlay(self)
                 ovr.on_gesture(gesture)
@@ -847,16 +800,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
                 return True
 
             if not self.state.get_workspace_state(self.get_active_workspace()).is_in_overview():
-                if isinstance(gesture, HigherSwipeGesture) \
-                        and gesture.n_touches == 4:
+                if gesture.kind == "swipe-4":
                     logger.debug("...SwipeToZoom")
                     ovr = SwipeToZoomOverlay(self)
                     ovr.on_gesture(gesture)
                     self.enter_overlay(ovr)
                     return True
 
-            if isinstance(gesture, HigherSwipeGesture) \
-                    and gesture.n_touches == 5:
+            if gesture.kind == "swipe-5":
                 logger.debug("...Launcher")
                 ovr = LauncherOverlay(self)
                 ovr.on_gesture(gesture)
@@ -932,7 +883,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self.overlay = None
 
         logger.debug("Resetting gesture")
-        self.reallow_gesture()
+        self.reset_gesture()
 
 
     def destroy_view(self, view: View) -> None:
@@ -1231,7 +1182,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
 
         try:
             view_state, ws_state, ws_handle = self.state.find_view(view)
-            ws = [w for w in self.workspaces if w._handle == ws_handle][0]
             sid, idx, siz = view_state.stack_data
             nidx = (idx+1)%siz
             next_view = [k for k, s in ws_state._view_states.items() if s.stack_data[0] == sid and s.stack_data[1]==nidx]

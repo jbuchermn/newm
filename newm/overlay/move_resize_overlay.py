@@ -6,18 +6,12 @@ import time
 import logging
 
 from pywm import PYWM_PRESSED
-from pywm.touchpad import (
-    SingleFingerMoveGesture,
-    TwoFingerSwipePinchGesture,
-    GestureListener,
-    LowpassGesture
-)
-from pywm.touchpad.gestures import Gesture
 
 from .overlay import Overlay
 from ..grid import Grid
 from ..hysteresis import Hysteresis
 from ..config import configured_value
+from ..gestures import GestureListener, LowpassGesture, Gesture
 
 if TYPE_CHECKING:
     from ..layout import Layout, Workspace
@@ -33,6 +27,9 @@ conf_resize_grid_m = configured_value("resize.grid_m", 3)
 conf_hyst = configured_value("resize.hyst", 0.2)
 conf_gesture_factor = configured_value("move_resize.gesture_factor", 2)
 conf_anim_t = configured_value("anim_time", .3)
+
+conf_lp_freq = configured_value('gestures.lp_freq', 60.)
+conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 
 class _Overlay:
     def reset_gesture(self) -> None:
@@ -385,24 +382,24 @@ class MoveResizeOverlay(Overlay, Thread):
             logger.debug("MoveResizeOverlay: Rejecting gesture")
             return False
 
-        if isinstance(gesture, TwoFingerSwipePinchGesture):
+        if gesture.kind == "pinch-2":
             logger.debug("MoveResizeOverlay: New TwoFingerSwipePinch")
             self._target_view_pos = None
             self._target_view_size = None
 
             self.overlay = ResizeOverlay(self.layout, self.view)
-            LowpassGesture(gesture).listener(GestureListener(
+            LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                 self.overlay.on_gesture,
                 self.finish
             ))
             return True
 
-        if isinstance(gesture, SingleFingerMoveGesture):
+        if gesture.kind == "move-1":
             logger.debug("MoveResizeOverlay: New SingleFingerMove")
             self._target_view_pos = None
 
             self.overlay = MoveOverlay(self.layout, self.view)
-            LowpassGesture(gesture).listener(GestureListener(
+            LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                 self.overlay.on_gesture,
                 self.finish
             ))

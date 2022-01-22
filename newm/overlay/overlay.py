@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 
 import logging
 
-from pywm.touchpad.gestures import Gesture
+from ..gestures import Gesture
 
 if TYPE_CHECKING:
     from ..state import LayoutState

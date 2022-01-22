@@ -4,16 +4,11 @@ from typing import TYPE_CHECKING, Optional
 import logging
 
 from pywm import PYWM_PRESSED
-from pywm.touchpad import (
-    SingleFingerMoveGesture,
-    TwoFingerSwipePinchGesture,
-    GestureListener,
-    LowpassGesture
-)
-from pywm.touchpad.gestures import Gesture
 
 from .overlay import Overlay
 from ..config import configured_value
+
+from ..gestures import Gesture, GestureListener, LowpassGesture
 
 if TYPE_CHECKING:
     from ..layout import Layout
@@ -23,6 +18,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 conf_anim_t = configured_value("anim_time", .3)
+
+conf_lp_freq = configured_value('gestures.lp_freq', 60.)
+conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 
 class MoveResizeFloatingOverlay(Overlay):
     def __init__(self, layout: Layout, view: View):
@@ -137,23 +135,23 @@ class MoveResizeFloatingOverlay(Overlay):
         return False
 
     def on_gesture(self, gesture: Gesture) -> bool:
-        if isinstance(gesture, TwoFingerSwipePinchGesture):
+        if gesture.kind == "pinch-2":
             logger.debug("MoveResizeFloatingOverlay: New TwoFingerSwipePinch")
 
             self._motion_mode = False
             self._gesture_mode = True
-            LowpassGesture(gesture).listener(GestureListener(
+            LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                 self.gesture_resize,
                 self.gesture_finish
             ))
             return True
 
-        if isinstance(gesture, SingleFingerMoveGesture):
+        if gesture.kind == "move-1":
             logger.debug("MoveResizeFloatingOverlay: New SingleFingerMove")
 
             self._motion_mode = False
             self._gesture_mode = True
-            LowpassGesture(gesture).listener(GestureListener(
+            LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                 self.gesture_move,
                 self.gesture_finish
             ))

@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, Optional
 import logging
 
 from pywm import PYWM_RELEASED
-from pywm.touchpad import GestureListener, LowpassGesture, HigherSwipeGesture
-from pywm.touchpad.gestures import Gesture
+from ..gestures import Gesture, GestureListener, LowpassGesture
 
 from .overlay import Overlay
 from ..config import configured_value
@@ -20,6 +19,9 @@ logger = logging.getLogger(__name__)
 conf_gesture_factor = configured_value("panels.launcher.gesture_factor", 200)
 conf_anim_t = configured_value("anim_time", .3)
 
+conf_lp_freq = configured_value('gestures.lp_freq', 60.)
+conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
+
 class LauncherOverlay(Overlay):
     def __init__(self, layout: Layout):
         super().__init__(layout)
@@ -30,12 +32,11 @@ class LauncherOverlay(Overlay):
     def on_gesture(self, gesture: Gesture) -> bool:
         logger.debug("LauncherOverlay: new gesture")
         if self._is_opened:
-            if isinstance(gesture, HigherSwipeGesture) \
-                    and gesture.n_touches == 5:
+            if gesture.kind == "swipe-5":
                 """
                 Final gesture
                 """
-                LowpassGesture(gesture).listener(GestureListener(
+                LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                     self._on_update,
                     lambda: self._on_update(None)
                 ))
@@ -43,12 +44,11 @@ class LauncherOverlay(Overlay):
                 return True
 
         else:
-            if isinstance(gesture, HigherSwipeGesture) \
-                    and gesture.n_touches == 5:
+            if gesture.kind == "swipe-5":
                 """
                 Initial gesture
                 """
-                LowpassGesture(gesture).listener(GestureListener(
+                LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                     self._on_update,
                     lambda: self._on_update(None)
                 ))

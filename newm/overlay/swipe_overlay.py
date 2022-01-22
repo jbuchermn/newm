@@ -1,8 +1,7 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
-from pywm.touchpad import GestureListener, LowpassGesture
-from pywm.touchpad.gestures import Gesture, HigherSwipeGesture
+from ..gestures import Gesture, GestureListener, LowpassGesture
 from .overlay import Overlay
 from ..grid import Grid
 from ..config import configured_value
@@ -18,6 +17,8 @@ conf_grid_m = configured_value('swipe.grid_m', 1)
 
 conf_grid_min_dist = configured_value('grid.min_dist', .05)
 
+conf_lp_freq = configured_value('gestures.lp_freq', 60.)
+conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 
 class SwipeOverlay(Overlay):
     def __init__(self, layout: Layout) -> None:
@@ -93,12 +94,12 @@ class SwipeOverlay(Overlay):
 
 
     def on_gesture(self, gesture: Gesture) -> bool:
-        if not isinstance(gesture, HigherSwipeGesture) or gesture.n_touches != 3:
+        if gesture.kind != "swipe-3":
             self.layout.exit_overlay()
             return False
 
         if not self._has_gesture:
-            LowpassGesture(gesture).listener(GestureListener(
+            LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                 self._on_update,
                 lambda: self.layout.exit_overlay()
             ))
