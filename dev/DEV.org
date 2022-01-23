@@ -2,13 +2,16 @@
 
 * Current (v0.3)
 ** Improvements
-*** STRT Bring down idle CPU
+*** STRT Bring down idle CPU - Appears to be related to python gestures
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Scale windows moving others "out of the way"
 
 ** Gestures 
-*** STRT Incorporate delta2_s in c gestures
-*** STRT Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
+*** DONE C gestures: Incorporate motion and axis
+*** DONE C gestures: Properly handle down- and upgrade 3 -> 2, or 4 -> 3, 3 -> 4, ...
+*** TODO Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
+*** TODO C gestures: 5 fingers?
+*** TODO C gestures: Configurability
 
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight

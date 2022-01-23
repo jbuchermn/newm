@@ -382,7 +382,7 @@ class MoveResizeOverlay(Overlay, Thread):
             logger.debug("MoveResizeOverlay: Rejecting gesture")
             return False
 
-        if gesture.kind == "pinch-2":
+        if gesture.kind == "swipe-2":
             logger.debug("MoveResizeOverlay: New TwoFingerSwipePinch")
             self._target_view_pos = None
             self._target_view_size = None

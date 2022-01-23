@@ -88,7 +88,7 @@ class SingleFingerMoveGesture(PyEvdevGesture):
 
 class TwoFingerSwipePinchGesture(PyEvdevGesture):
     def __init__(self, parent: Gestures, update: TouchpadUpdate):
-        super().__init__("pinch-2", parent)
+        super().__init__("swipe-2", parent)
 
         assert(update.n_touches == 2 and len(update.touches) == 2)
         self._initial_cog_x, \

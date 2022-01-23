@@ -5,8 +5,7 @@ from .gesture_listener import GestureListener
 """
 Kinds:
     - move-1
-    - pinch-2
-    - swipe-[3,4,5]
+    - swipe-[2,3,4,5]
 
 Values:
     - delta_x

@@ -789,7 +789,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             return self.overlay.on_gesture(gesture)
         elif self.overlay is None:
             if self.modifiers & self.mod and \
-                    gesture.kind in [ "move-1", "pinch-2" ]:
+                    gesture.kind in [ "move-1", "swipe-2" ]:
                 logger.debug("...MoveResize")
                 view = self.find_focused_view()
 

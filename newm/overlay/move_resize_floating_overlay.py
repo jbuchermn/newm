@@ -135,7 +135,7 @@ class MoveResizeFloatingOverlay(Overlay):
         return False
 
     def on_gesture(self, gesture: Gesture) -> bool:
-        if gesture.kind == "pinch-2":
+        if gesture.kind == "swipe-2":
             logger.debug("MoveResizeFloatingOverlay: New TwoFingerSwipePinch")
 
             self._motion_mode = False
