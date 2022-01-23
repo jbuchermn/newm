@@ -6,31 +6,39 @@
 
     flake-utils.url = "github:numtide/flake-utils";
 
-    pywm.url = "github:jbuchermn/pywm/v0.3";
-    pywm.inputs.nixpkgs.follows = "nixpkgs";
+    pywmpkg.url = "github:jbuchermn/pywm/v0.3";
+    pywmpkg.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, pywm, flake-utils }:
+  outputs = { self, nixpkgs, pywmpkg, flake-utils }:
   flake-utils.lib.eachDefaultSystem (
     system:
     let
-      pkgs = nixpkgs.legacyPackages.${system}; 
-      pywmpkg = pywm.packages.${system};
-      dasbuspkg = {
-        dasbus = pkgs.python3.pkgs.buildPythonPackage rec {
-          pname = "dasbus";
-          version = "1.6";
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [
+          (self: super: rec {
+            python3 = super.python3.override {
+              packageOverrides = self1: super1: {
+                pywm = pywmpkg.packages.${system}.pywm;
+                dasbus = super1.buildPythonPackage rec {
+                  pname = "dasbus";
+                  version = "1.6";
 
-          src = pkgs.python3.pkgs.fetchPypi {
-            inherit pname version;
-            sha256 = "sha256-FJrY/Iw9KYMhq1AVm1R6soNImaieR+IcbULyyS5W6U0=";
-          };
+                  src = super1.fetchPypi {
+                    inherit pname version;
+                    sha256 = "sha256-FJrY/Iw9KYMhq1AVm1R6soNImaieR+IcbULyyS5W6U0=";
+                  };
 
-          setuptoolsCheckPhase = "true";
+                  setuptoolsCheckPhase = "true";
 
-          propagatedBuildInputs = with pkgs.python3Packages; [ pygobject3 ];
-        };
-
+                  propagatedBuildInputs = with super1; [ pygobject3 ];
+                };
+              };
+            };
+            python3Packages = python3.pkgs;
+          })
+        ];
       };
     in
     {
@@ -42,13 +50,13 @@
           src = ./.;
 
           propagatedBuildInputs = with pkgs.python3Packages; [
-            pywmpkg.pywm
+            pywm
             pycairo
             psutil
             python-pam
             pyfiglet
             fuzzywuzzy
-            dasbuspkg.dasbus
+            dasbus
           ];
 
           setuptoolsCheckPhase = "true";
@@ -57,13 +65,13 @@
       devShell = let
         my-python = pkgs.python3;
         python-with-my-packages = my-python.withPackages (ps: with ps; [
-          pywmpkg.pywm
+          pywm
           pycairo
           psutil
           python-pam
           pyfiglet
           fuzzywuzzy
-          dasbuspkg.dasbus
+          dasbus
 
           python-lsp-server
           pylsp-mypy
