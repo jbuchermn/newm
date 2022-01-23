@@ -2,14 +2,13 @@
 
 * Current (v0.3)
 ** Improvements
-*** TODO Bring down idle CPU
+*** STRT Bring down idle CPU
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
-*** TODO SwipeToZoom overlay - address shakiness when not moving fingers (possibly c gestures?)
 *** TODO Scale windows moving others "out of the way"
 
 ** Gestures 
-*** TODO Incorporate delta2_s in c gestures
-*** TODO Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
+*** STRT Incorporate delta2_s in c gestures
+*** STRT Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
 
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight

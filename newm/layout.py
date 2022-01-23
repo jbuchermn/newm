@@ -28,7 +28,7 @@ from .view import View
 from .config import configured_value, load_config, print_config
 
 from .key_processor import KeyProcessor
-from .dbus import DBusEndpoint
+from .dbus import DBusEndpoint, DBusGestureProvider
 from .panel_launcher import PanelsLauncher
 from .auth_backend import AuthBackend
 
@@ -278,10 +278,15 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self.panel_launcher = PanelsLauncher()
         self.dbus_endpoint = DBusEndpoint(self)
 
+        dbus_gesture_provider = DBusGestureProvider(self.dbus_endpoint, self._gesture_provider_callback)
+        self.dbus_endpoint.set_gesture_provider(dbus_gesture_provider)
+
         self.gesture_providers: list[GestureProvider] = [
             PyEvdevGestureProvider(self._gesture_provider_callback),
-            CGestureProvider(self._gesture_provider_callback)
+            CGestureProvider(self._gesture_provider_callback),
+            dbus_gesture_provider
         ]
+
 
         self.workspaces: list[Workspace] = [Workspace(PyWMOutput("dummy", -1, 1., 1280, 720, (0, 0)), 0, 0, 1280, 720)]
 
