@@ -8,15 +8,9 @@ done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
 
-LOGDIR=$HOME
-if [ "$LOGDIR" = "/" ]; then 
-    echo "Switching to tmp" 
-    LOGDIR="/tmp"
-else
-    LOGDIR="$LOGDIR/.cache"
-fi;
+LOGDIR="$HOME/.cache"
+mkdir -p $LOGDIR || LOGDIR="/tmp"
 
-mkdir -p $LOGDIR
 pushd $LOGDIR
 if [ -e newm_log_bu1 ]
     then cp newm_log_bu1 newm_log_bu2
