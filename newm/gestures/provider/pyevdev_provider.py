@@ -242,10 +242,10 @@ class PyEvdevGestureProvider(GestureProvider, Thread):
         return 1 if len(self._touchpads) > 0 else 0
 
     def on_pywm_motion(self, time_msec: int, delta_x: float, delta_y: float) -> int:
-        return 2 if self._captured else 0
+        return 2 if self._captured else 1
 
     def on_pywm_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> int:
-        return 2 if self._captured else 0
+        return 2 if self._captured else 1
 
     def _gesture_listener(self, gesture: Gesture) -> None:
         if self._on_gesture(gesture):
