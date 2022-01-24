@@ -106,7 +106,7 @@ class AuthBackend:
         with open('/etc/passwd', 'r') as pwd:
             for user in pwd:
                 u = user.split(":")
-                if "nologin" not in u[6]:
+                if "nologin" not in u[6] or u[0] == greeter_user:
                     self._users += [(u[0], int(u[2]), u[6], u[0] == greeter_user)] # name, uid, login shell, is_greeter
 
         if len([g for g in self._users if g[3]]) == 0:
