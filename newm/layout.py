@@ -89,6 +89,10 @@ conf_bar_enabled = configured_value('bar.enabled', True)
 
 conf_synchronous_update = configured_value('synchronous_update', lambda: None)
 
+conf_enable_pyevdev_gestures = configured_value('gestures.pyevdev.enabled', False)
+conf_enable_c_gestures = configured_value('gestures.c.enabled', True)
+conf_enable_dbus_gestures = configured_value('gestures.dbus.enabled', True)
+
 def _score(i1: float, j1: float, w1: float, h1: float,
            im: int, jm: int,
            i2: float, j2: float, w2: float, h2: float) -> float:
@@ -278,15 +282,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self.panel_launcher = PanelsLauncher()
         self.dbus_endpoint = DBusEndpoint(self)
 
-        dbus_gesture_provider = DBusGestureProvider(self.dbus_endpoint, self._gesture_provider_callback)
-        self.dbus_endpoint.set_gesture_provider(dbus_gesture_provider)
-
-        self.gesture_providers: list[GestureProvider] = [
-            PyEvdevGestureProvider(self._gesture_provider_callback),
-            CGestureProvider(self._gesture_provider_callback),
-            dbus_gesture_provider
-        ]
-
+        self.gesture_providers: list[GestureProvider] = []
 
         self.workspaces: list[Workspace] = [Workspace(PyWMOutput("dummy", -1, 1., 1280, 720, (0, 0)), 0, 0, 1280, 720)]
 
@@ -455,6 +451,25 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
                 *kb(self)
             )
 
+        # Stop and re-setup Gestures
+        for g in self.gesture_providers:
+            g.stop()
+        self.gesture_providers = []
+
+        dbus_gesture_provider: Optional[DBusGestureProvider] = None
+        if conf_enable_dbus_gestures():
+            dbus_gesture_provider = DBusGestureProvider(self.dbus_endpoint, self._gesture_provider_callback)
+            self.dbus_endpoint.set_gesture_provider(dbus_gesture_provider)
+
+        self.gesture_providers = \
+            cast(list[GestureProvider], [ PyEvdevGestureProvider(self._gesture_provider_callback) ] if conf_enable_pyevdev_gestures() else []) + \
+            cast(list[GestureProvider], [ CGestureProvider(self._gesture_provider_callback) ] if conf_enable_c_gestures() else []) + \
+            cast(list[GestureProvider], [ dbus_gesture_provider ] if dbus_gesture_provider is not None else [])
+
+        # Start gesture providers
+        for p in self.gesture_providers:
+            p.start()
+
         if reconfigure:
             self.reconfigure(dict(**conf_pywm(), outputs=conf_outputs(), debug=self._debug))
 
@@ -479,11 +494,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self._setup(reconfigure=False)
 
         self.thread.start()
-        self.dbus_endpoint.start()
         self.panel_launcher.start()
-
-        for p in self.gesture_providers:
-            p.start()
+        self.dbus_endpoint.start()
 
         # Initially display cursor
         self.update_cursor()

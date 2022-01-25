@@ -1,13 +1,16 @@
 #+TITLE: newm developer information
 
 * Current (v0.3)
+** TODO NixOS greetd deployment
+** TODO FocusBorder (possibly SSD as well) shows up before newm closes
+
 ** Improvements
 *** STRT Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update)
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Scale windows moving others "out of the way"
 
 ** Gestures 
-*** TODO Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
+*** STRT Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
 *** TODO C gestures: Configurability
 
 ** Improved panel
@@ -18,10 +21,10 @@
 **** TODO Possibility to start waybar as a panel (i.e. with auto restart)
 **** TODO Drop panel == "notifier" --> wob and mako are the better solution
 *** TODO Incorporate and update default config accordingly
-- [ ] catapult
-- [ ] rofi
-- [X] wob
-- [X] mako
+    - [ ] catapult
+    - [ ] rofi
+    - [X] wob
+    - [X] mako
 
 * Backlog
 ** dbus endpoint for waybar etc

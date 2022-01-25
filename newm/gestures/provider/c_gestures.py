@@ -7,8 +7,11 @@ from threading import Thread
 
 from .provider import GestureProvider
 from ..gesture import Gesture
+from ...config import configured_value
 
 logger = logging.getLogger(__name__)
+
+conf_scale = configured_value('gestures.c.scale_px', 800.)
 
 class CGestureProvider(GestureProvider, Thread):
     def __init__(self, on_gesture: Callable[[Gesture], bool]) -> None:
@@ -17,9 +20,6 @@ class CGestureProvider(GestureProvider, Thread):
         self._captured: Optional[Gesture] = None
 
         self._running = True
-
-        # TODO: Configure
-        self._scale = 1000.
 
         self._reference = (0., 0.)
         self._d2s = 0.
@@ -55,8 +55,8 @@ class CGestureProvider(GestureProvider, Thread):
         if self._captured is None:
             return 0
 
-        delta_x /= self._scale
-        delta_y /= self._scale
+        delta_x /= conf_scale()
+        delta_y /= conf_scale()
 
         self._reference = self._reference[0] + delta_x, self._reference[1] + delta_y
         self._d2s += delta_x**2 + delta_y**2
