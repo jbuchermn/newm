@@ -4,7 +4,7 @@ import time
 
 import logging
 try:
-    import yappi
+    import yappi  # type: ignore
     YAPPI = True
 except:
     YAPPI = False

@@ -5,13 +5,13 @@
 ** TODO FocusBorder (possibly SSD as well) shows up before newm closes
 
 ** Improvements
-*** STRT Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update)
+*** STRT Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update, plus lots of unnecessary threads?) and polling c<-py (20Hz)
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Scale windows moving others "out of the way"
 
 ** Gestures 
 *** STRT Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
-*** TODO C gestures: Configurability
+*** DONE C gestures: Configurability
 
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight
