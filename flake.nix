@@ -76,6 +76,7 @@
           python-lsp-server
           pylsp-mypy
           mypy
+          yappi
         ]);
       in
         pkgs.mkShell {
