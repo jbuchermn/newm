@@ -2,7 +2,8 @@
 
 * Current (v0.3)
 ** TODO NixOS greetd deployment
-** TODO FocusBorder (possibly SSD as well) shows up before newm closes
+** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes
+** TODO rofi / dmenu app-switcher via newm-cmd
 
 ** Improvements
 *** STRT Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update, plus lots of unnecessary threads?) and polling c<-py (20Hz)
@@ -12,6 +13,10 @@
 ** Gestures 
 *** STRT Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
 *** DONE C gestures: Configurability
+
+** Blur (pywm poc_blur)
+*** TODO Configurable blurring of window backgrounds
+*** TODO Configurable locking behaviour (blur, fancy, basic) - don't expose texture_shaders as config option
 
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight

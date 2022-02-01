@@ -882,7 +882,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
                                                                                                               *self._initial_state.size))
 
         if up_state.is_mapped and not self._waiting_for_show:
-            self.wm.animate_to(self.show, conf_anim_t(), None)
+            self.wm.animate_to(self.show, conf_anim_t(), None, self._initial_kind <= 1) # overlay_safe for panel and layer
             self._waiting_for_show = True
         return self._initial_state
 
