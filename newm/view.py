@@ -14,7 +14,7 @@ from .interpolation import ViewDownstreamInterpolation
 from .animate import Animate, Animatable
 from .overlay import MoveResizeFloatingOverlay
 from .config import configured_value
-from .widget import SSDs
+from .widget import SSDs, BackgroundBlur
 
 if TYPE_CHECKING:
     from .layout import Layout, Workspace
@@ -70,6 +70,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         Animate.__init__(self)
 
         self._ssd: Optional[SSDs] = None
+        self._background: Optional[BackgroundBlur] = None
 
         # State machine
         self._mapped = False
@@ -852,6 +853,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             self._mapped = True
 
         self.validate_ssd(override_float=self._initial_kind == 2)
+        self.validate_background()
 
         return result
 
@@ -929,16 +931,22 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
 
         if self._ssd is not None:
             self._ssd.animate(old_state, new_state, dt)
+        if self._background is not None:
+            self._background.animate(old_state, new_state, dt)
 
     def damage(self) -> None:
         PyWMView.damage(self)
         if self._ssd is not None:
             self._ssd.damage()
+        if self._background is not None:
+            self._background.damage()
 
     def flush_animation(self) -> None:
         Animate.flush_animation(self)
         if self._ssd is not None:
             self._ssd.flush_animation()
+        if self._background is not None:
+            self._background.flush_animation()
 
     """
     Public API
@@ -950,6 +958,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         self._destroyed = True
         if self._ssd is not None:
             self._ssd.destroy()
+        if self._background is not None:
+            self._background.destroy()
 
         self.wm.destroy_view(self)
 
@@ -1105,6 +1115,16 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             self._ssd.destroy()
             self._ssd = None
 
+    def validate_background(self) -> None:
+        # TODO
+        needs_background = self.app_id == "Alacritty"
+
+        if needs_background and self._background is None:
+            self._background = self.wm.create_widget(BackgroundBlur, None, self)
+        elif not needs_background and self._background is not None:
+            self._background.destroy()
+            self._background = None
+
 
     """
     Callbacks
@@ -1139,6 +1159,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         self.wm.focus_borders.damage()
         if self._ssd is not None:
             self._ssd.damage()
+        if self._background is not None:
+            self._background.damage()
 
     def on_focus_change(self) -> None:
         if self.is_focused():
@@ -1146,4 +1168,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             self.wm.focus_borders.update_focus(self)
         if self._ssd is not None:
             self._ssd.damage()
+        if self._background is not None:
+            self._background.damage()
 
