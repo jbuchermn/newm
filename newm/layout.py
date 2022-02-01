@@ -93,6 +93,8 @@ conf_enable_pyevdev_gestures = configured_value('gestures.pyevdev.enabled', Fals
 conf_enable_c_gestures = configured_value('gestures.c.enabled', True)
 conf_enable_dbus_gestures = configured_value('gestures.dbus.enabled', True)
 
+conf_enable_unlock_command = configured_value('enable_unlock_command', True)
+
 def _score(i1: float, j1: float, w1: float, h1: float,
            im: int, jm: int,
            i2: float, j2: float, w2: float, h2: float) -> float:
@@ -1036,7 +1038,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             "close-launcher": lambda: self.exit_overlay() if isinstance(self.overlay, LauncherOverlay) else None,
             "open-virtual-output": lambda: self.open_virtual_output(arg) if arg is not None else None,
             "close-virtual-output": lambda: self.close_virtual_output(arg) if arg is not None else None,
-            "clean": clean
+            "clean": clean,
+            "unlock": self._trusted_unlock if conf_enable_unlock_command() else lambda: "Disabled"
         }
         return cmds.get(cmd, lambda: f"Unknown command {cmd}")()
 
