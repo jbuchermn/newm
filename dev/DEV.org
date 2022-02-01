@@ -30,6 +30,7 @@
     - [ ] rofi
     - [X] wob
     - [X] mako
+*** TODO Always present top and bottom bars
 
 * Backlog
 ** dbus endpoint for waybar etc

@@ -32,16 +32,18 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 ## Roadmap
 
 Development on v0.3 has just started following the goals:
-- Improve panel functionality
-  - Get rid of `sys_backend`
-  - Get rid of websocket-communication
-  - Better integrate rofi (launcher), waybar (bar), mako / wob (notifications) and lock screen
-  - Possibly provide dbus endpoint
-- Borders
-  - Draw borders around some floating windows (quite ugly floating windows on v0.2)
-  - Possibly highlight focused window using a border
-- Enable window swallowing
-- Some minor imporivements here and there
+- [X] Improve panel functionality
+  - [X] Get rid of `sys_backend`
+  - [X] Get rid of websocket-communication
+  - [X] Possibly provide dbus endpoint
+  - [ ] Better integrate rofi (launcher), waybar (bar), mako / wob (notifications) and lock screen
+  - [ ] Support always-present top and bottom bars
+- [X] Borders
+  - [X] Draw borders around some floating windows (quite ugly floating windows on v0.2)
+  - [X] Possibly highlight focused window using a border
+- [X] Enable window swallowing
+- [ ] Blurred window backgrounds
+- Some minor improvements here and there
 
 
 ## Installing
