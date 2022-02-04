@@ -29,7 +29,7 @@ conf_padding = configured_value('view.padding', 6)
 conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0)
 conf_border_ws_switch = configured_value('view.border_ws_switch', 10.)
 
-conf_float_callback = configured_value('view.should_float', lambda view: None)
+conf_rules_callback = configured_value('view.rules', lambda view: None)
 conf_floating_min_size = configured_value('view.floating_min_size', True)
 
 conf_accept_fullscreen_from_views = configured_value('view.accept_fullscreen', True)
@@ -68,6 +68,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
+
+        self._rules: dict[str, Any] = {}
 
         self._ssd: Optional[SSDs] = None
         self._background: Optional[BackgroundBlur] = None
@@ -123,20 +125,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         pos_hint: Optional[tuple[float, float]] = None
 
         floats = self.up_state is not None and self.up_state.is_floating
-        try:
-            hints = conf_float_callback()(self)
-            if hints is not None:
-                if isinstance(hints, tuple):
-                    if len(hints) >= 1:
-                        floats = hints[0]
-                    if len(hints) >= 2:
-                        size_hint = hints[1]
-                    if len(hints) >= 3:
-                        pos_hint = hints[2]
-                else:
-                    floats = hints != False
-        except Exception:
-            logger.exception("floats callback")
+        if 'float' in self._rules:
+            floats = bool(self._rules['float'])
+        if 'float_size' in self._rules:
+            size_hint = self._rules['float_size']
+        if 'float_pos' in self._rules:
+            pos_hint = self._rules['float_pos']
 
         if (self.up_state is not None and
            self.up_state.size_constraints[0] > 0 and
@@ -776,6 +770,16 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     def init(self) -> CustomDownstreamState:
         if self._initial_state is None:
             logger.info("Init: %s", self)
+            try:
+                rules = conf_rules_callback()(self)
+                if rules is not None:
+                    self._rules = rules
+                    logger.debug("View %s rules: %s" % (self, self._rules))
+                else:
+                    logger.debug("No rules for view %s" % self)
+
+            except:
+                logger.exception("In rules callback")
 
         # mypy
         if self.up_state is None:
@@ -824,6 +828,16 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             return None, None
 
         logger.info("Show: %s", self)
+        try:
+            rules = conf_rules_callback()(self)
+            if rules is not None:
+                self._rules = rules
+                logger.debug("View %s rules: %s" % (self, self._rules))
+            else:
+                logger.debug("No rules for view %s" % self)
+
+        except:
+            logger.exception("In rules callback")
 
         ws = self.wm.get_active_workspace()
         if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
@@ -1096,8 +1110,23 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         return ws, i0, j0, w0, h0
 
     def update(self) -> None:
+        try:
+            rules = conf_rules_callback()(self)
+            if rules is not None:
+                self._rules = rules
+                logger.debug("View %s rules: %s" % (self, self._rules))
+            else:
+                logger.debug("No rules for view %s" % self)
+        except:
+            logger.exception("In rules callback")
+
         if self._ssd is not None:
             self._ssd.update()
+        if self._background is not None:
+            self._background.destroy()
+            self._background = None
+
+        self.validate_background()
 
     def validate_ssd(self, override_float: Optional[bool] = None) -> None:
         if self.up_state is None:
@@ -1116,11 +1145,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             self._ssd = None
 
     def validate_background(self) -> None:
-        # TODO
-        needs_background = self.app_id == "Alacritty"
+        needs_background = "blur" in self._rules and "radius" in self._rules["blur"] and "passes" in self._rules["blur"]
 
         if needs_background and self._background is None:
-            self._background = self.wm.create_widget(BackgroundBlur, None, self)
+            self._background = self.wm.create_widget(BackgroundBlur, None, self, self._rules["blur"]["radius"], self._rules["blur"]["passes"])
         elif not needs_background and self._background is not None:
             self._background.destroy()
             self._background = None

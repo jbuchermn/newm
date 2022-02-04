@@ -9,6 +9,7 @@
 *** STRT Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update, plus lots of unnecessary threads?) and polling c<-py (20Hz)
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Scale windows moving others "out of the way"
+*** TODO Swiping between fullscreen windows should not exit fullscreen
 
 ** Gestures 
 *** STRT Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes

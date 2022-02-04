@@ -19,9 +19,11 @@ logger = logging.getLogger(__name__)
 conf_view_corner_radius = configured_value('view.corner_radius', 12)
 
 class BackgroundBlur(PyWMBlurWidget, Animate[PyWMWidgetDownstreamState], Animatable):
-    def __init__(self, wm: Layout, output: PyWMOutput, view: View):
+    def __init__(self, wm: Layout, output: PyWMOutput, view: View, radius: int, passes: int):
         PyWMBlurWidget.__init__(self, wm, output)
         Animate.__init__(self)
+
+        self.set_blur(radius, passes)
 
         self.view = view
         self.view_state: Optional[CustomDownstreamState] = None
