@@ -1,26 +1,18 @@
 #+TITLE: newm developer information
 
 * Current (v0.3)
-** TODO NixOS greetd deployment
-** TODO rofi / dmenu app-switcher via newm-cmd
-
 ** Bugs
 **** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes
 **** TODO Move mouse, press mod - does not trigger a gesture anymore
 
 ** Improvements
-*** STRT Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update, plus lots of unnecessary threads?) and polling c<-py (20Hz)
+*** TODO Configurable locking behaviour (blur, fancy, basic) - don't expose texture_shaders as config option
+*** TODO Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update, plus lots of unnecessary threads?) and polling c<-py (20Hz)
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Scale windows moving others "out of the way"
 *** TODO Swiping between fullscreen windows should not exit fullscreen
-
-** Gestures 
-*** STRT Configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
-*** DONE C gestures: Configurability
-
-** Blur (pywm poc_blur)
-*** TODO Configurable blurring of window backgrounds
-*** TODO Configurable locking behaviour (blur, fancy, basic) - don't expose texture_shaders as config option
+*** TODO rofi / dmenu app-switcher via newm-cmd
+*** TODO Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
 
 ** Improved panel
 *** DONE Complete default keybindings for sound and kbdlight
@@ -35,6 +27,8 @@
     - [X] wob
     - [X] mako
 *** TODO Always present top and bottom bars
+
+** TODO NixOS greetd deployment
 
 * Backlog
 ** dbus endpoint for waybar etc
