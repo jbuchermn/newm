@@ -4,11 +4,16 @@ from typing import Any, Optional, TYPE_CHECKING
 import math
 import logging
 
+from .config import configured_value
+
 if TYPE_CHECKING:
     from .view import View
     from .layout import Layout, Workspace
 
 logger = logging.getLogger(__name__)
+
+conf_permanent_top_bar = configured_value('panels.top_bar.permanent', 0)
+conf_permanent_bottom_bar = configured_value('panels.bottom_bar.permanent', 0)
 
 class ViewState:
     def __init__(self, **kwargs: Any) -> None:
@@ -82,6 +87,9 @@ class WorkspaceState:
 
         self.top_bar_dy: float = kwargs['top_bar_dy'] if 'top_bar_dy' in kwargs else 0
         self.bottom_bar_dy: float = kwargs['bottom_bar_dy'] if 'bottom_bar_dy' in kwargs else 0
+
+        self.top_excluded: float = kwargs['top_excluded'] if 'top_excluded' in kwargs else 0
+        self.bottom_excluded: float = kwargs['bottom_excluded'] if 'bottom_excluded' in kwargs else 0
 
         # Non-null indicates we are in overview mode, in that case i, j, size, size_origin, top_bar_dy, bottom_bar_dy
         self.state_before_overview: Optional[tuple[float, float, float, Optional[float], float, float]] = kwargs['state_before_overview'] if 'state_before_overview' in kwargs else None
@@ -200,6 +208,26 @@ class WorkspaceState:
             if len(stack) == 1:
                 stack[0][1].stack_idx = stack[0][0]
 
+    def validate_bars(self, ) -> None:
+        if conf_permanent_top_bar() > 0:
+            self.top_bar_dy = 1.
+            self.top_excluded = conf_permanent_top_bar()
+        else:
+            if self.is_in_overview():
+                self.top_bar_dy = 1.
+            else:
+                self.top_bar_dy = 0.
+            self.top_excluded = 0.
+
+        if conf_permanent_bottom_bar():
+            self.bottom_bar_dy = 1.
+            self.bottom_excluded = conf_permanent_bottom_bar()
+        else:
+            if self.is_in_overview():
+                self.bottom_bar_dy = 1.
+            else:
+                self.bottom_bar_dy = 0.
+            self.bottom_excluded = 0.
 
     def constrain(self) -> None:
         min_i, min_j, max_i, max_j = self.get_extent()
@@ -316,6 +344,7 @@ class WorkspaceState:
         self.constrain()
         self.validate_fullscreen()
         self.validate_stack_indices()
+        self.validate_bars()
 
 
     """
@@ -569,6 +598,10 @@ class LayoutState:
     def validate_fullscreen(self) -> None:
         for h, s in self._workspace_states.items():
             s.validate_fullscreen()
+
+    def validate_bars(self) -> None:
+        for h, s in self._workspace_states.items():
+            s.validate_bars()
 
     def validate_stack_indices(self, moved_view: Optional[View]=None) -> None:
         for h, s in self._workspace_states.items():

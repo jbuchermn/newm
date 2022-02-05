@@ -88,6 +88,8 @@ class FocusBorders(Animatable):
         if self.current_view is not None and self.current_view.up_state is not None:
             view_down_state = self.current_view.reducer(self.current_view.up_state, layout_state)
             self.current_box = view_down_state.z_index - 0.01, *view_down_state.logical_box
+            if view_down_state.is_fullscreen:
+                self.current_box = -999, 0, 0, 0, 0
             for b in self.borders:
                 b.set_corner_radius(view_down_state.corner_radius + conf_focus_d())
         else:
@@ -139,6 +141,11 @@ class FocusBorders(Animatable):
 
             old_box = view_old_down_state.z_index - 0.01, *view_old_down_state.logical_box
             new_box = view_new_down_state.z_index - 0.01, *view_new_down_state.logical_box
+
+            if view_old_down_state.is_fullscreen:
+                old_box = -999, 0, 0, 0, 0
+            if view_new_down_state.is_fullscreen:
+                new_box = -999, 0, 0, 0, 0
 
             self.current_box = new_box
             for b in self.borders:

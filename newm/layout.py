@@ -193,6 +193,7 @@ class Animation:
             self._final_state.constrain()
             self._final_state.validate_fullscreen()
             self._final_state.validate_stack_indices()
+            self._final_state.validate_bars()
 
             self.layout._animate_to(self._final_state, self.duration)
         else:

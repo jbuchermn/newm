@@ -63,6 +63,7 @@ class CustomDownstreamState(PyWMViewDownstreamState):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.logical_box: tuple[float, float, float, float] = kwargs['logical_box'] if 'logical_box' in kwargs else self.box
+        self.is_fullscreen: bool = kwargs['is_fullscreen'] if 'is_fullscreen' in kwargs else False
 
 class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     def __init__(self, wm: Layout, handle: int):
@@ -595,21 +596,25 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         _, stack_idx, stack_len = self_state.stack_data
         if stack_len > 1:
             i += 0.05 * stack_idx / (stack_len - 1)
-            j += 0.05 * ws.width / ws.height * stack_idx / (stack_len - 1)
+            j += 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) * stack_idx / (stack_len - 1)
             w -= 0.05
-            h -= 0.05 * ws.width / ws.height
+            h -= 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded)
 
         x = i - ws_state.i
         y = j - ws_state.j
 
         x *= ws.width / ws_state.size
-        y *= ws.height / ws_state.size
+        y *= (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) / ws_state.size
         w *= ws.width / ws_state.size
-        h *= ws.height / ws_state.size
+        h *= (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) / ws_state.size
+
+        y += ws_state.top_excluded
 
         result.corner_radius /= max(1, ws_state.size / 2.)
 
-        padding = float(conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding())
+        result.is_fullscreen = ws_state.is_fullscreen()
+
+        padding = float(conf_fullscreen_padding() if result.is_fullscreen else conf_padding())
         padding_scaled = padding / max(1, ws_state.size / 2.)
 
         padding_for_size = padding_scaled
@@ -634,10 +639,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
 
         if stack_len > 1:
             w_for_size -= 0.05
-            h_for_size -= 0.05 * ws.width / ws.height
+            h_for_size -= 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded)
 
         w_for_size *= ws.width / size
-        h_for_size *= ws.height / size
+        h_for_size *= (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) / size
 
         w_for_size -= 2*padding_for_size
         h_for_size -= 2*padding_for_size
@@ -716,7 +721,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         if ws_state.size_origin is not None:
             size = ws_state.size_origin
         min_w *= size / ws.width
-        min_h *= size / ws.height
+        min_h *= size / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded)
 
         w = max(math.ceil(min_w), 1)
         h = max(math.ceil(min_h), 1)
@@ -1020,7 +1025,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
 
         else:
             w = max(1, round((state.float_size[0] + 2*padding) / ws.width * ws_state.size))
-            h = max(1, round((state.float_size[1] + 2*padding) / ws.height * ws_state.size))
+            h = max(1, round((state.float_size[1] + 2*padding) / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) * ws_state.size))
             i = round(state.float_pos[0])
             j = round(state.float_pos[1])
 

@@ -12,11 +12,9 @@ from pywm import PyWMBlurWidget, PyWMWidgetDownstreamState, PyWMOutput
 
 from ..animate import Animate, Animatable
 from ..interpolation import WidgetDownstreamInterpolation
-from ..config import configured_value
 
 logger = logging.getLogger(__name__)
 
-conf_view_corner_radius = configured_value('view.corner_radius', 12)
 
 class BackgroundBlur(PyWMBlurWidget, Animate[PyWMWidgetDownstreamState], Animatable):
     def __init__(self, wm: Layout, output: PyWMOutput, view: View, radius: int, passes: int):
@@ -29,7 +27,7 @@ class BackgroundBlur(PyWMBlurWidget, Animate[PyWMWidgetDownstreamState], Animata
         self.view_state: Optional[CustomDownstreamState] = None
 
     def reducer(self, state: CustomDownstreamState) -> PyWMWidgetDownstreamState:
-        return PyWMWidgetDownstreamState(state.z_index -0.001, state.logical_box, lock_enabled=False, opacity=1., corner_radius=conf_view_corner_radius())
+        return PyWMWidgetDownstreamState(state.z_index -0.001, state.logical_box, lock_enabled=False, opacity=1., corner_radius=state.corner_radius)
 
     def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
         if self.view.up_state is not None:
