@@ -29,7 +29,7 @@ class BackgroundBlur(PyWMBlurWidget, Animate[PyWMWidgetDownstreamState], Animata
         self.view_state: Optional[CustomDownstreamState] = None
 
     def reducer(self, state: CustomDownstreamState) -> PyWMWidgetDownstreamState:
-        return PyWMWidgetDownstreamState(state.z_index -0.1, state.logical_box, lock_enabled=False, opacity=1., corner_radius=conf_view_corner_radius())
+        return PyWMWidgetDownstreamState(state.z_index -0.001, state.logical_box, lock_enabled=False, opacity=1., corner_radius=conf_view_corner_radius())
 
     def animate(self, old_state: LayoutState, new_state: LayoutState, dt: float) -> None:
         if self.view.up_state is not None:

@@ -2,8 +2,11 @@
 
 * Current (v0.3)
 ** TODO NixOS greetd deployment
-** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes
 ** TODO rofi / dmenu app-switcher via newm-cmd
+
+** Bugs
+**** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes
+**** TODO Move mouse, press mod - does not trigger a gesture anymore
 
 ** Improvements
 *** STRT Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update, plus lots of unnecessary threads?) and polling c<-py (20Hz)

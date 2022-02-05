@@ -126,6 +126,7 @@ class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):
         self.box = (state0.box, state1.box)
         self.opacity = (state0.opacity, state1.opacity)
         self.lock_enabled = state0.lock_enabled
+        self.corner_radius = (state0.corner_radius, state1.corner_radius)
 
 
         self.anim = True
@@ -153,5 +154,6 @@ class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):
             box=box,
         )
         res.opacity = self.opacity[0] + at * (self.opacity[1] - self.opacity[0])
-        res.lock_enabled=self.lock_enabled
+        res.lock_enabled = self.lock_enabled
+        res.corner_radius = self.corner_radius[0] + at * (self.corner_radius[1] - self.corner_radius[0])
         return res
