@@ -6,7 +6,7 @@
 **** TODO Move mouse, press mod - does not trigger a gesture anymore
 
 ** Improvements
-*** TODO Configurable locking behaviour (blur, fancy, basic) - don't expose texture_shaders as config option
+*** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Bring down idle CPU - Appears to be related to python gestures (possibly PyEvdevGestureProvider.update, plus lots of unnecessary threads?) and polling c<-py (20Hz)
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Scale windows moving others "out of the way"
@@ -15,12 +15,12 @@
 *** TODO Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
 
 ** Improved panel
-*** DONE Complete default keybindings for sound and kbdlight
 *** Panel implementation in view
 **** TODO Get rid of newm-panel-nwjs (in documentation)
 **** TODO Unify layer_panel and panel
 **** TODO Possibility to start waybar as a panel (i.e. with auto restart)
 **** TODO Drop panel == "notifier" --> wob and mako are the better solution
+**** TODO Should wob and mako be panels? (i.e. no anim)
 *** TODO Incorporate and update default config accordingly
     - [ ] catapult
     - [ ] rofi

@@ -39,6 +39,7 @@ class _PAMBackend(_Backend):
 
     def enter_cred(self, cred: str) -> None:
         res = self._pam.authenticate(self._user, cred)
+        logger.debug("PAM Backend: %ssuccessful" % ("" if res else "not "))
         self.auth._auth_result(res)
         if not res and self._user is not None:
             self.init_auth(self._user)
