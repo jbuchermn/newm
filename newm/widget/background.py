@@ -206,7 +206,7 @@ class Background(PyWMBackgroundWidget, Animatable):
 
         self._current_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
         self._target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
-        self._last_frame: float = time.time()
+        self._last_frame: float = 0.
         self._anim_caught: Optional[float] = None
 
         if self._prevent_anim:
@@ -217,10 +217,9 @@ class Background(PyWMBackgroundWidget, Animatable):
         if self._prevent_anim:
             return
 
-        self._anim_caught = time.time() + dt
+        self._anim_caught = -dt
         self._target_state = BackgroundState(new_state, new_state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
 
-        self._last_frame = time.time()
         self.damage()
 
     def flush_animation(self) -> None:
@@ -235,6 +234,11 @@ class Background(PyWMBackgroundWidget, Animatable):
                 target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
                 if target_state.delta(self._target_state) > 1:
                     self._target_state = target_state
+            else:
+                if self._anim_caught < 0:
+                    self._anim_caught = t - 1./120. - self._anim_caught
+                    self._last_frame = t - 1./120.
+
 
             if self._current_state.delta(self._target_state) > 1:
                 self._current_state.approach(self._target_state, conf_time_scale(), t - self._last_frame)

@@ -153,7 +153,8 @@ class Animation:
 
         self._initial_state: Optional[LayoutState] = None
         self._final_state: Optional[LayoutState] = None
-        self._started: Optional[float] = None
+        self._started: bool = False
+        self._finish: Optional[float] = None
 
         # Prevent devision by zero
         self.duration = max(.1, duration)
@@ -166,7 +167,10 @@ class Animation:
             self.layout.do_flush_animation()
             return True
 
-        if self._started is not None and time.time() > self._started + self.duration:
+        if self._started and self._finish is None:
+            self._finish = self.layout.get_final_time()
+
+        if self._finish is not None and time.time() > self._finish:
             if self._final_state is not None:
                 self.layout.update(self._final_state)
             if callable(self.then):
@@ -187,7 +191,7 @@ class Animation:
         if self._initial_state is not None:
             self.layout.update(self._initial_state)
 
-        self._started = time.time()
+        self._started = True
         if self._final_state is not None:
             # Enforce constraints on final state
             self._final_state.constrain()
