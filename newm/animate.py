@@ -4,6 +4,7 @@ from typing import TypeVar, Generic, Optional
 from abc import abstractmethod
 import logging
 import time
+from threading import Lock
 
 from .interpolation import Interpolation
 from .state import LayoutState
@@ -27,28 +28,32 @@ class Animatable:
 class Animate(Generic[StateT]):
     def __init__(self) -> None:
         self._animation: Optional[tuple[Interpolation[StateT], float, float, float]] = None
+        self._animation_lock = Lock()
 
     def _process(self, default_state: StateT) -> StateT:
-        if self._animation is not None:
-            if self._animation[1] <  0:
-                t = time.time()
-                self._animation = self._animation[0], t - 1./120., self._animation[2], t - 1./120.
+        with self._animation_lock:
+            if self._animation is not None:
+                interpolation, s, d, last_ts = self._animation
 
-            interpolation, s, d, last_ts = self._animation
-            ts = time.time()
-            if ts - last_ts > 1. / conf_debug_freq():
-                logger.debug("Animate (%30s, %s) - Slow animation frame: %.2ffps", self.__class__.__name__, id(self), 1. / (ts-last_ts))
-            self._animation = (interpolation, s, d, ts)
+                if s < 0:
+                    t = time.time()
+                    s, last_ts = t - 1./120., t - 1./120.
 
-            perc = min((ts - s) / d, 1.0)
+                ts = time.time()
+                if ts - last_ts > 1. / conf_debug_freq():
+                    logger.debug("Animate (%30s, %s) - Slow animation frame: %.2ffps", self.__class__.__name__, id(self), 1. / (ts-last_ts))
+                self._animation = (interpolation, s, d, ts)
 
-            self.damage()
-            return interpolation.get(perc)
-        else:
-            return default_state
+                perc = min((ts - s) / d, 1.0)
+
+                self.damage()
+                return interpolation.get(perc)
+            else:
+                return default_state
 
     def flush_animation(self) -> None:
-        self._animation = None
+        with self._animation_lock:
+            self._animation = None
 
     def _animate(self, interp: Interpolation[StateT], dt: float) -> None:
         self._animation = (interp, -1, dt, -1)
