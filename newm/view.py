@@ -954,11 +954,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             self._background.animate(old_state, new_state, dt)
 
     def damage(self) -> None:
-        PyWMView.damage(self)
+        super().damage()
         if self._ssd is not None:
             self._ssd.damage()
         if self._background is not None:
             self._background.damage()
+
+    def damage_in_animation(self) -> None:
+        super().damage()
 
     def flush_animation(self) -> None:
         Animate.flush_animation(self)

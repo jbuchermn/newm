@@ -1,14 +1,55 @@
+from __future__ import annotations
+from typing import Optional
 import time
 import logging
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
-def timed(func):  # type: ignore
-    def wrapped(*args, **kwargs):  # type: ignore
+class Profile:
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self._cur: Optional[float] = None
+        self.ts: list[float] = []
+        self.t0 = time.time()
+
+    def start(self) -> None:
+        self._cur = time.time()
+
+    def stop(self) -> None:
+        if self._cur is None:
+            return
         t = time.time()
+        self.ts += [t - self._cur]
+        self._cur = None
+
+        if t - self.t0 > 1.:
+            self.t0 = t
+            if len(self.ts) > 0:
+                avg = 1000. * sum(self.ts) / len(self.ts)
+                ma = 1000. * max(self.ts)
+                mi = 1000. * min(self.ts)
+                self.ts = []
+                logger.debug("TIMER[%-50s]: %7.2fms -- avg %7.2fms -- %7.2fms" % (self.name, mi, avg, ma))
+
+
+class Profiler:
+    def __init__(self) -> None:
+        self._profiles: dict[str, Profile] = {}
+
+    def get(self, name: str) -> Profile:
+        if name not in self._profiles:
+            self._profiles[name] = Profile(name)
+        return self._profiles[name]
+
+profiler = Profiler()
+
+def timed(func):  # type: ignore
+    profile = profiler.get(str(func))
+    def wrapped(*args, **kwargs):  # type: ignore
+        profile.start()
         res = func(*args, **kwargs)
-        logger.debug("TIMER[%-30s]  : %7.2fms" % (func.__name__, (time.time() - t) * 1000))
+        profile.stop()
         return res
     return wrapped
 

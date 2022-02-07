@@ -65,6 +65,9 @@ class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
     def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self._parent.current_box, 1.))
 
+    def damage_in_animation(self) -> None:
+        self.damage()
+
 class FocusBorders(Animatable):
     def __init__(self, wm: Layout):
         self.wm = wm

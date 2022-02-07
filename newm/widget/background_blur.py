@@ -51,3 +51,6 @@ class BackgroundBlur(PyWMBlurWidget, Animate[PyWMWidgetDownstreamState], Animata
         if self.view.up_state is not None:
             self.view_state = self.view.reducer(self.view.up_state, self.wm.state)
         super().damage()
+
+    def damage_in_animation(self) -> None:
+        super().damage()

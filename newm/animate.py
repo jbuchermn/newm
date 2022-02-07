@@ -46,7 +46,7 @@ class Animate(Generic[StateT]):
 
                 perc = min((ts - s) / d, 1.0)
 
-                self.damage()
+                self.damage_in_animation()
                 return interpolation.get(perc)
             else:
                 return default_state
@@ -57,7 +57,7 @@ class Animate(Generic[StateT]):
 
     def _animate(self, interp: Interpolation[StateT], dt: float) -> None:
         self._animation = (interp, -1, dt, -1)
-        self.damage()
+        self.damage_in_animation()
 
     def get_final_time(self) -> Optional[float]:
         if self._animation is not None and self._animation[1] > 0.:
@@ -65,5 +65,5 @@ class Animate(Generic[StateT]):
         return None
 
     @abstractmethod
-    def damage(self) -> None:
+    def damage_in_animation(self) -> None:
         pass

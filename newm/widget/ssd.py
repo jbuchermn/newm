@@ -60,6 +60,9 @@ class SSD(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
         else:
             return self._process(self.reducer(self._parent.view_state, self._parent.opacity))
 
+    def damage_in_animation(self) -> None:
+        self.damage()
+
 class SSDs(Animatable):
     def __init__(self, wm: Layout, view: View):
         self.wm = wm
