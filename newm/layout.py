@@ -557,7 +557,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     def damage(self) -> None:
         super().damage()
 
-        for _, v in self._views.items():
+        for v in self._views.values():
             v.damage()
 
         for bg in self.backgrounds:
@@ -570,6 +570,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             b.damage()
 
         self.focus_borders.damage()
+
+    def damage_in_animation(self) -> None:
+        super().damage()
 
 
     def update(self, new_state: LayoutState) -> None:

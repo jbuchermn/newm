@@ -81,6 +81,9 @@ class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState], Animatable):
     def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self.wm.state))
 
+    def damage_in_animation(self) -> None:
+        self.damage()
+
 
 class TopBar(Bar, Thread):
     def __init__(self, wm: Layout, output: PyWMOutput) -> None:

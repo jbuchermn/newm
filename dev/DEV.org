@@ -5,6 +5,7 @@
 **** DONE Occasionally animations are not finished
 **** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes
 **** TODO Move mouse, press mod - does not trigger a gesture anymore
+**** DONE Animating a view with ssd or blur causes lots of damages on class SSDs and BackgroundBlur - fix damage logic between view and its child widgets (FocusBorders too?)
 
 ** Improvements
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
