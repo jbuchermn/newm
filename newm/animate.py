@@ -27,22 +27,23 @@ class Animatable:
 
 class Animate(Generic[StateT]):
     def __init__(self) -> None:
-        self._animation: Optional[tuple[Interpolation[StateT], float, float, float]] = None
+        self._animation: Optional[tuple[Interpolation[StateT], float, float, float, int]] = None
         self._animation_lock = Lock()
 
     def _process(self, default_state: StateT) -> StateT:
         with self._animation_lock:
             if self._animation is not None:
-                interpolation, s, d, last_ts = self._animation
+                interpolation, s, d, last_ts, frame = self._animation
+                frame += 1
 
-                if s < 0:
+                if frame == 1:
                     t = time.time()
                     s, last_ts = t - 1./120., t - 1./120.
 
                 ts = time.time()
                 if ts - last_ts > 1. / conf_debug_freq():
-                    logger.debug("Animate (%30s, %s) - Slow animation frame: %.2ffps", self.__class__.__name__, id(self), 1. / (ts-last_ts))
-                self._animation = (interpolation, s, d, ts)
+                    logger.debug("TIMER(%20s, %s): Slow animation frame (%2d): %.2fms = %.2ffps", self.__class__.__name__, id(self), frame, 1000. * (ts-last_ts), 1. / (ts-last_ts))
+                self._animation = interpolation, s, d, ts, frame
 
                 perc = min((ts - s) / d, 1.0)
 
@@ -56,7 +57,7 @@ class Animate(Generic[StateT]):
             self._animation = None
 
     def _animate(self, interp: Interpolation[StateT], dt: float) -> None:
-        self._animation = (interp, -1, dt, -1)
+        self._animation = (interp, -1, dt, -1, 0)
         self.damage()
 
     def get_final_time(self) -> Optional[float]:
