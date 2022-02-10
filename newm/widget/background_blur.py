@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any
 
 if TYPE_CHECKING:
     from ..state import LayoutState
@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class BackgroundBlur(PyWMBlurWidget, Animate[PyWMWidgetDownstreamState], Animatable):
-    def __init__(self, wm: Layout, output: PyWMOutput, view: View, radius: int, passes: int):
-        PyWMBlurWidget.__init__(self, wm, output)
+    def __init__(self, wm: Layout, output: PyWMOutput, view: View, radius: int, passes: int, *args: Any, **kwargs: Any):
+        PyWMBlurWidget.__init__(self, wm, output, *args, **kwargs)
         Animate.__init__(self)
 
         self.set_blur(radius, passes)
@@ -47,10 +47,10 @@ class BackgroundBlur(PyWMBlurWidget, Animate[PyWMWidgetDownstreamState], Animata
         else:
             return self._process(self.reducer(self.view_state))
 
-    def damage(self) -> None:
+    def damage(self, propagate: bool=True) -> None:
         if self.view.up_state is not None:
             self.view_state = self.view.reducer(self.view.up_state, self.wm.state)
-        super().damage()
+        super().damage(False)
 
-    def damage_in_animation(self) -> None:
-        super().damage()
+    def _anim_damage(self) -> None:
+        self.damage(False)

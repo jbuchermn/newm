@@ -243,6 +243,7 @@ class LayoutThread(Thread):
     def on_overlay_destroyed(self) -> None:
         logger.debug("Thread: Finishing overlay...")
         self._current_ovr = None
+        self.layout.exit_constant_damage()
 
     def run(self) -> None:
         while self._running:
@@ -253,16 +254,19 @@ class LayoutThread(Thread):
                             logger.debug("Thread: Starting overlay...")
                             self._current_ovr = self._pending.pop(0)
                             self.layout.start_overlay(self._current_ovr)
+                            self.layout.enter_constant_damage()
                     else:
                         if self._current_anim is None and (self._current_ovr is None or self._pending[0].overlay_safe):
                             logger.debug("Thread: Starting animation...")
                             self._current_anim = self._pending.pop(0)
                             self._current_anim.start()
+                            self.layout.enter_constant_damage()
 
                 if self._current_anim is not None:
                     if self._current_anim.check_finished():
                         logger.debug("Thread: Finishing animation...")
                         self._current_anim = None
+                        self.layout.exit_constant_damage()
 
                 conf_synchronous_update()()
             except Exception:
@@ -554,27 +558,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         self.thread.push(Animation(self, reducer, duration, then, overlay_safe))
 
 
-    def damage(self) -> None:
-        super().damage()
-
-        for v in self._views.values():
-            v.damage()
-
-        for bg in self.backgrounds:
-            bg.damage()
-
-        for t in self.top_bars:
-            t.damage()
-
-        for b in self.bottom_bars:
-            b.damage()
-
-        self.focus_borders.damage()
-
-    def damage_in_animation(self) -> None:
-        super().damage()
-
-
     def update(self, new_state: LayoutState) -> None:
         self.state = new_state
         self.damage()
@@ -595,6 +578,9 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     def _animate_to(self, new_state: LayoutState, duration: float) -> None:
         for a in self._all_animates():
             a.animate(self.state, new_state, duration)
+
+    def _anim_damage(self) -> None:
+        self.damage(False)
 
     def _trusted_unlock(self) -> None:
         if self.is_locked():

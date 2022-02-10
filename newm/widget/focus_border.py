@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any
 
 if TYPE_CHECKING:
     from ..state import LayoutState
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 import logging
 
-from pywm import PyWMWidget, PyWMWidgetDownstreamState, PyWMOutput
+from pywm import PyWMWidget, PyWMWidgetDownstreamState, PyWMOutput, DamageTracked
 
 from ..animate import Animate, Animatable
 from ..interpolation import WidgetDownstreamInterpolation
@@ -25,11 +25,11 @@ conf_animate_on_change = configured_value('focus.animate_on_change', False)
 conf_enabled = configured_value('focus.enabled', True)
 conf_color = configured_value('focus.color', '#19CEEB55')
 
-class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
-    def __init__(self, wm: Layout, output: PyWMOutput, parent: FocusBorders):
+class FocusBorder(Animate[PyWMWidgetDownstreamState], PyWMWidget):
+    def __init__(self, wm: Layout, output: PyWMOutput, parent: FocusBorders, *args: Any, **kwargs: Any):
         self._output = output
         self._parent = parent
-        PyWMWidget.__init__(self, wm, output)
+        PyWMWidget.__init__(self, wm, output, *args, **kwargs)
         Animate.__init__(self)
 
         self._corner_radius = -1.
@@ -65,11 +65,12 @@ class FocusBorder(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
     def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self._parent.current_box, 1.))
 
-    def damage_in_animation(self) -> None:
-        self.damage()
+    def _anim_damage(self) -> None:
+        self.damage(False)
 
-class FocusBorders(Animatable):
+class FocusBorders(Animatable, DamageTracked):
     def __init__(self, wm: Layout):
+        DamageTracked.__init__(self, wm)
         self.wm = wm
         self.borders: list[FocusBorder] = []
 
@@ -158,7 +159,7 @@ class FocusBorders(Animatable):
         for b in self.borders:
             b.flush_animation()
 
-    def damage(self) -> None:
+    def damage(self, propagate: bool=False) -> None:
         self._set_box_and_radius()
 
         for b in self.borders:

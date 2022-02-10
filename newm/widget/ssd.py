@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 import logging
 
-from pywm import PyWMWidget, PyWMWidgetDownstreamState, PyWMOutput
+from pywm import PyWMWidget, PyWMWidgetDownstreamState, PyWMOutput, DamageTracked
 
 from ..animate import Animate, Animatable
 from ..interpolation import WidgetDownstreamInterpolation
@@ -60,11 +60,13 @@ class SSD(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
         else:
             return self._process(self.reducer(self._parent.view_state, self._parent.opacity))
 
-    def damage_in_animation(self) -> None:
-        self.damage()
+    def _anim_damage(self):
+        self.damage(False)
 
-class SSDs(Animatable):
+
+class SSDs(Animatable, DamageTracked):
     def __init__(self, wm: Layout, view: View):
+        DamageTracked.__init__(self, view)
         self.wm = wm
         self.view = view
         self.view_state: Optional[CustomDownstreamState] = None
@@ -102,7 +104,7 @@ class SSDs(Animatable):
         for b in self.ssds:
             b.flush_animation()
 
-    def damage(self) -> None:
+    def damage(self, propagate: bool=True) -> None:
         if self.view.up_state is not None:
             self.view_state = self.view.reducer(self.view.up_state, self.wm.state)
             self.opacity = self.wm.state.background_opacity

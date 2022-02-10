@@ -49,7 +49,7 @@ class SwipeToZoomOverlay(Overlay):
         """
         self.grid = Grid("size", min_size, self.initial_size + 1, self.initial_size, conf_grid_ovr(), conf_grid_m())
         self.hyst = Hysteresis(conf_hyst(), self.size)
-        
+
 
         self._set_state()
 

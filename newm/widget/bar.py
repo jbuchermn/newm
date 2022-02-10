@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from abc import abstractmethod
 from threading import Thread
@@ -25,11 +25,11 @@ conf_font = configured_value('bar.font', 'Source Code Pro for Powerline')
 
 
 class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState], Animatable):
-    def __init__(self, wm: Layout, output: PyWMOutput):
+    def __init__(self, wm: Layout, output: PyWMOutput, *args: Any, **kwargs: Any):
         PyWMCairoWidget.__init__(
             self, wm, output,
             int(output.scale * output.width),
-            int(output.scale * conf_bar_height()))
+            int(output.scale * conf_bar_height()), *args, **kwargs)
         Animate.__init__(self)
 
         self._output: PyWMOutput = output
@@ -78,16 +78,16 @@ class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState], Animatable):
 
         self._animate(WidgetDownstreamInterpolation(self.wm, self, cur, nxt), dt)
 
+    def _anim_damage(self) -> None:
+        self.damage(False)
+
     def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self.wm.state))
 
-    def damage_in_animation(self) -> None:
-        self.damage()
-
 
 class TopBar(Bar, Thread):
-    def __init__(self, wm: Layout, output: PyWMOutput) -> None:
-        Bar.__init__(self, wm, output)
+    def __init__(self, wm: Layout, output: PyWMOutput, *args: Any, **kwargs: Any) -> None:
+        Bar.__init__(self, wm, output, *args, **kwargs)
         Thread.__init__(self)
 
         self._running = True
@@ -115,9 +115,10 @@ class TopBar(Bar, Thread):
     def set(self) -> None:
         self.set_texts(conf_top_bar_text()())
 
+
 class BottomBar(Bar, Thread):
-    def __init__(self, wm: Layout, output: PyWMOutput):
-        Bar.__init__(self, wm, output)
+    def __init__(self, wm: Layout, output: PyWMOutput, *args: Any, **kwargs: Any):
+        Bar.__init__(self, wm, output, *args, **kwargs)
         Thread.__init__(self)
 
         self._running = True

@@ -820,7 +820,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
                 self._initial_kind = 3
                 self._initial_state = self._init_tiled(self.up_state, ws)
 
-        self.damage()
+        # Until show animation starts
+        self.wm.enter_constant_damage()
         return self._initial_state
 
     def show(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
@@ -953,22 +954,15 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         if self._background is not None:
             self._background.animate(old_state, new_state, dt)
 
-    def damage(self) -> None:
-        super().damage()
-        if self._ssd is not None:
-            self._ssd.damage()
-        if self._background is not None:
-            self._background.damage()
-
-    def damage_in_animation(self) -> None:
-        super().damage()
-
     def flush_animation(self) -> None:
         Animate.flush_animation(self)
         if self._ssd is not None:
             self._ssd.flush_animation()
         if self._background is not None:
             self._background.flush_animation()
+
+    def _anim_damage(self) -> None:
+        self.damage(False)
 
     """
     Public API
@@ -977,6 +971,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         return self.up_state is not None and self.up_state.is_focused
 
     def destroy(self) -> None:
+        # Until exit animation
+        self.wm.enter_constant_damage()
+
         self._destroyed = True
         if self._ssd is not None:
             self._ssd.destroy()
@@ -1156,7 +1153,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         needs_background = "blur" in self._rules and "radius" in self._rules["blur"] and "passes" in self._rules["blur"]
 
         if needs_background and self._background is None:
-            self._background = self.wm.create_widget(BackgroundBlur, None, self, self._rules["blur"]["radius"], self._rules["blur"]["passes"])
+            self._background = self.wm.create_widget(BackgroundBlur, None, self, self._rules["blur"]["radius"], self._rules["blur"]["passes"], override_parent=self)
         elif not needs_background and self._background is not None:
             self._background.destroy()
             self._background = None

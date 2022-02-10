@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pywm import PyWMWidget, PyWMWidgetDownstreamState, PyWMOutput
 
@@ -13,11 +13,11 @@ conf_corner_radius = configured_value('corner_radius', 18)
 
 
 class Corner(PyWMWidget):
-    def __init__(self, wm: Layout, output: PyWMOutput, left: bool, top: bool):
+    def __init__(self, wm: Layout, output: PyWMOutput, left: bool, top: bool, *args: Any, **kwargs: Any):
         self.r = conf_corner_radius()
         self.radius = round(output.scale * self.r)
 
-        super().__init__(wm, output)
+        super().__init__(wm, output, *args, **kwargs)
         self._output: PyWMOutput = output
 
         self.left = left

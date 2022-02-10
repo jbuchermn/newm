@@ -181,7 +181,7 @@ class BackgroundState:
 
 
 class Background(PyWMBackgroundWidget, Animatable):
-    def __init__(self, wm: Layout, output: PyWMOutput, workspace: Workspace):
+    def __init__(self, wm: Layout, output: PyWMOutput, workspace: Workspace, *args: Any, **kwargs: Any):
 
         self._output: PyWMOutput = output
         self._workspace: Workspace = workspace
@@ -202,7 +202,7 @@ class Background(PyWMBackgroundWidget, Animatable):
         if path is None:
             path = conf_path_default()
 
-        PyWMBackgroundWidget.__init__(self, wm, output, path)
+        PyWMBackgroundWidget.__init__(self, wm, output, path, *args, **kwargs)
 
         self._current_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
         self._target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
