@@ -1281,6 +1281,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             return
 
         view[0].close()
+        self.damage_once()
 
     def toggle_focused_view_floating(self) -> None:
         def reducer(state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
