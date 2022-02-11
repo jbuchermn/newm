@@ -820,8 +820,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
                 self._initial_kind = 3
                 self._initial_state = self._init_tiled(self.up_state, ws)
 
+        self.damage()
         # Until show animation starts
         self.wm.enter_constant_damage()
+
         return self._initial_state
 
     def show(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
