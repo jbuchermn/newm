@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any
 
 if TYPE_CHECKING:
     from ..state import LayoutState
@@ -23,10 +23,10 @@ conf_enabled = configured_value('view.ssd.enabled', True)
 conf_color = configured_value('view.ssd.color', '#BEBEBEFF')
 
 class SSD(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
-    def __init__(self, wm: Layout, output: PyWMOutput, parent: SSDs):
+    def __init__(self, wm: Layout, output: PyWMOutput, parent: SSDs, *args: Any, **kwargs: Any):
         self._output = output
         self._parent = parent
-        PyWMWidget.__init__(self, wm, output)
+        PyWMWidget.__init__(self, wm, output, *args, **kwargs)
         Animate.__init__(self)
 
         self._corner_radius = -1.
@@ -60,7 +60,7 @@ class SSD(PyWMWidget, Animate[PyWMWidgetDownstreamState]):
         else:
             return self._process(self.reducer(self._parent.view_state, self._parent.opacity))
 
-    def _anim_damage(self):
+    def _anim_damage(self) -> None:
         self.damage(False)
 
 
