@@ -4,7 +4,7 @@
 ** Bugs
 **** DONE Occasionally animations are not finished
 **** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes
-**** STRT Move mouse, press mod - does not trigger a gesture (move / resize) anymore
+**** DONE Move mouse, press mod - does not trigger a gesture (move / resize) anymore
 **** DONE Animating a view with ssd or blur causes lots of damages on class SSDs and BackgroundBlur - fix damage logic between view and its child widgets (FocusBorders too?)
 **** DONE Switching to floating no longer works
 

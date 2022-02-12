@@ -290,7 +290,7 @@ class PyEvdevGestureProvider(GestureProvider, Thread):
     def stop(self) -> None:
         self._running = False
 
-    def reset_gestures(self) -> None:
+    def reset_gesture(self) -> None:
         for _, g in self._touchpads:
             g.reset()
 
