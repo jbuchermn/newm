@@ -4,6 +4,8 @@
 ** Bugs
 **** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
 
+** TODO NixOS greetd deployment
+
 ** Improvements
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
@@ -14,19 +16,18 @@
 
 ** Improved panel
 *** Panel implementation in view
-**** TODO Get rid of newm-panel-nwjs (in documentation)
-**** TODO Unify layer_panel and panel
-**** TODO Possibility to start waybar as a panel (i.e. with auto restart)
-**** TODO Drop panel == "notifier" --> wob and mako are the better solution
-**** TODO Should wob and mako be panels? (i.e. no anim)
-*** TODO Incorporate and update default config accordingly
+**** STRT Get rid of newm-panel-nwjs (in documentation)
+**** STRT Unify layer_panel and panel
+**** STRT Possibility to start waybar as a panel (i.e. with auto restart)
+**** STRT Drop panel == "notifier" --> wob and mako are the better solution
+**** STRT Should wob and mako be panels? (i.e. no anim + defined ordering back to front)
+*** STRT Incorporate and update default config accordingly
     - [ ] catapult
     - [ ] rofi
     - [X] wob
     - [X] mako
 *** STRT Always present top and bottom bars
 
-** TODO NixOS greetd deployment
 
 * Backlog
 ** dbus endpoint for waybar etc
