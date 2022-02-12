@@ -2,32 +2,29 @@
 
 * Current (v0.3)
 ** Bugs
+**** STRT FocusBorder is visible on non-selected monitor
 **** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
 
-** TODO NixOS greetd deployment
-
 ** Improvements
+*** TODO Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
+*** TODO Keychord bindings
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Scale windows moving others "out of the way"
 *** TODO Swiping between fullscreen windows should not exit fullscreen
 *** TODO rofi / dmenu app-switcher via newm-cmd
-*** TODO Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
+*** TODO Move all configurable debug options into `debug.xyz = True`
 
 ** Improved panel
 *** Panel implementation in view
-**** STRT Get rid of newm-panel-nwjs (in documentation)
-**** STRT Unify layer_panel and panel
-**** STRT Possibility to start waybar as a panel (i.e. with auto restart)
-**** STRT Drop panel == "notifier" --> wob and mako are the better solution
-**** STRT Should wob and mako be panels? (i.e. no anim + defined ordering back to front)
-*** STRT Incorporate and update default config accordingly
-    - [ ] catapult
-    - [ ] rofi
-    - [X] wob
-    - [X] mako
-*** STRT Always present top and bottom bars
+**** STRT Top bar above mako and similar
+*** STRT Always present top and bottom bars --> incl. autodetect if bar is there and of which size
 
+** TODO NixOS greetd deployment
+
+** Documentation
+**** Update to v0.3
+**** newm-panel-nwjs is history
 
 * Backlog
 ** dbus endpoint for waybar etc

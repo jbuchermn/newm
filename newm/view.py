@@ -34,14 +34,15 @@ conf_floating_min_size = configured_value('view.floating_min_size', True)
 
 conf_accept_fullscreen_from_views = configured_value('view.accept_fullscreen', True)
 
+"""
+Launcher and lock panels are handled in a special way - define size and corner radius here
+"""
 conf_panel_lock_h = configured_value('panels.lock.h', 0.6)
 conf_panel_lock_w = configured_value('panels.lock.w', 0.7)
 conf_panel_lock_corner_radius = configured_value('panels.lock.corner_radius', 50)
 conf_panel_launcher_h = configured_value('panels.launcher.h', 0.8)
 conf_panel_launcher_w = configured_value('panels.launcher.w', 0.8)
 conf_panel_launcher_corner_radius = configured_value('panels.launcher.corner_radius', 0)
-conf_panel_notifiers_h = configured_value('panels.notifiers.h', 0.3)
-conf_panel_notifiers_w = configured_value('panels.notifiers.w', 0.2)
 
 conf_anim_t = configured_value('anim_time', .3)
 
@@ -86,7 +87,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         self._initial_state: Optional[CustomDownstreamState] = None
 
         self.panel: Optional[str] = None
-        self.layer_panel: Optional[str] = None
 
         self._debug_scaling = conf_debug_scaling()
 
@@ -94,10 +94,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         if self.up_state is None:
             return "<View %d>" % self._handle
 
-        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s, panel=%s, layer_panel=%s, size_constraints=%s>" % (
+        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s, panel=%s, size_constraints=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
              self.title, self.app_id, self.role, self.pid,
-             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused, self.panel, self.layer_panel, self.up_state.size_constraints)
+             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused, self.panel, self.up_state.size_constraints)
 
     def is_float(self, state: LayoutState) -> bool:
         if self.is_panel():
@@ -155,22 +155,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         result = CustomDownstreamState()
         result.logical_box = (0, 0, 0, 0)
 
-        if self.panel == "notifiers":
-            result.z_index = 2000
-            result.accepts_input = False
-            result.lock_enabled = True
-
-            result.size = (
-                int(ws.width * conf_panel_notifiers_w()),
-                int(ws.height * conf_panel_notifiers_h()))
-
-            result.box = (
-                ws.pos_x + ws.width * (1. - conf_panel_notifiers_w())/2.,
-                ws.pos_y + ws.height * (1. - conf_panel_notifiers_h()),
-                ws.width * conf_panel_notifiers_w(),
-                ws.height * conf_panel_notifiers_h())
-
-        elif self.panel == "launcher":
+        if self.panel == "launcher":
             result.z_index = 1000
             result.accepts_input = True
             result.corner_radius = conf_panel_launcher_corner_radius()
@@ -264,9 +249,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             target_height = height
 
         if anchored_top and ((anchored_left and anchored_right) or target_width == output.width) and not anchored_bottom and target_height < 0.2*output.height:
-            self.layer_panel = "top_bar"
+            self.panel = "top_bar"
         elif anchored_bottom and ((anchored_left and anchored_right) or target_width == output.width) and not anchored_top and target_height < 0.2*output.height:
-            self.layer_panel = "bottom_bar"
+            self.panel = "bottom_bar"
 
         return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
 
@@ -307,12 +292,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
         result.logical_box = result.box
 
-        if self.layer_panel == "top_bar":
+        if self.panel == "top_bar":
             x, y, w, h = 0., 0., 0., 0. # mypy
             x, y, w, h = result.box
             y -= h * 1.2 * (1. - ws_state.top_bar_dy)
             result.box = x, y, w, h
-        elif self.layer_panel == "bottom_bar":
+        elif self.panel == "bottom_bar":
             x, y, w, h = 0., 0., 0., 0. # mypy
             x, y, w, h = result.box
             y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
@@ -331,7 +316,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     def _show_layer(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Show - layer: %s", self)
 
-        if self.layer_panel is None:
+        if self.panel is None:
             ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True, layer_initial=True)
             ws_state2 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
             state1, state2 = state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
@@ -801,7 +786,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         if self.pid is not None:
             self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
 
-        if self.panel is not None:
+        if self.panel is not None and self.role != "layer":  # Special case for layer panels
             self._initial_kind = 0
             self._initial_state = self._init_panel(self.up_state, ws)
 
@@ -932,7 +917,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             logger.warn("Missing state: %s" % self)
             return CustomDownstreamState(up_state=up_state)
 
-        if self.panel is not None:
+        if self.panel is not None and self.role != "layer":  # Special case for layer panels
             return self._reducer_panel(up_state, state, self_state, ws, ws_state)
         elif self_state.is_tiled:
             return self._reducer_tiled(up_state, state, self_state, ws, ws_state)
