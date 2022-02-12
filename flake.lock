@@ -54,11 +54,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1644676005,
-        "narHash": "sha256-ur9hoAGXALQEwwcczl7SqmtZcebVzMlPPSz0qZaezCM=",
+        "lastModified": 1644698820,
+        "narHash": "sha256-U/g88cu+VyIWEK2fScplHWTXhFoKNLNXnpnN2AwXU2g=",
         "owner": "jbuchermn",
         "repo": "pywm",
-        "rev": "08d3f668ffa0dedc5f3822d42602c4814379ac18",
+        "rev": "c8ce22a6aa242fd86114e185cdaf393fd673c85c",
         "type": "github"
       },
       "original": {
