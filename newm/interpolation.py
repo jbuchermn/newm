@@ -124,6 +124,7 @@ class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):
     def __init__(self, layout: Layout, widget: PyWMWidget, state0: PyWMWidgetDownstreamState, state1: PyWMWidgetDownstreamState) -> None:
         self.z_index = (state0.z_index, state1.z_index)
         self.box = (state0.box, state1.box)
+        self.workspace = (state0.workspace, state1.workspace)
         self.opacity = (state0.opacity, state1.opacity)
         self.lock_enabled = state0.lock_enabled
         self.corner_radius = (state0.corner_radius, state1.corner_radius)
@@ -149,10 +150,17 @@ class WidgetDownstreamInterpolation(Interpolation[PyWMWidgetDownstreamState]):
             self.box[0][2] + (self.box[1][2] - self.box[0][2]) * at,
             self.box[0][3] + (self.box[1][3] - self.box[0][3]) * at,
         )
+        workspace=(
+            self.workspace[0][0] + (self.workspace[1][0] - self.workspace[0][0]) * at,
+            self.workspace[0][1] + (self.workspace[1][1] - self.workspace[0][1]) * at,
+            self.workspace[0][2] + (self.workspace[1][2] - self.workspace[0][2]) * at,
+            self.workspace[0][3] + (self.workspace[1][3] - self.workspace[0][3]) * at,
+        ) if self.workspace[0] is not None and self.workspace[1] is not None else None
         res = PyWMWidgetDownstreamState(
             z_index=self.z_index[1] if at > 0.5 else self.z_index[0],
             box=box,
         )
+        res.workspace = workspace
         res.opacity = self.opacity[0] + at * (self.opacity[1] - self.opacity[0])
         res.lock_enabled = self.lock_enabled
         res.corner_radius = self.corner_radius[0] + at * (self.corner_radius[1] - self.corner_radius[0])
