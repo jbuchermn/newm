@@ -16,7 +16,10 @@
 *** TODO Move all configurable debug options into `debug.xyz = True`
 
 ** Improved panel
-*** STRT Always present top and bottom bars --> incl. autodetect if bar is there and of which size
+*** STRT Always present top and bottom bars
+     - Autodetect if bar is there and of which size
+     - Move away on fullscreen
+     - Move into view via mouse
 
 ** TODO NixOS greetd deployment
 
