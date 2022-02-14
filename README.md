@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/github/license/jbuchermn/newm)](LICENSE)
 [![AUR](https://img.shields.io/aur/version/newm-git)](https://aur.archlinux.org/packages/newm-git)
 
-[![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/Qvyt4XynlYI)
+[![Screenshot](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/Qvyt4XynlYI)
 
 ## Idea
 
@@ -83,17 +83,17 @@ Installing newm this way means it cannot be used as a login manager, as it can o
 
 ### Starting and tests
 
-Start newm using
+Start `newm` using
 
-``` sh
+``` 
 start-newm -d
 ```
 
 `-d` is the debug flag and gives more output to `$HOME/.cache/newm_log`.
 
-Open a terminal window (default `alacritty`) using `Logo+Enter` (default config). Check if the touchpad works by pressing `Logo` and resizing the window using two-finger touch. If the touchpad does not work (and you intend to use it), check that your user has access by either command:
+Open a terminal window (default `alacritty`) using `Logo+Enter` (default keybinding). Check if the touchpad works by pressing `Logo` and resizing the window using two-finger touch. If the touchpad does not work (and you intend to use it), check that your user has access by either command:
 
-```
+```sh
 ls -al /dev/input/event*
 evtest
 ```
