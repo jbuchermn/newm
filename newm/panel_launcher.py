@@ -53,6 +53,10 @@ class PanelLauncher:
             logger.exception("Subprocess")
 
     def check(self) -> None:
+        cmd = conf_cmds[self.panel]()
+        if cmd is None:
+            return
+
         try:
             if self._proc is None or self._proc.poll() is not None:
                 raise Exception()
