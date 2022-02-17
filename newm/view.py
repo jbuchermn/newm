@@ -186,6 +186,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
                 result.size[0],
                 result.size[1])
 
+        result.logical_box = result.box
         return result
 
     def _show_panel(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
@@ -290,7 +291,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             logger.debug("Manually assigning fixed output: %s" % self.wm.layout[0])
 
         result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
-        result.logical_box = result.box
 
         if self.panel == "top_bar":
             x, y, w, h = 0., 0., 0., 0. # mypy
@@ -307,6 +307,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
 
         result.mask = (-100000, -100000, result.size[0] + 200000, result.size[1] + 200000)
+        result.logical_box = result.box
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.workspace = None
@@ -325,7 +326,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
                 self.focus()
                 self.wm.focus_borders.update_focus(self, (state1, state2))
 
-            return state1, state2
+            return state2, None
         else:
             ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
             return state.setting_workspace_state(ws, ws_state1), None

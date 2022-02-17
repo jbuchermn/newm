@@ -3,11 +3,13 @@
 * Current (v0.3)
 ** Bugs
 **** STRT FocusBorder is visible on non-selected monitor
-**** TODO FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
+**** DONE Blur issues with always present bars
+**** WAIT FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
+**** WAIT Screenshare crashes on chrome
 
 ** Improvements
-*** TODO Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
-*** TODO Keychord bindings
+*** STRT Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
+*** STRT Keychord bindings
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
 *** TODO Scale windows moving others "out of the way"
