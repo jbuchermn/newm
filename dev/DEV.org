@@ -2,8 +2,6 @@
 
 * Current (v0.3)
 ** Bugs
-**** DONE FocusBorder is visible on non-selected monitor
-**** DONE Blur issues with always present bars
 **** WAIT FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
 **** WAIT Screenshare crashes on chrome
 
@@ -15,7 +13,6 @@
 *** TODO Scale windows moving others "out of the way"
 *** TODO Swiping between fullscreen windows should not exit fullscreen
 *** TODO rofi / dmenu app-switcher via newm-cmd
-*** TODO Move all configurable debug options into `debug.xyz = True`
 
 ** Improved panel
 *** STRT Always present top and bottom bars
@@ -25,7 +22,8 @@
 
 ** TODO NixOS greetd deployment
 
-** Documentation
+** Documentation / Cleanup
+**** Move all configurable debug options into `debug.xyz = True`
 **** Update to v0.3
 **** newm-panel-nwjs is history
 
