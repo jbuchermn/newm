@@ -2,7 +2,7 @@
 
 * Current (v0.3)
 ** Bugs
-**** STRT FocusBorder is visible on non-selected monitor
+**** DONE FocusBorder is visible on non-selected monitor
 **** DONE Blur issues with always present bars
 **** WAIT FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
 **** WAIT Screenshare crashes on chrome

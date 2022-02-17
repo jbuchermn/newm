@@ -47,8 +47,20 @@ class FocusBorder(Animate[PyWMWidgetDownstreamState], PyWMWidget):
             # Width
             conf_focus_w() * self._output.scale])
 
-    def reducer(self, box: tuple[float, float, float, float, float], opacity: float) -> PyWMWidgetDownstreamState:
-        if box[2] == 0 or box[3] == 0:
+    def reducer(self, box: tuple[float, float, float, float, float, Optional[tuple[float, float, float, float]]], opacity: float) -> PyWMWidgetDownstreamState:
+        intersects = True
+        if (ws := box[5]) is not None:
+            o_box = (self._output.pos[0], self._output.pos[1], self._output.width, self._output.height)
+            if o_box[0] + o_box[2] <= ws[0]:
+                intersects = False
+            elif o_box[1] + o_box[3] <= ws[1]:
+                intersects = False
+            elif ws[0] + ws[2] <= o_box[0]:
+                intersects = False
+            elif ws[1] + ws[3] <= o_box[1]:
+                intersects = False
+
+        if box[2] == 0 or box[3] == 0 or not intersects:
             return PyWMWidgetDownstreamState(0, (self._output.pos[0] - conf_focus_d() - self._corner_radius,
                                                  self._output.pos[1] - conf_focus_d() - self._corner_radius,
                                                  self._output.width + 2*conf_focus_d() + 2*self._corner_radius,
@@ -56,7 +68,7 @@ class FocusBorder(Animate[PyWMWidgetDownstreamState], PyWMWidget):
         else:
             return PyWMWidgetDownstreamState(box[0], (box[1] - conf_focus_d(), box[2] - conf_focus_d(), box[3] + 2*conf_focus_d(), box[4] + 2*conf_focus_d()), lock_enabled=False, opacity=opacity)
 
-    def animate(self, old_box: tuple[float, float, float, float, float], old_opacity: float, new_box: tuple[float, float, float, float, float], new_opacity: float, dt: float) -> None:
+    def animate(self, old_box: tuple[float, float, float, float, float, Optional[tuple[float, float, float, float]]], old_opacity: float, new_box: tuple[float, float, float, float, float, Optional[tuple[float, float, float, float]]], new_opacity: float, dt: float) -> None:
         cur = self.reducer(old_box, old_opacity)
         nxt = self.reducer(new_box, new_opacity)
 
@@ -77,7 +89,7 @@ class FocusBorders(Animatable, DamageTracked):
         self._skip_next_animate: bool = False
 
         self.current_view: Optional[View] = None
-        self.current_box: tuple[float, float, float, float, float] = -999, 0, 0, 0, 0
+        self.current_box: tuple[float, float, float, float, float, Optional[tuple[float, float, float, float]]] = -999, 0, 0, 0, 0, None
 
     def update(self) -> None:
         for b in self.borders:
@@ -91,13 +103,13 @@ class FocusBorders(Animatable, DamageTracked):
 
         if self.current_view is not None and self.current_view.up_state is not None:
             view_down_state = self.current_view.reducer(self.current_view.up_state, layout_state)
-            self.current_box = view_down_state.z_index - 0.01, *view_down_state.logical_box
+            self.current_box = view_down_state.z_index - 0.01, *view_down_state.logical_box, view_down_state.workspace
             if view_down_state.is_fullscreen:
-                self.current_box = -999, 0, 0, 0, 0
+                self.current_box = -999, 0, 0, 0, 0, None
             for b in self.borders:
                 b.set_corner_radius(view_down_state.corner_radius + conf_focus_d())
         else:
-            self.current_box = -999, 0, 0, 0, 0
+            self.current_box = -999, 0, 0, 0, 0, None
             for b in self.borders:
                 b.set_corner_radius(conf_view_corner_radius() + conf_focus_d())
 
@@ -143,13 +155,13 @@ class FocusBorders(Animatable, DamageTracked):
             old_opacity = old_state.background_opacity
             new_opacity = new_state.background_opacity
 
-            old_box = view_old_down_state.z_index - 0.01, *view_old_down_state.logical_box
-            new_box = view_new_down_state.z_index - 0.01, *view_new_down_state.logical_box
+            old_box = view_old_down_state.z_index - 0.01, *view_old_down_state.logical_box, view_old_down_state.workspace
+            new_box = view_new_down_state.z_index - 0.01, *view_new_down_state.logical_box, view_new_down_state.workspace
 
             if view_old_down_state.is_fullscreen:
-                old_box = -999, 0, 0, 0, 0
+                old_box = -999, 0, 0, 0, 0, None
             if view_new_down_state.is_fullscreen:
-                new_box = -999, 0, 0, 0, 0
+                new_box = -999, 0, 0, 0, 0, None
 
             self.current_box = new_box
             for b in self.borders:
