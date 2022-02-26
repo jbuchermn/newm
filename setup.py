@@ -12,7 +12,7 @@ setup(name='newm',
       install_requires=[
           'pycairo',
           'psutil',
-          'websockets',
+          'python-websockets',
           'python-pam',
           'pyfiglet',
           'fuzzywuzzy'
