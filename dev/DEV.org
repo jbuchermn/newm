@@ -13,6 +13,7 @@
 *** TODO Scale windows moving others "out of the way"
 *** TODO Swiping between fullscreen windows should not exit fullscreen
 *** TODO rofi / dmenu app-switcher via newm-cmd
+*** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 
 ** Improved panel
 *** STRT Always present top and bottom bars
@@ -28,6 +29,7 @@
 **** newm-panel-nwjs is history
 
 * Backlog
+** scratchpad
 ** dbus endpoint for waybar etc
 ** Support swaylock
 ** Don't have double padding between windows
