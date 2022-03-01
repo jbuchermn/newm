@@ -1,15 +1,14 @@
 ### Setting environment variables for a wayland session
 
-It is very likely that you want to have newm configured as well as possible and that it is not the only wm you have installed. In this context it is helpful to have perfectly assigned environment variables for wayland integration with applications.
+It is very likely that you want to have newm configured as well as possible and that it is not the only wm you have installed. In this context it is useful to have perfectly assigned environment variables for wayland integration with applications.
 
+In case you use another wm or other wms besides newm, maybe this bash script will be useful to assign the environment variables and call them from different startup scripts.
 
-In case you use another wm or other wm's besides newm, maybe this bash script will be useful to assign environment variables and call them from different startup scripts.
+This script should preferably be saved with the following name `/usr/local/bin/wayland_enablement.sh`.
+The contents are shown below:
 
- This script should preferably be saved under the following name `/usr/local/bin/wayland_enablement.sh`
- The content is shown below:
-
- ``` bash
- #!/bin/sh
+```bash
+#!/bin/sh
 
 #
 # GTK environment
@@ -53,18 +52,18 @@ export NO_AT_BRIDGE=1
 export WINIT_UNIX_BACKEND=wayland
 export DBUS_SESSION_BUS_ADDRESS
 export DBUS_SESSION_BUS_PID
- ```
- You can add more variables related to wayland integration with applications. If you do not know any of these variables you can search for information individually by variable name.
+```
 
+You can add more variables related to wayland integration with applications. If you do not know any of these variables you can search for information individually by variable name.
 
 ### Starting newm with environment variables
 
 For this purpose it is necessary to add some variables related to the session,
 then we will create the following script `/usr/local/bin/newm-run.sh`
 
- The content is shown below:
+The content is shown below:
 
- ``` bash
+```bash
 #!/bin/sh
 
 # Session
@@ -77,15 +76,15 @@ source /usr/local/bin/wayland_enablement.sh #we import the environment variables
 sleep 0.5;
 
 start-newm
- ```
+```
 
- will now use this script to start newm(remember to give it execution permissions).
+will now use this script to start newm(remember to give it execution permissions).
 
 #### Use with greetd
 
 Change `command` to the following line in your greetd config
 
-``` bash
+```bash
 command = "newm-run.sh"
 ```
 
@@ -93,7 +92,7 @@ command = "newm-run.sh"
 
 #### sway example
 
- ``` bash
+```bash
 #!/bin/sh
 
 # Session
@@ -107,8 +106,7 @@ source /usr/local/bin/wayland_enablement.sh #we import the environment variables
 sleep 1;
 
 systemd-cat --identifier=sway sway $@
- ```
-
+```
 
 ### Using newm with systemd
 
