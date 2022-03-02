@@ -3,3 +3,4 @@ psutil
 python-pam
 pyfiglet
 fuzzywuzzy
+dasbus

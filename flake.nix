@@ -51,6 +51,7 @@
 
           propagatedBuildInputs = with pkgs.python3Packages; [
             pywm
+
             pycairo
             psutil
             python-pam
@@ -66,6 +67,7 @@
         my-python = pkgs.python3;
         python-with-my-packages = my-python.withPackages (ps: with ps; [
           pywm
+
           pycairo
           psutil
           python-pam
