@@ -8,7 +8,7 @@ For this purpose, and for any command that does not need to remain listening, wi
 
 For define a desktop theme, icons theme among other things we will do it relying on [gsettings](https://wiki.gnome.org/HowDoI/GSettings). The implementation is as follows:
 
-``` python
+```python
 def on_reconfigure():
     gnome_schema = 'org.gnome.desktop.interface'
     wm_service_extra_config = (
@@ -25,7 +25,7 @@ def on_reconfigure():
 
 Personally I like to add some extra settings(my personal config):
 
-``` python
+```python
 def on_reconfigure():
     gnome_schema = 'org.gnome.desktop.interface'
     gnome_peripheral = 'org.gnome.desktop.peripherals'
@@ -50,8 +50,8 @@ def on_reconfigure():
 ## Configuere Bar
 
 ### Native bar
-newm has an integrated bar, whose main feature is the ministerialism. Below is a configuration that might be to your liking (remember to add this to your configuration file)
 
+newm has a built-in bar, whose main feature is simplicity. Here is a configuration that might be to your liking (remember to add it to your configuration file)
 
 ```python
 import os
@@ -104,14 +104,15 @@ bar = {
     ]
 }
 ```
+
 note: If you have any other native bar settings add them to this file and make a pr
 
 ### Another bar
 
 Maybe the native bar doesn't meet your needs or you need more interactivity or like me I just want to have a tray on the bar.
-Whatever the reason you don't want the native bar, newm can disable it and replace it with the one of your choice. In this case I will use waybar but you could use any waybar, in any case you can copy the following and adapt it to your needs:
+Whatever the reason you don't want the native bar, newm can disable it and replace it with the one of your choice. In this case I will use waybar but you could use any bar, in any case you can copy the following and adapt it to your needs:
 
-``` python
+```python
 # More config
 def on_startup():
     # More services
@@ -119,4 +120,3 @@ def on_startup():
 
 bar = {'enabled': False}
 ```
-

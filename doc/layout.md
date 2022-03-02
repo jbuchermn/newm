@@ -3,7 +3,6 @@
 To configure specific behaviour, a `Layout` object is passed to the `key_bindings` config value. The following methods
 are relevant in general - more detailed config on this to follow.
 
-
 ```py
 class Layout:
     """
