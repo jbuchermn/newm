@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install mypy
-        pip install -r newm/requirements.txt
+        pip install -r newm/requirements_mypy.txt
         pip install -r pywm/requirements_mypy.txt
     - name: Run mypy
       working-directory: newm
