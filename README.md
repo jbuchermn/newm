@@ -162,7 +162,7 @@ pywm = {
 
 ### Configuring
 
-The configuration works by evaluating the python config file and extracting the variables which the file exports. So basically you can do whatever you please to provide the configuration values, this is why certain config elements are callbacks. Some elements are hierarchical, to set these use PYthon dicts - e.g. for `x.y`:
+The configuration works by evaluating the python config file and extracting the variables which the file exports. So basically you can do whatever you please to provide the configuration values, this is why certain config elements are callbacks. Some elements are hierarchical, to set these use Python dicts - e.g. for `x.y`:
 
 ```py
 x = {
