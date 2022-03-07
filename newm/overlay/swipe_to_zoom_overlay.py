@@ -20,6 +20,8 @@ conf_gesture_factor = configured_value("swipe_zoom.gesture_factor", 4)
 conf_lp_freq = configured_value('gestures.lp_freq', 60.)
 conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 
+conf_gesture_binding_swipe_to_zoom = configured_value('gesture_bindings.swipe_to_zoom', (None, 'swipe-4'))
+
 class SwipeToZoomOverlay(Overlay):
     def __init__(self, layout: Layout) -> None:
         super().__init__(layout)
@@ -85,7 +87,7 @@ class SwipeToZoomOverlay(Overlay):
         self.layout.damage()
 
     def on_gesture(self, gesture: Gesture) -> bool:
-        if gesture.kind != "swipe-4":
+        if gesture.kind != conf_gesture_binding_swipe_to_zoom()[1]:
             self.layout.exit_overlay()
             return False
 

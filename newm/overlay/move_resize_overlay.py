@@ -13,7 +13,6 @@ from ..hysteresis import Hysteresis
 from ..config import configured_value
 from ..gestures import GestureListener, LowpassGesture, Gesture
 
-from ..util import errorlogged
 
 if TYPE_CHECKING:
     from ..layout import Layout, Workspace
@@ -32,6 +31,8 @@ conf_anim_t = configured_value("anim_time", .3)
 
 conf_lp_freq = configured_value('gestures.lp_freq', 60.)
 conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
+
+conf_gesture_binding_move_resize = configured_value('gesture_bindings.move_resize', ('L', 'move-1', 'swipe-2'))
 
 class _Overlay:
     def reset_gesture(self) -> None:
@@ -384,7 +385,7 @@ class MoveResizeOverlay(Overlay, Thread):
             logger.debug("MoveResizeOverlay: Rejecting gesture")
             return False
 
-        if gesture.kind == "swipe-2":
+        if gesture.kind == conf_gesture_binding_move_resize()[2]:
             logger.debug("MoveResizeOverlay: New TwoFingerSwipePinch")
             self._target_view_pos = None
             self._target_view_size = None
@@ -396,7 +397,7 @@ class MoveResizeOverlay(Overlay, Thread):
             ))
             return True
 
-        if gesture.kind == "move-1":
+        if gesture.kind == conf_gesture_binding_move_resize()[1]:
             logger.debug("MoveResizeOverlay: New SingleFingerMove")
             self._target_view_pos = None
 
@@ -423,7 +424,7 @@ class MoveResizeOverlay(Overlay, Thread):
                 self._target_view_size = (iw, ih, fw, fh, time.time(), time.time() + t)
 
 
-        if not self.layout.modifiers.logo:
+        if not self.layout.modifiers.has(conf_gesture_binding_move_resize()[0]):
             logger.debug("MoveResizeOverlay: Requesting close after gesture finish")
             self.close()
 
@@ -433,9 +434,8 @@ class MoveResizeOverlay(Overlay, Thread):
     def on_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> bool:
         return False
 
-    @errorlogged
     def on_modifiers(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers) -> bool:
-        if last_modifiers.pressed(modifiers).logo:
+        if last_modifiers.pressed(modifiers).has(conf_gesture_binding_move_resize()[0]):
             if self.overlay is None:
                 logger.debug("MoveResizeOverlay: Requesting close after Mod release")
                 self.close()

@@ -15,8 +15,6 @@ from pywm import (
     PyWMDownstreamState,
     PYWM_MOD_CTRL,
     PYWM_PRESSED,
-    PYWM_MOD_ALT,
-    PYWM_MOD_LOGO
 )
 from .gestures import Gesture
 from .gestures.provider import GestureProvider, CGestureProvider, PyEvdevGestureProvider
@@ -69,6 +67,7 @@ conf_blend_t = configured_value('blend_time', 1.)
 
 conf_idle_times = configured_value('energy.idle_times', [120, 300, 600])
 conf_suspend_command = configured_value('energy.suspend_command', "systemctl suspend")
+
 """
 code == 'lock': Called on lock - idea is to dim the screen now
 code == 'idle': Called after idle_times[0] has passed
@@ -94,6 +93,11 @@ conf_enable_c_gestures = configured_value('gestures.c.enabled', True)
 conf_enable_dbus_gestures = configured_value('gestures.dbus.enabled', True)
 
 conf_enable_unlock_command = configured_value('enable_unlock_command', True)
+
+conf_gesture_binding_swipe_to_zoom = configured_value('gesture_bindings.swipe_to_zoom', (None, 'swipe-4'))
+conf_gesture_binding_swipe = configured_value('gesture_bindings.swipe', (None, 'swipe-3'))
+conf_gesture_binding_move_resize = configured_value('gesture_bindings.move_resize', ('L', 'move-1', 'swipe-2'))
+conf_gesture_binding_launcher = configured_value('gesture_bindings.launcher', (None, 'swipe-5'))
 
 def _score(i1: float, j1: float, w1: float, h1: float,
            im: int, jm: int,
@@ -787,8 +791,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             logger.debug("...passing to overlay %s", self.overlay)
             return self.overlay.on_gesture(gesture)
         elif self.overlay is None:
-            if self.modifiers.logo and \
-                    gesture.kind in [ "move-1", "swipe-2" ]:
+            if self.modifiers.has(conf_gesture_binding_move_resize()[0]) and (gesture.kind == conf_gesture_binding_move_resize()[1] or 
+                    gesture.kind == conf_gesture_binding_move_resize()[2]):
                 logger.debug("...MoveResize")
                 view = self.find_focused_view()
 
@@ -805,7 +809,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
                     self.enter_overlay(ovr)
                     return True
 
-            if gesture.kind == "swipe-3":
+            if self.modifiers.has(conf_gesture_binding_swipe()[0]) and gesture.kind == conf_gesture_binding_swipe()[1]:
                 logger.debug("...Swipe")
                 ovr = SwipeOverlay(self)
                 ovr.on_gesture(gesture)
@@ -813,14 +817,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
                 return True
 
             if not self.state.get_workspace_state(self.get_active_workspace()).is_in_overview():
-                if gesture.kind == "swipe-4":
+                if self.modifiers.has(conf_gesture_binding_swipe_to_zoom()[0]) and gesture.kind == conf_gesture_binding_swipe_to_zoom()[1]:
                     logger.debug("...SwipeToZoom")
                     ovr = SwipeToZoomOverlay(self)
                     ovr.on_gesture(gesture)
                     self.enter_overlay(ovr)
                     return True
 
-            if gesture.kind == "swipe-5":
+            if self.modifiers.has(conf_gesture_binding_launcher()[0]) and gesture.kind == conf_gesture_binding_launcher()[1]:
                 logger.debug("...Launcher")
                 ovr = LauncherOverlay(self)
                 ovr.on_gesture(gesture)

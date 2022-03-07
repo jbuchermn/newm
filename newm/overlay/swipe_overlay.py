@@ -20,6 +20,8 @@ conf_grid_min_dist = configured_value('grid.min_dist', .05)
 conf_lp_freq = configured_value('gestures.lp_freq', 60.)
 conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 
+conf_gesture_binding_swipe = configured_value('gesture_bindings.swipe', (None, 'swipe-3'))
+
 class SwipeOverlay(Overlay):
     def __init__(self, layout: Layout) -> None:
         super().__init__(layout)
@@ -94,7 +96,7 @@ class SwipeOverlay(Overlay):
 
 
     def on_gesture(self, gesture: Gesture) -> bool:
-        if gesture.kind != "swipe-3":
+        if gesture.kind != conf_gesture_binding_swipe()[1]:
             self.layout.exit_overlay()
             return False
 

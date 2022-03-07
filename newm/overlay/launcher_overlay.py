@@ -22,6 +22,8 @@ conf_anim_t = configured_value("anim_time", .3)
 conf_lp_freq = configured_value('gestures.lp_freq', 60.)
 conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 
+conf_gesture_binding_launcher = configured_value('gesture_bindings.launcher', (None, 'swipe-5'))
+
 class LauncherOverlay(Overlay):
     def __init__(self, layout: Layout):
         super().__init__(layout)
@@ -32,7 +34,7 @@ class LauncherOverlay(Overlay):
     def on_gesture(self, gesture: Gesture) -> bool:
         logger.debug("LauncherOverlay: new gesture")
         if self._is_opened:
-            if gesture.kind == "swipe-5":
+            if gesture.kind == conf_gesture_binding_launcher()[1]:
                 """
                 Final gesture
                 """
@@ -44,7 +46,7 @@ class LauncherOverlay(Overlay):
                 return True
 
         else:
-            if gesture.kind == "swipe-5":
+            if gesture.kind == conf_gesture_binding_launcher()[1]:
                 """
                 Initial gesture
                 """

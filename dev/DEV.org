@@ -17,6 +17,7 @@
     - Move into view via mouse
 
 ** TODO Documentation / Cleanup
+**** New config, e.g. gesture_bindings
 **** Move all configurable debug options into `debug.xyz = True`
 **** Update to v0.3
 **** newm-panel-nwjs is history

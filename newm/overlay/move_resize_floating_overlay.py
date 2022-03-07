@@ -22,6 +22,8 @@ conf_anim_t = configured_value("anim_time", .3)
 conf_lp_freq = configured_value('gestures.lp_freq', 60.)
 conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 
+conf_gesture_binding_move_resize = configured_value('gesture_bindings.move_resize', ('L', 'move-1', 'swipe-2'))
+
 class MoveResizeFloatingOverlay(Overlay):
     def __init__(self, layout: Layout, view: View):
         super().__init__(layout)
@@ -117,7 +119,7 @@ class MoveResizeFloatingOverlay(Overlay):
         self._gesture_last_dx = 0
         self._gesture_last_dy = 0
 
-        if not self.layout.modifiers.logo:
+        if not self.layout.modifiers.has(conf_gesture_binding_move_resize()[0]):
             logger.debug("MoveResizeFloatingOverlay: Exiting on gesture end")
             self.layout.exit_overlay()
 
@@ -135,7 +137,7 @@ class MoveResizeFloatingOverlay(Overlay):
         return False
 
     def on_gesture(self, gesture: Gesture) -> bool:
-        if gesture.kind == "swipe-2":
+        if gesture.kind == conf_gesture_binding_move_resize()[2]:
             logger.debug("MoveResizeFloatingOverlay: New TwoFingerSwipePinch")
 
             self._motion_mode = False
@@ -146,7 +148,7 @@ class MoveResizeFloatingOverlay(Overlay):
             ))
             return True
 
-        if gesture.kind == "move-1":
+        if gesture.kind == conf_gesture_binding_move_resize()[1]:
             logger.debug("MoveResizeFloatingOverlay: New SingleFingerMove")
 
             self._motion_mode = False
@@ -161,7 +163,7 @@ class MoveResizeFloatingOverlay(Overlay):
 
 
     def on_modifiers(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers) -> bool:
-        if last_modifiers.pressed(modifiers).logo:
+        if last_modifiers.pressed(modifiers).has(conf_gesture_binding_move_resize()[0]):
             if self._gesture_mode == False and self._motion_mode == False:
                 logger.debug("MoveResizeFloatingOverlay: Requesting close after Mod release")
                 self.layout.exit_overlay()
