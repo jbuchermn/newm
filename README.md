@@ -133,8 +133,6 @@ from pywm import (
     PYWM_MOD_ALT
 )
 
-mod = PYWM_MOD_ALT
-
 def on_startup():
     os.system("waybar &")
 

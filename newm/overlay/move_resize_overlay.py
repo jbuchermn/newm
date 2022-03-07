@@ -5,13 +5,15 @@ from threading import Thread
 import time
 import logging
 
-from pywm import PYWM_PRESSED
+from pywm import PYWM_PRESSED, PyWMModifiers
 
 from .overlay import Overlay
 from ..grid import Grid
 from ..hysteresis import Hysteresis
 from ..config import configured_value
 from ..gestures import GestureListener, LowpassGesture, Gesture
+
+from ..util import errorlogged
 
 if TYPE_CHECKING:
     from ..layout import Layout, Workspace
@@ -421,7 +423,7 @@ class MoveResizeOverlay(Overlay, Thread):
                 self._target_view_size = (iw, ih, fw, fh, time.time(), time.time() + t)
 
 
-        if not self.layout.modifiers & self.layout.mod:
+        if not self.layout.modifiers.logo:
             logger.debug("MoveResizeOverlay: Requesting close after gesture finish")
             self.close()
 
@@ -431,16 +433,13 @@ class MoveResizeOverlay(Overlay, Thread):
     def on_axis(self, time_msec: int, source: int, orientation: int, delta: float, delta_discrete: int) -> bool:
         return False
 
-    def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
-        if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
+    @errorlogged
+    def on_modifiers(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers) -> bool:
+        if last_modifiers.pressed(modifiers).logo:
             if self.overlay is None:
                 logger.debug("MoveResizeOverlay: Requesting close after Mod release")
                 self.close()
             return True
-
-        return False
-
-    def on_modifiers(self, modifiers: int) -> bool:
         return False
 
     def close(self) -> None:

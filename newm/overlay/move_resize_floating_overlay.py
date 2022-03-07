@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 import logging
 
-from pywm import PYWM_PRESSED
+from pywm import PYWM_PRESSED, PYWM_MOD_LOGO, PyWMModifiers
 
 from .overlay import Overlay
 from ..config import configured_value
@@ -117,7 +117,7 @@ class MoveResizeFloatingOverlay(Overlay):
         self._gesture_last_dx = 0
         self._gesture_last_dy = 0
 
-        if not self.layout.modifiers & self.layout.mod:
+        if not self.layout.modifiers.logo:
             logger.debug("MoveResizeFloatingOverlay: Exiting on gesture end")
             self.layout.exit_overlay()
 
@@ -160,12 +160,12 @@ class MoveResizeFloatingOverlay(Overlay):
         return False
 
 
-    def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
-        if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
+    def on_modifiers(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers) -> bool:
+        if last_modifiers.pressed(modifiers).logo:
             if self._gesture_mode == False and self._motion_mode == False:
-                logger.debug("MoveResizeFlaotingOverlay: Exiting on mod release")
+                logger.debug("MoveResizeFloatingOverlay: Requesting close after Mod release")
                 self.layout.exit_overlay()
-                return True
+            return True
         return False
 
 

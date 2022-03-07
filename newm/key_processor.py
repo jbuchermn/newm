@@ -2,143 +2,156 @@ from __future__ import annotations
 from typing import Callable, Any
 import logging
 
-from pywm import (
-    PYWM_MOD_CTRL,
-    PYWM_MOD_ALT,
-    PYWM_MOD_MOD2,
-    PYWM_MOD_MOD3,
-    PYWM_MOD_LOGO,
-    PYWM_MOD_MOD5,
-)
+from pywm import PyWMModifiers
 
 logger = logging.getLogger(__name__)
 
-class TKeyBinding:
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, logo_down: bool, ctrl_down: bool, alt_down: bool, mod1_down: bool, mod2_down: bool, mod3_down: bool, locked: bool) -> bool:
-        pass
+class KeyEvent:
+    def __init__(self) -> None:
+        self.is_mod = False
+        self.pressed = False
+        self.keysyms = ""
+        self.modifiers = PyWMModifiers(0)
+        self.last_modifiers = PyWMModifiers(0)
 
-    def clear(self) -> None:
-        pass
+    def set_from_key(self, pressed: bool, keysyms: str, modifiers: PyWMModifiers) -> KeyEvent:
+        self.is_mod = False
+        self.pressed = pressed
+        self.keysyms = keysyms
+        self.modifiers = modifiers
+        return self
 
+    def set_from_mod(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers) -> KeyEvent:
+        self.is_mod = True
+        self.modifiers = modifiers
+        self.last_modifiers = last_modifiers
+        return self
 
-class KeyBinding(TKeyBinding):
-    def __init__(self, keys: str, action: Callable[[], Any]) -> None:
-        self.mod = False
-        self.logo = False
-        self.ctrl = False
-        self.alt = False
-        self.mod1 = False
-        self.mod2 = False
-        self.mod3 = False
+class KeyPress:
+    def __init__(self, keys: str) -> None:
+        self.mod = PyWMModifiers(0)
         _keys = keys.split("-")
         for k in _keys[:-1]:
-            if k == "M":
-                self.mod = True
             if k == "L":
-                self.logo = True
+                self.mod.logo = True
             if k == "C":
-                self.ctrl = True
+                self.mod.ctrl = True
             if k == "A":
-                self.alt = True
+                self.mod.alt = True
             if k == "1":
-                self.mod1 = True
+                self.mod.mod1 = True
             if k == "2":
-                self.mod2 = True
+                self.mod.mod2 = True
             if k == "3":
-                self.mod3 = True
-
+                self.mod.mod3 = True
         self.keysym = _keys[-1]
-        self.action = action
         self.lock_safe = self.keysym.startswith("XF86")
 
         self._ready_to_fire = False
 
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, logo_down: bool, ctrl_down: bool, alt_down: bool, mod1_down: bool, mod2_down: bool, mod3_down: bool, locked: bool) -> bool:
+    def process(self, event: KeyEvent, locked: bool) -> int:
         if locked and not self.lock_safe:
-            return False
+            return -1
 
-        if pressed and keysyms == self.keysym and \
-                mod_down == self.mod and \
-                logo_down == self.logo and \
-                ctrl_down == self.ctrl and \
-                alt_down == self.alt and \
-                mod1_down == self.mod1 and \
-                mod2_down == self.mod2 and \
-                mod3_down == self.mod3:
-            self._ready_to_fire = True
-            return True
+        if self.keysym == '':
+            if event.is_mod:
+                p = event.modifiers.pressed(event.last_modifiers)
+                if p == self.mod:
+                    self._ready_to_fire = True
+                    return 0
 
-        if not pressed and keysyms == self.keysym and \
-                self._ready_to_fire:
-            self._ready_to_fire = False
-            self.action()
-            return True
+                p = event.last_modifiers.pressed(event.modifiers)
+                if self._ready_to_fire and \
+                        p == self.mod:
+                    self._ready_to_fire = False
+                    return 1
+            else:
+                self._ready_to_fire = False
 
-        return False
+        else:
+            if event.is_mod:
+                return 0
+            else:
+                if event.pressed and event.keysyms == self.keysym and \
+                        event.modifiers == self.mod:
+                    self._ready_to_fire = True
+                    return 0
 
-    def clear(self) -> None:
-        pass
+                if not event.pressed and event.keysyms == self.keysym and \
+                        self._ready_to_fire:
+                    self._ready_to_fire = False
+                    return 1
 
-
-class ModPressKeyBinding(TKeyBinding):
-    def __init__(self, mod_sym: str, action: Callable[[], Any]) -> None:
-        self.mod_sym = mod_sym
-        self.action = action
-        self._ready_to_fire = False
-
-    def process(self, pressed: bool, keysyms: str, mod_down: bool, logo_down: bool, ctrl_down: bool, alt_down: bool, mod1_down: bool, mod2_down: bool, mod3_down: bool, locked: bool) -> bool:
-        if locked:
-            return False
-
-        if self.mod_sym not in keysyms:
-            self._ready_to_fire = False
-            return False
-
-        if pressed:
-            self._ready_to_fire = True
-        elif self._ready_to_fire:
-            self.action()
-
-        return True
+        return -1
 
     def clear(self) -> None:
         self._ready_to_fire = False
 
+class KeyBinding:
+    def __init__(self, keys: str, action: Callable[[], Any]) -> None:
+        _keys = keys.strip().split(" ")
+        _keys = [k for k in _keys if k != ""]
+        self._presses = [KeyPress(k) for k in _keys]
+        self._at = 0
 
-def keybinding_factory(processor: KeyProcessor, keys: str, action: Callable[[], Any]) -> TKeyBinding:
-    if keys == "ModPress":
-        return ModPressKeyBinding(processor.mod_sym, action)
-    else:
-        return KeyBinding(keys, action)
+        self._action = action
+
+    def process(self, event: KeyEvent, locked: bool) -> int:
+        result = self._presses[self._at].process(event, locked)
+
+        if result == 1:
+            if self._at == len(self._presses) - 1:
+                self._action()
+                self._at = 0
+                return 1
+            else:
+                self._at += 1
+                return 0
+        elif result == 0:
+            return 0
+        elif result == -1:
+            self._at = 0
+
+        return -1
+
+    def clear(self) -> None:
+        self._at = 0
+        for p in self._presses:
+            p.clear()
 
 
 class KeyProcessor:
-    def __init__(self, mod_sym: str) -> None:
-        self.mod_sym = mod_sym
-        self.bindings: list[TKeyBinding] = []
+    def __init__(self) -> None:
+        self.bindings: list[KeyBinding] = []
 
     def clear(self) -> None:
         self.bindings = []
 
     def register_bindings(self, *bindings: tuple[str, Callable[[], Any]]) -> None:
         for keys, action in bindings:
-            self.bindings += [keybinding_factory(self, keys, action)]
+            self.bindings += [KeyBinding(keys, action)]
 
-    def on_key(self, pressed: bool, keysyms: str, modifiers: int, mod: int, locked: bool) -> bool:
+    def on_event(self, event: KeyEvent, locked: bool) -> bool:
+        return_True = False
         triggered = False
         for b in self.bindings:
-            if b.process(pressed, keysyms,
-                         bool(modifiers & mod),
-                         bool(modifiers & PYWM_MOD_LOGO) and PYWM_MOD_LOGO != mod,
-                         bool(modifiers & PYWM_MOD_CTRL) and PYWM_MOD_CTRL != mod,
-                         bool(modifiers & PYWM_MOD_ALT) and PYWM_MOD_ALT != mod,
-                         bool(modifiers & PYWM_MOD_MOD2) and PYWM_MOD_MOD2 != mod,
-                         bool(modifiers & PYWM_MOD_MOD3) and PYWM_MOD_MOD3 != mod,
-                         bool(modifiers & PYWM_MOD_MOD5) and PYWM_MOD_MOD5 != mod,
-                         locked):
-                triggered = True
+            if triggered:
+                b.clear()
+            else:
+                result = b.process(event, locked)
+                if result == 1:
+                    triggered = True
+                    return_True = True
+                if result == 0:
+                    return_True = True
 
-        return triggered
+        return return_True
+
+    def on_key(self, pressed: bool, keysyms: str, modifiers: PyWMModifiers, locked: bool) -> bool:
+        return self.on_event(KeyEvent().set_from_key(pressed, keysyms, modifiers), locked)
+
+    def on_modifiers(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers, locked: bool) -> bool:
+        return self.on_event(KeyEvent().set_from_mod(modifiers, last_modifiers), locked)
 
     def on_other_action(self) -> None:
         for b in self.bindings:

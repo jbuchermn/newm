@@ -10,6 +10,7 @@ from threading import Thread
 
 from pywm import (
     PyWM,
+    PyWMModifiers,
     PyWMOutput,
     PyWMDownstreamState,
     PYWM_MOD_CTRL,
@@ -50,7 +51,6 @@ from .overlay import (
 
 logger = logging.getLogger(__name__)
 
-conf_mod = configured_value('mod', PYWM_MOD_LOGO)
 conf_pywm = configured_value('pywm', cast(dict[str, Any], {}))
 
 conf_outputs = configured_value('outputs', cast(list[dict[str, Any]], []))
@@ -284,11 +284,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         PyWM.__init__(self, View, **conf_pywm(), outputs=conf_outputs(), debug=debug)
         Animate.__init__(self)
 
-        self.mod = conf_mod()
-        self.mod_sym = ""
-        self._set_mod_sym()
-
-        self.key_processor = KeyProcessor(self.mod_sym)
+        self.key_processor = KeyProcessor()
         self.auth_backend = AuthBackend(self)
         self.panel_launcher = PanelsLauncher()
         self.dbus_endpoint = DBusEndpoint(self)
@@ -315,15 +311,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
 
         # Workspace cursor is on, Focused workspace override by focused view
         self._active_workspace: tuple[Workspace, Optional[Workspace]] = self.workspaces[0], None
-
-    def _set_mod_sym(self) -> None:
-        self.mod_sym = ""
-        if self.mod == PYWM_MOD_ALT:
-            self.mod_sym = "Alt"
-        elif self.mod == PYWM_MOD_LOGO:
-            self.mod_sym = "Super"
-        else:
-            raise Exception("Unknown mod")
 
     def _setup_workspaces(self) -> None:
         output_conf = conf_outputs()
@@ -450,9 +437,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     def _setup(self, fallback: bool=True, reconfigure: bool=True) -> None:
         if reconfigure:
             load_config(fallback=fallback, path_str=self._config_file)
-
-        self.mod = conf_mod()
-        self._set_mod_sym()
 
         self._setup_widgets()
 
@@ -689,11 +673,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     Input
     """
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
-        # BEGIN DEBUG
-        if self.modifiers & self.mod > 0 and keysyms == "D":
-            self.force_close_overlay()
-            return True
-        # END DEBUG
+        """ 
+        These are processed via on_modifiers
+        """
+        if keysyms in [ 'Super_L', 'Super_R', 'Alt_L', 'Alt_R', 'Logo_L', 'Logo_R' ]: 
+            return False
 
         if self.overlay is not None and self.overlay.ready():
             logger.debug("...passing to overlay %s", self.overlay)
@@ -703,14 +687,11 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         return self.key_processor.on_key(state == PYWM_PRESSED,
                                          keysyms,
                                          self.modifiers,
-                                         self.mod,
                                          self.is_locked())
 
-    def on_modifiers(self, modifiers: int) -> bool:
-        if self.is_locked():
-            return False
+    def on_modifiers(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers) -> bool:
 
-        if self.modifiers & self.mod > 0:
+        if modifiers.pressed(last_modifiers).any():
             """
             This is a special case, if a SingleFingerMoveGesture has started, then
             Mod is pressed the MoveResize(Floating)Overlay is not triggered - we re-allow a
@@ -721,9 +702,19 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             logger.debug("Resetting gesture")
             self.reset_gesture()
 
+        if self.is_locked():
+            return False
+
         if self.overlay is not None and self.overlay.ready():
-            if self.overlay.on_modifiers(modifiers):
-                return True
+            if self.overlay.on_modifiers(modifiers, last_modifiers):
+                return False
+
+        self.key_processor.on_modifiers(modifiers, last_modifiers, self.is_locked())
+
+        """
+        Always return False - no matter what key_processor returns. Modifiers should not be captured
+        """
+
         return False
 
     def on_motion(self, time_msec: int, delta_x: float, delta_y: float) -> bool:
@@ -796,7 +787,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             logger.debug("...passing to overlay %s", self.overlay)
             return self.overlay.on_gesture(gesture)
         elif self.overlay is None:
-            if self.modifiers & self.mod and \
+            if self.modifiers.logo and \
                     gesture.kind in [ "move-1", "swipe-2" ]:
                 logger.debug("...MoveResize")
                 view = self.find_focused_view()

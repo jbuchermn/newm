@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
+from pywm import PyWMModifiers
+
 import logging
 
 from ..gestures import Gesture
@@ -58,7 +60,7 @@ class Overlay:
 
     def pre_destroy(self) -> None:
         pass
-    
+
     def _enter_transition(self) -> tuple[Optional[LayoutState], Optional[float]]:
         return None, 0
 
@@ -68,7 +70,7 @@ class Overlay:
     def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
         return True
 
-    def on_modifiers(self, modifiers: int) -> bool:
+    def on_modifiers(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers) -> bool:
         return False
 
     def on_motion(self, time_msec: int, delta_x: float, delta_y: float) -> bool:

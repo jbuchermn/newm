@@ -7,7 +7,7 @@
 
 ** Improvements
 *** STRT Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
-*** STRT Keychord bindings
+*** DONE Keychord bindings
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 
@@ -37,70 +37,11 @@
 ** scratchpad
 ** dbus endpoint for waybar etc
 ** Support swaylock
-** Video on newm-sidecar
 ** Titles during Overview
 ** More detailed config on Layout class
 ** Ability to increase size of rows or cols (e.g. in 1x2 | 1x2)
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
 ** Dynamic background
 ** Possible and sensible to use a decorator for layout methods where reducer is defined and then an animation is started?
+** Video on newm-sidecar
 
-
-* Setup clean arch chroot / qemu for testing
-** Setup chroot
-
-Following https://www.collabora.com/news-and-blog/blog/2019/03/20/bootstraping-a-minimal-arch-linux-image/
-
-#+BEGIN_SRC sh
-truncate -s 20G arch_disk.raw
-mkfs.ext4 arch_disk.raw
-mkdir mnt
-sudo mount arch_disk.raw mnt
-sudo pacstrap mnt base base-devel linux linux-firmware
-sudo arch-chroot mnt
-#+END_SRC
-
-Now we are inside the chroot, very basic setup:
-
-#+BEGIN_SRC sh
-passwd
-pacman -S dhcpcd
-
-useradd --create-home test
-passwd test
-usermod -aG wheel test
-vim /etc/sudoers # add wheel
-su test
-#+END_SRC
-
-Finally clean up
-
-#+BEGIN_SRC sh
-exit
-sudo umount mnt
-#+END_SRC
-
-** Setup virtual machine
-
-To use the disk in a virtual machine (not incredibly nice...)
-
-#+BEGIN_SRC sh
-sudo mount arch_disk.raw mnt
-cp -r mnt/boot mnt_boot
-sudo umount mnt
-#+END_SRC
-
-and start using
-
-#+BEGIN_SRC sh
-qemu-system-x86_64 --enable-kvm -hda arch_disk.raw -m 4G -kernel mnt_boot/vmlinuz-linux -initrd mnt_boot/initramfs-linux[-fallback].img -append "root=/dev/sda rw" -vga virtio
-#+END_SRC
-
-To enable internet access, probably
-
-#+BEGIN_SRC sh
-systemctl enable dhcpcd
-systemctl start dhcpcd
-#+END_SRC
-
-is necessary

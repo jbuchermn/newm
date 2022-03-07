@@ -16,7 +16,6 @@ from pywm import (
 
 logger = logging.getLogger(__name__)
 
-mod = PYWM_MOD_LOGO
 background = {
     'path': os.path.dirname(os.path.realpath(__file__)) + '/resources/wallpaper.jpg',
     'anim': True
@@ -38,34 +37,34 @@ pactl = PaCtl(0, wob_runner)
 
 def key_bindings(layout: Layout) -> list[tuple[str, Callable[[], Any]]]:
     return [
-        ("M-h", lambda: layout.move(-1, 0)),
-        ("M-j", lambda: layout.move(0, 1)),
-        ("M-k", lambda: layout.move(0, -1)),
-        ("M-l", lambda: layout.move(1, 0)),
-        ("M-u", lambda: layout.basic_scale(1)),
-        ("M-n", lambda: layout.basic_scale(-1)),
-        ("M-t", lambda: layout.move_in_stack(1)),
+        ("L-h", lambda: layout.move(-1, 0)),
+        ("L-j", lambda: layout.move(0, 1)),
+        ("L-k", lambda: layout.move(0, -1)),
+        ("L-l", lambda: layout.move(1, 0)),
+        ("L-u", lambda: layout.basic_scale(1)),
+        ("L-n", lambda: layout.basic_scale(-1)),
+        ("L-t", lambda: layout.move_in_stack(1)),
 
-        ("M-H", lambda: layout.move_focused_view(-1, 0)),
-        ("M-J", lambda: layout.move_focused_view(0, 1)),
-        ("M-K", lambda: layout.move_focused_view(0, -1)),
-        ("M-L", lambda: layout.move_focused_view(1, 0)),
+        ("L-H", lambda: layout.move_focused_view(-1, 0)),
+        ("L-J", lambda: layout.move_focused_view(0, 1)),
+        ("L-K", lambda: layout.move_focused_view(0, -1)),
+        ("L-L", lambda: layout.move_focused_view(1, 0)),
 
-        ("M-C-h", lambda: layout.resize_focused_view(-1, 0)),
-        ("M-C-j", lambda: layout.resize_focused_view(0, 1)),
-        ("M-C-k", lambda: layout.resize_focused_view(0, -1)),
-        ("M-C-l", lambda: layout.resize_focused_view(1, 0)),
+        ("L-C-h", lambda: layout.resize_focused_view(-1, 0)),
+        ("L-C-j", lambda: layout.resize_focused_view(0, 1)),
+        ("L-C-k", lambda: layout.resize_focused_view(0, -1)),
+        ("L-C-l", lambda: layout.resize_focused_view(1, 0)),
 
-        ("M-Return", lambda: os.system("alacritty &")),
-        ("M-q", lambda: layout.close_focused_view()),
+        ("L-Return", lambda: os.system("alacritty &")),
+        ("L-q", lambda: layout.close_focused_view()),
 
-        ("M-p", lambda: layout.ensure_locked(dim=True)),
-        ("M-P", lambda: layout.terminate()),
-        ("M-C", lambda: layout.update_config()),
+        ("L-p", lambda: layout.ensure_locked(dim=True)),
+        ("L-P", lambda: layout.terminate()),
+        ("L-C", lambda: layout.update_config()),
 
-        ("M-f", lambda: layout.toggle_fullscreen()),
+        ("L-f", lambda: layout.toggle_fullscreen()),
 
-        ("ModPress", lambda: layout.toggle_overview()),
+        ("L-", lambda: layout.toggle_overview()),
 
         ("XF86MonBrightnessUp", lambda: backlight_manager.set(backlight_manager.get() + 0.1)),
         ("XF86MonBrightnessDown", lambda: backlight_manager.set(backlight_manager.get() - 0.1)),
