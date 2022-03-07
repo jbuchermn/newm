@@ -9,42 +9,41 @@
 *** STRT Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
 *** STRT Keychord bindings
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
-*** TODO Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
-*** TODO Scale windows moving others "out of the way"
-*** TODO Swiping between fullscreen windows should not exit fullscreen
-*** TODO rofi / dmenu app-switcher via newm-cmd
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 
-** Improved panel
-*** STRT Always present top and bottom bars
-     - Autodetect if bar is there and of which size
-     - Move away on fullscreen
-     - Move into view via mouse
+** STRT Always present top and bottom bars
+    - Autodetect if bar is there and of which size
+    - Move away on fullscreen
+    - Move into view via mouse
 
-** TODO NixOS greetd deployment
-
-** Documentation / Cleanup
+** TODO Documentation / Cleanup
 **** Move all configurable debug options into `debug.xyz = True`
 **** Update to v0.3
 **** newm-panel-nwjs is history
 
 * Backlog
+** NixOS greetd deployment including documentation
+** Small improvements
+    - Swiping between fullscreen windows should not exit fullscreen
+    - Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
+    - Don't have double padding between windows
+    * Ultrawide monitors --> two workspaces on one output
+    - Layer shell - Exclusive zones and keyboard interactivity
+    - Move to resize overlay: Trigger size changes on invisible windows only in finish transition? Analogous to interpolate
+    - Move tiles from workspace to another -> animate size change instead of jump
+    - Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
+    - Scale windows moving others "out of the way"
+** rofi / dmenu app-switcher via newm-cmd
 ** scratchpad
 ** dbus endpoint for waybar etc
 ** Support swaylock
-** Don't have double padding between windows
-** Layer shell - Exclusive zones and keyboard interactivity
 ** Video on newm-sidecar
 ** Titles during Overview
 ** More detailed config on Layout class
 ** Ability to increase size of rows or cols (e.g. in 1x2 | 1x2)
-** Ultrawide monitors --> two workspaces on one output
-** Move to resize overlay: Trigger size changes on invisible windows only in finish transition? Analogous to interpolate
-** Move tiles from workspace to another -> animate size change instead of jump
 ** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
-** Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
 ** Dynamic background
-** Possible and sensible to use a decorater for layout methods where reducer is defined and then an animation is started?
+** Possible and sensible to use a decorator for layout methods where reducer is defined and then an animation is started?
 
 
 * Setup clean arch chroot / qemu for testing
