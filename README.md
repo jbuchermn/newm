@@ -1,6 +1,7 @@
 # newm
 [![License](https://img.shields.io/github/license/jbuchermn/newm)](LICENSE)
 [![AUR](https://img.shields.io/aur/version/newm-git)](https://aur.archlinux.org/packages/newm-git)
+[![Join the chat at https://gitter.im/jbuchermn-newm/community](https://badges.gitter.im/jbuchermn-newm/community.svg)](https://gitter.im/jbuchermn-newm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Screenshot](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/Qvyt4XynlYI)
 
