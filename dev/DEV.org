@@ -6,7 +6,7 @@
 **** WAIT Screenshare crashes on chrome
 
 ** Improvements
-*** STRT Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
+*** DONE Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
 *** DONE Keychord bindings
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
