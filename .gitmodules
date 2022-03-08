@@ -1,3 +1,0 @@
-[submodule "dist/newm-git"]
-	path = dist/newm-git
-	url = ssh://aur@aur.archlinux.org/newm-git.git
