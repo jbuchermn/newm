@@ -15,6 +15,5 @@ setup(name='newm',
           'websockets',
           'python-pam',
           'pyfiglet',
-          'fuzzywuzzy',
           'thefuzz'
       ])
