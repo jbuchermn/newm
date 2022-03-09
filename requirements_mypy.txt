@@ -3,4 +3,4 @@ psutil
 websockets
 python-pam
 pyfiglet
-fuzzywuzzy
+thefuzz

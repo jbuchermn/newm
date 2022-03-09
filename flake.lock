@@ -17,11 +17,11 @@
     },
     "flake-utils_2": {
       "locked": {
-        "lastModified": 1638122382,
-        "narHash": "sha256-sQzZzAbvKEqN9s0bzWuYmRaA03v40gaJ4+iL1LXjaeI=",
+        "lastModified": 1644229661,
+        "narHash": "sha256-1YdnJAsNy69bpcjuoKdOYQX0YxZBiCYZo4Twxerqv7k=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "74f7e4319258e287b0f9cb95426c9853b282730b",
+        "rev": "3cecb5b042f7f209c56ffd8371b2711a290ec797",
         "type": "github"
       },
       "original": {
@@ -46,7 +46,7 @@
         "type": "github"
       }
     },
-    "pywm": {
+    "pywmpkg": {
       "inputs": {
         "flake-utils": "flake-utils_2",
         "nixpkgs": [
@@ -54,11 +54,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1641420963,
-        "narHash": "sha256-chAWUF13sD608eCaZL5RFBcBza0offJspuye9DU9QXs=",
+        "lastModified": 1645113655,
+        "narHash": "sha256-HBd0we4RpPGARsXTxErYEhdebexrbU4Do1XhZ11EfZw=",
         "owner": "jbuchermn",
         "repo": "pywm",
-        "rev": "63f32828a1ac0d7e961727ceb84e68d6ff642d4a",
+        "rev": "8171cd7055465544333bab0d3ac22b68da718d48",
         "type": "github"
       },
       "original": {
@@ -71,7 +71,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "pywm": "pywm"
+        "pywmpkg": "pywmpkg"
       }
     }
   },
