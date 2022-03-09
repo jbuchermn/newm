@@ -30,7 +30,7 @@
             websockets
             python-pam
             pyfiglet
-            fuzzywuzzy
+            thefuzz
           ];
 
           setuptoolsCheckPhase = "true";
