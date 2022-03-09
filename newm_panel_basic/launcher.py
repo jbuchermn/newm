@@ -9,7 +9,7 @@ import logging
 import pathlib
 import importlib
 from pyfiglet import Figlet
-from fuzzywuzzy import process
+from thefuzz import process
 
 logger = logging.getLogger(__name__)
 
