@@ -19,10 +19,10 @@ The basic commands therefore are navigation (left, right, top, bottom) and zoom-
 
 To be able to arrange the windows in a useful manner, use
 
-- `Logo` (unless configured otherwise) plus one finger on the touchpad to move windows
-- `Logo` (unless configured otherwise) plus two fingers on the touchpad to change the extent of a window
+- `Logo` (default , unless configured otherwise) + one finger on the touchpad to move windows
+- `Logo` (default , unless configured otherwise) + two fingers on the touchpad to change the extent of a window
 
-To get a quick overview of all windows, just hit the `Logo` (unless configured otherwise) key.
+To get a quick overview of all windows, just hit the `Logo` (default , unless configured otherwise) key.
 Additionally with a quick 5-finger swipe a launcher panel can be opened.
 
 These behaviours can (partly) be configured (see below for setup). By default (check [default_config.py](newm/default_config.py)), the following key bindings (among others) are in place
@@ -55,11 +55,9 @@ Development on v0.3 has just started following the goals:
 
 ### Arch Linux
 
-For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, see below for pip installation.
+- [Intall on Arch linux](doc/install_Arch_Linux.md)
 
-- [Intall on Arch linux](./doc/install_Arch_Linux.md)
-
-### NixOS (work in progress)
+### NixOS [W.I.P]
 
 A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. A flakes based installation should work however and is preferred (see also [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)):
 
