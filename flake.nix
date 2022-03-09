@@ -34,6 +34,21 @@
 
                   propagatedBuildInputs = with super1; [ pygobject3 ];
                 };
+
+                thefuzz = super1.buildPythonPackage rec {
+                  pname = "thefuzz";
+                  version = "0.19.0";
+
+                  src = super1.fetchPypi {
+                    inherit pname version;
+                    sha256 = "sha256-b3Em2y8silQhKwXjp0DkX0KRxJfXXSB1Fyj2Nbt0qj0=";
+                  };
+
+                  propagatedBuildInputs = with super1; [ 
+                    python-Levenshtein
+                    pycodestyle
+                  ];
+                };
               };
             };
             python3Packages = python3.pkgs;
@@ -56,8 +71,8 @@
             psutil
             python-pam
             pyfiglet
-            fuzzywuzzy
             dasbus
+            thefuzz
 
             setuptools
           ];
@@ -74,8 +89,8 @@
           psutil
           python-pam
           pyfiglet
-          fuzzywuzzy
           dasbus
+          thefuzz
 
           python-lsp-server
           pylsp-mypy

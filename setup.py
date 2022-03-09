@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(name='newm',
       version='0.3',
-      description='pywm reference implementation',
+      description='newm - Wayland compositor',
       url="https://github.com/jbuchermn/newm",
       author='Jonas Bucher',
       author_email='j.bucher.mn@gmail.com',
@@ -14,6 +14,6 @@ setup(name='newm',
           'psutil',
           'python-pam',
           'pyfiglet',
-          'fuzzywuzzy',
-          'dasbus'
+          'dasbus',
+          'thefuzz'
       ])

@@ -8,7 +8,7 @@ import logging
 import pathlib
 import importlib
 from pyfiglet import Figlet  # type: ignore
-from fuzzywuzzy import process  # type: ignore
+from thefuzz import process  # type: ignore
 
 logger = logging.getLogger(__name__)
 
