@@ -4,10 +4,11 @@
 ** Bugs
 **** WAIT FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
 **** WAIT Screenshare crashes on chrome
+**** TODO Kill moot animations (e.g. focusing different window by shortcut where both are visible)
+**** DONE pyfiglet import broken (possibly only nixOS)
+**** TODO Black background if none is provided
 
 ** Improvements
-*** DONE Make gestures configurable to some extent - i.e. enable / disable certain behaviours, exchange 3- / 4- / 5-finger-swipes
-*** DONE Keychord bindings
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 

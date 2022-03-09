@@ -58,6 +58,8 @@
             pyfiglet
             fuzzywuzzy
             dasbus
+
+            setuptools
           ];
 
           setuptoolsCheckPhase = "true";
