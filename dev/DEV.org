@@ -5,8 +5,6 @@
 **** WAIT FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
 **** WAIT Screenshare crashes on chrome
 **** TODO Kill moot animations (e.g. focusing different window by shortcut where both are visible)
-**** DONE pyfiglet import broken (possibly only nixOS)
-**** TODO Black background if none is provided
 
 ** Improvements
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
