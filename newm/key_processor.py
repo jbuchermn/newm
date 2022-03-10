@@ -44,7 +44,11 @@ class KeyPress:
                 self.mod.mod2 = True
             if k == "3":
                 self.mod.mod3 = True
-        self.keysym = _keys[-1]
+
+        self.keysym = _keys[-1].strip()
+        if self.keysym.upper() == "SPC":
+            self.keysym = "space"
+
         self.lock_safe = self.keysym.startswith("XF86")
 
         self._ready_to_fire = False
