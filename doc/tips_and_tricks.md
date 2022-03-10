@@ -62,7 +62,7 @@ background = {
 
 ## Python
 
-The simple fact of using python to configure is already a trick in itself. Below I will list a set of code snippets that will make your configuration cleaner.The simple fact of using python to configure is already a trick in itself. Below I will list a set of code snippets that will make your configuration cleaner.
+The simple fact of using python to configure is already a trick in itself. Below I will list a set of code snippets that will make your configuration cleaner.
 
 ### Use tuples in your startup applications
 
