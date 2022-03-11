@@ -218,6 +218,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         anchored_left = bool(anchor & 4)
         anchored_right = bool(anchor & 8)
 
+        logger.debug("w: %d h: %d m: %s at: %s ab: %s al: %s ar: %s" % (width, height, str(margin), anchored_top, anchored_bottom, anchored_left, anchored_right))
+
         if width == 0:
             if not anchored_left or not anchored_right:
                 logger.warn("Layer shell protocol error")
@@ -227,16 +229,16 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
                 logger.warn("Layer shell protocol error")
             height = output.height - margin[1] - margin[3]
 
-        if anchored_right:
+        if anchored_right and not anchored_left:
             x = output.width - margin[2] - width
-        elif anchored_left:
+        elif anchored_left and not anchored_right:
             x = margin[0]
         else:
             x = (output.width - width) // 2
 
-        if anchored_bottom:
+        if anchored_bottom and not anchored_top:
             y = output.height - margin[3] - height
-        elif anchored_top:
+        elif anchored_top and not anchored_bottom:
             y = margin[1]
         else:
             y = (output.height - height) // 2
@@ -248,11 +250,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             target_width = width
         if target_height == 0:
             target_height = height
-
-        if anchored_top and ((anchored_left and anchored_right) or target_width == output.width) and not anchored_bottom and target_height < 0.2*output.height:
-            self.panel = "top_bar"
-        elif anchored_bottom and ((anchored_left and anchored_right) or target_width == output.width) and not anchored_top and target_height < 0.2*output.height:
-            self.panel = "bottom_bar"
 
         return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
 
