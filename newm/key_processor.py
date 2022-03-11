@@ -32,6 +32,8 @@ class KeyPress:
         self.mod = PyWMModifiers(0)
         _keys = keys.split("-")
         for k in _keys[:-1]:
+            if k == "S":
+                self.mod.shift = True
             if k == "L":
                 self.mod.logo = True
             if k == "C":
@@ -48,6 +50,12 @@ class KeyPress:
         self.keysym = _keys[-1].strip()
         if self.keysym.upper() == "SPC":
             self.keysym = "space"
+
+        if len(self.keysym) == 1:
+            k = self.keysym.lower()
+            if k != self.keysym:
+                self.mod.shift = True
+                self.keysym = k
 
         self.lock_safe = self.keysym.startswith("XF86")
 
