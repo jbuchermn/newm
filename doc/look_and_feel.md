@@ -1,12 +1,12 @@
 # Look and feel
 
-At this point you are wondering how you can customize the appearance of applications in newm.
-
+At this point you're wondering how you can customize the appearance of applications in newm.
+Here's some help.
 ## GTK settings
 
 For this purpose, and for any command that does not need to remain listening, with newm we can write a function your config file that will be executed every time the newm configuration is restarted. The function is named `on_reconfigure`.
 
-For define a desktop theme, icons theme among other things we will do it relying on [gsettings](https://wiki.gnome.org/HowDoI/GSettings). The implementation is as follows:
+For defining a desktop theme and icons theme (among other things) we use [gsettings](https://wiki.gnome.org/HowDoI/GSettings). The implementation is as follows:
 
 ```python
 def on_reconfigure():
@@ -23,7 +23,7 @@ def on_reconfigure():
         os.system(config)
 ```
 
-Personally I like to add some extra settings(my personal config):
+Personally I like to add some extra settings(jbuchermn's personal config):
 
 ```python
 def on_reconfigure():
@@ -51,7 +51,7 @@ def on_reconfigure():
 
 ### Native bar
 
-newm has a built-in bar, whose main feature is simplicity. Here is a configuration that might be to your liking (remember to add it to your configuration file)
+newm has a built-in bar, whose main feature is simplicity. Here is a configuration that might be to your liking:
 
 ```python
 import os
@@ -109,7 +109,7 @@ note: If you have any other native bar settings add them to this file and make a
 
 ### Another bar
 
-Maybe the native bar doesn't meet your needs or you need more interactivity or like me I just want to have a tray on the bar.
+Maybe the native bar doesn't meet your needs or you need more interactivity or just want to have a tray on the bar.
 Whatever the reason you don't want the native bar, newm can disable it and replace it with the one of your choice. In this case I will use waybar but you could use any bar, in any case you can copy the following and adapt it to your needs:
 
 ```python
@@ -120,3 +120,4 @@ def on_startup():
 
 bar = {'enabled': False}
 ```
+(end)
