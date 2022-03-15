@@ -5,19 +5,6 @@ from newm import cmd
 from collections.abc import Sequence
 
 
-# Declare new commands, in the following format "command": "description"
-# See main function
-command_without_args: dict[str, str] = {
-    "inhibit-idle": "Prevents newm from going into idle states (dimming the screen)",
-    "config": "Reloads the configuration",
-    "lock": "Locks the screen",
-    "clean": "Removes orphaned states, which can happen, but shouldn't (if you encounter the need for this, please file a bug)",
-    "debug": "Prints out some debug info on the current state of views",
-    "finish-inhibit-idle": "Restore the idle states",
-    "close-launcher": "Close launcher",
-    "unlock": "Unlocks the screen",
-}
-
 # Declare new commands, in the following format:
 # "command": {
 #   "help": "description",
@@ -27,14 +14,38 @@ command_without_args: dict[str, str] = {
 #   }
 # }
 # See main function
-command_needs_args: dict[str, dict[str, Union[str, dict[str, str]]]] = {
+commands: dict[str, dict[str, Union[str, dict[str, str]]]] = {
+    "inhibit-idle": {
+        "help": "Prevents newm from going into idle states (dimming the screen)",
+        "args": {},
+    },
+    "config": {
+        "help": "Reloads the configuration",
+        "args": {},
+    },
+    "lock": {
+        "help": "Locks the screen",
+        "args": {},
+    },
+    "clean": {
+        "help": "Removes orphaned states, which can happen, but shouldn't (if you encounter the need for this, please file a bug)",
+        "args": {},
+    },
+    "debug": {
+        "help": "Prints out some debug info on the current state of views",
+        "args": {},
+    },
+    "unlock": {
+        "help": "Unlocks the screen",
+        "args": {},
+    },
     "open-virtual-output": {
         "help": "opens a new virtual output (see newm-sidecar)",
-        "args": {"name": "newm-cmd open-virtual-output <name>"},
+        "args": {"output_name": "newm-cmd open-virtual-output <name>"},
     },
     "close-virtual-output": {
         "help": "close a virtual output",
-        "args": {"name": "newm-cmd close-virtual-output <name>"},
+        "args": {"output_name": "newm-cmd close-virtual-output <name>"},
     },
 }
 
@@ -43,45 +54,35 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    for command, help in command_without_args.items():
-        subparsers.add_parser(command, help=help)
-
-    for command, meta in command_needs_args.items():
+    for command, meta in commands.items():
         command_parser = subparsers.add_parser(command, help=meta["help"])
         for argument, help in meta["args"].items():
             command_parser.add_argument(argument, help=help)
 
     args = parser.parse_args(argv)
 
-    if args.command in command_without_args.keys():
-        return call_without_args(args.command)
-    elif args.command in command_needs_args.keys():
+    if args.command in commands.keys():
         dict_args = vars(args)
         # dict_args[a] for a in command_needs_args[args.command]["args"].keys()
-        call_with_args(
+        call_cmd(
             args.command,
             *tuple(
                 filter(
                     lambda v: v is not None,
                     map(
                         lambda k: dict_args.get(k, None),
-                        command_needs_args[args.command]["args"].keys(),
+                        commands[args.command]["args"].keys(),
                     ),
                 )
             ),
         )
     else:
         raise NotImplementedError(
-            f"Command {args.command} does not exist.",
+            f"Command {args.command} does not exist, see: newm-cmd -h.",
         )
 
 
-def call_without_args(command: str) -> int:
-    cmd(command)
-    return 0
-
-
-def call_with_args(command: str, *args) -> int:
+def call_cmd(command: str, *args) -> int:
     cmd(command, *args)
     return 0
 
