@@ -1,5 +1,94 @@
 #!/usr/bin/env python3
-import sys
+from typing import Union
+import argparse
 from newm import cmd
-if len(sys.argv) > 1:
-    cmd(*sys.argv[1:])
+from collections.abc import Sequence
+
+
+# Declare new commands, in the following format:
+# "command": {
+#   "help": "description",
+#   "args": {
+#       "arg_name": "description",
+#       ...
+#   }
+# }
+# See main function
+commands: dict[str, dict[str, Union[str, dict[str, str]]]] = {
+    "inhibit-idle": {
+        "help": "Prevents newm from going into idle states (dimming the screen)",
+        "args": {},
+    },
+    "config": {
+        "help": "Reloads the configuration",
+        "args": {},
+    },
+    "lock": {
+        "help": "Locks the screen",
+        "args": {},
+    },
+    "clean": {
+        "help": "Removes orphaned states, which can happen, but shouldn't (if you encounter the need for this, please file a bug)",
+        "args": {},
+    },
+    "debug": {
+        "help": "Prints out some debug info on the current state of views",
+        "args": {},
+    },
+    "unlock": {
+        "help": "Unlocks the screen",
+        "args": {},
+    },
+    "open-virtual-output": {
+        "help": "Opens a new virtual output (see newm-sidecar)",
+        "args": {"output_name": "newm-cmd open-virtual-output <name>"},
+    },
+    "close-virtual-output": {
+        "help": "Close a virtual output",
+        "args": {"output_name": "newm-cmd close-virtual-output <name>"},
+    },
+    "launcher": {
+        "help": "Open new app",
+        "args": {"app": "newm-cmd launcher <app>"},
+    },
+}
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    for command, meta in commands.items():
+        command_parser = subparsers.add_parser(command, help=meta["help"])
+        for argument, help in meta["args"].items():
+            command_parser.add_argument(argument, help=help)
+
+    args = parser.parse_args(argv)
+
+    if args.command in commands.keys():
+        dict_args = vars(args)
+        call_cmd(
+            args.command,
+            *tuple(
+                filter(
+                    lambda v: v is not None,
+                    map(
+                        lambda k: dict_args.get(k, None),
+                        commands[args.command]["args"].keys(),
+                    ),
+                )
+            ),
+        )
+    else:
+        raise NotImplementedError(
+            f"Command {args.command} does not exist, see: newm-cmd -h.",
+        )
+
+
+def call_cmd(command: str, *args) -> int:
+    cmd(command, *args)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
