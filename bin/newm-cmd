@@ -40,12 +40,16 @@ commands: dict[str, dict[str, Union[str, dict[str, str]]]] = {
         "args": {},
     },
     "open-virtual-output": {
-        "help": "opens a new virtual output (see newm-sidecar)",
+        "help": "Opens a new virtual output (see newm-sidecar)",
         "args": {"output_name": "newm-cmd open-virtual-output <name>"},
     },
     "close-virtual-output": {
-        "help": "close a virtual output",
+        "help": "Close a virtual output",
         "args": {"output_name": "newm-cmd close-virtual-output <name>"},
+    },
+    "launcher": {
+        "help": "Open new app",
+        "args": {"app": "newm-cmd launcher <app>"},
     },
 }
 
@@ -63,7 +67,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command in commands.keys():
         dict_args = vars(args)
-        # dict_args[a] for a in command_needs_args[args.command]["args"].keys()
         call_cmd(
             args.command,
             *tuple(
