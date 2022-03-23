@@ -8,8 +8,10 @@
 **** DONE bemenu issues
 
 ** Improvements
+*** TODO Clean up native bar config
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
+*** TODO Stacked windows: Place them in a grid or similar
 
 ** STRT Always present top and bottom bars
     - Autodetect if bar is there and of which size
@@ -25,6 +27,7 @@
 * Backlog
 ** NixOS greetd deployment including documentation
 ** Small improvements
+    - Hide cursor automativally
     - Swiping between fullscreen windows should not exit fullscreen
     - Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
     - Don't have double padding between windows

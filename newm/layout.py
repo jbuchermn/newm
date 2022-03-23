@@ -1130,8 +1130,12 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             self.animate_to(reducer, conf_anim_t())
 
         cmds: dict[str, Callable[[], Optional[str]]] = {
-            "lock": self.ensure_locked,
+            "lock": lambda: self.ensure_locked(
+                anim="anim" in arg if arg is not None else False,
+                dim="dim" in arg if arg is not None else False
+            ),
             "config": print_config,
+            "update-config": self.update_config,
             "debug": self.debug_str,
             "inhibit-idle": lambda: set_inhibit_idle(True),
             "finish-inhibit-idle": lambda: set_inhibit_idle(False),
