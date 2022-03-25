@@ -218,8 +218,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         anchored_left = bool(anchor & 4)
         anchored_right = bool(anchor & 8)
 
-        logger.debug("w: %d h: %d m: %s at: %s ab: %s al: %s ar: %s" % (width, height, str(margin), anchored_top, anchored_bottom, anchored_left, anchored_right))
-
         if width == 0:
             if not anchored_left or not anchored_right:
                 logger.warn("Layer shell protocol error")
@@ -289,16 +287,23 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
 
         result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
 
-        if self.panel == "top_bar":
-            x, y, w, h = 0., 0., 0., 0. # mypy
-            x, y, w, h = result.box
-            y -= h * 1.2 * (1. - ws_state.top_bar_dy)
-            result.box = x, y, w, h
-        elif self.panel == "bottom_bar":
-            x, y, w, h = 0., 0., 0., 0. # mypy
-            x, y, w, h = result.box
-            y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
-            result.box = x, y, w, h
+        if self.panel in ["bar", "top_bar", "bottom_bar"]:
+            top = True
+            if self.panel == "bottom_bar":
+                top = False
+            elif self.panel == "bar":
+                top = result.box[1] < 1.
+
+            if top:
+                x, y, w, h = 0., 0., 0., 0. # mypy
+                x, y, w, h = result.box
+                y -= h * 1.2 * (1. - ws_state.top_bar_dy)
+                result.box = x, y, w, h
+            else:
+                x, y, w, h = 0., 0., 0., 0. # mypy
+                x, y, w, h = result.box
+                y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
+                result.box = x, y, w, h
 
         if self_state.layer_initial:
             result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
@@ -1124,7 +1129,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
 
         floating = self.is_float(self.wm.state) if override_float is None else override_float
         show = floating and self._needs_ssd(self.up_state)
-        logger.debug("%s: %s %s" % (self, show, self._ssd))
         if show and self._ssd is None:
             logger.debug("Creating SSD for %s" % self)
             self._ssd = SSDs(self.wm, self)

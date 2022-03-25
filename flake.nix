@@ -93,7 +93,7 @@
           thefuzz
 
           python-lsp-server
-          pylsp-mypy
+          (pylsp-mypy.overrideAttrs (old: { pytestCheckPhase = "true"; }))
           mypy
           yappi
         ]);

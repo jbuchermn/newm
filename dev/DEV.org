@@ -5,30 +5,22 @@
 **** WAIT FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
 **** WAIT Screenshare crashes on chrome
 **** WAIT Issues on wakeup with login managers
-**** TODO Kill moot animations (e.g. focusing different window by shortcut where both are visible)
 
 ** Improvements
+*** TODO Kill moot animations (e.g. focusing different window by shortcut where both are visible)
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 *** TODO Stacked windows: Place them in a grid or similar
 
 ** STRT Always present top and bottom bars
-    - Overview
-        - Always visible
-    - Fullscreen
-        - Always visible, or
-        - Visible after mouse hits top
-    - Normal
-        - Always visible, or
-        - never visible
-**** TODO Autodetect height
-**** TODO Implement different modes
+**** DONE Autodetect height
+**** DONE Implement different modes
+**** TODO Implement slide-in-bars
 
 ** TODO Documentation / Cleanup
-**** New config, e.g. gesture_bindings
 **** Move all configurable debug options into `debug.xyz = True`
-**** Update to v0.3
 **** newm-panel-nwjs is history
+**** Update to v0.3
 
 * Backlog
 ** NixOS greetd deployment including documentation

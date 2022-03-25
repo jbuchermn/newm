@@ -12,8 +12,15 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-conf_permanent_top_bar = configured_value('panels.top_bar.permanent', 0)
-conf_permanent_bottom_bar = configured_value('panels.bottom_bar.permanent', 0)
+conf_top_bar_vn = configured_value('panels.top_bar.visible_normal', True)
+conf_top_bar_vf = configured_value('panels.top_bar.visible_fullscreen', False)
+conf_bottom_bar_vn = configured_value('panels.bottom_bar.permanent', True)
+conf_bottom_bar_vf = configured_value('panels.bottom_bar.permanent', False)
+
+conf_native_top_bar_enabled = configured_value("panels.top_bar.native.enabled", False)
+conf_native_bottom_bar_enabled = configured_value("panels.bottom_bar.native.enabled", False)
+conf_native_top_bar_height = configured_value('panels.top_bar.native.height', 20)
+conf_native_bottom_bar_height = configured_value('panels.bottom_bar.native.height', 20)
 
 class ViewState:
     def __init__(self, **kwargs: Any) -> None:
@@ -208,26 +215,52 @@ class WorkspaceState:
             if len(stack) == 1:
                 stack[0][1].stack_idx = stack[0][0]
 
-    def validate_bars(self, ) -> None:
-        if conf_permanent_top_bar() > 0:
-            self.top_bar_dy = 1.
-            self.top_excluded = conf_permanent_top_bar()
-        else:
-            if self.is_in_overview():
+    def validate_bars(self, wm: Layout, wm_state: LayoutState) -> None:
+        self.top_excluded = 0.
+        self.bottom_excluded = 0.
+
+        if conf_top_bar_vn() or conf_top_bar_vf() or \
+                conf_bottom_bar_vn() or conf_bottom_bar_vf():
+            top_bar_height = 0.
+            bottom_bar_height = 0.
+            for p in wm.panels(self._ws):
+                if p.up_state is not None and p.panel in ["bar", "top_bar", "bottom_bar"]:
+                    view_state = p.reducer(p.up_state, wm_state)
+                    if p.panel == "top_bar":
+                        top_bar_height = view_state.box[3]
+                    elif p.panel == "bottom_bar":
+                        bottom_bar_height = view_state.box[3]
+                    else:
+                        if view_state.box[1] <= 1.:
+                            top_bar_height = view_state.box[3]
+                        else:
+                            bottom_bar_height = view_state.box[3]
+
+            if conf_native_top_bar_enabled():
+                top_bar_height = conf_native_top_bar_height()
+
+            if conf_native_bottom_bar_enabled():
+                bottom_bar_height = conf_native_bottom_bar_height()
+
+            fs = self.is_fullscreen()
+            top_v = (conf_top_bar_vf() if fs else conf_top_bar_vn())
+            bottom_v = (conf_bottom_bar_vf() if fs else conf_bottom_bar_vn())
+
+            if top_v:
+                self.top_excluded = top_bar_height
                 self.top_bar_dy = 1.
             else:
-                self.top_bar_dy = 0.
-            self.top_excluded = 0.
+                self.top_excluded = 0.
+                self.top_bar_dy = 1. if self.is_in_overview() else 0.
 
-        if conf_permanent_bottom_bar():
-            self.bottom_bar_dy = 1.
-            self.bottom_excluded = conf_permanent_bottom_bar()
-        else:
-            if self.is_in_overview():
+            if bottom_v:
+                self.bottom_excluded = bottom_bar_height
                 self.bottom_bar_dy = 1.
             else:
-                self.bottom_bar_dy = 0.
-            self.bottom_excluded = 0.
+                self.bottom_excluded = 0.
+                self.bottom_bar_dy = 1. if self.is_in_overview() else 0.
+        logger.debug("POST_VALIDATE: %d %d %d %d" % (self.top_excluded, self.top_bar_dy, self.bottom_excluded, self.bottom_bar_dy))
+
 
     def constrain(self) -> None:
         min_i, min_j, max_i, max_j = self.get_extent()
@@ -341,10 +374,6 @@ class WorkspaceState:
             else:
                 new_view_states[h] = s
         self._view_states = new_view_states
-        self.constrain()
-        self.validate_fullscreen()
-        self.validate_stack_indices()
-        self.validate_bars()
 
 
     """
@@ -519,7 +548,9 @@ class WorkspaceState:
 
 
 class LayoutState:
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, wm: Layout, **kwargs: Any) -> None:
+        self._wm = wm
+
         self.launcher_perc: float = kwargs['launcher_perc'] if 'launcher_perc' in kwargs else 0
         self.lock_perc: float = kwargs['lock_perc'] if 'lock_perc' in kwargs else 0
         self.final: bool = kwargs['final'] if 'final' in kwargs else False
@@ -560,7 +591,7 @@ class LayoutState:
     """
 
     def copy(self, **kwargs: Any) -> LayoutState:
-        res = LayoutState(**{**self.__dict__, **kwargs})
+        res = LayoutState(self._wm, **{**self.__dict__, **kwargs})
         for h, s in self._workspace_states.items():
             res._workspace_states[h] = s.copy()
         return res
@@ -570,13 +601,13 @@ class LayoutState:
             self.__dict__[k] = v
 
     def replacing_workspace_state(self, workspace: Workspace, **kwargs: Any) -> LayoutState:
-        res = LayoutState(**self.__dict__)
+        res = LayoutState(self._wm, **self.__dict__)
         for h, s in self._workspace_states.items():
             res._workspace_states[h] = s.copy(**(kwargs if h==workspace._handle else {}))
         return res
 
     def setting_workspace_state(self, workspace: Workspace, state: WorkspaceState) -> LayoutState:
-        res = LayoutState(**self.__dict__)
+        res = LayoutState(self._wm, **self.__dict__)
         for h, s in self._workspace_states.items():
             res._workspace_states[h] = s.copy() if h!=workspace._handle else state
         return res
@@ -601,7 +632,7 @@ class LayoutState:
 
     def validate_bars(self) -> None:
         for h, s in self._workspace_states.items():
-            s.validate_bars()
+            s.validate_bars(self._wm, self)
 
     def validate_stack_indices(self, moved_view: Optional[View]=None) -> None:
         for h, s in self._workspace_states.items():
@@ -615,8 +646,18 @@ class LayoutState:
     def clean(self, view_handles: list[int]) -> LayoutState:
         for h, s in self._workspace_states.items():
             s.clean(view_handles)
+        self.constrain()
+        self.validate_fullscreen()
+        self.validate_stack_indices()
+        self.validate_bars()
         return self
 
+    def constrain_and_validate(self) -> LayoutState:
+        self.constrain()
+        self.validate_fullscreen()
+        self.validate_stack_indices()
+        self.validate_bars()
+        return self
 
     """
     Reducers

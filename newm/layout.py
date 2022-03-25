@@ -219,10 +219,7 @@ class Animation:
         self._started = True
         if self._final_state is not None:
             # Enforce constraints on final state
-            self._final_state.constrain()
-            self._final_state.validate_fullscreen()
-            self._final_state.validate_stack_indices()
-            self._final_state.validate_bars()
+            self._final_state.constrain_and_validate()
 
             self.layout._animate_to(self._final_state, self.duration)
         else:
@@ -330,7 +327,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             Workspace(PyWMOutput("dummy", -1, 1.0, 1280, 720, (0, 0)), 0, 0, 1280, 720)
         ]
 
-        self.state = LayoutState()
+        self.state = LayoutState(self)
 
         self.overlay: Optional[Overlay] = None
 
