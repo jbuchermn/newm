@@ -82,17 +82,24 @@ panels = {
     'launcher': {
         'cmd': 'alacritty -e newm-panel-basic launcher'
     },
-}
-
-bar = {
-    'top_texts': lambda: [
-        pwd.getpwuid(os.getuid())[0],
-        time.strftime("%c"),
-    ],
-    'bottom_texts': lambda: [
-        "newm",
-        "powered by pywm"
-    ]
+    'top_bar': {
+        'native': {
+            'enabled': True,
+            'texts': lambda: [
+                pwd.getpwuid(os.getuid())[0],
+                time.strftime("%c"),
+            ],
+        }
+    },
+    'bottom_bar': {
+        'native': {
+            'enabled': True,
+            'texts': lambda: [
+                "newm",
+                "powered by pywm"
+            ],
+        }
+    },
 }
 
 energy = {

@@ -80,7 +80,8 @@ conf_on_startup = configured_value("on_startup", lambda: None)
 conf_on_reconfigure = configured_value("on_reconfigure", lambda: None)
 conf_lock_on_wakeup = configured_value("lock_on_wakeup", True)
 
-conf_bar_enabled = configured_value("bar.enabled", True)
+conf_native_top_bar_enabled = configured_value("panels.top_bar.native.enabled", False)
+conf_native_bottom_bar_enabled = configured_value("panels.bottom_bar.native.enabled", False)
 
 conf_synchronous_update = configured_value("synchronous_update", lambda: None)
 
@@ -463,11 +464,14 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
                 c2.destroy()
         self.corners = []
 
-        if conf_bar_enabled():
+        if conf_native_bottom_bar_enabled():
             self.bottom_bars = [self.create_widget(BottomBar, o) for o in self.layout]
-            self.top_bars = [self.create_widget(TopBar, o) for o in self.layout]
         else:
             self.bottom_bars = []
+
+        if conf_native_top_bar_enabled():
+            self.top_bars = [self.create_widget(TopBar, o) for o in self.layout]
+        else:
             self.top_bars = []
 
         self.backgrounds = [
