@@ -180,7 +180,19 @@ class WorkspaceState:
     def validate_fullscreen(self) -> None:
         if self.state_before_fullscreen is not None:
             _1, _2, _3, i, j, size = self.state_before_fullscreen
-            if abs(self.i - i) + abs(self.j - j) + abs(self.size - size) > .01:
+
+            invalid = abs(self.i - i) + abs(self.j - j) + abs(self.size - size) > .01
+            if abs(self.i - i) + abs(self.j - j) > 0.01 and abs(self.size - size) < 0.01:
+                for k, v in self._view_states.items():
+                    i_, j_, w, h = v.get_ijwh()
+                    if abs(w - self.size) + abs(h - self.size) + abs(i_ - self.i) + abs(j_ - self.j) < 0.01:
+                        i = i_
+                        j = j_
+                        self.state_before_fullscreen = _1, _2, _3, i, j, size
+                        invalid = False
+                        break
+
+            if invalid:
                 self.state_before_fullscreen = None
                 i_stolen, j_stolen = self._clear_intermediate(round(self.i), round(self.j))
                 self.i -= i_stolen
