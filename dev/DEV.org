@@ -7,7 +7,9 @@
 **** WAIT Issues on wakeup with login managers
 
 ** Improvements
+*** TODO Update focus after animation / gesture
 *** TODO Kill moot animations (e.g. focusing different window by shortcut where both are visible)
+*** TODO Swiping between fullscreen windows should not exit fullscreen
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 *** TODO Stacked windows: Place them in a grid or similar
@@ -26,7 +28,6 @@
 ** NixOS greetd deployment including documentation
 ** Small improvements
     - Hide cursor automativally
-    - Swiping between fullscreen windows should not exit fullscreen
     - Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
     - Don't have double padding between windows
     * Ultrawide monitors --> two workspaces on one output

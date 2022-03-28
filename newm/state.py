@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 conf_top_bar_vn = configured_value('panels.top_bar.visible_normal', True)
 conf_top_bar_vf = configured_value('panels.top_bar.visible_fullscreen', False)
-conf_bottom_bar_vn = configured_value('panels.bottom_bar.permanent', True)
-conf_bottom_bar_vf = configured_value('panels.bottom_bar.permanent', False)
+conf_bottom_bar_vn = configured_value('panels.bottom_bar.visible_normal', True)
+conf_bottom_bar_vf = configured_value('panels.bottom_bar.visible_fullscreen', False)
 
 conf_native_top_bar_enabled = configured_value("panels.top_bar.native.enabled", False)
 conf_native_bottom_bar_enabled = configured_value("panels.bottom_bar.native.enabled", False)
