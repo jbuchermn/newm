@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING, cast
 
 import math
 import logging
@@ -12,15 +12,46 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-conf_top_bar_vn = configured_value('panels.top_bar.visible_normal', True)
-conf_top_bar_vf = configured_value('panels.top_bar.visible_fullscreen', False)
-conf_bottom_bar_vn = configured_value('panels.bottom_bar.visible_normal', True)
-conf_bottom_bar_vf = configured_value('panels.bottom_bar.visible_fullscreen', False)
+conf_top_bar_vn = configured_value('panels.top_bar.visible_normal', cast(Optional[bool], None))
+conf_top_bar_vf = configured_value('panels.top_bar.visible_fullscreen', cast(Optional[bool], None))
+conf_bottom_bar_vn = configured_value('panels.bottom_bar.visible_normal', cast(Optional[bool], None))
+conf_bottom_bar_vf = configured_value('panels.bottom_bar.visible_fullscreen', cast(Optional[bool], None))
+
+conf_bar_vn = configured_value('panels.bar.visible_normal', cast(Optional[bool], None))
+conf_bar_vf = configured_value('panels.bar.visible_fullscreen', cast(Optional[bool], None))
 
 conf_native_top_bar_enabled = configured_value("panels.top_bar.native.enabled", False)
 conf_native_bottom_bar_enabled = configured_value("panels.bottom_bar.native.enabled", False)
 conf_native_top_bar_height = configured_value('panels.top_bar.native.height', 20)
 conf_native_bottom_bar_height = configured_value('panels.bottom_bar.native.height', 20)
+
+def top_bar_vn() -> bool:
+    if conf_top_bar_vn() is not None:
+        return conf_top_bar_vn()
+    if conf_bar_vn() is not None:
+        return conf_bar_vn()
+    return True
+
+def bottom_bar_vn() -> bool:
+    if conf_bottom_bar_vn() is not None:
+        return conf_bottom_bar_vn()
+    if conf_bar_vn() is not None:
+        return conf_bar_vn()
+    return True
+
+def top_bar_vf() -> bool:
+    if conf_top_bar_vf() is not None:
+        return conf_top_bar_vf()
+    if conf_bar_vf() is not None:
+        return conf_bar_vf()
+    return False
+
+def bottom_bar_vf() -> bool:
+    if conf_bottom_bar_vf() is not None:
+        return conf_bottom_bar_vf()
+    if conf_bar_vf() is not None:
+        return conf_bar_vf()
+    return False
 
 class ViewState:
     def __init__(self, **kwargs: Any) -> None:
@@ -219,8 +250,8 @@ class WorkspaceState:
         self.top_excluded = 0.
         self.bottom_excluded = 0.
 
-        if conf_top_bar_vn() or conf_top_bar_vf() or \
-                conf_bottom_bar_vn() or conf_bottom_bar_vf():
+        if top_bar_vn() or top_bar_vf() or \
+                bottom_bar_vn() or bottom_bar_vf():
             top_bar_height = 0.
             bottom_bar_height = 0.
             for p in wm.panels(self._ws):
@@ -243,8 +274,8 @@ class WorkspaceState:
                 bottom_bar_height = conf_native_bottom_bar_height()
 
             fs = self.is_fullscreen()
-            top_v = (conf_top_bar_vf() if fs else conf_top_bar_vn())
-            bottom_v = (conf_bottom_bar_vf() if fs else conf_bottom_bar_vn())
+            top_v = (top_bar_vf() if fs else top_bar_vn())
+            bottom_v = (bottom_bar_vf() if fs else bottom_bar_vn())
 
             if top_v:
                 self.top_excluded = top_bar_height
