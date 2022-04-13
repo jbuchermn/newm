@@ -12,7 +12,7 @@
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 *** TODO Update focus after animation / gesture
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
-*** TODO Stacked windows: Place them in a grid or similar
+*** TODO Stacked windows: Place them in a grid or similar (configurable)
 
 ** STRT Always present top and bottom bars
 **** DONE Autodetect height

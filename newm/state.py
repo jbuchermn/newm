@@ -302,7 +302,6 @@ class WorkspaceState:
             else:
                 self.bottom_excluded = 0.
                 self.bottom_bar_dy = 1. if self.is_in_overview() else 0.
-        logger.debug("POST_VALIDATE: %d %d %d %d" % (self.top_excluded, self.top_bar_dy, self.bottom_excluded, self.bottom_bar_dy))
 
 
     def constrain(self) -> None:
