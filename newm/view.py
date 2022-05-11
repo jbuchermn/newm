@@ -1,20 +1,20 @@
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING, cast, TypeVar
+from typing import Optional, TYPE_CHECKING, cast, TypeVar, Any
 
 import math
 import logging
 import time
+import psutil  # type: ignore
 
 from pywm import PyWMView, PyWMViewDownstreamState, PyWMOutput
-from pywm.pywm import PyWMDownstreamState
 from pywm.pywm_view import PyWMViewUpstreamState
 
 from .state import ViewState, LayoutState, WorkspaceState
 from .interpolation import ViewDownstreamInterpolation
-from .animate import Animate
+from .animate import Animate, Animatable
 from .overlay import MoveResizeFloatingOverlay
 from .config import configured_value
-from .util import errorlogged
+from .widget import SSDs, BackgroundBlur
 
 if TYPE_CHECKING:
     from .layout import Layout, Workspace
@@ -24,22 +24,25 @@ else:
 
 logger = logging.getLogger(__name__)
 
-conf_corner_radius = configured_value('view.corner_radius', 12.5)
-conf_padding = configured_value('view.padding', 8)
+conf_corner_radius = configured_value('view.corner_radius', 12)
+conf_padding = configured_value('view.padding', 6)
 conf_fullscreen_padding = configured_value('view.fullscreen_padding', 0)
 conf_border_ws_switch = configured_value('view.border_ws_switch', 10.)
 
-conf_float_callback = configured_value('view.should_float', lambda view: None)
+conf_rules_callback = configured_value('view.rules', lambda view: None)
 conf_floating_min_size = configured_value('view.floating_min_size', True)
 
+conf_accept_fullscreen_from_views = configured_value('view.accept_fullscreen', True)
+
+"""
+Launcher and lock panels are handled in a special way - define size and corner radius here
+"""
 conf_panel_lock_h = configured_value('panels.lock.h', 0.6)
 conf_panel_lock_w = configured_value('panels.lock.w', 0.7)
 conf_panel_lock_corner_radius = configured_value('panels.lock.corner_radius', 50)
 conf_panel_launcher_h = configured_value('panels.launcher.h', 0.8)
 conf_panel_launcher_w = configured_value('panels.launcher.w', 0.8)
 conf_panel_launcher_corner_radius = configured_value('panels.launcher.corner_radius', 0)
-conf_panel_notifiers_h = configured_value('panels.notifiers.h', 0.3)
-conf_panel_notifiers_w = configured_value('panels.notifiers.w', 0.2)
 
 conf_anim_t = configured_value('anim_time', .3)
 
@@ -57,10 +60,21 @@ In production .3 or similar should be okay
 """
 RESIZE_PATIENCE = .3
 
-class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
+class CustomDownstreamState(PyWMViewDownstreamState):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.logical_box: tuple[float, float, float, float] = kwargs['logical_box'] if 'logical_box' in kwargs else self.box
+        self.is_fullscreen: bool = kwargs['is_fullscreen'] if 'is_fullscreen' in kwargs else False
+
+class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     def __init__(self, wm: Layout, handle: int):
         PyWMView.__init__(self, wm, handle)
         Animate.__init__(self)
+
+        self._rules: dict[str, Any] = {}
+
+        self._ssd: Optional[SSDs] = None
+        self._background: Optional[BackgroundBlur] = None
 
         # State machine
         self._mapped = False
@@ -70,10 +84,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         # Initial state while waiting for map
         self._initial_time: float = time.time()
         self._initial_kind: int = 0 # 0: panel, 1: layer, 2: float, 3: tiled
-        self._initial_state: Optional[PyWMViewDownstreamState] = None
+        self._initial_state: Optional[CustomDownstreamState] = None
 
         self.panel: Optional[str] = None
-        self.layer_panel: Optional[str] = None
 
         self._debug_scaling = conf_debug_scaling()
 
@@ -81,10 +94,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.up_state is None:
             return "<View %d>" % self._handle
 
-        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s, panel=%s, layer_panel=%s>" % (
+        return "<View %d (%s): %s, %s, %s, %s, xwayland=%s, floating=%s, focused=%s, panel=%s, size_constraints=%s>" % (
             self._handle, ("child(%d)" % self.parent._handle) if self.parent is not None else "root",
              self.title, self.app_id, self.role, self.pid,
-             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused, self.panel, self.layer_panel)
+             self.is_xwayland, self.up_state.is_floating, self.up_state.is_focused, self.panel, self.up_state.size_constraints)
 
     def is_float(self, state: LayoutState) -> bool:
         if self.is_panel():
@@ -113,20 +126,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         pos_hint: Optional[tuple[float, float]] = None
 
         floats = self.up_state is not None and self.up_state.is_floating
-        try:
-            hints = conf_float_callback()(self)
-            if hints is not None:
-                if isinstance(hints, tuple):
-                    if len(hints) >= 1:
-                        floats = hints[0]
-                    if len(hints) >= 2:
-                        size_hint = hints[1]
-                    if len(hints) >= 3:
-                        pos_hint = hints[2]
-                else:
-                    floats = hints != False
-        except Exception:
-            logger.exception("floats callback")
+        if 'float' in self._rules:
+            floats = bool(self._rules['float'])
+        if 'float_size' in self._rules:
+            size_hint = self._rules['float_size']
+        if 'float_pos' in self._rules:
+            pos_hint = self._rules['float_pos']
 
         if (self.up_state is not None and
            self.up_state.size_constraints[0] > 0 and
@@ -143,28 +148,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Panel
     """
-    def _init_panel(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> PyWMViewDownstreamState:
-        return PyWMViewDownstreamState()
+    def _init_panel(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> CustomDownstreamState:
+        return CustomDownstreamState()
 
-    def _reducer_panel(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _reducer_panel(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> CustomDownstreamState:
+        result = CustomDownstreamState()
+        result.logical_box = (0, 0, 0, 0)
 
-        if self.panel == "notifiers":
-            result.z_index = 2000
-            result.accepts_input = False
-            result.lock_enabled = True
-
-            result.size = (
-                int(ws.width * conf_panel_notifiers_w()),
-                int(ws.height * conf_panel_notifiers_h()))
-
-            result.box = (
-                ws.pos_x + ws.width * (1. - conf_panel_notifiers_w())/2.,
-                ws.pos_y + ws.height * (1. - conf_panel_notifiers_h()),
-                ws.width * conf_panel_notifiers_w(),
-                ws.height * conf_panel_notifiers_h())
-
-        elif self.panel == "launcher":
+        if self.panel == "launcher":
             result.z_index = 1000
             result.accepts_input = True
             result.corner_radius = conf_panel_launcher_corner_radius()
@@ -195,6 +186,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 result.size[0],
                 result.size[1])
 
+        result.logical_box = result.box
         return result
 
     def _show_panel(self, ws: Workspace, state: LayoutState, ws_state:WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
@@ -235,16 +227,16 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 logger.warn("Layer shell protocol error")
             height = output.height - margin[1] - margin[3]
 
-        if anchored_right:
+        if anchored_right and not anchored_left:
             x = output.width - margin[2] - width
-        elif anchored_left:
+        elif anchored_left and not anchored_right:
             x = margin[0]
         else:
             x = (output.width - width) // 2
 
-        if anchored_bottom:
+        if anchored_bottom and not anchored_top:
             y = output.height - margin[3] - height
-        elif anchored_top:
+        elif anchored_top and not anchored_bottom:
             y = margin[1]
         else:
             y = (output.height - height) // 2
@@ -257,23 +249,18 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if target_height == 0:
             target_height = height
 
-        if anchored_top and ((anchored_left and anchored_right) or target_width == output.width) and not anchored_bottom and target_height < 0.2*output.height:
-            self.layer_panel = "top_bar"
-        elif anchored_bottom and ((anchored_left and anchored_right) or target_width == output.width) and not anchored_top and target_height < 0.2*output.height:
-            self.layer_panel = "bottom_bar"
-
         return (target_width, target_height), (x + output.pos[0], y + output.pos[1], width, height)
 
 
-    def _init_layer(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _init_layer(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> CustomDownstreamState:
+        result = CustomDownstreamState()
 
         result.fixed_output = up_state.fixed_output if (up_state.fixed_output is not None) else ws.outputs[0]
         result.size, _ = self._layer_placement(result.fixed_output, up_state.size_constraints)
         return result
 
-    def _reducer_layer(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _reducer_layer(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> CustomDownstreamState:
+        result = CustomDownstreamState()
         result.floating = True
         result.accepts_input = True
         result.corner_radius = 0
@@ -300,21 +287,29 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         result.size, result.box = self._layer_placement(result.fixed_output, up_state.size_constraints, up_state.size)
 
-        if self.layer_panel == "top_bar":
-            x, y, w, h = 0., 0., 0., 0. # mypy
-            x, y, w, h = result.box
-            y -= h * 1.2 * (1. - ws_state.top_bar_dy)
-            result.box = x, y, w, h
-        elif self.layer_panel == "bottom_bar":
-            x, y, w, h = 0., 0., 0., 0. # mypy
-            x, y, w, h = result.box
-            y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
-            result.box = x, y, w, h
+        if self.panel in ["bar", "top_bar", "bottom_bar"]:
+            top = True
+            if self.panel == "bottom_bar":
+                top = False
+            elif self.panel == "bar":
+                top = result.box[1] < 1.
+
+            if top:
+                x, y, w, h = 0., 0., 0., 0. # mypy
+                x, y, w, h = result.box
+                y -= h * 1.2 * (1. - ws_state.top_bar_dy)
+                result.box = x, y, w, h
+            else:
+                x, y, w, h = 0., 0., 0., 0. # mypy
+                x, y, w, h = result.box
+                y += h * 1.2 * (1. - ws_state.bottom_bar_dy)
+                result.box = x, y, w, h
 
         if self_state.layer_initial:
             result.box = result.box[0] + .5*result.box[2], result.box[1] + .5*result.box[3], 0, 0
 
         result.mask = (-100000, -100000, result.size[0] + 200000, result.size[1] + 200000)
+        result.logical_box = result.box
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.workspace = None
@@ -324,12 +319,16 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     def _show_layer(self, ws: Workspace, state: LayoutState, ws_state: WorkspaceState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
         logger.info("Show - layer: %s", self)
 
-        if self.layer_panel is None:
+        if self.panel is None:
             ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True, layer_initial=True)
             ws_state2 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
+            state1, state2 = state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
 
-            self.focus()
-            return state.setting_workspace_state(ws, ws_state1), state.setting_workspace_state(ws, ws_state2)
+            if self.up_state is not None and self.up_state.size_constraints[9] != 0: # != ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_NONE
+                self.focus()
+                self.wm.focus_borders.update_focus(self, (state1, state2))
+
+            return state2, None
         else:
             ws_state1 = ws_state.copy().with_view_state(self, is_tiled=False, is_layer=True)
             return state.setting_workspace_state(ws, ws_state1), None
@@ -337,11 +336,32 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Floating
     """
-    def _init_floating(self, up_state: PyWMViewUpstreamState, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> PyWMViewDownstreamState:
+    def _needs_ssd(self, up_state: PyWMViewUpstreamState) -> bool:
+        """
+        Two options
+        - CSD or no decoration necessary: No masking and we're good
+        - SSD: For now, use masking and corner_radius
+
+        Heuristic to decide based on decoration protocols and offset
+        - Needs special info for catapult (Could be moved to config)
+        """
+        ssd = True
+        if up_state.shows_csd:
+            ssd = False
+        if up_state.offset != (0, 0):
+            # Assume some CSD
+            ssd = False
+
+        if self.app_id == "catapult":
+            ssd = False
+        return ssd
+
+
+    def _init_floating(self, up_state: PyWMViewUpstreamState, ws: Workspace, size_hint: Optional[tuple[int, int]]=None, pos_hint: Optional[tuple[float, float]]=None) -> CustomDownstreamState:
         """
         Set floating attributes on init if it is clear the window will float
         """
-        result = PyWMViewDownstreamState()
+        result = CustomDownstreamState()
 
         width, height = up_state.size
         if size_hint is not None:
@@ -367,8 +387,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return result
 
 
-    def _reducer_floating(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _reducer_floating(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> CustomDownstreamState:
+        result = CustomDownstreamState()
         result.floating = True
         result.accepts_input = True
         result.corner_radius = conf_corner_radius()
@@ -409,25 +429,20 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         y *= ws.height / ws_state.size
         result.box = (x, y, width, height)
 
-        """
-        Two options
-        - CSD or no decoration necessary: No masking and we're good
-        - SSD: For now, use masking and corner_radius
-
-        For now heuristic to decide / needs special info for catapult
-        """
-        ssd = up_state.offset == (0, 0)
-        if self.app_id == "catapult":
-            ssd = False
-
-        if ssd:
+        if self._needs_ssd(up_state):
             result.mask = (0, 0, width, height)
         else:
-
+            result.corner_radius = 0
             result.mask = (-ws.width, -ws.height, width + 2 * ws.width, height + 2 * ws.height)
 
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
+        result.logical_box = result.box[0] + up_state.offset[0] * size / ws_state.size, result.box[1] + up_state.offset[1] * size / ws_state.size, result.box[2], result.box[3]
+
+        if self_state.swallowed is not None:
+            x, y, w, h = result.box
+            result.box = (x + 0.5*w, y + 0.5*h, 0., 0.)
+            result.logical_box = (x + 0.5*w, y + 0.5*h, 0., 0.)
 
         # Workspaces don't really matter for floating windows, just leave them attached to initial workspace
         result.workspace = None
@@ -495,15 +510,18 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             float_size=(w, h),
             stack_idx=self._handle,
         )
+        state1, state2 = state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
 
         self.focus()
-        return state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
+        self.wm.focus_borders.update_focus(self, (state1, state2))
+
+        return state1, state2
 
 
     """
     Tiled
     """
-    def _init_tiled(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> PyWMViewDownstreamState:
+    def _init_tiled(self, up_state: PyWMViewUpstreamState, ws: Workspace) -> CustomDownstreamState:
         """
         Make a best-guess assumption w=h=1 and workspace size unchanged to ask the view to open with correct size
         Note that we can't be sure the view is going to be tiled at this stage - views do change min / max sizes later on
@@ -529,8 +547,8 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return result
 
 
-    def _reducer_tiled(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState, ignore_min_size: bool=False) -> PyWMViewDownstreamState:
-        result = PyWMViewDownstreamState()
+    def _reducer_tiled(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState, ignore_min_size: bool=False) -> CustomDownstreamState:
+        result = CustomDownstreamState()
         result.floating = False
         result.accepts_input = True
         result.corner_radius = conf_corner_radius()
@@ -566,21 +584,25 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         _, stack_idx, stack_len = self_state.stack_data
         if stack_len > 1:
             i += 0.05 * stack_idx / (stack_len - 1)
-            j += 0.05 * ws.width / ws.height * stack_idx / (stack_len - 1)
+            j += 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) * stack_idx / (stack_len - 1)
             w -= 0.05
-            h -= 0.05 * ws.width / ws.height
+            h -= 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded)
 
         x = i - ws_state.i
         y = j - ws_state.j
 
         x *= ws.width / ws_state.size
-        y *= ws.height / ws_state.size
+        y *= (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) / ws_state.size
         w *= ws.width / ws_state.size
-        h *= ws.height / ws_state.size
+        h *= (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) / ws_state.size
+
+        y += ws_state.top_excluded
 
         result.corner_radius /= max(1, ws_state.size / 2.)
 
-        padding = float(conf_fullscreen_padding() if ws_state.is_fullscreen() else conf_padding())
+        result.is_fullscreen = ws_state.is_fullscreen()
+
+        padding = float(conf_fullscreen_padding() if result.is_fullscreen else conf_padding())
         padding_scaled = padding / max(1, ws_state.size / 2.)
 
         padding_for_size = padding_scaled
@@ -605,10 +627,10 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         if stack_len > 1:
             w_for_size -= 0.05
-            h_for_size -= 0.05 * ws.width / ws.height
+            h_for_size -= 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded)
 
         w_for_size *= ws.width / size
-        h_for_size *= ws.height / size
+        h_for_size *= (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) / size
 
         w_for_size -= 2*padding_for_size
         h_for_size -= 2*padding_for_size
@@ -644,6 +666,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                     # new width is smaller - would appear scaled up horizontally
                     w *= old_ar / new_ar
 
+        result.logical_box = (x + ws.pos_x, y + ws.pos_y, w, h)
         """
         Use masking to cut off unwanted CSD. Chromium uses a larger root xdg_surface than its toplevel
         to render shadows (even though being asked not to). This masks the root surface to toplevel dimensions
@@ -663,6 +686,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
 
+        if self_state.swallowed is not None:
+            x, y, w, h = result.box
+            result.mask = (0, 0, 0, 0)
+            result.box = (x + 0.5*w, y + 0.5*h, 0., 0.)
+            result.logical_box = (x + 0.5*w, y + 0.5*h, 0., 0.)
+
         if self_state.move_origin is not None and self_state.scale_origin is None:
             # No fixed output during a move
             result.workspace = None
@@ -680,7 +709,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if ws_state.size_origin is not None:
             size = ws_state.size_origin
         min_w *= size / ws.width
-        min_h *= size / ws.height
+        min_h *= size / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded)
 
         w = max(math.ceil(min_w), 1)
         h = max(math.ceil(min_h), 1)
@@ -721,20 +750,33 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             scale_origin=None, move_origin=None,
             stack_idx=self._handle,
         ).focusing_view(self)
+        state1, state2 = state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
 
         self.focus()
-        return state.setting_workspace_state(ws, ws_state1), reference_state.setting_workspace_state(ws, ws_state2)
+        self.wm.focus_borders.update_focus(self, (state1, state2))
+
+        return state1, state2
 
     """
     Init and map
     """
-    def init(self) -> PyWMViewDownstreamState:
+    def init(self) -> CustomDownstreamState:
         if self._initial_state is None:
             logger.info("Init: %s", self)
+            try:
+                rules = conf_rules_callback()(self)
+                if rules is not None:
+                    self._rules = rules
+                    logger.debug("View %s rules: %s" % (self, self._rules))
+                else:
+                    logger.debug("No rules for view %s" % self)
+
+            except:
+                logger.exception("In rules callback")
 
         # mypy
         if self.up_state is None:
-            return PyWMViewDownstreamState()
+            return CustomDownstreamState()
 
         ws = self.wm.get_active_workspace()
         if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
@@ -747,7 +789,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if self.pid is not None:
             self.panel = self.wm.panel_launcher.get_panel_for_pid(self.pid)
 
-        if self.panel is not None:
+        if self.panel is not None and self.role != "layer":  # Special case for layer panels
             self._initial_kind = 0
             self._initial_state = self._init_panel(self.up_state, ws)
 
@@ -767,6 +809,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 self._initial_state = self._init_tiled(self.up_state, ws)
 
         self.damage()
+        # Until show animation starts
+        self.wm.enter_constant_damage()
+
         return self._initial_state
 
     def show(self, state: LayoutState) -> tuple[Optional[LayoutState], Optional[LayoutState]]:
@@ -779,6 +824,16 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             return None, None
 
         logger.info("Show: %s", self)
+        try:
+            rules = conf_rules_callback()(self)
+            if rules is not None:
+                self._rules = rules
+                logger.debug("View %s rules: %s" % (self, self._rules))
+            else:
+                logger.debug("No rules for view %s" % self)
+
+        except:
+            logger.exception("In rules callback")
 
         ws = self.wm.get_active_workspace()
         if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
@@ -807,6 +862,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         if result != (None, None):
             self._mapped = True
 
+        self.validate_ssd(override_float=self._initial_kind == 2)
+        self.validate_background()
+
         return result
 
 
@@ -821,7 +879,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         # mypy
         if self._initial_state is None:
-            return PyWMViewDownstreamState()
+            return CustomDownstreamState()
 
         if kind != self._initial_kind:
             logger.debug("View %s changed kind: %d -> %d", kind, self._initial_kind)
@@ -836,7 +894,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                                                                                                               *self._initial_state.size))
 
         if up_state.is_mapped and not self._waiting_for_show:
-            self.wm.animate_to(self.show, conf_anim_t(), None)
+            self.wm.animate_to(self.show, conf_anim_t(), None, self._initial_kind <= 1) # overlay_safe for panel and layer
             self._waiting_for_show = True
         return self._initial_state
 
@@ -844,7 +902,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
     """
     Animation logic
     """
-    def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> PyWMViewDownstreamState:
+    def reducer(self, up_state: PyWMViewUpstreamState, state: LayoutState) -> CustomDownstreamState:
         try:
             self_state, ws_state, ws_handle = state.find_view(self)
             ws = [w for w in self.wm.workspaces if w._handle == ws_handle][0]
@@ -860,9 +918,9 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
             This however shouldn't happen
             """
             logger.warn("Missing state: %s" % self)
-            return PyWMViewDownstreamState(up_state=up_state)
+            return CustomDownstreamState(up_state=up_state)
 
-        if self.panel is not None:
+        if self.panel is not None and self.role != "layer":  # Special case for layer panels
             return self._reducer_panel(up_state, state, self_state, ws, ws_state)
         elif self_state.is_tiled:
             return self._reducer_tiled(up_state, state, self_state, ws, ws_state)
@@ -881,6 +939,21 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
         self._animate(ViewDownstreamInterpolation(self.wm, cur, nxt), dt)
 
+        if self._ssd is not None:
+            self._ssd.animate(old_state, new_state, dt)
+        if self._background is not None:
+            self._background.animate(old_state, new_state, dt)
+
+    def flush_animation(self) -> None:
+        Animate.flush_animation(self)
+        if self._ssd is not None:
+            self._ssd.flush_animation()
+        if self._background is not None:
+            self._background.flush_animation()
+
+    def _anim_damage(self) -> None:
+        self.damage(False)
+
     """
     Public API
     """
@@ -888,24 +961,66 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         return self.up_state is not None and self.up_state.is_focused
 
     def destroy(self) -> None:
+        # Until exit animation
+        self.wm.enter_constant_damage()
+
         self._destroyed = True
+        if self._ssd is not None:
+            self._ssd.destroy()
+        if self._background is not None:
+            self._background.destroy()
+
         self.wm.destroy_view(self)
+
+    def find_swallower(self) -> Optional[View]:
+        res: list[View] = []
+        for k, v in self.wm._views.items():
+            if id(v) == id(self):
+                continue
+
+            ppid = v.pid
+            while ppid is not None and ppid > 1:
+                if ppid == self.pid:
+                    res += [v]
+                ppid = psutil.Process(ppid).ppid()
+
+        if len(res) == 0:
+            return None
+        elif len(res) == 1:
+            return res[0]
+        else:
+            pids = set([v.pid for v in res])
+            remove: list[View] = []
+            for v in res:
+                ppid = psutil.Process(v.pid).ppid()
+                while ppid is not None and ppid > 1:
+                    if ppid in pids:
+                        remove += [v]
+                    ppid = psutil.Process(ppid).ppid()
+            for r in remove:
+                res.remove(r)
+            if len(res) == 0:
+                logger.debug("Unexpected")
+                return None
+            return res[0]
 
     def toggle_floating(self, state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> tuple[ViewState, ViewState]:
         padding = conf_padding() if not ws_state.is_fullscreen() else 0
         if state.is_tiled:
             float_size = self.up_state.size if self.up_state is not None else (100, 100)
             float_pos = state.i + 0.1, state.j - 0.1
+
+            self.validate_ssd(override_float=True)
             return state, state.copy(is_tiled=False, float_size=float_size, float_pos=float_pos)
 
         else:
             w = max(1, round((state.float_size[0] + 2*padding) / ws.width * ws_state.size))
-            h = max(1, round((state.float_size[1] + 2*padding) / ws.height * ws_state.size))
+            h = max(1, round((state.float_size[1] + 2*padding) / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) * ws_state.size))
             i = round(state.float_pos[0])
             j = round(state.float_pos[1])
-            return state, state.copy(is_tiled=True, i=i, j=j, w=w, h=h)
 
-        return state.copy(is_tiled=not self.is_floating, i=i, j=j, w=w, h=h)
+            self.validate_ssd(override_float=False)
+            return state, state.copy(is_tiled=True, i=i, j=j, w=w, h=h)
 
 
     def transform_to_closest_ws(self, ws: Workspace, i0: float, j0: float, w0: float, h0: float) -> tuple[Workspace, float, float, float, float]:
@@ -921,8 +1036,6 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
 
             cx = x + .5*w
             cy = y + .5*h
-
-            size = ws_state.size_origin if ws_state.size_origin is not None else ws_state.size
 
             if ws.pos_x - border_ws_switch <= cx <= ws.pos_x + ws.width + border_ws_switch and ws.pos_y - border_ws_switch <= cy <= ws.pos_y + ws.height + border_ws_switch:
                 return ws, i0, j0, w0, h0
@@ -991,6 +1104,50 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
         logger.debug("View outside of workspaces - defaulting")
         return ws, i0, j0, w0, h0
 
+    def update(self) -> None:
+        try:
+            rules = conf_rules_callback()(self)
+            if rules is not None:
+                self._rules = rules
+                logger.debug("View %s rules: %s" % (self, self._rules))
+            else:
+                logger.debug("No rules for view %s" % self)
+        except:
+            logger.exception("In rules callback")
+
+        if self._ssd is not None:
+            self._ssd.update()
+        if self._background is not None:
+            self._background.destroy()
+            self._background = None
+
+        self.validate_background()
+
+    def validate_ssd(self, override_float: Optional[bool] = None) -> None:
+        if self.up_state is None:
+            return
+
+        floating = self.is_float(self.wm.state) if override_float is None else override_float
+        show = floating and self._needs_ssd(self.up_state)
+        if show and self._ssd is None:
+            logger.debug("Creating SSD for %s" % self)
+            self._ssd = SSDs(self.wm, self)
+            self._ssd.damage()
+        elif not show and self._ssd is not None:
+            logger.debug("Destroying SSD for %s" % self)
+            self._ssd.destroy()
+            self._ssd = None
+
+    def validate_background(self) -> None:
+        needs_background = "blur" in self._rules and "radius" in self._rules["blur"] and "passes" in self._rules["blur"]
+
+        if needs_background and self._background is None:
+            self._background = self.wm.create_widget(BackgroundBlur, None, self, self._rules["blur"]["radius"], self._rules["blur"]["passes"], override_parent=self)
+        elif not needs_background and self._background is not None:
+            self._background.destroy()
+            self._background = None
+
+
     """
     Callbacks
     """
@@ -1001,12 +1158,12 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                     MoveResizeFloatingOverlay(self.wm, self))
         elif event == "request_fullscreen":
             logger.debug("Client requested fullscreen - following")
-            if self.is_focused():
+            if self.is_focused() and conf_accept_fullscreen_from_views():
                 self.wm.toggle_fullscreen(True)
             self.set_fullscreen(True)
         elif event == "request_nofullscreen":
             logger.debug("Client requests to leave fullscreen - following")
-            if self.is_focused():
+            if self.is_focused() and conf_accept_fullscreen_from_views():
                 self.wm.toggle_fullscreen(False)
             self.set_fullscreen(False)
 
@@ -1021,6 +1178,18 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState]):
                 # OK, on_resized is called before map
                 pass
 
+        self.wm.focus_borders.damage()
+        if self._ssd is not None:
+            self._ssd.damage()
+        if self._background is not None:
+            self._background.damage()
+
     def on_focus_change(self) -> None:
         if self.is_focused():
             self.wm.focus_hint(self)
+            self.wm.focus_borders.update_focus(self)
+        if self._ssd is not None:
+            self._ssd.damage()
+        if self._background is not None:
+            self._background.damage()
+

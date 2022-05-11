@@ -1,8 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from pywm.touchpad import GestureListener, LowpassGesture
-from pywm.touchpad.gestures import Gesture, HigherSwipeGesture
+from ..gestures import Gesture, GestureListener, LowpassGesture
 
 from .overlay import Overlay
 from ..grid import Grid
@@ -18,6 +17,10 @@ conf_grid_m = configured_value("swipe_zoom.grid_m", 1)
 conf_hyst = configured_value("swipe_zoom.hyst", 0.2)
 conf_gesture_factor = configured_value("swipe_zoom.gesture_factor", 4)
 
+conf_lp_freq = configured_value('gestures.lp_freq', 60.)
+conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
+
+conf_gesture_binding_swipe_to_zoom = configured_value('gesture_bindings.swipe_to_zoom', (None, 'swipe-4'))
 
 class SwipeToZoomOverlay(Overlay):
     def __init__(self, layout: Layout) -> None:
@@ -48,7 +51,7 @@ class SwipeToZoomOverlay(Overlay):
         """
         self.grid = Grid("size", min_size, self.initial_size + 1, self.initial_size, conf_grid_ovr(), conf_grid_m())
         self.hyst = Hysteresis(conf_hyst(), self.size)
-        
+
 
         self._set_state()
 
@@ -84,12 +87,12 @@ class SwipeToZoomOverlay(Overlay):
         self.layout.damage()
 
     def on_gesture(self, gesture: Gesture) -> bool:
-        if not isinstance(gesture, HigherSwipeGesture) or gesture.n_touches != 4:
+        if gesture.kind != conf_gesture_binding_swipe_to_zoom()[1]:
             self.layout.exit_overlay()
             return False
 
         if not self._has_gesture:
-            LowpassGesture(gesture).listener(GestureListener(
+            LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                 self._on_update,
                 lambda: self.layout.exit_overlay()
             ))

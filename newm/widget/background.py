@@ -7,8 +7,7 @@ import logging
 
 from pywm import PyWMBackgroundWidget, PyWMWidgetDownstreamState, PyWMOutput
 
-from ..interpolation import WidgetDownstreamInterpolation
-from ..animate import Animate
+from ..animate import Animatable
 from ..config import configured_value
 
 if TYPE_CHECKING:
@@ -181,8 +180,8 @@ class BackgroundState:
         return "<BackgroundState box=%s opacity=%f>" % (str(self.box), self.opacity)
 
 
-class Background(PyWMBackgroundWidget):
-    def __init__(self, wm: Layout, output: PyWMOutput, workspace: Workspace):
+class Background(PyWMBackgroundWidget, Animatable):
+    def __init__(self, wm: Layout, output: PyWMOutput, workspace: Workspace, *args: Any, **kwargs: Any):
 
         self._output: PyWMOutput = output
         self._workspace: Workspace = workspace
@@ -203,11 +202,11 @@ class Background(PyWMBackgroundWidget):
         if path is None:
             path = conf_path_default()
 
-        PyWMBackgroundWidget.__init__(self, wm, output, path)
+        PyWMBackgroundWidget.__init__(self, wm, output, path, *args, **kwargs)
 
         self._current_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
         self._target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
-        self._last_frame: float = time.time()
+        self._last_frame: float = 0.
         self._anim_caught: Optional[float] = None
 
         if self._prevent_anim:
@@ -218,24 +217,28 @@ class Background(PyWMBackgroundWidget):
         if self._prevent_anim:
             return
 
-        self._anim_caught = time.time() + dt
+        self._anim_caught = -dt
         self._target_state = BackgroundState(new_state, new_state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
 
-        self._last_frame = time.time()
         self.damage()
+
+    def flush_animation(self) -> None:
+        self._anim_caught = None
 
     def process(self) -> PyWMWidgetDownstreamState:
         if not self._prevent_anim:
             # State handling
             t = time.time()
 
-            if self._anim_caught is not None:
-                if t > self._anim_caught:
-                    self._anim_caught = None
-            else:
+            if self._anim_caught is None:
                 target_state = BackgroundState(self.wm.state, self.wm.state.get_workspace_state(self._workspace), (self.width, self.height), (self._output.width, self._output.height), self._output.scale)
                 if target_state.delta(self._target_state) > 1:
                     self._target_state = target_state
+            else:
+                if self._anim_caught < 0:
+                    self._anim_caught = t - 1./120. - self._anim_caught
+                    self._last_frame = t - 1./120.
+
 
             if self._current_state.delta(self._target_state) > 1:
                 self._current_state.approach(self._target_state, conf_time_scale(), t - self._last_frame)

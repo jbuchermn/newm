@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from abc import abstractmethod
 from threading import Thread
@@ -9,34 +9,38 @@ import cairo
 from pywm import PyWMCairoWidget, PyWMWidgetDownstreamState, PyWMOutput
 
 from ..interpolation import WidgetDownstreamInterpolation
-from ..animate import Animate
+from ..animate import Animate, Animatable
 from ..config import configured_value
 
 if TYPE_CHECKING:
     from ..state import LayoutState
     from ..layout import Layout, Workspace
 
-conf_bar_height = configured_value('bar.height', 20)
-conf_font_size = configured_value('bar.font_size', 12)
+conf_top_bar_height = configured_value('panels.top_bar.native.height', 20)
+conf_top_bar_font_size = configured_value('panels.top_bar.native.font_size', 12)
+conf_top_bar_font = configured_value('panels.top_bar.native.font', 'Source Code Pro for Powerline')
+conf_top_bar_text = configured_value('panels.top_bar.native.texts', lambda: ["1", "2", "3"])
 
-conf_top_bar_text = configured_value('bar.top_texts', lambda: ["1", "2", "3"])
-conf_bottom_bar_text = configured_value('bar.bottom_texts', lambda: ["4", "5", "6"])
-conf_font = configured_value('bar.font', 'Source Code Pro for Powerline')
+conf_bottom_bar_height = configured_value('panels.bottom_bar.native.height', 20)
+conf_bottom_bar_font_size = configured_value('panels.bottom_bar.native.font_size', 12)
+conf_bottom_bar_font = configured_value('panels.bottom_bar.native.font', 'Source Code Pro for Powerline')
+conf_bottom_bar_text = configured_value('panels.bottom_bar.native.texts', lambda: ["4", "5", "6"])
 
 
-class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
-    def __init__(self, wm: Layout, output: PyWMOutput):
+class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState], Animatable):
+    def __init__(self, wm: Layout, output: PyWMOutput, height: int, font: str, font_size: int, *args: Any, **kwargs: Any):
         PyWMCairoWidget.__init__(
             self, wm, output,
             int(output.scale * output.width),
-            int(output.scale * conf_bar_height()))
+            int(output.scale * height), *args, **kwargs)
         Animate.__init__(self)
 
         self._output: PyWMOutput = output
         self._workspace: Workspace = [w for w in self.wm.workspaces if self._output in w.outputs][0]
 
         self.texts = ["Leftp", "Middlep", "Rightp"]
-        self.font_size = output.scale * conf_font_size()
+        self.font_size = output.scale * font_size
+        self._font = font
 
     def set_texts(self, texts: list[str]) -> None:
         self.texts = texts
@@ -49,7 +53,7 @@ class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
         ctx.rectangle(0, 0, self.width, self.height)
         ctx.fill()
 
-        ctx.select_font_face(conf_font())
+        ctx.select_font_face(self._font)
         ctx.set_font_size(self.font_size)
 
         _, y_bearing, c_width, c_height, _, _ = ctx.text_extents("pA")
@@ -78,13 +82,16 @@ class Bar(PyWMCairoWidget, Animate[PyWMWidgetDownstreamState]):
 
         self._animate(WidgetDownstreamInterpolation(self.wm, self, cur, nxt), dt)
 
+    def _anim_damage(self) -> None:
+        self.damage(False)
+
     def process(self) -> PyWMWidgetDownstreamState:
         return self._process(self.reducer(self.wm.state))
 
 
 class TopBar(Bar, Thread):
-    def __init__(self, wm: Layout, output: PyWMOutput) -> None:
-        Bar.__init__(self, wm, output)
+    def __init__(self, wm: Layout, output: PyWMOutput, *args: Any, **kwargs: Any) -> None:
+        Bar.__init__(self, wm, output, conf_top_bar_height(), conf_top_bar_font(), conf_top_bar_font_size(), *args, **kwargs)
         Thread.__init__(self)
 
         self._running = True
@@ -99,8 +106,8 @@ class TopBar(Bar, Thread):
 
         ws_state = wm_state.get_workspace_state(self._workspace)
 
-        dy = ws_state.top_bar_dy * conf_bar_height()
-        result.box = (self._output.pos[0], self._output.pos[1] + dy - conf_bar_height(), self._output.width, conf_bar_height())
+        dy = ws_state.top_bar_dy * conf_top_bar_height()
+        result.box = (self._output.pos[0], self._output.pos[1] + dy - conf_top_bar_height(), self._output.width, conf_top_bar_height())
 
         return result
 
@@ -112,9 +119,10 @@ class TopBar(Bar, Thread):
     def set(self) -> None:
         self.set_texts(conf_top_bar_text()())
 
+
 class BottomBar(Bar, Thread):
-    def __init__(self, wm: Layout, output: PyWMOutput):
-        Bar.__init__(self, wm, output)
+    def __init__(self, wm: Layout, output: PyWMOutput, *args: Any, **kwargs: Any):
+        Bar.__init__(self, wm, output, conf_bottom_bar_height(), conf_bottom_bar_font(), conf_bottom_bar_font_size(), *args, **kwargs)
         Thread.__init__(self)
 
         self._running = True
@@ -129,9 +137,9 @@ class BottomBar(Bar, Thread):
 
         ws_state = wm_state.get_workspace_state(self._workspace)
 
-        dy = ws_state.bottom_bar_dy * conf_bar_height()
+        dy = ws_state.bottom_bar_dy * conf_bottom_bar_height()
         result.box = (self._output.pos[0], self._output.pos[1] + self._output.height - dy, self._output.width,
-                      conf_bar_height())
+                      conf_bottom_bar_height())
 
         return result
 

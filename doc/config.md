@@ -3,7 +3,7 @@
 These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and configure basic behaviour needed c-side.
 
 | Configuration key                    | Default value | Description                                                                                          |
-|--------------------------------------|---------------|------------------------------------------------------------------------------------------------------|
+| ------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------- |
 | `outputs`                            |               | List of dictionaries: Output configuration (see next lines)                                          |
 | `output.name`                        | `""`          | String: Name of output to attach config to actual output                                             |
 | `output.scale`                       | `1.0`         | Number: HiDPI scale of output                                                                        |
@@ -29,8 +29,8 @@ These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and 
 | `pywm.output.pos_x`                  | `None`        | Integer: Output position x in layout (or None to be placed automatically)                            |
 | `pywm.output.pos_y`                  | `None`        | Integer: Output position y in layout (or None to be placed automatically)                            |
 | `pywm.xcursor_theme`                 |               | String: `XCursor` theme (if not set, read from; if set, exported to `XCURSOR_THEME`)                 |
-| `pywm.xcursor_size`                  | `24`          | Integer: `XCursor` size  (if not set, read from; if set, exported to `XCURSOR_SIZE`)                 |
-| `pywm.tap_to_click`                  | `True`        | Boolean: On tocuhpads use tap for click enter                                                        |
+| `pywm.xcursor_size`                  | `24`          | Integer: `XCursor` size (if not set, read from; if set, exported to `XCURSOR_SIZE`)                  |
+| `pywm.tap_to_click`                  | `True`        | Boolean: On touchpads use tap for click enter                                                        |
 | `pywm.natural_scroll`                | `True`        | Boolean: On touchpads use natural scrolling enter                                                    |
 | `pywm.focus_follows_mouse`           | `True`        | Boolean: `Focus` window upon mouse enter                                                             |
 | `pywm.contstrain_popups_to_toplevel` | `False`       | Boolean: Try to keep popups contrained within their window                                           |
@@ -40,11 +40,11 @@ These values are mostly passed to [pywm](https://github.com/jbuchermn/pywm) and 
 
 Some basic appearence and animation related configuration:
 
-| Configuration key               | Default value | Description                                                                                                                                                                |
-|---------------------------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `background.path`               |               | String: Path to background image (replaces obsolete `wallpaper`)                                                                                                                                                  |
+| Configuration key               | Default value | Description                                                                                                                                                                        |
+| ------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `background.path`               |               | String: Path to background image (replaces obsolete `wallpaper`)                                                                                                                   |
 | `background.time_scale`         | `0.15`        | Number: Time scale of background movement                                                                                                                                          |
-| `background.anim`               | `True`        | Bool: Prevent (`False`) background movement                                                                                                                                      |
+| `background.anim`               | `True`        | Bool: Prevent (`False`) background movement                                                                                                                                        |
 | `blend_time`                    | `1.`          | Number: Time in seconds to blend in and out (at startup and shutdown)                                                                                                              |
 | `anim_time`                     | `.3`          | Number: Timescale of all animations in seconds                                                                                                                                     |
 | `corner_radius`                 | `17.5`        | Number: Radius of blacked out corners of display (0 to disable)                                                                                                                    |
@@ -58,8 +58,7 @@ Some basic appearence and animation related configuration:
 The most important configuration options with regard to behaviour are `mod` and `key_bindings`; see below for them and some more detailed ones.
 
 | Configuration key        | Default value         | Description                                                                                                                                                                                                                                    |
-|--------------------------|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `mod`                    | `PYWM_MOD_LOGO`       | Modifier key, either `PYWM_MOD_ALT` or `PYWM_MOD_LOGO`                                                                                                                                                                                         |
+| ------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `key_bindings`           | `lambda layout: []`   | Key bindings as array, see `default_config.py`, `layout.py` and [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py))                                                                                |
 | `view.send_fullscreen`   | `True`                | Let clients know when they are set to fullscreen (which leads to them adjusting, e.g. YouTube fullscreen)                                                                                                                                      |
 | `view.should_float`      | `lambda view: None`   | If a function is provided, it is called on every new view to determine if the view should float. The function can return a boolean (e.g. `True`) plus additionally one or two hints for size and position (e.g. `True, (500, 400), (0.5,0.5)`) |
@@ -79,7 +78,7 @@ as well as some general ones (`gestures` and `grid`). The best way is to experim
 plot script when (`grid.debug`) is enabled.
 
 | Configuration key              | Default value |
-|--------------------------------|---------------|
+| ------------------------------ | ------------- |
 | `gestures.lp_freq`             | `60.`         |
 | `gestures.lp_inertia`          | `.8`          |
 | `gestures.two_finger_min_dist` | `.1`          |
@@ -110,7 +109,7 @@ Configurable actions on keybindings can be any function calls on `layout`. Check
 The top and bottom bars are visible during the zoom-out ("Overview") mode. Configure font and texts (for an example see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py))
 
 | Configuration key  | Default value                     | Description                                            |
-|--------------------|-----------------------------------|--------------------------------------------------------|
+| ------------------ | --------------------------------- | ------------------------------------------------------ |
 | `bar.enabled`      | `True`                            | Show newm bars (set to `False` in order to use waybar) |
 | `bar.font`         | `'Source Code Pro for Powerline'` | Font name used in both bars                            |
 | `bar.font_size`    | `12`                              | Font size used in both bars                            |
@@ -123,6 +122,7 @@ The top and bottom bars are visible during the zoom-out ("Overview") mode. Confi
 **Warning - This functionality is going to need a rewrite in v0.3 - websocket connection is not here to stay and layer shell makes much of this config unnecessary**
 
 Panels in this context means the UI elements you interact with to
+
 - Launch an application from a menu (launcher)
 - Unlock the screen (locker)
 - Get information on changed volume etc (notifiers)
@@ -132,9 +132,8 @@ These are in general separate apps and can be developed independently of newm; t
 By default **newm_panel_basic** is included, where the first two of these are implemented as terminal applications in a very basic manner.
 See below for a different implementation using NW.js.
 
-
 | Configuration key                | Default value                              | Description                                                                          |
-|----------------------------------|--------------------------------------------|--------------------------------------------------------------------------------------|
+| -------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------ |
 | `panels.launcher.cmd`            | `"alacritty -e newm-panel-basic launcher"` | Command to start launcher panel                                                      |
 | `panels.launcher.cwd`            |                                            | Directory to start launcher panel in                                                 |
 | `panels.launcher.corner_radius`  | `0`                                        | Launcher panel: corner radius (pixel)                                                |
@@ -163,6 +162,5 @@ shortcuts = {
     2: ("alacritty", "alacritty")
 }
 ```
-
 
 provides ways to start chromium and alacritty either by typing their names, or by using the keys 1 and 2 when the launcher is open.

@@ -1,6 +1,6 @@
 pycairo
 psutil
-websockets
 python-pam
 pyfiglet
+dasbus
 thefuzz

@@ -1,86 +1,50 @@
 #+TITLE: newm developer information
 
-* Current (v0.2)
+* Current (v0.3)
 ** Bugs
-*** WAIT Bug: Occasionally Chromium / Brave size changes are not handled properly (e.g. appears twice the size initially / doesn't fill the screen after fullscreen) - possibly relies rather on xdg_surface than xdg_toplevel size (see pywm - wm_view_xdg.possibly_update_size)
+**** WAIT FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
+**** WAIT Screenshare crashes on chrome
+**** WAIT Issues on wakeup with login managers
 
-** STRT nixOS
-- [ ] Get it merged to nixpkgs
-- [X] Fix flakes for v0.2 and v0.3 / Adjust README
-- [X] Reference to nixGL and pam not working outside nixOS
+** Improvements
+*** DONE Swiping between fullscreen windows should not exit fullscreen
+*** TODO Kill moot animations (e.g. focusing different window by shortcut where both are visible)
+*** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
+*** TODO Update focus after animation / gesture
+*** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
+*** TODO Stacked windows: Place them in a grid or similar (configurable)
 
-** TODO TESTS
-- [ ] Write more tests concerning newm as opposed to client-side behaviour
-  - No rescale on overview and swipe-to-zoom up-to size=5
-  - Switch overview <-> fullscreen
-  - Fullscreen a 1x2 view, move -> view returns to 1x2
-  - Overview, swipe-to-zoom on floating windows
-  - Resize floating windows without imperfect frames
-  - newm as greeter
-  - reload config / move outputs around
-  - virtual output and moving windows in-between
-- [ ] OBS
-  - Misplaced popups when output isn't placed at 0, 0 (happens on sway as well), check with weston
-  - Check overlap on rescaling
-- [ ] Redo all tests
+** STRT Always present top and bottom bars
+**** DONE Autodetect height
+**** DONE Implement different modes
+**** STRT Implement slide-in-bars
 
+** TODO Documentation / Cleanup
+**** Move all configurable debug options into `debug.xyz = True`
+**** newm-panel-nwjs is history
+**** Update to v0.3
 
-* Setup clean arch chroot / qemu for testing
+* Backlog
+** NixOS greetd deployment including documentation
+** Small improvements
+    - Hide cursor automativally
+    - Switch to last focused window (i.e. make switching between two windows via one shortcut possible)
+    - Don't have double padding between windows
+    * Ultrawide monitors --> two workspaces on one output
+    - Layer shell - Exclusive zones and keyboard interactivity
+    - Move to resize overlay: Trigger size changes on invisible windows only in finish transition? Analogous to interpolate
+    - Move tiles from workspace to another -> animate size change instead of jump
+    - Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
+    - Scale windows moving others "out of the way"
+** rofi / dmenu app-switcher via newm-cmd
+** scratchpad
+** dbus endpoint for waybar etc
+** Support swaylock
+** Titles during Overview
+** More detailed config on Layout class
+** Ability to increase size of rows or cols (e.g. in 1x2 | 1x2)
+** Allow certain overlays to start during animations (e.g. 3/4-Finger-Swipe during animation one view)
+** Dynamic background
+** Possible and sensible to use a decorator for layout methods where reducer is defined and then an animation is started?
+** Video on newm-sidecar
 
-** Setup chroot
-
-Following https://www.collabora.com/news-and-blog/blog/2019/03/20/bootstraping-a-minimal-arch-linux-image/
-
-#+BEGIN_SRC sh
-truncate -s 20G arch_disk.raw
-mkfs.ext4 arch_disk.raw
-mkdir mnt
-sudo mount arch_disk.raw mnt
-sudo pacstrap mnt base base-devel linux linux-firmware
-sudo arch-chroot mnt
-#+END_SRC
-
-Now we are inside the chroot, very basic setup:
-
-#+BEGIN_SRC sh
-passwd
-pacman -S dhcpcd
-
-useradd --create-home test
-passwd test
-usermod -aG wheel test
-vim /etc/sudoers # add wheel
-su test
-#+END_SRC
-
-Finally clean up
-
-#+BEGIN_SRC sh
-exit
-sudo umount mnt
-#+END_SRC
-
-** Setup virtual machine
-
-To use the disk in a virtual machine (not incredibly nice...)
-
-#+BEGIN_SRC sh
-sudo mount arch_disk.raw mnt
-cp -r mnt/boot mnt_boot
-sudo umount mnt
-#+END_SRC
-
-and start using
-
-#+BEGIN_SRC sh
-qemu-system-x86_64 --enable-kvm -hda arch_disk.raw -m 4G -kernel mnt_boot/vmlinuz-linux -initrd mnt_boot/initramfs-linux[-fallback].img -append "root=/dev/sda rw" -vga virtio
-#+END_SRC
-
-To enable internet access, probably
-
-#+BEGIN_SRC sh
-systemctl enable dhcpcd
-systemctl start dhcpcd
-#+END_SRC
-
-is necessary

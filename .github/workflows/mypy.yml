@@ -16,7 +16,7 @@ jobs:
       with:
         repository: jbuchermn/pywm
         path: pywm
-        ref: master
+        ref: v0.3
     - name: Setup python 3.9
       uses: actions/setup-python@v1
       with:
@@ -24,8 +24,8 @@ jobs:
     - name: Install dependencies
       run: |
         pip install mypy
-        pip install -r newm/requirements_mypy.txt
-        pip install -r pywm/requirements_mypy.txt
+        pip install -r newm/requirements.txt
+        pip install -r pywm/requirements.txt
     - name: Run mypy
       working-directory: newm
       run: |

@@ -1,9 +1,10 @@
 # newm
+
 [![License](https://img.shields.io/github/license/jbuchermn/newm)](LICENSE)
 [![AUR](https://img.shields.io/aur/version/newm-git)](https://aur.archlinux.org/packages/newm-git)
 [![Join the chat at https://gitter.im/jbuchermn-newm/community](https://badges.gitter.im/jbuchermn-newm/community.svg)](https://gitter.im/jbuchermn-newm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Screenshot](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/Qvyt4XynlYI)
+[![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/Qvyt4XynlYI)
 
 ## Idea
 
@@ -12,17 +13,20 @@
 So, windows are placed on a two-dimensional grid of tiles taking either one by one, one by two, two by one, ... tiles of that grid. The compositor shows a one by one, two by two, ... view of that grid but scales the windows so they are usable on any zoom level (that is, zooming out the compositor actually changes the windows sizes). This makes for example switching between a couple of fullscreen applications very easy - place them in adjacent one by one tiles and have the compositor show a one by one view. And if you need to see them in parallel, zoom out. Then back in, and so on...
 
 The basic commands therefore are navigation (left, right, top, bottom) and zoom-in and -out. These commands can be handled very intuitively on the touchpad (one- and two-finger gestures are reserved for interacting with the apps):
+
 - Use three fingers to move around the wall
 - Use four fingers to zoom out (move them upward) or in (downward)
 
 To be able to arrange the windows in a useful manner, use
-- `Logo` (unless configured otherwise) plus one finger on the touchpad to move windows
-- `Logo` (unless configured otherwise) plus two fingers on the touchpad to change the extent of a window
 
-To get a quick overview of all windows, just hit the `Logo` (unless configured otherwise) key.
+- `Logo` (default , unless configured otherwise) + one finger on the touchpad to move windows
+- `Logo` (default , unless configured otherwise) + two fingers on the touchpad to change the extent of a window
+
+To get a quick overview of all windows, just hit the `Logo` (default , unless configured otherwise) key.
 Additionally with a quick 5-finger swipe a launcher panel can be opened.
 
 These behaviours can (partly) be configured (see below for setup). By default (check [default_config.py](newm/default_config.py)), the following key bindings (among others) are in place
+
 - `Logo-hjkl`: Move around
 - `Logo-un`: Scale
 - `Logo-HJKL`: Move windows around
@@ -30,32 +34,35 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 - `Logo-f`: Toggle a fullscreen view of the focused window (possibly resizing it)
 - ...
 
-## Changelog / Updates
+## Roadmap
 
-v0.2 introduces some breaking changes and many little improvements. Changes include
-- Support for multi-monitor setups
-- Basic support for layer shell (waybar, rofi, ...)
-- Many small improvements concerning window behaviour
-- Virtual output support (see [newm-sidecar](https://github.com/jbuchermn/newm-sidecar))
-- More configuration possibilities, as e.g. defining which windows should float
-- Improved background
-- Possibility to switch windows between tiled and floating
+Development on v0.3 has just started following the goals:
 
-If you're interested in current development, check out [newm v0.3](https://github.com/jbuchermn/newm/tree/v0.3).
-
+- [x] Improve panel functionality
+  - [x] Get rid of `sys_backend`
+  - [x] Get rid of websocket-communication
+  - [x] Possibly provide dbus endpoint
+  - [ ] Better integrate rofi (launcher), waybar (bar), mako / wob (notifications) and lock screen
+  - [ ] Support always-present top and bottom bars
+- [x] Borders
+  - [x] Draw borders around some floating windows (quite ugly floating windows on v0.2)
+  - [x] Possibly highlight focused window using a border
+- [x] Enable window swallowing
+- [ ] Blurred window backgrounds
+- Some minor improvements here and there
 
 ## Installing
 
 ### Arch Linux
 
-For Arch Linux users, an AUR package `newm-git` is provided. Alternatively, see below for pip installation.
+- [Intall on Arch linux](doc/install_Arch_Linux.md)
 
-### NixOS (work in progress)
+### NixOS [W.I.P]
 
 A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. A flakes based installation should work however and is preferred (see also [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)):
 
 ```sh
-nix build "github:jbuchermn/newm#newm"
+nix build "github:jbuchermn/newm/v0.3#newm"
 ./result/bin/start-newm -d
 ```
 
@@ -68,7 +75,7 @@ to be broken in this setup.
 
 [pywm](https://github.com/jbuchermn/pywm) is the abstraction layer for and main dependency of newm. If all prerequisites are installed, the command:
 
-``` sh
+```sh
 pip3 install --user git+https://github.com/jbuchermn/pywm
 ```
 
@@ -76,7 +83,7 @@ should suffice.Additionally, unless configured otherwise, newm depends on alacri
 
 To install newm:
 
-``` sh
+```sh
 pip3 install --user git+https://github.com/jbuchermn/newm
 ```
 
@@ -84,17 +91,17 @@ Installing newm this way means it cannot be used as a login manager, as it can o
 
 ### Starting and tests
 
-Start `newm` using
+Start newm using
 
-``` 
+```sh
 start-newm -d
 ```
 
 `-d` is the debug flag and gives more output to `$HOME/.cache/newm_log`.
 
-Open a terminal window (default `alacritty`) using `Logo+Enter` (default keybinding). Check if the touchpad works by pressing `Logo` and resizing the window using two-finger touch. If the touchpad does not work (and you intend to use it), check that your user has access by either command:
+Open a terminal window (default `alacritty`) using `Logo+Enter` (default config). Check if the touchpad works by pressing `Logo` and resizing the window using two-finger touch. If the touchpad does not work (and you intend to use it), check that your user has access by either command:
 
-```sh
+```
 ls -al /dev/input/event*
 evtest
 ```
@@ -109,7 +116,7 @@ Configuring is handled via Python and read from either `$HOME/.config/newm/confi
 
 For example, copy (path of `default_config.py` in the example assumes pip installation)
 
-``` sh
+```sh
 cd
 mkdir -p .config/newm
 cp .local/lib/pythonX.Y/site-packages/newm/default_config.py .config/newm/config.py
@@ -118,14 +125,12 @@ vim .config/newm/config.py
 
 and adjust, e.g. for a German HiDPI MacBook with a wallpaper placed in the home folder,
 
-``` py
+```py
 import os
 from pywm import (
     PYWM_MOD_LOGO,
     PYWM_MOD_ALT
 )
-
-mod = PYWM_MOD_ALT
 
 def on_startup():
     os.system("waybar &")
@@ -154,14 +159,13 @@ pywm = {
 
 ### Configuring
 
-The configuration works by evaluating the python config file and extracting the variables which the file exports. So basically you can do whatever you please to provide the configuration values, this is why certain config elements are callbacks. Some elements are hierarchical, to set these use PYthon dicts - e.g. for `x.y`:
+The configuration works by evaluating the python config file and extracting the variables which the file exports. So basically you can do whatever you please to provide the configuration values, this is why certain config elements are callbacks. Some elements are hierarchical, to set these use Python dicts - e.g. for `x.y`:
 
 ```py
 x = {
     'y': 2.0
 }
 ```
-
 
 The configuration can be dynamically updated (apart from a couple of fixed keys) using `Layout.update_config` (by default bound to `Mod+C`).
 
@@ -179,6 +183,7 @@ Be aware that functions (as in keybindings, `on_startup`, ...) are run synchrono
 ### Using newm-cmd
 
 `newm-cmd` provides a way to interact with a running newm instance from command line:
+
 - `newm-cmd inhibit-idle` prevents newm from going into idle states (dimming the screen)
 - `newm-cmd config` reloads the configuration
 - `newm-cmd lock` locks the screen
@@ -191,16 +196,15 @@ Be aware that functions (as in keybindings, `on_startup`, ...) are run synchrono
 
 This setup depends on [greetd](https://git.sr.ht/~kennylevinsen/greetd). Make sure to install newm as well as pywm and a newm panel in a way in which the greeter-user has access, i.e. either form the AUR, or e.g.:
 
-``` sh
+```sh
 sudo pip3 install git+https://github.com/jbuchermn/pywm
 sudo pip3 install git+https://github.com/jbuchermn/newm
 ```
 
 Place configuration in `/etc/newm/config.py` and check, after logging in as `greeter`, that `start-newm` works and shows the login panel (login itself should not work). If it works, set
 
-``` toml
+```toml
 command = "start-newm"
 ```
 
 in `/etc/greetd/config.toml`.
-

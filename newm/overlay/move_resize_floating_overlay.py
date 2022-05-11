@@ -3,17 +3,12 @@ from typing import TYPE_CHECKING, Optional
 
 import logging
 
-from pywm import PYWM_PRESSED
-from pywm.touchpad import (
-    SingleFingerMoveGesture,
-    TwoFingerSwipePinchGesture,
-    GestureListener,
-    LowpassGesture
-)
-from pywm.touchpad.gestures import Gesture
+from pywm import PYWM_PRESSED, PYWM_MOD_LOGO, PyWMModifiers
 
 from .overlay import Overlay
 from ..config import configured_value
+
+from ..gestures import Gesture, GestureListener, LowpassGesture
 
 if TYPE_CHECKING:
     from ..layout import Layout
@@ -23,6 +18,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 conf_anim_t = configured_value("anim_time", .3)
+
+conf_lp_freq = configured_value('gestures.lp_freq', 60.)
+conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
+
+conf_gesture_binding_move_resize = configured_value('gesture_bindings.move_resize', ('L', 'move-1', 'swipe-2'))
 
 class MoveResizeFloatingOverlay(Overlay):
     def __init__(self, layout: Layout, view: View):
@@ -119,7 +119,7 @@ class MoveResizeFloatingOverlay(Overlay):
         self._gesture_last_dx = 0
         self._gesture_last_dy = 0
 
-        if not self.layout.modifiers & self.layout.mod:
+        if not self.layout.modifiers.has(conf_gesture_binding_move_resize()[0]):
             logger.debug("MoveResizeFloatingOverlay: Exiting on gesture end")
             self.layout.exit_overlay()
 
@@ -137,23 +137,23 @@ class MoveResizeFloatingOverlay(Overlay):
         return False
 
     def on_gesture(self, gesture: Gesture) -> bool:
-        if isinstance(gesture, TwoFingerSwipePinchGesture):
+        if gesture.kind == conf_gesture_binding_move_resize()[2]:
             logger.debug("MoveResizeFloatingOverlay: New TwoFingerSwipePinch")
 
             self._motion_mode = False
             self._gesture_mode = True
-            LowpassGesture(gesture).listener(GestureListener(
+            LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                 self.gesture_resize,
                 self.gesture_finish
             ))
             return True
 
-        if isinstance(gesture, SingleFingerMoveGesture):
+        if gesture.kind == conf_gesture_binding_move_resize()[1]:
             logger.debug("MoveResizeFloatingOverlay: New SingleFingerMove")
 
             self._motion_mode = False
             self._gesture_mode = True
-            LowpassGesture(gesture).listener(GestureListener(
+            LowpassGesture(gesture, conf_lp_inertia(), conf_lp_freq()).listener(GestureListener(
                 self.gesture_move,
                 self.gesture_finish
             ))
@@ -162,12 +162,12 @@ class MoveResizeFloatingOverlay(Overlay):
         return False
 
 
-    def on_key(self, time_msec: int, keycode: int, state: int, keysyms: str) -> bool:
-        if state != PYWM_PRESSED and self.layout.mod_sym in keysyms:
+    def on_modifiers(self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers) -> bool:
+        if last_modifiers.pressed(modifiers).has(conf_gesture_binding_move_resize()[0]):
             if self._gesture_mode == False and self._motion_mode == False:
-                logger.debug("MoveResizeFlaotingOverlay: Exiting on mod release")
+                logger.debug("MoveResizeFloatingOverlay: Requesting close after Mod release")
                 self.layout.exit_overlay()
-                return True
+            return True
         return False
 
 

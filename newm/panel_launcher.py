@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import Optional, cast
 
 from threading import Thread
-import os
 import subprocess
 import psutil # type: ignore
 import time
@@ -12,13 +11,21 @@ from .config import configured_value
 
 logger = logging.getLogger(__name__)
 
+all_panels: list[str] = [
+    "lock",
+    "launcher",
+    "top_bar",
+    "bottom_bar",
+    "bar"
+]
+
 conf_cmds = {
-    'lock': configured_value("panels.lock.cmd", "alacritty -e newm-panel-basic lock"),
-    'launcher': configured_value("panels.launcher.cmd", "alacritty -e newm-panel-basic launcher"),
-    'notifiers': configured_value("panels.notifiers.cmd", None)
+    **{k: configured_value("panels.%s.cmd" % k, cast(Optional[str], None)) for k in all_panels},
+    'lock': configured_value("panels.lock.cmd", cast(Optional[str], "alacritty -e newm-panel-basic lock")),
+    'launcher': configured_value("panels.launcher.cmd", cast(Optional[str], "alacritty -e newm-panel-basic launcher")),
 }
 
-conf_cwds = {k: configured_value("panels.%s.cwd" % k, cast(Optional[str], None)) for k in ["lock", "launcher", "notifiers"]}
+conf_cwds = {k: configured_value("panels.%s.cwd" % k, cast(Optional[str], None)) for k in all_panels}
 
 class PanelLauncher:
     def __init__(self, panel: str) -> None:
@@ -46,6 +53,10 @@ class PanelLauncher:
             logger.exception("Subprocess")
 
     def check(self) -> None:
+        cmd = conf_cmds[self.panel]()
+        if cmd is None:
+            return
+
         try:
             if self._proc is None or self._proc.poll() is not None:
                 raise Exception()
@@ -66,7 +77,7 @@ class PanelsLauncher(Thread):
     def __init__(self) -> None:
         super().__init__()
         self._running = True
-        self._panels = [PanelLauncher(k) for k in conf_cmds.keys()]
+        self._panels = [PanelLauncher(k) for k in all_panels]
 
     def stop(self) -> None:
         self._running = False

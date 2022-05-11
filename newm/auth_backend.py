@@ -9,6 +9,7 @@ import socket
 import json
 
 from .config import configured_value
+from .dbus import AuthRequest
 
 if TYPE_CHECKING:
     from .layout import Layout
@@ -38,12 +39,14 @@ class _PAMBackend(_Backend):
 
     def enter_cred(self, cred: str) -> None:
         res = self._pam.authenticate(self._user, cred)
+        logger.debug("PAM Backend: %ssuccessful" % ("" if res else "not "))
         self.auth._auth_result(res)
         if not res and self._user is not None:
             self.init_auth(self._user)
 
     def start_session(self) -> None:
         logger.warn("Unsupported operation")
+
 
 class _GreetdBackend(_Backend):
     def __init__(self, auth: AuthBackend) -> None:
@@ -104,7 +107,7 @@ class AuthBackend:
         with open('/etc/passwd', 'r') as pwd:
             for user in pwd:
                 u = user.split(":")
-                if "nologin" not in u[6]:
+                if "nologin" not in u[6] or u[0] == greeter_user:
                     self._users += [(u[0], int(u[2]), u[6], u[0] == greeter_user)] # name, uid, login shell, is_greeter
 
         if len([g for g in self._users if g[3]]) == 0:
@@ -134,10 +137,10 @@ class AuthBackend:
 
         possible_users = [u for u in self._users if not u[3]]
         logger.debug("Requesting user")
-        self.layout.panel_endpoint.broadcast({
+        self.layout.dbus_endpoint.publish_auth_request(AuthRequest({
             'kind': 'auth_request_user',
             'users': [u[0] for u in possible_users]
-        })
+            }, self._on_user))
 
     def lock(self) -> None:
         current_user = [u for u in self._users if u[1] == os.getuid()]
@@ -148,24 +151,13 @@ class AuthBackend:
     """
     Panels endpoint
     """
-    def on_message(self, msg: dict[str, Any]) -> None:
-        logger.debug("Received kind=%s" % msg['kind'])
-        if msg['kind'] == "auth_register":
-            logger.debug("New auth client")
-            if self._state == "wait_user":
-                self.init_session()
-            elif self._state == "wait_cred":
-                self._request_cred()
-            else:
-                logger.debug("Acking register")
-                self.layout.panel_endpoint.broadcast({ 'kind': 'auth_ack' })
+    def _on_user(self, msg: dict[str, Any]) -> None:
+        logger.debug("Received user %s" % msg['user'])
+        self._backend.init_auth(msg['user'])
 
-        elif msg['kind'] == "auth_choose_user":
-            logger.debug("Received user %s" % msg['user'])
-            self._backend.init_auth(msg['user'])
-        elif msg['kind'] == "auth_enter_cred":
-            logger.debug("Received credentials")
-            self._backend.enter_cred(msg['cred'])
+    def _on_cred(self, msg: dict[str, Any]) -> None:
+        logger.debug("Received credentials")
+        self._backend.enter_cred(msg['cred'])
 
     """
     Backends endpoint
@@ -179,7 +171,8 @@ class AuthBackend:
             }
 
         logger.debug("Requesting credentials")
-        self.layout.panel_endpoint.broadcast(self._waiting_cred)
+        self.layout.dbus_endpoint.publish_auth_request(
+                AuthRequest(self._waiting_cred, self._on_cred))
         self._state = "wait_cred"
 
     def _auth_result(self, successful: bool) -> None:
