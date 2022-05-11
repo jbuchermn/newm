@@ -6,7 +6,7 @@
 
     flake-utils.url = "github:numtide/flake-utils";
 
-    pywmpkg.url = "github:jbuchermn/pywm/v0.3";
+    pywmpkg.url = "github:jbuchermn/pywm";
     pywmpkg.inputs.nixpkgs.follows = "nixpkgs";
   };
 

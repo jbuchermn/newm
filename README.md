@@ -36,20 +36,25 @@ These behaviours can (partly) be configured (see below for setup). By default (c
 
 ## Roadmap
 
-Development on v0.3 has just started following the goals:
+v0.3 has been merged into master, new features include
 
 - [x] Improve panel functionality
-  - [x] Get rid of `sys_backend`
-  - [x] Get rid of websocket-communication
-  - [x] Possibly provide dbus endpoint
-  - [ ] Better integrate rofi (launcher), waybar (bar), mako / wob (notifications) and lock screen
-  - [ ] Support always-present top and bottom bars
+- [X] Better bars
+  - [X] Support always-present top and bottom bars
+  - [ ] Slide in bars
 - [x] Borders
   - [x] Draw borders around some floating windows (quite ugly floating windows on v0.2)
   - [x] Possibly highlight focused window using a border
 - [x] Enable window swallowing
-- [ ] Blurred window backgrounds
-- Some minor improvements here and there
+- [X] Blurred window backgrounds
+- [X] Better key bindings
+- [X] DBus gestures
+- [ ] Better window stacking
+
+## Attention
+
+Unfortunately, documentation is missing on a lot of new features. This is *WIP*.
+
 
 ## Installing
 
@@ -57,12 +62,12 @@ Development on v0.3 has just started following the goals:
 
 - [Intall on Arch linux](doc/install_Arch_Linux.md)
 
-### NixOS [W.I.P]
+### NixOS
 
-A PR on [nixpkgs](https://github.com/nixos/nixpkgs) is currently work in progress. A flakes based installation should work however and is preferred (see also [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)):
+Install via flakes (see also [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)):
 
 ```sh
-nix build "github:jbuchermn/newm/v0.3#newm"
+nix build "github:jbuchermn/newm#newm"
 ./result/bin/start-newm -d
 ```
 

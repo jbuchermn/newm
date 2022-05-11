@@ -16,7 +16,6 @@ jobs:
       with:
         repository: jbuchermn/pywm
         path: pywm
-        ref: v0.3
     - name: Setup python 3.9
       uses: actions/setup-python@v1
       with:

@@ -22,7 +22,6 @@
 ** TODO Documentation / Cleanup
 **** Move all configurable debug options into `debug.xyz = True`
 **** newm-panel-nwjs is history
-**** Update to v0.3
 
 * Backlog
 ** NixOS greetd deployment including documentation
