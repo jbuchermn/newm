@@ -20,7 +20,7 @@
 **** TODO Implement slide-in-bars
 
 ** DONE Documentation / Cleanup
-** TODO v0.3 video
+** DONE v0.3 video
 
 * Backlog
 ** NixOS greetd deployment including documentation
