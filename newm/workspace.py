@@ -62,11 +62,12 @@ class Workspace:
         return w*h / (self.width * self.height)
 
     def __str__(self) -> str:
-        return "Workspace[%d] at %d, %d --> %d, %d" % (
+        return "Workspace[%d] at %d, %d --> %d, %d (Outputs: %s)" % (
             self._handle,
             self.pos_x,
             self.pos_y,
             self.width,
             self.height,
+            [o._key for o in self.outputs]
         )
 
