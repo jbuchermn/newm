@@ -104,7 +104,16 @@ The following rules can be used in `view.rules`:
 - `blur` (e.g. `lambda view: { 'blur': { 'raidus': 5, passes: 2 }}`): Apply background Kawase blur with radius and passes.
 - `float`, `float_size` (oprional) and `float_pos` (optional), e.g. `lambda view: { 'float': True, 'float_size': (300, 300), 'float_pos': (0.5, 0.5)}`: Always open certain views floating, possibly supplying size and position.
 
-Gestures are configured by a lot of numeric parameters; these are structured by the different gesture kinds (swipe to move, swipe to zoom, move, resize)
+Gesture bindings can be configured, where the first entry in the tuple describes a modifier (e.g. "L", the gesture will only be detected if Logo is held down meanwhile). The examples below are exhaustive for 1-5 finger gestures which can be used:
+
+| Configuration key                      | Default value                          | Description                                                                       |
+| -------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
+|`gesture_bindings.launcher`             |`(None, "swipe-5")`                     | Binding which slides in the launcher panel                                        |
+|`gesture_bindings.move_resize`          |`("L", "move-1", "swipe-2")`            | Bindings for moving (second in tuple) and resizing (third in tuple) a view        |
+|`gesture_bindings.swipe`                |`(None, "swipe-3")`                     | Binding to swipe between tiles                                                    |
+|`gesture_bindings.swipe_to_zoom`        |`(None, "swipe-4")`                     | Binding to zoom in and out                                                        |
+
+Gesture sensitivity and the like are configured by a lot of numeric parameters; these are structured by the different gesture kinds (swipe to move, swipe to zoom, move, resize)
 as well as some general ones (`gestures` and `grid`). The best way is to experiment with these and hot-reload the configuration (by default `M-C`). Also `grid.py` acts as a
 plot script when (`grid.debug`) is enabled.
 
@@ -134,6 +143,24 @@ plot script when (`grid.debug`) is enabled.
 | `move_resize.gesture_factor`   | `2`           |
 
 Configurable actions on keybindings can be any function calls on `layout`. Check the class `Layout` and [layout](layout.md) for details.
+
+### Config: Gesture providers
+
+Gestures can stem from various sources, most importantly from wlroots and libinput (referred to as *c gestures*), from evdev directly (referred to as *pyevdev gestures*), or from any DBus source (see e.g. [newm-hand-gestures](https://github.com/jbuchermn/newm-hand-gestures) for an implementation based on a webcam and you moving your hands in front of the laptop).
+
+The reason for having c, as well as python gestures, is that libinput handles gestures very poorly - e.g. it's not possible to detect the end (finger lifted from touchpad) of gestures. But (see also the
+troubleshooting section), python-side gestures are less secure as your user needs access to the device and newm can't rely on seat management.
+
+The following keys configure the providers:
+
+| Configuration key                       | Default value                          | Description                                                                       |
+| --------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
+| `gestures.c.enabled`                    |`True`                                  | Enable c gestures                                                                 |
+| `gestures.c.scale_px`                   |`800.`                                  | Scaling of c gestures (just experiment with it)                                   |
+| `gestures.dbus.enabled`                 |`True`                                  | Allow DBus gestures                                                               |
+| `gestures.pyevdev.enabled`              |`False`                                 | Enable python gestures (very much encouraged!)                                    |
+| `gestures.pyevdev.two_finger_min_dist`  |`.1`                                    | Experiment with this                                                              |
+| `gestures.pyevdev.validate_threshold`   |`.02`                                   | Experiment with this                                                              |
 
 ### Config: Top and bottom bars
 

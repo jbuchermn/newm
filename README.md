@@ -104,20 +104,6 @@ start-newm -d
 
 `-d` is the debug flag and gives more output to `$HOME/.cache/newm_log`.
 
-Open a terminal window (default `alacritty`) using `Logo+Enter` (default config). Check if the touchpad works by pressing `Logo` and resizing the window using two-finger touch. If the touchpad does not work (and you intend to use it), check that your user has access by either command:
-
-```
-ls -al /dev/input/event*
-evtest
-```
-
-As a sidenote, this is not necessary for a Wayland compositor in general as the devices can be accessed through `systemd-logind` or `seatd` or similar.
-However the python `evdev` module does not allow instantiation given a file descriptor (only a path which it then opens itself),
-so usage of that module would no longer be possible in this case (plus at first sight there is no easy way of getting that file descriptor to the 
-Python side). Also `wlroots` (`libinput` in the backend) does not expose touchpads as what they are (`touch-down`, `touch-up`, `touch-motion` for any
-number of parallel slots), but only as pointers (`motion` / `axis`), so gesture detection around `libinput`-events is not possible as well.
-
-Therefore, we're stuck with the less secure (and a lot easier) way of using the (probably named `input`) group.
 
 ## Configuration
 
@@ -184,6 +170,25 @@ See [config](./doc/config.md) for a documentation on all configurable values.
 
 Be aware that functions (as in keybindings, `on_startup`, ...) are run synchronously in the compositor thread. Blocking there will block the whole system.
 
+### Troubleshooting: Touchpad
+
+It is very much encouraged to use evdev, instead of python gestures (see [config](./doc/config.md)), however these might not work right from the start. Try:
+
+```
+ls -al /dev/input/event*
+evtest
+```
+
+This is a required prerequisite to use the python-side (smoother) gestures. C-side or DBus gestures do not require this.
+
+As a sidenote, this is not necessary for a Wayland compositor in general as the devices can be accessed through `systemd-logind` or `seatd` or similar.
+However the python `evdev` module does not allow instantiation given a file descriptor (only a path which it then opens itself),
+so usage of that module would no longer be possible in this case (plus at first sight there is no easy way of getting that file descriptor to the 
+Python side). Also `wlroots` (`libinput` in the backend) does not expose touchpads as what they are (`touch-down`, `touch-up`, `touch-motion` for any
+number of parallel slots), but only as pointers (`motion` / `axis`), so gesture detection around `libinput`-events is not possible as well.
+
+Therefore, we're stuck with the less secure (and a lot easier) way of using the (probably named `input`) group.
+
 ## Next steps
 
 - [Tips and tricks](./doc/tips_and_tricks.md)
@@ -202,6 +207,7 @@ Be aware that functions (as in keybindings, `on_startup`, ...) are run synchrono
 - `newm-cmd close-virtual-output <name>` close a virtual output
 - `newm-cmd clean` removes orphaned states, which can happen, but shouldn't (if you encounter the need for this, please file a bug)
 - `newm-cmd debug` prints out some debug info on the current state of views
+- `newm-cmd unlock` unlocks the compositor (if explicitly enabled in config) - this is useful in case you have trouble setting up the lock screen.
 
 ### Using newm for login
 
