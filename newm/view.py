@@ -75,6 +75,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
 
         self._ssd: Optional[SSDs] = None
         self._background: Optional[BackgroundBlur] = None
+        self._opacity: float = 1.0
 
         # State machine
         self._mapped = False
@@ -152,7 +153,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         return CustomDownstreamState()
 
     def _reducer_panel(self, up_state: PyWMViewUpstreamState, state: LayoutState, self_state: ViewState, ws: Workspace, ws_state: WorkspaceState) -> CustomDownstreamState:
-        result = CustomDownstreamState()
+        result = CustomDownstreamState(opacity=self._opacity)
         result.logical_box = (0, 0, 0, 0)
 
         if self.panel == "launcher":
@@ -311,7 +312,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         result.mask = (-100000, -100000, result.size[0] + 200000, result.size[1] + 200000)
         result.logical_box = result.box
 
-        result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
+        result.opacity = self._opacity * (1.0 if (result.lock_enabled and not state.final) else state.background_opacity)
         result.workspace = None
 
         return result
@@ -435,7 +436,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             result.corner_radius = 0
             result.mask = (-ws.width, -ws.height, width + 2 * ws.width, height + 2 * ws.height)
 
-        result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
+        result.opacity = self._opacity * (1.0 if (result.lock_enabled and not state.final) else state.background_opacity)
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
         result.logical_box = result.box[0] + up_state.offset[0] * size / ws_state.size, result.box[1] + up_state.offset[1] * size / ws_state.size, result.box[2], result.box[3]
 
@@ -683,7 +684,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         result.size = (width, height)
         result.box = (x, y, w, h)
 
-        result.opacity = 1.0 if (result.lock_enabled and not state.final) else state.background_opacity
+        result.opacity = self._opacity * (1.0 if (result.lock_enabled and not state.final) else state.background_opacity)
         result.box = (result.box[0] + ws.pos_x, result.box[1] + ws.pos_y, result.box[2], result.box[3])
 
         if self_state.swallowed is not None:
@@ -760,19 +761,25 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
     """
     Init and map
     """
+    def _get_rules(self) -> None:
+        try:
+            rules = conf_rules_callback()(self)
+            if rules is not None:
+                self._rules = rules
+                logger.debug("View %s rules: %s" % (self, self._rules))
+            else:
+                logger.debug("No rules for view %s" % self)
+
+            if 'opacity' in self._rules:
+                self._opacity = float(self._rules['opacity'])
+
+        except:
+            logger.exception("In rules callback")
+
     def init(self) -> CustomDownstreamState:
         if self._initial_state is None:
             logger.info("Init: %s", self)
-            try:
-                rules = conf_rules_callback()(self)
-                if rules is not None:
-                    self._rules = rules
-                    logger.debug("View %s rules: %s" % (self, self._rules))
-                else:
-                    logger.debug("No rules for view %s" % self)
-
-            except:
-                logger.exception("In rules callback")
+            self._get_rules()
 
         # mypy
         if self.up_state is None:
@@ -824,16 +831,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             return None, None
 
         logger.info("Show: %s", self)
-        try:
-            rules = conf_rules_callback()(self)
-            if rules is not None:
-                self._rules = rules
-                logger.debug("View %s rules: %s" % (self, self._rules))
-            else:
-                logger.debug("No rules for view %s" % self)
-
-        except:
-            logger.exception("In rules callback")
+        self._get_rules()
 
         ws = self.wm.get_active_workspace()
         if self.up_state is not None and (output := self.up_state.fixed_output) is not None:
@@ -1105,15 +1103,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         return ws, i0, j0, w0, h0
 
     def update(self) -> None:
-        try:
-            rules = conf_rules_callback()(self)
-            if rules is not None:
-                self._rules = rules
-                logger.debug("View %s rules: %s" % (self, self._rules))
-            else:
-                logger.debug("No rules for view %s" % self)
-        except:
-            logger.exception("In rules callback")
+        self._get_rules()
 
         if self._ssd is not None:
             self._ssd.update()
