@@ -32,7 +32,7 @@ conf_anim_t = configured_value("anim_time", .3)
 conf_lp_freq = configured_value('gestures.lp_freq', 60.)
 conf_lp_inertia = configured_value('gestures.lp_inertia', .8)
 
-conf_gesture_binding_move_resize = configured_value('gesture_bindings.move_resize', ('L', 'move-1', 'swipe-2'))
+conf_gesture_binding_move_resize = configured_value("gesture_bindings.move_resize", ("L", "move-1", "swipe-2"))
 
 class _Overlay:
     def reset_gesture(self) -> None:

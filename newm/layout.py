@@ -54,11 +54,9 @@ if TYPE_CHECKING:
 else:
     TKeyBindings = TypeVar("TKeyBindings")
 
-conf_key_bindings = configured_value(
-    "key_bindings", cast(TKeyBindings, lambda layout: [])
-)
+conf_key_bindings = configured_value("key_bindings", cast(TKeyBindings, lambda layout: []))
 
-conf_anim_t = configured_value("anim_time", 0.3)
+conf_anim_t = configured_value("anim_time", .3)
 conf_blend_t = configured_value("blend_time", 1.0)
 
 conf_idle_times = configured_value("energy.idle_times", [120, 300, 600])
@@ -91,18 +89,10 @@ conf_enable_dbus_gestures = configured_value("gestures.dbus.enabled", True)
 
 conf_enable_unlock_command = configured_value("enable_unlock_command", True)
 
-conf_gesture_binding_swipe_to_zoom = configured_value(
-    "gesture_bindings.swipe_to_zoom", (None, "swipe-4")
-)
-conf_gesture_binding_swipe = configured_value(
-    "gesture_bindings.swipe", (None, "swipe-3")
-)
-conf_gesture_binding_move_resize = configured_value(
-    "gesture_bindings.move_resize", ("L", "move-1", "swipe-2")
-)
-conf_gesture_binding_launcher = configured_value(
-    "gesture_bindings.launcher", (None, "swipe-5")
-)
+conf_gesture_binding_swipe_to_zoom = configured_value("gesture_bindings.swipe_to_zoom", (None, "swipe-4"))
+conf_gesture_binding_swipe = configured_value("gesture_bindings.swipe", (None, "swipe-3"))
+conf_gesture_binding_move_resize = configured_value("gesture_bindings.move_resize", ("L", "move-1", "swipe-2"))
+conf_gesture_binding_launcher = configured_value("gesture_bindings.launcher", (None, "swipe-5"))
 
 
 def _score(
