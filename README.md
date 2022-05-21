@@ -51,10 +51,6 @@ v0.3 has been merged into master, new features include
 - [X] DBus gestures
 - [ ] Better window stacking
 
-## Attention
-
-Unfortunately, documentation is missing on a lot of new features. This is *WIP*.
-
 
 ## Installing
 
