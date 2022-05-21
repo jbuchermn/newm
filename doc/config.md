@@ -49,11 +49,11 @@ Some basic appearence and animation related configuration:
 | `background.path`               |               | String: Path to background image (replaces obsolete `wallpaper`)                                                                                                                   |
 | `background.time_scale`         | `0.15`        | Number: Time scale of background movement                                                                                                                                          |
 | `background.anim`               | `True`        | Bool: Prevent (`False`) background movement                                                                                                                                        |
-| `blend_time`                    | `1.`          | Number: Time in seconds to blend in and out (at startup and shutdown)                                                                                                              |
+| `blend_time`                    | `1.0`         | Number: Time in seconds to blend in and out (at startup and shutdown)                                                                                                              |
 | `anim_time`                     | `.3`          | Number: Timescale of all animations in seconds                                                                                                                                     |
-| `corner_radius`                 | `17.5`        | Number: Radius of blacked out corners of display (0 to disable)                                                                                                                    |
-| `view.corner_radius`            | `12.5`        | Number: Corner radius of views (0 to disable)                                                                                                                                      |
-| `view.padding`                  | `8`           | Number: Padding around windows in normal mode (pixels)                                                                                                                             |
+| `corner_radius`                 | `18`          | Number: Radius of blacked out corners of display (0 to disable)                                                                                                                    |
+| `view.corner_radius`            | `12`          | Number: Corner radius of views (0 to disable)                                                                                                                                      |
+| `view.padding`                  | `6`           | Number: Padding around windows in normal mode (pixels)                                                                                                                             |
 | `view.fullscreen_padding`       | `0`           | Number: Padding around windows when they are in fullscreen (pixels)                                                                                                                |
 | `interpolation.size_adjustment` | `.5`          | Number: When window size adjustments of windows (slow) happen during gestures and animations, let them take place at the middle (`.5`) or closer to start / end (`.1` / `.9` e.g.) |
 
@@ -94,7 +94,7 @@ The most important configuration options with regard to behaviour are `mod` and 
 | `on_reconfigure`         | `lambda: None`        | Function called when the compositor has reloaded the config                                                                                                                                                                                                                                                                               |
 | `synchronous_update`     | `lambda: None`        | Function: called once per frame, can be used to e.g. update backlight dynamically. Be careful, will block the compositor.                                                                                                                                                                                                                 |
 | `view.debug_scaling`     | `False`               | Debug sclaing of views - if you think views look blurry, this outputs potential issues where logical size and size on the display do not match                                                                                                                                                                                            |
-| `enable_unlock_command`  | `False`               | Boolean: Enable `newm-cmd unlock` to unlock the compositor from second tty if lock screen breaks.                                                                                                                                                                                                                                         |
+| `enable_unlock_command`  | `True`                | Boolean: Enable `newm-cmd unlock` to unlock the compositor from second tty if lock screen breaks.                                                                                                                                                                                                                                         |
 | `energy.idle_callback`   | `lambda event: None`  | Callback called with events `"lock", "idle", "idle-lock", "idle-presuspend", "idle-suspend", "active", "sleep", "wakeup"` to e.g. adjust backlight. See [layout.py](https://github.com/jbuchermn/newm/blob/master/newm/layout.py) and [default_config.py](https://github.com/jbuchermn/newm/blob/master/newm/default_config.py)           |
 | `energy.idle_times`      | `[120, 300, 600]`     | Times to dim, lock and suspend, empty list disables energy management.                                                                                                                                                                                                                                                                    |
 | `energy.suspend_command` | `"systemctl suspend"` | Command called to suspend after `power_times[2] has passed`.                                                                                                                                                                                                                                                                              |
@@ -162,51 +162,55 @@ The following keys configure the providers:
 | `gestures.pyevdev.two_finger_min_dist`  |`.1`                                    | Experiment with this                                                              |
 | `gestures.pyevdev.validate_threshold`   |`.02`                                   | Experiment with this                                                              |
 
-### Config: Top and bottom bars
-
-The top and bottom bars are visible during the zoom-out ("Overview") mode. Configure font and texts (for an example see [dotfiles](https://github.com/jbuchermn/dotfiles/blob/master/newm/home/.config/newm/config.py))
-
-| Configuration key  | Default value                     | Description                                            |
-| ------------------ | --------------------------------- | ------------------------------------------------------ |
-| `bar.enabled`      | `True`                            | Show newm bars (set to `False` in order to use waybar) |
-| `bar.font`         | `'Source Code Pro for Powerline'` | Font name used in both bars                            |
-| `bar.font_size`    | `12`                              | Font size used in both bars                            |
-| `bar.height`       | `20`                              | Pixel height of both bars                              |
-| `bar.top_texts`    | `lambda: ["1", "2", "3"]`         | Function called each time top bar is rendered          |
-| `bar.bottom_texts` | `lambda: ["4", "5", "6"]`         | Function called each time bottom bar is rendererd      |
 
 ### Config: Panels
 
-**Warning - This functionality is going to need a rewrite in v0.3 - websocket connection is not here to stay and layer shell makes much of this config unnecessary**
+Panels mean UI elements, or clients with some special behaviour:
 
-Panels in this context means the UI elements you interact with to
+- `launcher`: Application launcher, which can be slid in using a gesture
+- `lock`: Lock screen
+- `top_bar`, `bottom_bar`, `bar`: Bars
 
-- Launch an application from a menu (launcher)
-- Unlock the screen (locker)
-- Get information on changed volume etc (notifiers)
-
-These are in general separate apps and can be developed independently of newm; they are started by newm and establish a connection to the compositor via websockets.
+These are in general separate apps and can be developed independently of newm; they are started (and restarted, if necessary) by newm and establish a connection to the compositor via dbus. For the bars, there is a newm-included simple implementation
+which can be configured using `panels.top_bar.native` (`panels.bottom_bar.native`). It is, however, not nearly as powerful, as e.g. `waybar`.
 
 By default **newm_panel_basic** is included, where the first two of these are implemented as terminal applications in a very basic manner.
-See below for a different implementation using NW.js.
 
-| Configuration key                | Default value                              | Description                                                                          |
-| -------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `panels.launcher.cmd`            | `"alacritty -e newm-panel-basic launcher"` | Command to start launcher panel                                                      |
-| `panels.launcher.cwd`            |                                            | Directory to start launcher panel in                                                 |
-| `panels.launcher.corner_radius`  | `0`                                        | Launcher panel: corner radius (pixel)                                                |
-| `panels.launcher.h`              | `0.8`                                      | Launcher panel: height (`1.0` is full height)                                        |
-| `panels.launcher.w`              | `0.8`                                      | Launcher panel: width (`1.0` is full width)                                          |
-| `panels.launcher.gesture_factor` | `200`                                      | Higher number means less movement with 5 fingers is necessary to open laucnher panel |
-| `panels.lock.cmd`                | `"alacritty -e newm-panel-basic lock"`     | Command to start lock panel                                                          |
-| `panels.lock.cwd`                |                                            | Directory to start lock panel in                                                     |
-| `panels.lock.corner_radius`      | `50`                                       | Lock panel: corner radius (pixel)                                                    |
-| `panels.lock.h`                  | `0.6`                                      | Lock panel: height (`1.0` is full height)                                            |
-| `panels.lock.w`                  | `0.7`                                      | Lock panel: width (`1.0` is full width)                                              |
-| `panels.notifiers.cmd`           |                                            | Command to start notifiers panel                                                     |
-| `panels.notifiers.cwd`           |                                            | Directory to start notifiers panel in                                                |
-| `panels.notifiers.h`             | `0.3`                                      | Notifiers panel: height (`1.0` is full height)                                       |
-| `panels.notifiers.w`             | `0.2`                                      | Notifiers panel: width (`1.0` is full width)                                         |
+| Configuration key                       | Default value                            | Description                                                                                     |
+| --------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `panels.launcher.cmd`                   |`"alacritty -e newm-panel-basic launcher"`| Command to start launcher panel                                                                 |
+| `panels.lock.cmd`                       |`"alacritty -e newm-panel-basic lock"`    | Command to start lock panel                                                                     |
+| `panels.bar.cmd`                        |`None`                                    | Command to start top and bottom bars (e.g. `waybar`)                                            |
+| `panels.top_bar.cmd`                    |`None`                                    | Command to start top bar (if not started by `bar` command or native bar in use)                 |
+| `panels.bottom_bar.cmd`                 |`None`                                    | Command to start bottom bar (if not started by `bar` command or native bar in use)              |
+| `panels.launcher.cwd`                   |`None`                                    | Working directory for corresponding command                                                     |
+| `panels.lock.cwd`                       |`None`                                    | Working directory for corresponding command                                                     |
+| `panels.top_bar.cwd`                    |`None`                                    | Working directory for corresponding command                                                     |
+| `panels.bottom_bar.cwd`                 |`None`                                    | Working directory for corresponding command                                                     |
+| `panels.bar.cwd`                        |`None`                                    | Working directory for corresponding command                                                     |
+| `panels.launcher.corner_radius`         |`0`                                       | Launcher panel: corner radius (pixel)                                                           |
+| `panels.launcher.gesture_factor`        |`200`                                     | Higher number means less movement with 5 fingers is necessary to open launcher panel            |
+| `panels.launcher.h`                     |`0.8`                                     | Launcher panel: height (`1.0` is full height)                                                   |
+| `panels.launcher.w`                     |`0.8`                                     | Launcher panel: width (`1.0` is full width)                                                     |
+| `panels.lock.corner_radius`             |`50`                                      | Lock panel: corner radius (pixel)                                                               |
+| `panels.lock.h`                         |`0.6`                                     | Lock panel: height (`1.0` is full height)                                                       |
+| `panels.lock.w`                         |`0.7`                                     | Lock panel: width (`1.0` is full width)                                                         |
+| `panels.bar.visible_fullscreen`         |`False`                                   | Should the bars be visible in fullscreen mode?                                                  |
+| `panels.bar.visible_normal`             |`True`                                    | Should the bars be visible in normal mode (or only if the overview is shown)?                   |
+| `panels.top_bar.visible_fullscreen`     |`False`                                   | Analogous to `panels.bar.visible_fullscreen`                                                    |
+| `panels.top_bar.visible_normal`         |`True`                                    | Analogous to `panels.bar.visible_normal`                                                        |
+| `panels.bottom_bar.visible_fullscreen`  |`False`                                   | Analogous to `panels.bar.visible_fullscreen`                                                    |
+| `panels.bottom_bar.visible_normal`      |`True`                                    | Analogous to `panels.bar.visible_normal`                                                        |
+| `panels.top_bar.native.enabled`         |`False`                                   | Enable native top bar                                                                           |
+| `panels.top_bar.native.font`            |`'Source Code Pro for Powerline'`         | Font for native top bar                                                                         |
+| `panels.top_bar.native.font_size`       |`12`                                      | Font size for native top bar                                                                    |
+| `panels.top_bar.native.height`          |`20`                                      | Height of native top bar                                                                        |
+| `panels.top_bar.native.texts`           |`lambda: ["1", "2", "3"]`                 | Function called each time top bar is rendered producing the text to render                      |
+| `panels.bottom_bar.native.enabled`      |`False`                                   | Enable native bottom bar                                                                        |
+| `panels.bottom_bar.native.font`         |`'Source Code Pro for Powerline'`         | Font for native bottom bar                                                                      |
+| `panels.bottom_bar.native.font_size`    |`12`                                      | Font size for native bottom bar                                                                 |
+| `panels.bottom_bar.native.height`       |`20`                                      | Height of native bottom bar                                                                     |
+| `panels.bottom_bar.native.texts`        |`lambda: ["4", "5", "6"]`                 | Function called each time bottom bar is rendered producing the text to render                   |
 
 The basic launcher panel is configured using `~/.config/newm/launcher.py`, e.g.
 
@@ -222,3 +226,12 @@ shortcuts = {
 ```
 
 provides ways to start chromium and alacritty either by typing their names, or by using the keys 1 and 2 when the launcher is open.
+
+### Config: helpers
+
+The package `newm.helpers` provide some behaviour (smooth dimming, pulse audio, `wob` support),
+that's very convenient and can be expected in a compositor, but is not really part of it.
+
+These methods can be used or ignored freely when configuring newm (see e.g. [default_config.py](https://github.com/jbuchermn/newm/blob/master/newm/default_config.py) or [dotfiles-nix](https://github.com/jbuchermn/dotfiles-nix)) for examples.
+
+The code is very simple and straight-forward, so I suggest reading through the corresponding files for details.

@@ -19,10 +19,7 @@
 **** DONE Implement different modes
 **** TODO Implement slide-in-bars
 
-** TODO Documentation / Cleanup
-**** Move all configurable debug options into `debug.xyz = True`
-**** newm-panel-nwjs is history
-
+** DONE Documentation / Cleanup
 ** TODO v0.3 video
 
 * Backlog
@@ -48,4 +45,5 @@
 ** Dynamic background
 ** Possible and sensible to use a decorator for layout methods where reducer is defined and then an animation is started?
 ** Video on newm-sidecar
+** Move all configurable debug options into `debug.xyz = True`
 
