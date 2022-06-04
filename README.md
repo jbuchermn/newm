@@ -56,7 +56,7 @@ v0.3 has been merged into master, new features include
 
 ### Arch Linux
 
-- [Intall on Arch linux](doc/install_Arch_Linux.md)
+- [Install on Arch linux](doc/install_Arch_Linux.md)
 
 ### NixOS
 
