@@ -7,21 +7,13 @@
 **** WAIT Issues on wakeup with login managers
 
 ** Improvements
-*** DONE Swiping between fullscreen windows should not exit fullscreen
 *** TODO Kill moot animations (e.g. focusing different window by shortcut where both are visible)
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 *** TODO Update focus after animation / gesture
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
 *** TODO Stacked windows: Place them in a grid or similar (configurable)
-
-** STRT Always present top and bottom bars
-**** DONE Autodetect height
-**** DONE Implement different modes
-**** TODO Implement slide-in-bars
-
-** DONE Documentation / Cleanup
-** DONE v0.3 video
-
+*** TODO Slide in top and bottom bars
+ 
 * Backlog
 ** NixOS greetd deployment including documentation
 ** Small improvements
