@@ -2,6 +2,9 @@
 
 At this point you're wondering how you can customize the appearance of applications in newm.
 Here's some help.
+If you want to customize the appearance of newm itself,
+[see the corresponding section in newm](./config.md#config-general-appearance)
+
 ## GTK settings
 
 For this purpose, and for any command that does not need to remain listening, with newm we can write a function your config file that will be executed every time the newm configuration is restarted. The function is named `on_reconfigure`.
