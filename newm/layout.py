@@ -480,10 +480,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
 
         self.damage()
 
-    def _setup(self, fallback: bool = True, reconfigure: bool = True) -> None:
-        if reconfigure:
-            load_config(fallback=fallback, path_str=self._config_file)
-
+    def _setup(self, reconfigure: bool = True) -> None:
         self._setup_widgets()
 
         self.key_processor.clear()
@@ -1213,7 +1210,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     """
 
     def update_config(self) -> None:
-        self._setup(fallback=False)
+        load_config(fallback=False, path_str=self._config_file)
+        self._setup()
         self.damage()
 
         conf_on_reconfigure()()
