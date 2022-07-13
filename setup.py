@@ -7,7 +7,7 @@ setup(name='newm',
       author='Jonas Bucher',
       author_email='j.bucher.mn@gmail.com',
       packages=['newm', 'newm.helper', 'newm.resources', 'newm.overlay', 'newm.widget', 'newm.dbus', 'newm.gestures', 'newm.gestures.provider', 'newm_panel_basic'],
-      package_data={'newm.resources': ['wallpaper.jpg']},
+      package_data={'newm.resources': ['wallpaper.jpg', 'newm.desktop']},
       scripts=['bin/start-newm', 'bin/.start-newm', 'bin/newm-cmd', 'bin/newm-panel-basic'],
       install_requires=[
           'pycairo',
