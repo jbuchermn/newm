@@ -107,6 +107,12 @@ class ViewState:
     def __repr__(self) -> str:
         return str(self)
 
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, ViewState):
+            return False
+
+        return self.__dict__ == o.__dict__
+
 
 class WorkspaceState:
     def __init__(self, ws: Workspace, **kwargs: Any) -> None:
@@ -588,6 +594,12 @@ class WorkspaceState:
     def get_view_state(self, view: View) -> ViewState:
         return self._view_states[view._handle]
 
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, WorkspaceState):
+            return False
+
+        return self.__dict__ == o.__dict__
+
 
 class LayoutState:
     def __init__(self, wm: Layout, **kwargs: Any) -> None:
@@ -762,3 +774,9 @@ class LayoutState:
             if not s.is_in_overview():
                 return False
         return True
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, LayoutState):
+            return False
+
+        return self.__dict__ == o.__dict__

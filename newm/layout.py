@@ -211,7 +211,12 @@ class Animation:
             # Enforce constraints on final state
             self._final_state.constrain_and_validate()
 
-            self.layout._animate_to(self._final_state, self.duration)
+            if self._final_state == self.layout.state:
+                logger.debug("Skipping moot animation")
+                self._final_state = None
+            else:
+                self.layout._animate_to(self._final_state, self.duration)
+
         else:
             logger.debug("Animation decided not to take place anymore")
 
@@ -480,10 +485,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
 
         self.damage()
 
-    def _setup(self, fallback: bool = True, reconfigure: bool = True) -> None:
-        if reconfigure:
-            load_config(fallback=fallback, path_str=self._config_file)
-
+    def _setup(self, reconfigure: bool = True) -> None:
         self._setup_widgets()
 
         self.key_processor.clear()
@@ -1213,7 +1215,8 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     """
 
     def update_config(self) -> None:
-        self._setup(fallback=False)
+        load_config(fallback=False, path_str=self._config_file)
+        self._setup()
         self.damage()
 
         conf_on_reconfigure()()
