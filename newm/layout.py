@@ -130,21 +130,29 @@ def _score(
         i2, j2, w2, h2 = j2, i2, h2, w2
 
     """
-    At this point: im == 1, jm == 0
+    At this point: Either im == 1, jm == 0 or im == jm == 1
     """
     d_i = i2 - (i1 + w1)
     if d_i < 0:
         return 1000
 
-    d_j = 0.0
-    if j2 >= j1 + h1:
+    if jm == 1:
         d_j = j2 - (j1 + h1)
-    elif j1 >= j2 + h2:
-        d_j = j1 - (j2 + h2)
-    else:
-        d_j = -1
+        if d_j < 0:
+            return 1000
 
-    return d_i + d_j
+        return d_i + d_j
+
+    else:
+        d_j = 0.0
+        if j2 >= j1 + h1:
+            d_j = j2 - (j1 + h1)
+        elif j1 >= j2 + h2:
+            d_j = j1 - (j2 + h2)
+        else:
+            d_j = -1
+
+        return d_i + d_j
 
 
 class Animation:
