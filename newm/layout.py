@@ -211,7 +211,12 @@ class Animation:
             # Enforce constraints on final state
             self._final_state.constrain_and_validate()
 
-            self.layout._animate_to(self._final_state, self.duration)
+            if self._final_state == self.layout.state:
+                logger.debug("Skipping moot animation")
+                self._final_state = None
+            else:
+                self.layout._animate_to(self._final_state, self.duration)
+
         else:
             logger.debug("Animation decided not to take place anymore")
 

@@ -8,7 +8,8 @@
 
 ** Improvements
 *** DONE Swiping between fullscreen windows should not exit fullscreen
-*** TODO Kill moot animations (e.g. focusing different window by shortcut where both are visible)
+*** DONE Kill moot animations (e.g. focusing different window by shortcut where both are visible)
+*** TODO Diagonal movements
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 *** TODO Update focus after animation / gesture
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
