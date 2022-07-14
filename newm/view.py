@@ -582,12 +582,14 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
         w = self_state.w
         h = self_state.h
 
-        _, stack_idx, stack_len = self_state.stack_data
-        if stack_len > 1:
-            i += 0.05 * stack_idx / (stack_len - 1)
-            j += 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) * stack_idx / (stack_len - 1)
-            w -= 0.05
-            h -= 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded)
+        stack_idx, stack_len = 0, 1
+        if not ws_state.is_fullscreen():
+            _, stack_idx, stack_len = self_state.stack_data
+            if stack_len > 1:
+                i += 0.05 * stack_idx / (stack_len - 1)
+                j += 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded) * stack_idx / (stack_len - 1)
+                w -= 0.05
+                h -= 0.05 * ws.width / (ws.height - ws_state.top_excluded - ws_state.bottom_excluded)
 
         x = i - ws_state.i
         y = j - ws_state.j
