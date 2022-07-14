@@ -25,6 +25,8 @@ conf_native_bottom_bar_enabled = configured_value("panels.bottom_bar.native.enab
 conf_native_top_bar_height = configured_value('panels.top_bar.native.height', 20)
 conf_native_bottom_bar_height = configured_value('panels.bottom_bar.native.height', 20)
 
+conf_dont_validate_fullscreen = configured_value('view.sticky_fullscreen', False)
+
 def top_bar_vn() -> bool:
     if conf_top_bar_vn() is not None:
         return conf_top_bar_vn()
@@ -184,6 +186,9 @@ class WorkspaceState:
 
 
     def validate_fullscreen(self) -> None:
+        if conf_dont_validate_fullscreen():
+            return
+
         if self.state_before_fullscreen is not None:
             _1, _2, _3, i, j, size = self.state_before_fullscreen
 
