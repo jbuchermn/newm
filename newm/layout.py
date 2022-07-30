@@ -187,6 +187,8 @@ class Animation:
 
     def check_finished(self) -> bool:
         if self._started is not None and self._final_state is None:
+            if callable(self.then):
+                self.then()
             self.layout.do_flush_animation()
             return True
 
