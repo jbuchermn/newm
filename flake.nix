@@ -8,6 +8,7 @@
 
     pywmpkg.url = "github:jbuchermn/pywm";
     pywmpkg.inputs.nixpkgs.follows = "nixpkgs";
+    pywmpkg.inputs.flake-utils.follows = "flake-utils";
   };
 
   outputs = { self, nixpkgs, pywmpkg, flake-utils }:
