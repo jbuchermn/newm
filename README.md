@@ -6,6 +6,10 @@
 
 [![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/4I_IHbP-iNQ)
 
+## Remarks
+
+Development has slowed down a lot due to my personal time. I'm no longer maintaining a separate stable branch - master is the most current working going for v0.3.
+
 ## Idea
 
 **newm** is a Wayland compositor written with laptops and touchpads in mind. The idea is, instead of placing windows inside the small viewport (that is, the monitor) to arrange them along an arbitrarily large two-dimensional wall (generally without windows overlapping) and focus the compositors job on moving around along this wall efficiently and providing ways to the user to rearrange the wall such that they find the overall layout intuitive.
