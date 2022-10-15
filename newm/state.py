@@ -163,8 +163,9 @@ class WorkspaceState:
 
     def copy(self, **kwargs: Any) -> WorkspaceState:
         res = WorkspaceState(self._ws, **{**self.__dict__, **kwargs})
-        for h, s in self._view_states.items():
-            res._view_states[h] = s.copy()
+        res.intermediate_rows = list(self.intermediate_rows)
+        res.intermediate_cols = list(self.intermediate_cols)
+        res._view_states = {h: s.copy() for h, s in self._view_states.items()}
         return res
 
     def update(self, **kwargs: Any) -> None:
@@ -172,9 +173,8 @@ class WorkspaceState:
             self.__dict__[k] = v
 
     def replacing_view_state(self, view: View, **kwargs: Any) -> WorkspaceState:
-        res = WorkspaceState(self._ws, **self.__dict__)
-        for h, s in self._view_states.items():
-            res._view_states[h] = s.copy(**(kwargs if h==view._handle else {}))
+        res = self.copy()
+        res.update_view_state(view, **kwargs)
         return res
 
     def update_view_state(self, view: View, **kwargs: Any) -> None:
@@ -651,8 +651,7 @@ class LayoutState:
 
     def copy(self, **kwargs: Any) -> LayoutState:
         res = LayoutState(self._wm, **{**self.__dict__, **kwargs})
-        for h, s in self._workspace_states.items():
-            res._workspace_states[h] = s.copy()
+        res._workspace_states = {h: s.copy() for h, s in self._workspace_states.items()}
         return res
 
     def update(self, **kwargs: Any) -> None:
@@ -661,14 +660,14 @@ class LayoutState:
 
     def replacing_workspace_state(self, workspace: Workspace, **kwargs: Any) -> LayoutState:
         res = LayoutState(self._wm, **self.__dict__)
-        for h, s in self._workspace_states.items():
-            res._workspace_states[h] = s.copy(**(kwargs if h==workspace._handle else {}))
+        res._workspace_states = {h: s.copy(**(kwargs if h==workspace._handle else {}))
+                                 for h, s in self._workspace_states.items()}
         return res
 
     def setting_workspace_state(self, workspace: Workspace, state: WorkspaceState) -> LayoutState:
         res = LayoutState(self._wm, **self.__dict__)
-        for h, s in self._workspace_states.items():
-            res._workspace_states[h] = s.copy() if h!=workspace._handle else state
+        res._workspace_states = {h: (s.copy() if h!=workspace._handle else state)
+                                 for h, s in self._workspace_states.items()}
         return res
 
     def update_view_state(self, view: View, **kwargs: Any) -> None:
@@ -759,12 +758,8 @@ class LayoutState:
         return self._workspace_states[workspace._handle]
 
     def get_view_state(self, view: View) -> ViewState:
-        for h, s in self._workspace_states.items():
-            try:
-                return s.get_view_state(view)
-            except:
-                pass
-        raise Exception("Could not find view %d state" % view._handle)
+        view_state, ws_state, ws_handle = self.find_view(view)
+        return view_state
 
     def find_view(self, view: View) -> tuple[ViewState, WorkspaceState, int]:
         for h, s in self._workspace_states.items():
