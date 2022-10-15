@@ -1,22 +1,23 @@
 #+TITLE: newm developer information
 
 * Current (v0.3)
+
+** TODO Update wlroots
+
 ** Bugs
 **** WAIT FocusBorder (possibly SSD as well) sometimes shows up before newm closes (after fade-out animation has finished)
 **** WAIT Screenshare crashes on chrome
 **** WAIT Issues on wakeup with login managers
 
 ** Improvements
-*** DONE Swiping between fullscreen windows should not exit fullscreen
-*** DONE Kill moot animations (e.g. focusing different window by shortcut where both are visible)
-*** TODO Diagonal movements
+*** TODO Diagonal movements (kebindings)
 *** TODO Clean-up state validation logic, e.g.: When rescaling a window which results in a different viewpoint afterwards, this adjustment is only triggered after releasing Mod
 *** TODO Update focus after animation / gesture
 *** TODO Configurable locking behaviour (blur, dim, squish) - don't expose texture_shaders as config option
-*** TODO Stacked windows: Place them in a grid or similar (configurable)
-*** TODO Slide in top and bottom bars
  
 * Backlog
+** Stacked windows: Place them in a grid or similar (configurable)
+** Slide in top and bottom bars
 ** NixOS greetd deployment including documentation
 ** Small improvements
     - Hide cursor automativally
@@ -28,6 +29,7 @@
     - Move tiles from workspace to another -> animate size change instead of jump
     - Autoplace the first couple of windows more like i3 (i.e. resizing existing windows / tiling)
     - Scale windows moving others "out of the way"
+
 ** rofi / dmenu app-switcher via newm-cmd
 ** scratchpad
 ** dbus endpoint for waybar etc

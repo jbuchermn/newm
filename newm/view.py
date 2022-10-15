@@ -882,7 +882,7 @@ class View(PyWMView[Layout], Animate[PyWMViewDownstreamState], Animatable):
             return CustomDownstreamState()
 
         if kind != self._initial_kind:
-            logger.debug("View %s changed kind: %d -> %d", kind, self._initial_kind)
+            logger.debug("View %s changed kind: %d -> %d" % (self, kind, self._initial_kind))
             return self._initial_state
 
         if up_state.size != self._initial_state.size and self._initial_state.size[0] > 0 and self._initial_state.size[1] > 0 and up_state.size[0] > 0 and up_state.size[1] > 0:

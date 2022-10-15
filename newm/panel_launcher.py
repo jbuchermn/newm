@@ -89,11 +89,8 @@ class PanelsLauncher(Thread):
             return None
 
         for p in self._panels:
-            ppid = pid
-            while ppid is not None and ppid > 1:
-                if ppid == p.get_pid():
-                    return p.panel
-                ppid = psutil.Process(ppid).ppid()
+            if pid == p.get_pid():
+                return p.panel
 
         return None
 
