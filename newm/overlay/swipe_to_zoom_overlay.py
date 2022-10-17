@@ -10,7 +10,7 @@ from ..config import configured_value
 
 if TYPE_CHECKING:
     from ..layout import Layout
-    from ..state import LayoutState
+    from ..state import LayoutState, ViewState
 
 conf_grid_ovr = configured_value("swipe_zoom.grid_ovr", 0.2)
 conf_grid_m = configured_value("swipe_zoom.grid_m", 1)
@@ -41,7 +41,7 @@ class SwipeToZoomOverlay(Overlay):
         self._focused_br = None
         min_size = 1
         if self._focused is not None:
-            state = self.layout.state.get_view_state(self._focused)
+            state: Optional[ViewState] = self.layout.state.get_view_state(self._focused)
             # if a floating view is focused, see if there's a non-floating parent
             # to set the min_size based on.
             if self._focused.is_float(self.layout.state):
