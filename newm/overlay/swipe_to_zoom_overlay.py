@@ -42,9 +42,31 @@ class SwipeToZoomOverlay(Overlay):
         min_size = 1
         if self._focused is not None:
             state = self.layout.state.get_view_state(self._focused)
-            min_size = min(self.initial_size, round(max(state.w, state.h)))
-            if self.i + self.size > state.i + state.w - 0.1 and self.j + self.size > state.j + state.h - 0.1:
-                self._focused_br = state.i + state.w, state.j + state.h
+            # if a floating view is focused, see if there's a non-floating parent
+            # to set the min_size based on.
+            if self._focused.is_float(self.layout.state):
+                found = False
+                view = self._focused
+                for i in range(5):
+                    view = view.parent
+                    if view is not None:
+                        state = self.layout.state.get_view_state(view)
+                        if not view.is_float(self.layout.state):
+                            found = True
+                            break
+                    else:
+                        break
+                if not found:
+                    state = None
+            if state is not None:
+                # set min_size so the focused view cannot be zoomed off-screen
+                square_containing_focused_view = round(max(state.w, state.h))
+                if square_containing_focused_view > 0 and square_containing_focused_view < self.initial_size:
+                    min_size = square_containing_focused_view
+                else:
+                    min_size = self.initial_size
+                if self.i + self.size > state.i + state.w - 0.1 and self.j + self.size > state.j + state.h - 0.1:
+                    self._focused_br = state.i + state.w, state.j + state.h
 
         """
         Grid
