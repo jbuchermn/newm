@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, cast
 
 from ..gestures import Gesture, GestureListener, LowpassGesture
 
@@ -11,6 +11,7 @@ from ..config import configured_value
 if TYPE_CHECKING:
     from ..layout import Layout
     from ..state import LayoutState, ViewState
+    from ..view import View
 
 conf_grid_ovr = configured_value("swipe_zoom.grid_ovr", 0.2)
 conf_grid_m = configured_value("swipe_zoom.grid_m", 1)
@@ -48,7 +49,7 @@ class SwipeToZoomOverlay(Overlay):
                 found = False
                 view = self._focused
                 for i in range(5):
-                    view = view.parent
+                    view = cast(View, view.parent)
                     if view is not None:
                         state = self.layout.state.get_view_state(view)
                         if not view.is_float(self.layout.state):
