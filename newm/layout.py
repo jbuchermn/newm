@@ -1453,7 +1453,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     def move_next_view(
         self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False
     ) -> None:
-        def inner_next_view(index: int, views: list[View]):
+        def inner_next_view(index: int, views: list[View]) -> None:
             num_w = len(views)
             if index == num_w:
                 index = 0
@@ -1464,7 +1464,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     def move_prev_view(
         self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False
     ) -> None:
-        def inner_prev_view(index: int, views: list[View]):
+        def inner_prev_view(index: int, views: list[View]) -> None:
             self.focus_view(views[index])
 
         self.__hook_prev_next_view(
