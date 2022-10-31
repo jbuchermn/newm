@@ -37,8 +37,10 @@ class Layout:
     def focus_view(self, view: View) -> None:
     def move_in_stack(self, delta: int) -> None:
     def move(self, delta_i: int, delta_j: int) -> None:
-    def move_next_view(self, dv: int=1, active_workspace: bool=True) -> None:
+    def move_next_view(self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False) -> None:
+    def move_prev_view(self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False) -> None:
     def move_workspace(self, ds: int=1) -> None:
+    def goto_view(self, index: int, active_workspace: bool = True, only_tiles: bool = False) -> None:
 
     """
     5. Change focused view

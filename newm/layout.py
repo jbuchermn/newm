@@ -1,45 +1,33 @@
 from __future__ import annotations
-from typing import Optional, Callable, TYPE_CHECKING, TypeVar, Union, Any, cast
 
-import time
-import math
 import logging
+import math
 import os
+import time
 from itertools import product
 from threading import Thread
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, Union, cast
 
-from pywm import (
-    PyWM,
-    PyWMModifiers,
-    PyWMOutput,
-    PyWMDownstreamState,
-    PYWM_MOD_CTRL,
-    PYWM_PRESSED,
-)
-from .gestures import Gesture
-from .gestures.provider import GestureProvider, CGestureProvider, PyEvdevGestureProvider
+from pywm import (PYWM_MOD_CTRL, PYWM_PRESSED, PyWM, PyWMDownstreamState,
+                  PyWMModifiers, PyWMOutput)
 
-from .workspace import Workspace
-from .state import LayoutState, WorkspaceState
-from .interpolation import LayoutDownstreamInterpolation
-from .animate import Animate, Animatable
-from .view import View
-from .config import configured_value, load_config, print_config
-
-from .key_processor import KeyProcessor
-from .dbus import DBusEndpoint, DBusGestureProvider
-from .panel_launcher import PanelsLauncher
+from .animate import Animatable, Animate
 from .auth_backend import AuthBackend
-
-from .widget import TopBar, BottomBar, Background, Corner, FocusBorders
-from .overlay import (
-    Overlay,
-    MoveResizeOverlay,
-    MoveResizeFloatingOverlay,
-    SwipeOverlay,
-    SwipeToZoomOverlay,
-    LauncherOverlay,
-)
+from .config import configured_value, load_config, print_config
+from .dbus import DBusEndpoint, DBusGestureProvider
+from .gestures import Gesture
+from .gestures.provider import (CGestureProvider, GestureProvider,
+                                PyEvdevGestureProvider)
+from .interpolation import LayoutDownstreamInterpolation
+from .key_processor import KeyProcessor
+from .overlay import (LauncherOverlay, MoveResizeFloatingOverlay,
+                      MoveResizeOverlay, Overlay, SwipeOverlay,
+                      SwipeToZoomOverlay)
+from .panel_launcher import PanelsLauncher
+from .state import LayoutState, WorkspaceState
+from .view import View
+from .widget import Background, BottomBar, Corner, FocusBorders, TopBar
+from .workspace import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +42,11 @@ if TYPE_CHECKING:
 else:
     TKeyBindings = TypeVar("TKeyBindings")
 
-conf_key_bindings = configured_value("key_bindings", cast(TKeyBindings, lambda layout: []))
+conf_key_bindings = configured_value(
+    "key_bindings", cast(TKeyBindings, lambda layout: [])
+)
 
-conf_anim_t = configured_value("anim_time", .3)
+conf_anim_t = configured_value("anim_time", 0.3)
 conf_blend_t = configured_value("blend_time", 1.0)
 
 conf_idle_times = configured_value("energy.idle_times", [120, 300, 600])
@@ -79,7 +69,9 @@ conf_on_reconfigure = configured_value("on_reconfigure", lambda: None)
 conf_lock_on_wakeup = configured_value("lock_on_wakeup", True)
 
 conf_native_top_bar_enabled = configured_value("panels.top_bar.native.enabled", False)
-conf_native_bottom_bar_enabled = configured_value("panels.bottom_bar.native.enabled", False)
+conf_native_bottom_bar_enabled = configured_value(
+    "panels.bottom_bar.native.enabled", False
+)
 
 conf_synchronous_update = configured_value("synchronous_update", lambda: None)
 
@@ -89,10 +81,18 @@ conf_enable_dbus_gestures = configured_value("gestures.dbus.enabled", True)
 
 conf_enable_unlock_command = configured_value("enable_unlock_command", True)
 
-conf_gesture_binding_swipe_to_zoom = configured_value("gesture_bindings.swipe_to_zoom", (None, "swipe-4"))
-conf_gesture_binding_swipe = configured_value("gesture_bindings.swipe", (None, "swipe-3"))
-conf_gesture_binding_move_resize = configured_value("gesture_bindings.move_resize", ("L", "move-1", "swipe-2"))
-conf_gesture_binding_launcher = configured_value("gesture_bindings.launcher", (None, "swipe-5"))
+conf_gesture_binding_swipe_to_zoom = configured_value(
+    "gesture_bindings.swipe_to_zoom", (None, "swipe-4")
+)
+conf_gesture_binding_swipe = configured_value(
+    "gesture_bindings.swipe", (None, "swipe-3")
+)
+conf_gesture_binding_move_resize = configured_value(
+    "gesture_bindings.move_resize", ("L", "move-1", "swipe-2")
+)
+conf_gesture_binding_launcher = configured_value(
+    "gesture_bindings.launcher", (None, "swipe-5")
+)
 
 
 def _score(
@@ -1135,7 +1135,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         cmds: dict[str, Callable[[], Optional[str]]] = {
             "lock": lambda: self.ensure_locked(
                 anim="anim" in arg if arg is not None else False,
-                dim="dim" in arg if arg is not None else False
+                dim="dim" in arg if arg is not None else False,
             ),
             "config": print_config,
             "update-config": self.update_config,
@@ -1423,16 +1423,53 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         if best_view is not None:
             self.focus_view(self._views[best_view])
 
-    def move_next_view(self, dv: int = 1, active_workspace: bool = True) -> None:
-        views = self.views(self.get_active_workspace() if active_workspace else None)
-        focused_view = self.find_focused_view()
+    def goto_view(
+        self, index: int, active_workspace: bool = True, only_tiles: bool = False
+    ) -> None:
+        if index == 0:
+            return
+        workspace = self.get_active_workspace() if active_workspace else None
+        views = self.tiles(workspace) if only_tiles else self.views(workspace)
+        num_w = len(views)
+        if index > num_w:
+            return
+        self.focus_view(views[index - 1])
 
-        if focused_view is not None and focused_view in views:
-            idx = views.index(focused_view)
-            next_view = views[(idx + dv) % len(views)]
-            self.focus_view(next_view)
-        elif len(views) > 0:
-            self.focus_view(views[0])
+    def __hook_prev_next_view(
+        self,
+        fun: Callable[[int, list[View]], None],
+        steps: int,
+        active_workspace: bool,
+        only_tiles: bool,
+    ) -> None:
+        workspace = self.get_active_workspace() if active_workspace else None
+        views = self.tiles(workspace) if only_tiles else self.views(workspace)
+        focused_view = self.find_focused_view()
+        if (not focused_view) or (focused_view not in views):
+            return
+        index = views.index(focused_view) + steps
+        fun(index, views)
+
+    def move_next_view(
+        self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False
+    ) -> None:
+        def inner_next_view(index: int, views: list[View]):
+            num_w = len(views)
+            if index == num_w:
+                index = 0
+            self.focus_view(views[index])
+
+        self.__hook_prev_next_view(inner_next_view, steps, active_workspace, only_tiles)
+
+    def move_prev_view(
+        self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False
+    ) -> None:
+        def inner_prev_view(index: int, views: list[View]):
+            self.focus_view(views[index])
+
+        self.__hook_prev_next_view(
+            inner_prev_view, -steps, active_workspace, only_tiles
+        )
 
     def move_workspace(self, ds: int = 1) -> None:
         ws = self.get_active_workspace()
