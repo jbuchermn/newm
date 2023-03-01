@@ -107,7 +107,6 @@ def _score(
     w2: float,
     h2: float,
 ) -> float:
-
     if (i1, j1, w1, h1) == (i2, j2, w2, h2):
         return 1000
 
@@ -781,7 +780,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
     def on_modifiers(
         self, modifiers: PyWMModifiers, last_modifiers: PyWMModifiers
     ) -> bool:
-
         if modifiers.pressed(last_modifiers).any():
             """
             This is a special case, if a SingleFingerMoveGesture has started, then
@@ -1402,7 +1400,6 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             or (j + h > ws_state.j + ws_state.size and delta_j > 0)
             or (j < ws_state.j and delta_j < 0)
         ):
-
             vf = self.find_focused_view()
             if vf is not None:
                 self.focus_view(vf)
@@ -1435,41 +1432,21 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
             return
         self.focus_view(views[index - 1])
 
-    def __hook_prev_next_view(
-        self,
-        fun: Callable[[int, list[View]], None],
-        steps: int,
-        active_workspace: bool,
-        only_tiles: bool,
+    def cycle_views(
+        self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False
     ) -> None:
         workspace = self.get_active_workspace() if active_workspace else None
-        views = self.tiles(workspace) if only_tiles else self.views(workspace)
-        focused_view = self.find_focused_view()
-        if (not focused_view) or (focused_view not in views):
+        views = tuple(self.tiles(workspace) if only_tiles else self.views(workspace))
+        current_view = self.find_focused_view()
+        if not current_view or current_view not in views:
             return
-        index = views.index(focused_view) + steps
-        fun(index, views)
+        index = views.index(current_view) + steps
+        self.__select_view(index, views)
 
-    def move_next_view(
-        self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False
-    ) -> None:
-        def inner_next_view(index: int, views: list[View]) -> None:
-            num_w = len(views)
-            if index == num_w:
-                index = 0
-            self.focus_view(views[index])
-
-        self.__hook_prev_next_view(inner_next_view, steps, active_workspace, only_tiles)
-
-    def move_prev_view(
-        self, steps: int = 1, active_workspace: bool = True, only_tiles: bool = False
-    ) -> None:
-        def inner_prev_view(index: int, views: list[View]) -> None:
-            self.focus_view(views[index])
-
-        self.__hook_prev_next_view(
-            inner_prev_view, -steps, active_workspace, only_tiles
-        )
+    def __select_view(self, index: int, views: tuple[View]) -> None:
+        num_view = len(views)
+        index = (index + num_view) % num_view
+        self.focus_view(views[index])
 
     def move_workspace(self, ds: int = 1) -> None:
         ws = self.get_active_workspace()

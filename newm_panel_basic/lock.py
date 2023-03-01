@@ -1,17 +1,19 @@
 from __future__ import annotations
+
+import asyncio
+import curses
+import json
+import logging
+import os
+import time
 from typing import Any, Optional
 
 from pyfiglet import Figlet
-import os
-import curses
-import json
-import asyncio
-import time
-import logging
 
 from newm import connect_to_auth
 
 logger = logging.getLogger(__name__)
+
 
 class Lock:
     def __init__(self) -> None:
@@ -37,29 +39,38 @@ class Lock:
     def render(self) -> None:
         _, width = self.scr.getmaxyx()
 
-
         if self.state == "initial":
             texts = [
                 "",
                 "",
                 Figlet(font="big", justify="center", width=width).renderText("newm"),
-                Figlet(font="digital", justify="center", width=width).renderText("Initial state")
+                Figlet(font="digital", justify="center", width=width).renderText(
+                    "Initial state"
+                ),
             ]
         elif self.state == "request_user":
             texts = [
                 "",
                 "",
                 Figlet(font="big", justify="center", width=width).renderText("newm"),
-                Figlet(font="digital", justify="center", width=width).renderText("   ".join(self.users)),
-                Figlet(font="small", justify="center", width=width).renderText(self.selected_user),
+                Figlet(font="digital", justify="center", width=width).renderText(
+                    "   ".join(self.users)
+                ),
+                Figlet(font="small", justify="center", width=width).renderText(
+                    self.selected_user
+                ),
             ]
         elif self.state == "request_cred":
             texts = [
                 "",
                 "",
                 Figlet(font="big", justify="center", width=width).renderText("newm"),
-                Figlet(font="digital", justify="center", width=width).renderText(self.message),
-                Figlet(font="small", justify="center", width=width).renderText("." * len(self.cred) if not self.pending else "-"),
+                Figlet(font="digital", justify="center", width=width).renderText(
+                    self.message
+                ),
+                Figlet(font="small", justify="center", width=width).renderText(
+                    "." * len(self.cred) if not self.pending else "-"
+                ),
             ]
 
         self.scr.erase()
@@ -99,43 +110,42 @@ class Lock:
             if ch == 9:
                 try:
                     if self.selected_user is None:
-                        self.selected_user = self.users[0] if len(self.users) > 0 else None
+                        self.selected_user = (
+                            self.users[0] if len(self.users) > 0 else None
+                        )
                     else:
-                        self.selected_user = self.users[(self.users.index(self.selected_user) + 1) % len(self.users)]
+                        self.selected_user = self.users[
+                            (self.users.index(self.selected_user) + 1) % len(self.users)
+                        ]
                 except:
                     pass
             elif ch == 10:
                 break
 
-
     def __call__(self, message: dict[str, Any]) -> dict[str, Any]:
-        if message['kind'] == 'auth_request_cred':
+        if message["kind"] == "auth_request_cred":
             self.state = "request_cred"
-            self.message = message['message']
+            self.message = message["message"]
             self.cred = ""
             self.pending = False
 
             self.enter_cred()
 
-            return {'kind': 'auth_enter_cred',
-                    'cred': self.cred}
+            return {"kind": "auth_enter_cred", "cred": self.cred}
 
-
-        elif message['kind'] == 'auth_request_user':
+        elif message["kind"] == "auth_request_user":
             self.state = "request_user"
-            self.users = message['users']
+            self.users = message["users"]
             self.selected_user = self.users[0] if len(self.users) > 0 else None
             self.pending = False
 
             self.enter_user()
 
-            return {'kind': 'auth_choose_user',
-                    'user': self.selected_user}
+            return {"kind": "auth_choose_user", "user": self.selected_user}
 
         else:
             logger.warn("Unsupported message %s" % message)
-            return { 'error': 'Unsupported' }
-
+            return {"error": "Unsupported"}
 
 
 def lock() -> None:
@@ -148,9 +158,10 @@ def lock() -> None:
                 connect_to_auth(l)
             except:
                 logger.exception("Excpetion in main loop")
-            time.sleep(.1)
+            time.sleep(0.1)
     finally:
         l.exit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     lock()
