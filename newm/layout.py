@@ -1443,7 +1443,7 @@ class Layout(PyWM[View], Animate[PyWMDownstreamState], Animatable):
         index = views.index(current_view) + steps
         self.__select_view(index, views)
 
-    def __select_view(self, index: int, views: tuple[View]) -> None:
+    def __select_view(self, index: int, views: tuple[View, ...]) -> None:
         num_view = len(views)
         index = (index + num_view) % num_view
         self.focus_view(views[index])
