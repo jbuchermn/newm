@@ -6,9 +6,9 @@
 
 [![IMAGE](https://github.com/jbuchermn/newm/blob/master/newm/resources/screenshot.png)](https://youtu.be/4I_IHbP-iNQ)
 
-## Remarks
+## Current state
 
-Development has slowed down a lot due to my personal time. I'm no longer maintaining a separate stable branch - master is the most current working going for v0.3.
+Unfortunately I no longer have time to spend on this project. So, newm is currently unmaintained.
 
 ## Idea
 
