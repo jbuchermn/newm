@@ -8,7 +8,7 @@
 
 ## Current state
 
-Unfortunately I no longer have time to spend on this project. So, newm is currently unmaintained.
+Unfortunately I no longer have time to spend on this project. So, this repo is currently unmaintained. Check out [newm-atha](https://sr.ht/~atha/newm-atha/)!
 
 ## Idea
 
